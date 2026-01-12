@@ -1,0 +1,54 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# FastAPI uploads / local db
+backend/uploads/
+app.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Node / frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store/
+dist/
+build/
+.vscode/
+.idea/
+
+# Docker / env
+.env
+.env.*
+!.env.example
+!.env.docker
+
+# Coverage / reports
+coverage/
+.pytest_cache/
+htmlcov/
+*.log
+
+# Misc
+*.swp
+*.swo
+*.tmp
+*.bak
+*.retry

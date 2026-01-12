@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
   Table, Button, Space, Tag, Modal, Form, Input, Select,
-  message, Popconfirm, Typography, Card, Tabs, Badge
+  message, Popconfirm, Typography, Card, Badge
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, FileTextOutlined, SyncOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SyncOutlined } from '@ant-design/icons';
 import { knowledgeBasesApi, documentsApi, departmentsApi, doctorsApi } from '../api';
 
 const { Title, Text } = Typography;

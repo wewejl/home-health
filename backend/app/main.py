@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base, SessionLocal
 from .routes import (
     auth_router, departments_router, sessions_router, feedbacks_router, diseases_router, drugs_router,
-    diagnosis_router,
+    diagnosis_router, derma_router,
     admin_auth_router, admin_doctors_router, admin_departments_router,
     admin_knowledge_router, admin_documents_router, admin_feedbacks_router, admin_stats_router,
     admin_diseases_router, admin_drugs_router, admin_drug_categories_router
@@ -34,6 +34,7 @@ app.include_router(feedbacks_router)
 app.include_router(diseases_router)
 app.include_router(drugs_router)
 app.include_router(diagnosis_router)
+app.include_router(derma_router)
 
 # 管理后台路由
 app.include_router(admin_auth_router)

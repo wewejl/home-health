@@ -14,6 +14,12 @@ from .disease import (
     DiseaseCreate, DiseaseUpdate, DiseaseListResponse, DiseaseDetailResponse,
     DiseaseAdminResponse, DiseaseSearchResponse
 )
+from .derma import (
+    DermaQuickOptionSchema, SkinConditionSchema, SkinAnalysisResultSchema,
+    ReportIndicatorSchema, ReportInterpretationSchema,
+    StartDermaSessionRequest, ContinueDermaRequest, SkinAnalysisRequest, ReportInterpretRequest,
+    DermaResponse, DermaSessionSchema, DermaSessionListResponse, ImageUploadResponse
+)
 
 __all__ = [
     "LoginRequest", "LoginResponse", "UserResponse",
@@ -27,5 +33,9 @@ __all__ = [
     "FeedbackCreate", "FeedbackResponse", "FeedbackHandleRequest",
     "OverviewStats", "DailyStats", "TrendStats", "DoctorStats",
     "DiseaseCreate", "DiseaseUpdate", "DiseaseListResponse", "DiseaseDetailResponse",
-    "DiseaseAdminResponse", "DiseaseSearchResponse"
+    "DiseaseAdminResponse", "DiseaseSearchResponse",
+    "DermaQuickOptionSchema", "SkinConditionSchema", "SkinAnalysisResultSchema",
+    "ReportIndicatorSchema", "ReportInterpretationSchema",
+    "StartDermaSessionRequest", "ContinueDermaRequest", "SkinAnalysisRequest", "ReportInterpretRequest",
+    "DermaResponse", "DermaSessionSchema", "DermaSessionListResponse", "ImageUploadResponse"
 ]

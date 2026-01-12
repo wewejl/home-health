@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Tag, Button, Modal, Form, Input, Select, message, Typography, Card, Row, Col, Statistic } from 'antd';
-import { CheckOutlined, CloseOutlined, LikeOutlined, DislikeOutlined } from '@ant-design/icons';
+import { LikeOutlined, DislikeOutlined } from '@ant-design/icons';
 import { feedbacksApi } from '../api';
 
 const { Title, Text } = Typography;

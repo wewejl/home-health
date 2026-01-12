@@ -9,5 +9,6 @@ from .feedback import SessionFeedback
 from .disease import Disease
 from .drug import Drug, DrugCategory
 from .diagnosis_session import DiagnosisSession
+from .derma_session import DermaSession
 
-__all__ = ["User", "Department", "Doctor", "Session", "Message", "SenderType", "KnowledgeBase", "KnowledgeDocument", "AdminUser", "AuditLog", "SessionFeedback", "Disease", "Drug", "DrugCategory", "DiagnosisSession"]
+__all__ = ["User", "Department", "Doctor", "Session", "Message", "SenderType", "KnowledgeBase", "KnowledgeDocument", "AdminUser", "AuditLog", "SessionFeedback", "Disease", "Drug", "DrugCategory", "DiagnosisSession", "DermaSession"]
