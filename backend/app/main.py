@@ -9,6 +9,8 @@ from .routes import (
     admin_diseases_router, admin_drugs_router, admin_drug_categories_router
 )
 from .services.admin_auth_service import AdminAuthService
+from .seed import seed_data
+import os
 
 Base.metadata.create_all(bind=engine)
 
@@ -51,6 +53,21 @@ app.include_router(admin_drug_categories_router)
 
 @app.on_event("startup")
 def startup_event():
+    # 初始化数据库表结构
+    Base.metadata.create_all(bind=engine)
+    
+    # 检查是否需要初始化种子数据
+    seed_data_enabled = os.getenv("SEED_DATA", "true").lower() == "true"
+    
+    if seed_data_enabled:
+        print("🌱 开始初始化种子数据...")
+        try:
+            seed_data()
+            print("✅ 种子数据初始化完成")
+        except Exception as e:
+            print(f"⚠️ 种子数据初始化失败: {e}")
+    
+    # 初始化默认管理员账户
     db = SessionLocal()
     try:
         AdminAuthService.init_default_admin(db)
