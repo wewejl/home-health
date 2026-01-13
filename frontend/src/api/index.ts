@@ -139,4 +139,198 @@ export const drugsApi = {
   toggleActive: (id: number) => api.post(`/admin/drugs/${id}/toggle-active`),
 };
 
+// Dermatology Agent API
+export const dermaAgentApi = {
+  // 创建新会话
+  createSession: (chiefComplaint?: string) => 
+    api.post('/derma/start', { 
+      chief_complaint: chiefComplaint || '' 
+    }),
+  
+  // 发送消息（继续对话）
+  sendMessage: (sessionId: string, message: string, history: any[] = []) =>
+    api.post(`/derma/${sessionId}/continue`, { 
+      history: history,
+      current_input: {
+        message: message
+      },
+      task_type: 'conversation'
+    }),
+  
+  // 创建新会话（SSE 流式）
+  createSessionStream: (chiefComplaint?: string, callbacks?: {
+    onMeta?: (data: any) => void;
+    onChunk?: (text: string) => void;
+    onStep?: (step: { type: string; content: string }) => void;
+    onComplete?: (data: any) => void;
+    onError?: (error: string) => void;
+  }) => {
+    const token = localStorage.getItem('admin_token');
+    const eventSource = new EventSource(
+      `${API_BASE_URL}/derma/start?chief_complaint=${encodeURIComponent(chiefComplaint || '')}`,
+      {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
+      } as any
+    );
+
+    eventSource.addEventListener('meta', (e: MessageEvent) => {
+      const data = JSON.parse(e.data);
+      callbacks?.onMeta?.(data);
+    });
+
+    eventSource.addEventListener('chunk', (e: MessageEvent) => {
+      const data = JSON.parse(e.data);
+      callbacks?.onChunk?.(data.text);
+    });
+
+    eventSource.addEventListener('step', (e: MessageEvent) => {
+      const data = JSON.parse(e.data);
+      callbacks?.onStep?.(data);
+    });
+
+    eventSource.addEventListener('complete', (e: MessageEvent) => {
+      const data = JSON.parse(e.data);
+      callbacks?.onComplete?.(data);
+      eventSource.close();
+    });
+
+    eventSource.addEventListener('error', (e: MessageEvent) => {
+      if (e.data) {
+        const data = JSON.parse(e.data);
+        callbacks?.onError?.(data.error);
+      }
+      eventSource.close();
+    });
+
+    eventSource.onerror = () => {
+      callbacks?.onError?.('连接错误');
+      eventSource.close();
+    };
+
+    return eventSource;
+  },
+
+  // 发送消息（SSE 流式）
+  sendMessageStream: (
+    sessionId: string,
+    message: string,
+    history: any[] = [],
+    callbacks?: {
+      onMeta?: (data: any) => void;
+      onChunk?: (text: string) => void;
+      onStep?: (step: { type: string; content: string }) => void;
+      onComplete?: (data: any) => void;
+      onError?: (error: string) => void;
+    }
+  ) => {
+    const token = localStorage.getItem('admin_token');
+    
+    console.log('[SSE] Starting stream request to:', `${API_BASE_URL}/derma/${sessionId}/continue`);
+    
+    fetch(`${API_BASE_URL}/derma/${sessionId}/continue`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        history: history,
+        current_input: { message: message },
+        task_type: 'conversation',
+      }),
+    }).then(async (response) => {
+      console.log('[SSE] Response status:', response.status);
+      console.log('[SSE] Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[SSE] HTTP error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      let buffer = '';
+      let eventCount = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          console.log('[SSE] Stream ended, total events:', eventCount);
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+
+          console.log('[SSE] Raw line:', line);
+
+          // 改进的解析逻辑
+          const eventMatch = line.match(/event:\s*(.+)/);
+          const dataMatch = line.match(/data:\s*(.+)/s);
+
+          if (eventMatch && dataMatch) {
+            const eventType = eventMatch[1].trim();
+            const dataStr = dataMatch[1].trim();
+            
+            console.log('[SSE] Event type:', eventType);
+            console.log('[SSE] Data string:', dataStr);
+
+            try {
+              const data = JSON.parse(dataStr);
+              eventCount++;
+
+              switch (eventType) {
+                case 'meta':
+                  console.log('[SSE] Meta event:', data);
+                  callbacks?.onMeta?.(data);
+                  break;
+                case 'chunk':
+                  console.log('[SSE] Chunk event:', data.text);
+                  callbacks?.onChunk?.(data.text);
+                  break;
+                case 'step':
+                  console.log('[SSE] Step event:', data);
+                  callbacks?.onStep?.(data);
+                  break;
+                case 'complete':
+                  console.log('[SSE] Complete event:', data);
+                  callbacks?.onComplete?.(data);
+                  break;
+                case 'error':
+                  console.error('[SSE] Error event:', data.error);
+                  callbacks?.onError?.(data.error);
+                  break;
+                default:
+                  console.warn('[SSE] Unknown event type:', eventType);
+              }
+            } catch (parseError) {
+              console.error('[SSE] JSON parse error:', parseError, 'Data:', dataStr);
+            }
+          } else {
+            console.warn('[SSE] Failed to parse line:', line);
+          }
+        }
+      }
+    }).catch((error) => {
+      console.error('[SSE] Fetch error:', error);
+      callbacks?.onError?.(error.message);
+    });
+  },
+  
+  // 获取会话详情
+  getSession: (sessionId: string) =>
+    api.get(`/derma/${sessionId}`),
+};
+
 export default api;

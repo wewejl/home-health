@@ -20,6 +20,7 @@ import {
   MenuUnfoldOutlined,
   MedicineBoxOutlined,
   FileSearchOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -40,6 +41,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ user, onLogout }) => {
       key: '/',
       icon: <DashboardOutlined />,
       label: '仪表盘',
+    },
+    {
+      key: '/derma-chat',
+      icon: <RobotOutlined />,
+      label: '皮肤科AI对话',
     },
     {
       key: '/departments',

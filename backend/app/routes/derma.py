@@ -25,7 +25,7 @@ from ..schemas.derma import (
     ReportIndicatorSchema
 )
 from ..services.dermatology import DermaAgent, DermaTaskType, create_derma_initial_state
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user_or_admin
 
 router = APIRouter(prefix="/derma", tags=["皮肤科AI"])
 
@@ -157,7 +157,7 @@ def build_response(state: dict) -> DermaResponse:
 async def start_derma_session(
     request: StartDermaSessionRequest,
     http_request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -232,6 +232,10 @@ async def stream_derma_response(
     async def on_chunk(chunk: str):
         await chunk_queue.put(("chunk", chunk))
     
+    async def on_step(step_type: str, content: str):
+        """处理 CrewAI 步骤回调"""
+        await chunk_queue.put(("step", {"type": step_type, "content": content}))
+    
     async def run_agent():
         nonlocal final_state, error_occurred
         try:
@@ -242,7 +246,8 @@ async def stream_derma_response(
                 image_url=image_url,
                 image_base64=image_base64,
                 task_type=task_type,
-                on_chunk=on_chunk
+                on_chunk=on_chunk,
+                on_step=on_step
             )
         except Exception as e:
             error_occurred = str(e)
@@ -262,7 +267,7 @@ async def stream_derma_response(
     }
     yield f"event: meta\ndata: {json.dumps(meta_data, ensure_ascii=False)}\n\n"
     
-    # 流式输出chunks
+    # 流式输出chunks和steps
     while True:
         event_type, data = await chunk_queue.get()
         if event_type == "done":
@@ -270,6 +275,9 @@ async def stream_derma_response(
         elif event_type == "chunk":
             chunk_data = {"text": data}
             yield f"event: chunk\ndata: {json.dumps(chunk_data, ensure_ascii=False)}\n\n"
+        elif event_type == "step":
+            # 发送思考过程步骤
+            yield f"event: step\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
     
     await agent_task
     
@@ -312,7 +320,7 @@ async def continue_derma_session(
     session_id: str,
     request: ContinueDermaRequest,
     http_request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -420,7 +428,7 @@ async def continue_derma_session(
 @router.get("/{session_id}", response_model=DermaResponse)
 async def get_derma_session(
     session_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_admin),
     db: Session = Depends(get_db)
 ):
     """获取皮肤科会话详情"""
@@ -440,7 +448,7 @@ async def get_derma_session(
 async def list_derma_sessions(
     limit: int = 20,
     offset: int = 0,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_admin),
     db: Session = Depends(get_db)
 ):
     """获取皮肤科会话列表"""
@@ -471,7 +479,7 @@ async def list_derma_sessions(
 @router.delete("/{session_id}")
 async def delete_derma_session(
     session_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_admin),
     db: Session = Depends(get_db)
 ):
     """删除皮肤科会话"""

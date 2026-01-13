@@ -49,7 +49,8 @@ class DermaCrewService:
         image_url: str = None,
         image_base64: str = None,
         task_type: str = None,
-        on_chunk: Optional[Callable[[str], Awaitable[None]]] = None
+        on_chunk: Optional[Callable[[str], Awaitable[None]]] = None,
+        on_step: Optional[Callable[[str, str], Awaitable[None]]] = None
     ) -> Dict[str, Any]:
         """
         运行文本问诊任务
@@ -65,7 +66,7 @@ class DermaCrewService:
         
         # 处理文本输入
         if user_input:
-            return await self._handle_conversation(state, user_input, on_chunk)
+            return await self._handle_conversation(state, user_input, on_chunk, on_step)
         
         return state
     
@@ -103,7 +104,8 @@ class DermaCrewService:
         self,
         state: Dict[str, Any],
         user_input: str,
-        on_chunk: Optional[Callable[[str], Awaitable[None]]] = None
+        on_chunk: Optional[Callable[[str], Awaitable[None]]] = None,
+        on_step: Optional[Callable[[str, str], Awaitable[None]]] = None
     ) -> Dict[str, Any]:
         """处理对话"""
         # 打印当前状态以便调试
@@ -122,7 +124,7 @@ class DermaCrewService:
         })
         
         # 使用 CrewAI 处理对话
-        result = await self._run_conversation_crew(state, user_input)
+        result = await self._run_conversation_crew(state, user_input, on_step)
         
         # 更新状态
         response = result.get("message", "")
@@ -184,7 +186,8 @@ class DermaCrewService:
     async def _run_conversation_crew(
         self,
         state: Dict[str, Any],
-        user_input: str
+        user_input: str,
+        on_step: Optional[Callable[[str, str], Awaitable[None]]] = None
     ) -> Dict[str, Any]:
         """运行对话 Crew - CrewAI 1.x 原生异步支持"""
         task = create_conversation_task(
@@ -193,11 +196,42 @@ class DermaCrewService:
             user_input
         )
         
+        # 定义步骤回调函数
+        step_callback_func = None
+        if on_step:
+            def step_callback(step_output):
+                """CrewAI 步骤回调 - 捕获思考过程"""
+                try:
+                    # 创建异步任务来调用 on_step
+                    loop = asyncio.get_event_loop()
+                    
+                    # 判断步骤类型
+                    if hasattr(step_output, 'description'):
+                        step_type = 'thinking'
+                        content = str(step_output.description)
+                    elif hasattr(step_output, 'tool'):
+                        step_type = 'tool'
+                        content = f"使用工具: {step_output.tool}"
+                    elif hasattr(step_output, 'thought'):
+                        step_type = 'reasoning'
+                        content = str(step_output.thought)
+                    else:
+                        step_type = 'step'
+                        content = str(step_output)
+                    
+                    # 异步调用 on_step
+                    asyncio.create_task(on_step(step_type, content))
+                except Exception as e:
+                    print(f"[DermaCrewService] step_callback error: {e}")
+            
+            step_callback_func = step_callback
+        
         crew = Crew(
             agents=[self.conversation_agent],
             tasks=[task],
             process=Process.sequential,
-            verbose=True
+            verbose=True,
+            step_callback=step_callback_func
         )
         
         # CrewAI 1.x 支持原生 async

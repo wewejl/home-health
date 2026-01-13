@@ -12,6 +12,7 @@ import Drugs from './pages/Drugs';
 import Knowledge from './pages/Knowledge';
 import Feedbacks from './pages/Feedbacks';
 import Stats from './pages/Stats';
+import DermaChat from './pages/DermaChat';
 
 interface AdminUser {
   id: number;
@@ -92,6 +93,7 @@ function App() {
               <Route path="knowledge" element={<Knowledge />} />
               <Route path="feedbacks" element={<Feedbacks />} />
               <Route path="stats" element={<Stats />} />
+              <Route path="derma-chat" element={<DermaChat />} />
             </Route>
           </Routes>
         </BrowserRouter>

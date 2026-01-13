@@ -123,7 +123,8 @@ class DermaAgent:
         image_url: str = None,
         image_base64: str = None,
         task_type: DermaTaskType = None,
-        on_chunk: Optional[Callable[[str], Awaitable[None]]] = None
+        on_chunk: Optional[Callable[[str], Awaitable[None]]] = None,
+        on_step: Optional[Callable[[str, str], Awaitable[None]]] = None
     ) -> DermaState:
         """
         运行皮肤科智能体
@@ -135,6 +136,7 @@ class DermaAgent:
             image_base64: 图像Base64编码
             task_type: 任务类型
             on_chunk: 流式输出回调
+            on_step: 思考步骤回调
             
         Returns:
             更新后的状态
@@ -145,7 +147,8 @@ class DermaAgent:
             image_url=image_url,
             image_base64=image_base64,
             task_type=task_type,
-            on_chunk=on_chunk
+            on_chunk=on_chunk,
+            on_step=on_step
         )
     
     async def analyze_skin_image(
@@ -197,13 +200,15 @@ class DermaAgent:
         self,
         state: DermaState,
         user_input: str,
-        on_chunk: Optional[Callable[[str], Awaitable[None]]] = None
+        on_chunk: Optional[Callable[[str], Awaitable[None]]] = None,
+        on_step: Optional[Callable[[str, str], Awaitable[None]]] = None
     ) -> DermaState:
         """处理对话"""
         return await self._crew_service._handle_conversation(
             state=state,
             user_input=user_input,
-            on_chunk=on_chunk
+            on_chunk=on_chunk,
+            on_step=on_step
         )
 
 
