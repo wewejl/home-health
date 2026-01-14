@@ -20,6 +20,14 @@ from .derma import (
     StartDermaSessionRequest, ContinueDermaRequest, SkinAnalysisRequest, ReportInterpretRequest,
     DermaResponse, DermaSessionSchema, DermaSessionListResponse, ImageUploadResponse
 )
+from .medical_event import (
+    MedicalEventCreateRequest, MedicalEventUpdateRequest,
+    MedicalEventSummarySchema, MedicalEventDetailSchema, MedicalEventListResponse,
+    AttachmentSchema, AttachmentCreateRequest, NoteSchema, NoteCreateRequest, NoteUpdateRequest,
+    ExportCreateRequest, ExportRecordSchema, ExportResponse, ShareLinkAccessRequest, ShareLinkResponse,
+    AggregateSessionRequest, AggregateResponse, GenerateSummaryRequest, GenerateSummaryResponse,
+    EventSearchParams, AIAnalysisSchema, ExportOptionsSchema
+)
 
 __all__ = [
     "LoginRequest", "LoginResponse", "UserResponse",
@@ -37,5 +45,11 @@ __all__ = [
     "DermaQuickOptionSchema", "SkinConditionSchema", "SkinAnalysisResultSchema",
     "ReportIndicatorSchema", "ReportInterpretationSchema",
     "StartDermaSessionRequest", "ContinueDermaRequest", "SkinAnalysisRequest", "ReportInterpretRequest",
-    "DermaResponse", "DermaSessionSchema", "DermaSessionListResponse", "ImageUploadResponse"
+    "DermaResponse", "DermaSessionSchema", "DermaSessionListResponse", "ImageUploadResponse",
+    "MedicalEventCreateRequest", "MedicalEventUpdateRequest",
+    "MedicalEventSummarySchema", "MedicalEventDetailSchema", "MedicalEventListResponse",
+    "AttachmentSchema", "AttachmentCreateRequest", "NoteSchema", "NoteCreateRequest", "NoteUpdateRequest",
+    "ExportCreateRequest", "ExportRecordSchema", "ExportResponse", "ShareLinkAccessRequest", "ShareLinkResponse",
+    "AggregateSessionRequest", "AggregateResponse", "GenerateSummaryRequest", "GenerateSummaryResponse",
+    "EventSearchParams", "AIAnalysisSchema", "ExportOptionsSchema"
 ]

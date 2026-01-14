@@ -33,6 +33,18 @@ class Settings(BaseSettings):
     # Qwen-VL 多模态配置（皮肤科智能体使用）
     QWEN_VL_MODEL: str = "qwen-vl-plus"  # 可选: qwen-vl-plus, qwen-vl-max, qwen2-vl-7b-instruct
     
+    # AI 算法服务配置
+    AI_SUMMARY_MODEL: str = ""  # 留空使用 LLM_MODEL
+    AI_SUMMARY_MAX_TOKENS: int = 2000
+    AI_SUMMARY_TEMPERATURE: float = 0.3
+    AI_AGGREGATION_TIME_WINDOW_DAYS: int = 7
+    AI_AGGREGATION_SIMILARITY_THRESHOLD: float = 0.7
+    
+    # 语音转写配置
+    ASR_PROVIDER: str = "mock"  # mock/aliyun/openai
+    ASR_SAMPLE_RATE: int = 16000
+    OPENAI_API_KEY: str = ""  # 用于 Whisper API
+    
     # Admin JWT 配置
     ADMIN_JWT_SECRET: str = "admin-secret-key-change-in-production"
     ADMIN_JWT_EXPIRE_HOURS: int = 24

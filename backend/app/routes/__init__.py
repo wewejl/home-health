@@ -6,6 +6,8 @@ from .diseases import router as diseases_router
 from .drugs import router as drugs_router
 from .diagnosis import router as diagnosis_router
 from .derma import router as derma_router
+from .medical_events import router as medical_events_router
+from .ai import router as ai_router
 from .admin_auth import router as admin_auth_router
 from .admin_doctors import router as admin_doctors_router
 from .admin_departments import router as admin_departments_router
@@ -17,7 +19,7 @@ from .admin_drugs import router as admin_drugs_router, categories_router as admi
 
 __all__ = [
     "auth_router", "departments_router", "sessions_router", "feedbacks_router", "diseases_router", "drugs_router",
-    "diagnosis_router", "derma_router",
+    "diagnosis_router", "derma_router", "medical_events_router", "ai_router",
     "admin_auth_router", "admin_doctors_router", "admin_departments_router",
     "admin_knowledge_router", "admin_documents_router", "admin_feedbacks_router", "admin_stats_router",
     "admin_diseases_router", "admin_drugs_router", "admin_drug_categories_router"
