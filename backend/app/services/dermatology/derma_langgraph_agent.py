@@ -26,6 +26,25 @@ from .prompts import (
 )
 
 
+def _get_message_content(msg) -> str:
+    """安全提取消息内容，兼容 dict 和 LangChain Message 对象"""
+    if isinstance(msg, dict):
+        return msg.get("content", "")
+    elif hasattr(msg, "content"):
+        return msg.content
+    return str(msg)
+
+
+def _get_message_role(msg) -> str:
+    """安全提取消息角色，兼容 dict 和 LangChain Message 对象"""
+    if isinstance(msg, dict):
+        return msg.get("role", "")
+    elif hasattr(msg, "type"):
+        # LangChain message types: human, ai, system
+        return "assistant" if msg.type == "ai" else msg.type
+    return ""
+
+
 class DermaLangGraphAgent(LangGraphAgentBase):
     """
     皮肤科 LangGraph Agent
@@ -84,7 +103,7 @@ class DermaLangGraphAgent(LangGraphAgentBase):
         """路由决策节点"""
         # 新会话 -> 问候
         if state["stage"] == "greeting" and state["questions_asked"] == 0:
-            has_history = any(m.get("role") == "assistant" for m in state["messages"])
+            has_history = any(_get_message_role(m) == "assistant" for m in state["messages"])
             if not has_history:
                 state["next_node"] = "greeting"
                 return state
@@ -112,7 +131,7 @@ class DermaLangGraphAgent(LangGraphAgentBase):
         if not state["messages"]:
             return False
             
-        last_msg = state["messages"][-1].get("content", "") if state["messages"] else ""
+        last_msg = _get_message_content(state["messages"][-1]) if state["messages"] else ""
         
         # 用户明确请求诊断
         diagnosis_keywords = ["怎么办", "是什么", "什么病", "建议", "严重吗", "需要治疗", "用什么药"]
@@ -147,11 +166,7 @@ class DermaLangGraphAgent(LangGraphAgentBase):
         # 获取最新用户输入
         user_input = ""
         if state["messages"]:
-            last_msg = state["messages"][-1]
-            if isinstance(last_msg, dict):
-                user_input = last_msg.get("content", "")
-            elif hasattr(last_msg, "content"):
-                user_input = last_msg.content
+            user_input = _get_message_content(state["messages"][-1])
         
         # 构建 Prompt
         prompt = ChatPromptTemplate.from_messages([

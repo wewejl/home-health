@@ -15,6 +15,31 @@ from langgraph.graph.message import add_messages
 from .base_agent import BaseAgent
 
 
+def _serialize_messages(messages: List[dict]) -> List[dict]:
+    """
+    将消息列表序列化为可 JSON 保存的格式
+    
+    LangGraph 的 add_messages 会将 dict 转换为 LangChain Message 对象，
+    但数据库存储需要 JSON 格式，因此需要转换回 dict
+    """
+    serialized = []
+    for msg in messages:
+        if isinstance(msg, dict):
+            serialized.append(msg)
+        elif hasattr(msg, "content"):
+            # LangChain Message 对象
+            role = "assistant" if getattr(msg, "type", "") == "ai" else "user"
+            if hasattr(msg, "type") and msg.type == "system":
+                role = "system"
+            serialized.append({
+                "role": role,
+                "content": msg.content
+            })
+        else:
+            serialized.append({"role": "user", "content": str(msg)})
+    return serialized
+
+
 class BaseAgentState(TypedDict):
     """
     统一的 Agent 状态基类
@@ -162,6 +187,9 @@ class LangGraphAgentBase(BaseAgent):
                     "content": final_state["current_response"]
                 })
             
+            # 序列化消息以便数据库存储
+            final_state["messages"] = _serialize_messages(final_state.get("messages", []))
+            
             return final_state
             
         except Exception as e:
@@ -208,6 +236,9 @@ class LangGraphAgentBase(BaseAgent):
             final_state["error"] = str(e)
             if streamed_content:
                 final_state["current_response"] = streamed_content
+        
+        # 序列化消息以便数据库存储
+        final_state["messages"] = _serialize_messages(final_state.get("messages", []))
         
         return final_state
     
