@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     # Qwen-VL 多模态配置（皮肤科智能体使用）
     QWEN_VL_MODEL: str = "qwen3-vl-plus"  # 可选: qwen3-vl-plus, qwen-vl-plus, qwen-vl-max
     
+    # LangGraph 配置
+    USE_LANGGRAPH: bool = True  # 是否使用 LangGraph 替代 CrewAI
+    LLM_TIMEOUT: int = 30  # LLM 调用超时（秒）
+    LLM_MAX_RETRIES: int = 1  # LLM 调用最大重试次数
+    LLM_MAX_TOKENS: int = 1500  # 普通 LLM 最大 token
+    LLM_VL_MAX_TOKENS: int = 2000  # 多模态 LLM 最大 token
+    
     # AI 算法服务配置
     AI_SUMMARY_MODEL: str = ""  # 留空使用 LLM_MODEL
     AI_SUMMARY_MAX_TOKENS: int = 2000

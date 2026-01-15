@@ -481,7 +481,7 @@ def aggregate_session(
         validation_errors.append("尚未收集到症状信息")
     if stage == "greeting":
         validation_errors.append("对话刚开始，请先描述您的问题")
-    elif stage == "collecting" and len(messages) < 3:
+    elif stage == "collecting" and len(messages) < 5:
         validation_errors.append("对话信息太少，请继续描述症状")
     
     if validation_errors:

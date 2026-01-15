@@ -177,17 +177,22 @@ def full_cleanup(db, dry_run=True):
     
     if not dry_run:
         # 按顺序删除（考虑外键约束，从最深层开始）
-        db.query(ExportAccessLog).delete()
-        db.query(ExportRecord).delete()
-        db.query(EventNote).delete()
-        db.query(EventAttachment).delete()
-        db.query(Message).delete()
-        db.query(Session).delete()
-        db.query(MedicalEvent).delete()
-        db.query(DermaSession).delete()
-        db.query(DiagnosisSession).delete()
-        db.commit()
-        print(f"\n✅ 已完全清理数据库")
+        try:
+            db.query(ExportAccessLog).delete()
+            db.query(ExportRecord).delete()
+            db.query(EventNote).delete()
+            db.query(EventAttachment).delete()
+            db.query(Message).delete()
+            db.query(Session).delete()
+            db.query(MedicalEvent).delete()
+            db.query(DermaSession).delete()
+            db.query(DiagnosisSession).delete()
+            db.commit()
+            print(f"\n✅ 已完全清理数据库")
+        except Exception as e:
+            db.rollback()
+            print(f"\n❌ 清理失败，已回滚: {e}")
+            raise
     else:
         print(f"\n[预览模式] 使用 --full 参数且不带 --dry-run 来执行完全清理")
     

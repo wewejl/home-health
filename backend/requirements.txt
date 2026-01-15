@@ -16,3 +16,8 @@ litellm
 # CrewAI 1.x Multi-Agent Framework (已升级)
 crewai>=1.7.0
 crewai-tools>=0.17.0
+
+# LangGraph 1.x Multi-Agent Framework (新增)
+langgraph>=1.0.0
+langchain-core>=0.3.0
+langchain-openai>=0.3.0
