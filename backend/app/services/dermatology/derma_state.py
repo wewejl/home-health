@@ -58,6 +58,14 @@ class DermaState(TypedDict):
     risk_level: Literal["low", "medium", "high", "emergency"]
     care_advice: str
     need_offline_visit: bool
+    
+    # === CrewAI 兼容字段（保持向后兼容）===
+    symptom_details: dict  # 症状详情
+    report_interpretations: List[dict]  # 报告解读历史
+    latest_interpretation: Optional[dict]  # 最新报告解读
+    progress: int  # 问诊进度百分比
+    current_task: str  # 当前任务类型
+    awaiting_image: bool  # 是否等待用户上传图片
 
 
 def create_derma_initial_state(session_id: str, user_id: int) -> DermaState:
@@ -113,5 +121,13 @@ def create_derma_initial_state(session_id: str, user_id: int) -> DermaState:
         possible_conditions=[],
         risk_level="low",
         care_advice="",
-        need_offline_visit=False
+        need_offline_visit=False,
+        
+        # CrewAI 兼容字段
+        symptom_details={},
+        report_interpretations=[],
+        latest_interpretation=None,
+        progress=0,
+        current_task="conversation",
+        awaiting_image=False
     )
