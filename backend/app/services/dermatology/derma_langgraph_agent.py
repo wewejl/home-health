@@ -142,21 +142,22 @@ class DermaLangGraphAgent(LangGraphAgentBase):
             
         last_msg = _get_message_content(state["messages"][-1]) if state["messages"] else ""
         
-        # 用户明确请求诊断
-        diagnosis_keywords = ["怎么办", "是什么", "什么病", "建议", "严重吗", "需要治疗", "用什么药"]
-        user_wants_diagnosis = any(kw in last_msg for kw in diagnosis_keywords)
-        
-        # 信息足够
+        # 信息足够（必须条件）
         has_enough_info = (
             bool(state.get("chief_complaint")) and
             bool(state.get("skin_location")) and
-            len(state.get("symptoms", [])) >= 1
+            len(state.get("symptoms", [])) >= 2  # 至少2个症状
         )
         
         # 对话足够长
         enough_rounds = state["questions_asked"] >= 3
         
-        return user_wants_diagnosis or (has_enough_info and enough_rounds)
+        # 用户明确请求完整诊断（更严格的关键词）
+        strong_diagnosis_keywords = ["怎么办", "什么病", "严重吗", "需要治疗", "用什么药", "给我诊断", "帮我看看"]
+        user_wants_diagnosis = any(kw in last_msg for kw in strong_diagnosis_keywords)
+        
+        # 只有在信息足够 + (对话够长 或 明确请求) 时才诊断
+        return has_enough_info and (enough_rounds or user_wants_diagnosis)
     
     # === 节点实现 ===
     
