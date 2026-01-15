@@ -24,7 +24,9 @@ from ..schemas.derma import (
     ReportInterpretationSchema,
     ReportIndicatorSchema
 )
-from ..services.dermatology import DermaAgent, DermaTaskType, create_derma_initial_state
+from ..services.dermatology import DermaAgentWrapper
+from ..services.dermatology.derma_agent import DermaTaskType
+from ..services.dermatology.react_state import create_react_initial_state
 from ..dependencies import get_current_user_or_admin
 from ..models.medical_event import MedicalEvent, EventStatus, AgentType
 
@@ -168,8 +170,8 @@ def build_response(state: dict) -> DermaResponse:
         "type": task_type,
         "session_id": state["session_id"],
         "message": state["current_response"],
-        "progress": state["progress"],
-        "stage": state["stage"],
+        "progress": state.get("progress", 0),  # ReAct 模式没有 progress
+        "stage": state.get("stage", "conversation"),  # ReAct 模式没有固定 stage
         "awaiting_image": state.get("awaiting_image", False),
         "quick_options": [
             DermaQuickOptionSchema(
@@ -255,7 +257,7 @@ async def start_derma_session(
     db.refresh(db_session)
     
     # 创建初始状态
-    state = create_derma_initial_state(
+    state = create_react_initial_state(
         session_id=session_id,
         user_id=current_user.id
     )
@@ -280,7 +282,7 @@ async def start_derma_session(
             }
         )
     else:
-        agent = DermaAgent()
+        agent = DermaAgentWrapper()
         state = await agent.run(state)
         state_to_db(state, db_session)
         db.commit()
@@ -317,15 +319,13 @@ async def stream_derma_response(
     async def run_agent():
         nonlocal final_state, error_occurred
         try:
-            agent = DermaAgent()
+            agent = DermaAgentWrapper()
             final_state = await agent.run(
                 state,
                 user_input=user_input,
-                image_url=image_url,
-                image_base64=image_base64,
-                task_type=task_type,
-                on_chunk=on_chunk,
-                on_step=on_step
+                attachments=[{"type": "image", "url": image_url, "base64": image_base64}] if image_url or image_base64 else None,
+                action=task_type.value if task_type else "conversation",
+                on_chunk=on_chunk
             )
         except Exception as e:
             error_occurred = str(e)
@@ -508,13 +508,12 @@ async def continue_derma_session(
             }
         )
     else:
-        agent = DermaAgent()
+        agent = DermaAgentWrapper()
         state = await agent.run(
             state,
             user_input=user_message,
-            image_url=image_url,
-            image_base64=image_base64,
-            task_type=task_type
+            attachments=[{"type": "image", "url": image_url, "base64": image_base64}] if image_url or image_base64 else None,
+            action=task_type.value if task_type else "conversation"
         )
         state_to_db(state, db_session)
         db.commit()
