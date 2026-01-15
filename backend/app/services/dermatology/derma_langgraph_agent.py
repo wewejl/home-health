@@ -307,8 +307,11 @@ class DermaLangGraphAgent(LangGraphAgentBase):
                 "image_analysis": image_analysis_text or "无图片分析"
             })
             
+            # 格式化诊断信息为用户友好的文本
+            formatted_response = self._format_diagnosis_response(result)
+            
             # 更新状态
-            state["current_response"] = result.diagnosis_message
+            state["current_response"] = formatted_response
             state["possible_conditions"] = [c.model_dump() for c in result.conditions]
             state["risk_level"] = result.risk_level
             state["care_advice"] = result.care_advice
@@ -325,6 +328,63 @@ class DermaLangGraphAgent(LangGraphAgentBase):
         return state
     
     # === 辅助方法 ===
+    
+    def _format_diagnosis_response(self, result: DiagnosisOutput) -> str:
+        """
+        将结构化诊断结果格式化为用户友好的文本
+        
+        避免直接显示 JSON 格式，提供清晰的诊断说明
+        """
+        lines = []
+        
+        # 诊断说明
+        if result.diagnosis_message:
+            lines.append(result.diagnosis_message)
+            lines.append("")
+        
+        # 可能的诊断
+        if result.conditions:
+            lines.append("**可能的诊断：**")
+            for condition in result.conditions:
+                probability_text = {
+                    "likely": "较可能",
+                    "possible": "可能",
+                    "unlikely": "不太可能"
+                }.get(condition.probability, condition.probability)
+                
+                lines.append(f"\n• **{condition.name}**（{probability_text}）")
+                lines.append(f"  依据：{condition.basis}")
+            lines.append("")
+        
+        # 护理建议
+        if result.care_advice:
+            lines.append("**护理建议：**")
+            lines.append(result.care_advice)
+            lines.append("")
+        
+        # 治疗建议
+        if result.treatment_suggestions:
+            lines.append("**治疗建议：**")
+            for suggestion in result.treatment_suggestions:
+                lines.append(f"• {suggestion}")
+            lines.append("")
+        
+        # 就医提醒
+        if result.need_offline_visit:
+            risk_emoji = {
+                "emergency": "🚨",
+                "high": "⚠️",
+                "medium": "ℹ️",
+                "low": "💡"
+            }.get(result.risk_level, "ℹ️")
+            
+            lines.append(f"{risk_emoji} **重要提醒：**")
+            lines.append("建议您尽快到皮肤科就诊，获得专业医生的面诊和确诊。")
+            
+            if result.follow_up_days:
+                lines.append(f"建议 {result.follow_up_days} 天内复诊。")
+        
+        return "\n".join(lines)
     
     def _update_medical_info(self, state: DermaState, extracted_info: Dict[str, Any]):
         """更新医学信息"""
