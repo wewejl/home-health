@@ -3,64 +3,62 @@
 """
 from typing import Dict, Any, Optional, Callable, Awaitable
 from ..base import BaseAgent
-from .cardio_agent import CardioAgent, create_cardio_initial_state, CardioTaskType
 
 
 class CardioAgentWrapper(BaseAgent):
     """心血管内科智能体适配器 - 实现 BaseAgent 接口"""
     
     def __init__(self):
-        self._cardio_agent = CardioAgent()
+        self._cardio_agent = None  # 延迟初始化
+    
+    def _ensure_agent(self):
+        """确保 Agent 已初始化（延迟加载）"""
+        if self._cardio_agent is None:
+            from .cardio_agent import CardioAgent
+            self._cardio_agent = CardioAgent()
+        return self._cardio_agent
     
     async def create_initial_state(self, session_id: str, user_id: int) -> Dict[str, Any]:
         """创建初始状态"""
+        from .cardio_agent import create_cardio_initial_state
         return create_cardio_initial_state(session_id, user_id)
     
     async def run(
         self,
         state: Dict[str, Any],
-        user_input: str = None,
-        attachments: list = None,
-        action: str = "conversation",
-        on_chunk: Optional[Callable[[str], Awaitable[None]]] = None
+        user_input: str,
+        attachments: Optional[list] = None,
+        action: Optional[str] = None,
+        on_chunk: Optional[Callable[[str], Awaitable[None]]] = None,
+        on_step: Optional[Callable[[str], Awaitable[None]]] = None
     ) -> Dict[str, Any]:
-        """
-        运行心血管内科智能体
+        """运行智能体"""
+        from .cardio_agent import CardioTaskType
         
-        Args:
-            state: 当前会话状态
-            user_input: 用户文本输入
-            attachments: 附件列表 [{type, url, base64, metadata}]
-            action: 动作类型 ("conversation", "interpret_ecg", "risk_assessment")
-            on_chunk: 流式输出回调
-            
-        Returns:
-            更新后的状态
-        """
-        # 解析 action 到 task_type
-        task_type_mapping = {
-            "conversation": CardioTaskType.CONVERSATION,
-            "interpret_ecg": CardioTaskType.INTERPRET_ECG,
-            "risk_assessment": CardioTaskType.RISK_ASSESSMENT
-        }
-        task_type = task_type_mapping.get(action, CardioTaskType.CONVERSATION)
+        agent = self._ensure_agent()  # 延迟初始化
         
-        # 提取图片信息（用于心电图解读）
-        image_url = None
+        # 映射 action 到 CardioTaskType
+        task_type = CardioTaskType.CONVERSATION
+        if action:
+            action_map = {
+                "conversation": CardioTaskType.CONVERSATION,
+                "ecg_analysis": CardioTaskType.ECG_ANALYSIS,
+                "report_interpretation": CardioTaskType.REPORT_INTERPRETATION,
+            }
+            task_type = action_map.get(action, CardioTaskType.CONVERSATION)
+        
+        # 提取图片信息
         image_base64 = None
         if attachments:
             for att in attachments:
-                att_type = att.get("type", "") if isinstance(att, dict) else ""
-                if att_type == "image" or att_type.startswith("image/"):
-                    image_url = att.get("url")
+                if att.get("type") == "image":
                     image_base64 = att.get("base64")
                     break
         
-        # 调用 CardioAgent
-        updated_state = await self._cardio_agent.run(
+        # 调用原有的 CardioAgent
+        updated_state = await agent.run(
             state=state,
             user_input=user_input,
-            image_url=image_url,
             image_base64=image_base64,
             task_type=task_type,
             on_chunk=on_chunk
