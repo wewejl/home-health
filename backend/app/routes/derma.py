@@ -26,8 +26,82 @@ from ..schemas.derma import (
 )
 from ..services.dermatology import DermaAgent, DermaTaskType, create_derma_initial_state
 from ..dependencies import get_current_user_or_admin
+from ..models.medical_event import MedicalEvent, EventStatus, AgentType
 
 router = APIRouter(prefix="/derma", tags=["皮肤科AI"])
+
+
+def auto_aggregate_to_event(session_id: str, user_id: int, db: Session) -> dict:
+    """
+    自动聚合会话到病历事件
+    
+    规则：
+    1. 同一天同科室归并到现有事件
+    2. 不同天或不同科室创建新事件
+    """
+    from datetime import datetime
+    
+    # 获取皮肤科会话信息
+    session = db.query(DermaSession).filter(DermaSession.id == session_id).first()
+    if not session:
+        raise ValueError(f"会话不存在: {session_id}")
+    
+    department = "皮肤科"
+    agent_type = AgentType.DERMA
+    chief_complaint = session.chief_complaint or ""
+    
+    session_data = {
+        "session_id": session.id,
+        "session_type": "derma",
+        "timestamp": session.created_at.isoformat() if session.created_at else datetime.now().isoformat(),
+        "summary": f"皮肤问诊 - {chief_complaint}" if chief_complaint else "皮肤问诊",
+        "risk_level": session.risk_level,
+        "stage": session.stage
+    }
+    
+    # 查找当天同科室的现有事件
+    today = datetime.utcnow().date()
+    existing_event = db.query(MedicalEvent).filter(
+        MedicalEvent.user_id == user_id,
+        MedicalEvent.agent_type == agent_type,
+        MedicalEvent.status == EventStatus.ACTIVE,
+        MedicalEvent.start_time >= datetime.combine(today, datetime.min.time())
+    ).first()
+    
+    is_new_event = False
+    
+    if existing_event:
+        # 添加到现有事件（避免重复添加）
+        sessions_list = existing_event.sessions or []
+        if not any(s.get("session_id") == session_id for s in sessions_list):
+            sessions_list.append(session_data)
+            existing_event.sessions = sessions_list
+            existing_event.session_count = len(sessions_list)
+            db.commit()
+        event = existing_event
+    else:
+        # 创建新事件
+        title = f"{department} {chief_complaint} {today.strftime('%Y-%m-%d')}" if chief_complaint else f"{department} {today.strftime('%Y-%m-%d')}"
+        event = MedicalEvent(
+            user_id=user_id,
+            title=title,
+            department=department,
+            agent_type=agent_type,
+            chief_complaint=chief_complaint,
+            status=EventStatus.ACTIVE,
+            sessions=[session_data],
+            session_count=1
+        )
+        db.add(event)
+        db.commit()
+        db.refresh(event)
+        is_new_event = True
+    
+    return {
+        "event_id": event.id,
+        "is_new_event": is_new_event,
+        "message": "会话已聚合到病历事件"
+    }
 
 
 def state_to_db(state: dict, session: DermaSession):
@@ -106,7 +180,11 @@ def build_response(state: dict) -> DermaResponse:
         ],
         "risk_level": state.get("risk_level"),
         "need_offline_visit": state.get("need_offline_visit"),
-        "care_advice": state.get("care_advice")
+        "care_advice": state.get("care_advice"),
+        # 病历事件关联字段
+        "event_id": state.get("event_id"),
+        "is_new_event": state.get("is_new_event"),
+        "should_show_dossier_prompt": state.get("should_show_dossier_prompt", False)
     }
     
     # 添加皮肤分析结果
@@ -298,9 +376,27 @@ async def stream_derma_response(
                 print(f"  - chief_complaint: {final_state.get('chief_complaint', '')}")
                 print(f"  - skin_location: {final_state.get('skin_location', '')}")
                 print(f"  - questions_asked: {final_state.get('questions_asked', 0)}")
+                print(f"  - stage: {final_state.get('stage', '')}")
                 state_to_db(final_state, db_session)
                 db_save.commit()
                 print(f"[stream_derma_response] 数据库 commit 完成")
+                
+                # 对话结束时自动聚合到病历事件
+                if final_state.get("stage") == "completed" or final_state.get("should_show_dossier_prompt"):
+                    print(f"[stream_derma_response] 对话完成，自动聚合到病历事件...")
+                    try:
+                        aggregate_result = auto_aggregate_to_event(
+                            session_id=session_id,
+                            user_id=db_session.user_id,
+                            db=db_save
+                        )
+                        final_state["event_id"] = aggregate_result.get("event_id")
+                        final_state["is_new_event"] = aggregate_result.get("is_new_event", False)
+                        final_state["should_show_dossier_prompt"] = True
+                        print(f"[stream_derma_response] 病历事件聚合成功: event_id={aggregate_result.get('event_id')}, is_new={aggregate_result.get('is_new_event')}")
+                    except Exception as agg_err:
+                        print(f"[stream_derma_response] 病历事件聚合失败: {agg_err}")
+                        # 聚合失败不阻塞对话，仅记录日志
             else:
                 print(f"[stream_derma_response] 错误: 找不到会话 {session_id}")
         except Exception as e:
@@ -422,6 +518,22 @@ async def continue_derma_session(
         )
         state_to_db(state, db_session)
         db.commit()
+        
+        # 对话结束时自动聚合到病历事件
+        if state.get("stage") == "completed" or state.get("should_show_dossier_prompt"):
+            try:
+                aggregate_result = auto_aggregate_to_event(
+                    session_id=session_id,
+                    user_id=current_user.id,
+                    db=db
+                )
+                state["event_id"] = aggregate_result.get("event_id")
+                state["is_new_event"] = aggregate_result.get("is_new_event", False)
+                state["should_show_dossier_prompt"] = True
+                print(f"[continue_derma_session] 病历事件聚合成功: event_id={aggregate_result.get('event_id')}")
+            except Exception as agg_err:
+                print(f"[continue_derma_session] 病历事件聚合失败: {agg_err}")
+        
         return build_response(state)
 
 

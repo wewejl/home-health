@@ -128,6 +128,11 @@ class DermaResponse(BaseModel):
     risk_level: Optional[str] = None
     need_offline_visit: Optional[bool] = None
     care_advice: Optional[str] = None
+    
+    # 病历事件关联（对话结束时自动生成）
+    event_id: Optional[int] = None
+    is_new_event: Optional[bool] = None
+    should_show_dossier_prompt: Optional[bool] = None
 
 
 class DermaSessionSchema(BaseModel):

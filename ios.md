@@ -10,9 +10,9 @@ trigger: always_on
     在理解用户需求、编写代码和解决问题时，你应始终遵循以下原则：
 
     ## 开始任何任务前必须完成的检查
-    - 阅读 `docs/DEVELOPMENT_GUIDELINES.md`，确认当前全局开发规范
-    - 如果任务涉及接口或数据字段，参考 `docs/API_CONTRACT.md` 以确认字段类型和接口契约
-    - 进行 iOS 开发时，遵循 `docs/IOS_DEVELOPMENT_GUIDE.md` 中的设计系统、响应式布局和编码规范
+    - 阅读 `@/Users/zhuxinye/Desktop/project/home-health/docs/DEVELOPMENT_GUIDELINES.md`，确认当前全局开发规范
+    - 如果任务涉及接口或数据字段，参考 `@/Users/zhuxinye/Desktop/project/home-health/docs/API_CONTRACT.md` 以确认字段类型和接口契约
+    - 进行 iOS 开发时，遵循 `@/Users/zhuxinye/Desktop/project/home-health/docs/IOS_DEVELOPMENT_GUIDE.md` 中的设计系统、响应式布局和编码规范
 
 
 
@@ -25,7 +25,7 @@ trigger: always_on
         2. 使用 `read_file`/`grep_search` 等工具查阅真实代码定义，禁止凭记忆修改。
         3. 结合全局架构（ViewModel、Service、Model、API 契约）评估改动影响，再进行修复。
         4. 修复后再次完整编译，直至无错误和警告。
-    - 在编写任何SwiftUI/Swift代码前，必须逐项核对《ios/xinlingyisheng/IOS_CODING_RULES.md》中的“强制性代码规范”，至少包含：
+    - 在编写任何SwiftUI/Swift代码前，必须逐项核对 `@/Users/zhuxinye/Desktop/project/home-health/ios/xinlingyisheng/IOS_CODING_RULES.md` 中的"强制性代码规范"，至少包含：
         - 先确认所需框架（SwiftUI、Combine、AVFoundation、Photos/PhotosUI等）已经正确导入，再使用任何 `ObservableObject`、`@StateObject/@ObservedObject`、相机/照片库功能。
         - 使用项目内已有的结构体/枚举/类之前，必须通过 `grep_search`、`read_file` 等工具查阅真实定义，禁止凭记忆编写初始化参数或字段。
         - Preview 中使用的数据模型必须与真实结构完全一致，严禁伪造字段或缺少必填属性。

@@ -364,7 +364,7 @@ class CardioCrewService:
             agents=[self.conversation_agent],
             tasks=[task],
             process=Process.sequential,
-            verbose=True
+            verbose=False
         )
         
         try:
@@ -391,7 +391,7 @@ class CardioCrewService:
             agents=[self.ecg_interpreter],
             tasks=[task],
             process=Process.sequential,
-            verbose=True
+            verbose=False
         )
         
         try:
@@ -416,7 +416,7 @@ class CardioCrewService:
             agents=[self.risk_assessor],
             tasks=[task],
             process=Process.sequential,
-            verbose=True
+            verbose=False
         )
         
         try:

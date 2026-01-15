@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     LLM_TEMPERATURE: float = 0.7
     
     # Qwen-VL 多模态配置（皮肤科智能体使用）
-    QWEN_VL_MODEL: str = "qwen-vl-plus"  # 可选: qwen-vl-plus, qwen-vl-max, qwen2-vl-7b-instruct
+    QWEN_VL_MODEL: str = "qwen3-vl-plus"  # 可选: qwen3-vl-plus, qwen-vl-plus, qwen-vl-max
     
     # AI 算法服务配置
     AI_SUMMARY_MODEL: str = ""  # 留空使用 LLM_MODEL

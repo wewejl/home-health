@@ -245,7 +245,22 @@ class ShareLinkResponse(BaseModel):
 class AggregateSessionRequest(BaseModel):
     """聚合会话请求"""
     session_id: str
-    session_type: Literal["derma", "diagnosis"]
+    # 支持两种命名方式:
+    # - iOS 端: dermatology, cardiology, orthopedics, general
+    # - 后端短名: derma, cardio, ortho, neuro, general, endo, gastro, respiratory, diagnosis
+    session_type: Literal[
+        "dermatology", "cardiology", "orthopedics",  # iOS 命名
+        "cardio", "derma", "ortho", "neuro", "general", "endo", "gastro", "respiratory", "diagnosis"  # 后端短名
+    ]
+
+
+class SessionSummarySchema(BaseModel):
+    """会话摘要信息"""
+    chief_complaint: Optional[str] = None
+    symptoms: List[str] = []
+    risk_level: str = "low"
+    message_count: int = 0
+    has_images: bool = False
 
 
 class AggregateResponse(BaseModel):
@@ -253,6 +268,7 @@ class AggregateResponse(BaseModel):
     event_id: str
     message: str
     is_new_event: bool = False
+    session_summary: Optional[SessionSummarySchema] = None
 
 
 class GenerateSummaryRequest(BaseModel):

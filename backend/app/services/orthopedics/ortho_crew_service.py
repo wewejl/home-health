@@ -276,7 +276,7 @@ class OrthoCrewService:
             agents=[self.conversation_agent],
             tasks=[task],
             process=Process.sequential,
-            verbose=True
+            verbose=False
         )
         
         try:
@@ -303,7 +303,7 @@ class OrthoCrewService:
             agents=[self.xray_interpreter],
             tasks=[task],
             process=Process.sequential,
-            verbose=True
+            verbose=False
         )
         
         try:
