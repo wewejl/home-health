@@ -270,6 +270,19 @@ POST /medical-events/aggregate
 - `event_id`: **String** (UUID格式)
 - `is_new_event`: **Boolean**
 
+**错误响应** (400 Bad Request):
+```json
+{
+  "detail": "会话信息不完整: 尚未明确主诉、尚未收集到症状信息。请继续对话后再生成病历。"
+}
+```
+
+**可能的验证错误**:
+- `尚未明确主诉` - chief_complaint 为空
+- `尚未收集到症状信息` - symptoms 数组为空
+- `对话刚开始，请先描述您的问题` - stage 为 "greeting"
+- `对话信息太少，请继续描述症状` - 消息数少于3条且 stage 为 "collecting"
+
 ### 2. 获取病历事件列表
 
 ```http
