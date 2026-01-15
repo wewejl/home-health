@@ -31,7 +31,7 @@ from ..schemas.medical_event import (
     AttachmentSchema, AttachmentCreateRequest, NoteSchema, NoteCreateRequest, NoteUpdateRequest,
     ExportCreateRequest, ExportRecordSchema, ExportResponse, ShareLinkAccessRequest, ShareLinkResponse,
     AggregateSessionRequest, AggregateResponse, GenerateSummaryRequest, GenerateSummaryResponse,
-    AIAnalysisSchema, SessionRecordSchema
+    AIAnalysisSchema, SessionRecordSchema, SessionSummarySchema
 )
 
 router = APIRouter(prefix="/medical-events", tags=["medical-events"])
@@ -55,7 +55,7 @@ def get_event_with_permission(
     if event.user_id != user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权访问此病历事件")
     
-    if not allow_archived and event.status == EventStatus.ARCHIVED:
+    if not allow_archived and event.status == EventStatus.archived:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="已归档的事件不可操作")
     
     return event
@@ -81,7 +81,7 @@ def create_medical_event(
         agent_type=AgentType(request.agent_type),
         chief_complaint=request.chief_complaint,
         risk_level=RiskLevel(request.risk_level),
-        status=EventStatus.ACTIVE,
+        status=EventStatus.active,
         ai_analysis={},
         sessions=[]
     )
@@ -237,7 +237,7 @@ def archive_medical_event(
     """归档病历事件"""
     event = get_event_with_permission(event_id, current_user, db)
     
-    event.status = EventStatus.ARCHIVED
+    event.status = EventStatus.archived
     event.end_time = datetime.utcnow()
     db.commit()
     db.refresh(event)
@@ -376,6 +376,54 @@ def delete_note(
     db.commit()
 
 
+# ============= 辅助函数：科室名称和类型映射 =============
+
+def get_department_name(agent_type: str) -> str:
+    """获取科室中文名称"""
+    mapping = {
+        "dermatology": "皮肤科",
+        "cardiology": "心血管科",
+        "orthopedics": "骨科",
+        "general": "全科",
+        "neurology": "神经科",
+        "endocrinology": "内分泌科",
+        "gastroenterology": "消化科",
+        "respiratory": "呼吸科",
+        # 后端短名
+        "derma": "皮肤科",
+        "cardio": "心血管科",
+        "ortho": "骨科",
+        "neuro": "神经科",
+        "endo": "内分泌科",
+        "gastro": "消化科",
+        "diagnosis": "全科",
+    }
+    return mapping.get(agent_type, "全科")
+
+
+def get_agent_type_enum(agent_type: str) -> AgentType:
+    """将字符串转换为AgentType枚举"""
+    mapping = {
+        "dermatology": AgentType.derma,
+        "cardiology": AgentType.cardio,
+        "orthopedics": AgentType.ortho,
+        "general": AgentType.general,
+        "neurology": AgentType.neuro,
+        "endocrinology": AgentType.endo,
+        "gastroenterology": AgentType.gastro,
+        "respiratory": AgentType.respiratory,
+        # 后端短名
+        "derma": AgentType.derma,
+        "cardio": AgentType.cardio,
+        "ortho": AgentType.ortho,
+        "neuro": AgentType.neuro,
+        "endo": AgentType.endo,
+        "gastro": AgentType.gastro,
+        "diagnosis": AgentType.general,
+    }
+    return mapping.get(agent_type, AgentType.general)
+
+
 # ============= 数据聚合 =============
 
 @router.post("/aggregate", response_model=AggregateResponse)
@@ -385,63 +433,106 @@ def aggregate_session(
     db: Session = Depends(get_db)
 ):
     """
-    聚合会话到病历事件
+    聚合会话到病历事件 (重构版本)
+    
+    核心改动：
+    1. 从统一的 sessions 表查询会话数据
+    2. 从 messages 表获取完整对话历史
+    3. 从 agent_state 提取症状、主诉等信息
+    4. 不再创建假数据，会话不存在时返回404错误
     
     会话结束时自动调用，将对话记录关联到现有事件或创建新事件
+    支持所有科室类型
     """
-    from ..models.derma_session import DermaSession
-    from ..models.diagnosis_session import DiagnosisSession
+    from ..models.session import Session as SessionModel
+    from ..models.message import Message
     
-    # 获取会话信息
-    session_data = None
-    department = ""
-    agent_type = AgentType.GENERAL
-    chief_complaint = ""
+    # 1. 查询统一会话表
+    session = db.query(SessionModel).filter(
+        SessionModel.id == request.session_id,
+        SessionModel.user_id == current_user.id
+    ).first()
     
-    if request.session_type == "derma":
-        session = db.query(DermaSession).filter(
-            DermaSession.id == request.session_id,
-            DermaSession.user_id == current_user.id
-        ).first()
-        if session:
-            department = "皮肤科"
-            agent_type = AgentType.DERMA
-            chief_complaint = session.chief_complaint or ""
-            session_data = {
-                "session_id": session.id,
-                "session_type": "derma",
-                "timestamp": session.created_at.isoformat() if session.created_at else "",
-                "summary": f"皮肤问诊 - {session.chief_complaint or ''}",
-                "risk_level": session.risk_level,
-                "stage": session.stage
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"会话不存在: {request.session_id}"
+        )
+    
+    # 2. 获取消息历史
+    messages = db.query(Message).filter(
+        Message.session_id == request.session_id
+    ).order_by(Message.created_at).all()
+    
+    # 3. 从 agent_state 提取信息
+    state = session.agent_state or {}
+    chief_complaint = state.get("chief_complaint", "")
+    symptoms = state.get("symptoms", [])
+    risk_level = state.get("risk_level", "low")
+    stage = state.get("stage", "completed")
+    
+    # 4. 数据完整性验证
+    # 检查是否收集到足够的信息才允许聚合
+    validation_errors = []
+    
+    if not chief_complaint:
+        validation_errors.append("尚未明确主诉")
+    if not symptoms or len(symptoms) == 0:
+        validation_errors.append("尚未收集到症状信息")
+    if stage == "greeting":
+        validation_errors.append("对话刚开始，请先描述您的问题")
+    elif stage == "collecting" and len(messages) < 3:
+        validation_errors.append("对话信息太少，请继续描述症状")
+    
+    if validation_errors:
+        error_detail = "会话信息不完整: " + "、".join(validation_errors) + "。请继续对话后再生成病历。"
+        logger.warning(f"Session {request.session_id} validation failed: {validation_errors}, messages={len(messages)}, stage={stage}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_detail
+        )
+    
+    # 4. 获取科室信息
+    # 优先使用请求中的 session_type，如果未指定则使用会话的 agent_type
+    effective_agent_type = request.session_type or session.agent_type or "general"
+    department = get_department_name(effective_agent_type)
+    agent_type_enum = get_agent_type_enum(effective_agent_type)
+    
+    # 5. 构建完整的会话数据
+    session_data = {
+        "session_id": session.id,
+        "session_type": effective_agent_type,
+        "timestamp": session.created_at.isoformat() if session.created_at else datetime.utcnow().isoformat(),
+        "summary": f"{department}问诊 - {chief_complaint}" if chief_complaint else f"{department}问诊",
+        "chief_complaint": chief_complaint,
+        "symptoms": symptoms,
+        "risk_level": risk_level,
+        "stage": stage,
+        "message_count": len(messages),
+        "messages": [
+            {
+                "role": msg.sender.value if msg.sender else "user",
+                "content": msg.content,
+                "timestamp": msg.created_at.isoformat() if msg.created_at else "",
+                "type": msg.message_type or "text"
             }
-    elif request.session_type == "diagnosis":
-        session = db.query(DiagnosisSession).filter(
-            DiagnosisSession.id == request.session_id,
-            DiagnosisSession.user_id == current_user.id
-        ).first()
-        if session:
-            department = "全科"
-            agent_type = AgentType.GENERAL
-            chief_complaint = session.chief_complaint or ""
-            session_data = {
-                "session_id": session.id,
-                "session_type": "diagnosis",
-                "timestamp": session.created_at.isoformat() if session.created_at else "",
-                "summary": f"问诊 - {session.chief_complaint or ''}",
-                "risk_level": session.risk_level,
-                "stage": session.stage
-            }
+            for msg in messages[:50]  # 限制消息数量，避免JSON过大
+        ],
+        # 科室特定数据（从 agent_state 提取）
+        "skin_analyses": state.get("skin_analyses", []),
+        "ecg_interpretations": state.get("ecg_interpretations", []),
+        "possible_diseases": state.get("possible_diseases", []),
+        "possible_conditions": state.get("possible_conditions", []),
+        "recommendations": state.get("recommendations", {}),
+        "symptom_details": state.get("symptom_details", {})
+    }
     
-    if not session_data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在")
-    
-    # 查找当天同科室的现有事件
+    # 6. 查找当天同科室的现有事件
     today = datetime.utcnow().date()
     existing_event = db.query(MedicalEvent).filter(
         MedicalEvent.user_id == current_user.id,
-        MedicalEvent.agent_type == agent_type,
-        MedicalEvent.status == EventStatus.ACTIVE,
+        MedicalEvent.agent_type == agent_type_enum,
+        MedicalEvent.status == EventStatus.active,
         MedicalEvent.start_time >= datetime.combine(today, datetime.min.time())
     ).first()
     
@@ -450,10 +541,31 @@ def aggregate_session(
     if existing_event:
         # 添加到现有事件
         sessions_list = existing_event.sessions or []
-        if not any(s.get("session_id") == request.session_id for s in sessions_list):
+        # 检查是否已存在该会话
+        existing_session_idx = next(
+            (i for i, s in enumerate(sessions_list) if s.get("session_id") == request.session_id),
+            None
+        )
+        if existing_session_idx is not None:
+            # 更新现有会话数据
+            sessions_list[existing_session_idx] = session_data
+        else:
+            # 添加新会话
             sessions_list.append(session_data)
-            existing_event.sessions = sessions_list
-            existing_event.session_count = len(sessions_list)
+        
+        existing_event.sessions = sessions_list
+        existing_event.session_count = len(sessions_list)
+        
+        # 更新主诉（如果当前会话有主诉且事件没有主诉）
+        if chief_complaint and not existing_event.chief_complaint:
+            existing_event.chief_complaint = chief_complaint
+        
+        # 更新风险等级（取最高级别）
+        risk_priority = {"low": 0, "medium": 1, "high": 2, "emergency": 3}
+        current_risk = existing_event.risk_level.value if existing_event.risk_level else "low"
+        if risk_priority.get(risk_level, 0) > risk_priority.get(current_risk, 0):
+            existing_event.risk_level = RiskLevel(risk_level)
+        
         event = existing_event
     else:
         # 创建新事件
@@ -461,9 +573,10 @@ def aggregate_session(
             user_id=current_user.id,
             title=f"{department} {today.strftime('%Y-%m-%d')}",
             department=department,
-            agent_type=agent_type,
+            agent_type=agent_type_enum,
             chief_complaint=chief_complaint,
-            status=EventStatus.ACTIVE,
+            risk_level=RiskLevel(risk_level) if risk_level in ["low", "medium", "high", "emergency"] else RiskLevel.low,
+            status=EventStatus.active,
             sessions=[session_data],
             session_count=1
         )
@@ -473,10 +586,26 @@ def aggregate_session(
     db.commit()
     db.refresh(event)
     
+    logger.info(f"Successfully aggregated session {request.session_id} to event {event.id} (new={is_new_event})")
+    
+    # 构建会话摘要
+    has_images = any(
+        msg.message_type == "image" or 
+        (msg.attachments and any(a.get("type") == "image" for a in msg.attachments))
+        for msg in messages
+    )
+    
     return AggregateResponse(
-        event_id=event.id,
+        event_id=str(event.id),
         message="会话已聚合到病历事件",
-        is_new_event=is_new_event
+        is_new_event=is_new_event,
+        session_summary=SessionSummarySchema(
+            chief_complaint=chief_complaint,
+            symptoms=symptoms if isinstance(symptoms, list) else [],
+            risk_level=risk_level,
+            message_count=len(messages),
+            has_images=has_images
+        )
     )
 
 
@@ -646,8 +775,8 @@ def create_export(
     # 更新事件导出计数
     for event in events:
         event.export_count += 1
-        if event.status == EventStatus.ACTIVE:
-            event.status = EventStatus.EXPORTED
+        if event.status == EventStatus.active:
+            event.status = EventStatus.exported
     
     db.commit()
     db.refresh(export_record)
@@ -761,13 +890,32 @@ def access_share_link(
 
 def _build_event_summary(event: MedicalEvent) -> MedicalEventSummarySchema:
     """构建事件摘要"""
+    # 安全获取枚举值，防止无效数据导致500错误
+    try:
+        agent_type_value = event.agent_type.value if event.agent_type else "general"
+    except (AttributeError, ValueError):
+        logger.warning(f"Invalid agent_type for event {event.id}: {event.agent_type}")
+        agent_type_value = "general"
+    
+    try:
+        status_value = event.status.value if event.status else "active"
+    except (AttributeError, ValueError):
+        logger.warning(f"Invalid status for event {event.id}: {event.status}")
+        status_value = "active"
+    
+    try:
+        risk_level_value = event.risk_level.value if event.risk_level else "low"
+    except (AttributeError, ValueError):
+        logger.warning(f"Invalid risk_level for event {event.id}: {event.risk_level}")
+        risk_level_value = "low"
+    
     return MedicalEventSummarySchema(
-        id=event.id,
-        title=event.title,
-        department=event.department,
-        agent_type=event.agent_type.value if event.agent_type else "general",
-        status=event.status.value if event.status else "active",
-        risk_level=event.risk_level.value if event.risk_level else "low",
+        id=str(event.id),
+        title=event.title or f"病历事件 {event.id}",
+        department=event.department or "全科",
+        agent_type=agent_type_value,
+        status=status_value,
+        risk_level=risk_level_value,
         start_time=event.start_time,
         end_time=event.end_time,
         summary=event.summary,
@@ -781,25 +929,64 @@ def _build_event_summary(event: MedicalEvent) -> MedicalEventSummarySchema:
 
 def _build_event_detail(event: MedicalEvent) -> MedicalEventDetailSchema:
     """构建事件详情"""
+    # 安全解析 AI 分析
     ai_analysis = None
     if event.ai_analysis:
-        ai_analysis = AIAnalysisSchema(**event.ai_analysis)
+        try:
+            ai_analysis = AIAnalysisSchema(**event.ai_analysis)
+        except Exception as e:
+            logger.warning(f"Failed to parse ai_analysis for event {event.id}: {e}")
     
+    # 安全解析会话记录
     sessions = []
     if event.sessions:
         for s in event.sessions:
-            sessions.append(SessionRecordSchema(**s))
+            try:
+                sessions.append(SessionRecordSchema(**s))
+            except Exception as e:
+                logger.warning(f"Failed to parse session for event {event.id}: {e}")
     
-    attachments = [AttachmentSchema.model_validate(a) for a in event.attachments]
-    notes = [NoteSchema.model_validate(n) for n in event.notes]
+    # 安全解析附件和备注
+    attachments = []
+    for a in event.attachments:
+        try:
+            attachments.append(AttachmentSchema.model_validate(a))
+        except Exception as e:
+            logger.warning(f"Failed to parse attachment {a.id} for event {event.id}: {e}")
+    
+    notes = []
+    for n in event.notes:
+        try:
+            notes.append(NoteSchema.model_validate(n))
+        except Exception as e:
+            logger.warning(f"Failed to parse note {n.id} for event {event.id}: {e}")
+    
+    # 安全获取枚举值
+    try:
+        agent_type_value = event.agent_type.value if event.agent_type else "general"
+    except (AttributeError, ValueError):
+        logger.warning(f"Invalid agent_type for event {event.id}: {event.agent_type}")
+        agent_type_value = "general"
+    
+    try:
+        status_value = event.status.value if event.status else "active"
+    except (AttributeError, ValueError):
+        logger.warning(f"Invalid status for event {event.id}: {event.status}")
+        status_value = "active"
+    
+    try:
+        risk_level_value = event.risk_level.value if event.risk_level else "low"
+    except (AttributeError, ValueError):
+        logger.warning(f"Invalid risk_level for event {event.id}: {event.risk_level}")
+        risk_level_value = "low"
     
     return MedicalEventDetailSchema(
-        id=event.id,
-        title=event.title,
-        department=event.department,
-        agent_type=event.agent_type.value if event.agent_type else "general",
-        status=event.status.value if event.status else "active",
-        risk_level=event.risk_level.value if event.risk_level else "low",
+        id=str(event.id),
+        title=event.title or f"病历事件 {event.id}",
+        department=event.department or "全科",
+        agent_type=agent_type_value,
+        status=status_value,
+        risk_level=risk_level_value,
         start_time=event.start_time,
         end_time=event.end_time,
         summary=event.summary,
