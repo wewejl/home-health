@@ -14,15 +14,24 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from ..base.langgraph_base import LangGraphAgentBase
 from ..llm_provider import LLMProvider
 from .derma_state import DermaState, create_derma_initial_state
-from .output_models import ConversationOutput, DiagnosisOutput
+from .output_models import (
+    ConversationOutput, 
+    DiagnosisOutput, 
+    InfoExtractor, 
+    DiagnosisExtractor
+)
 from .prompts import (
     DERMA_CONVERSATION_PROMPT,
+    DERMA_CONVERSATION_STREAM_PROMPT,
     DERMA_IMAGE_ANALYSIS_PROMPT,
     DERMA_DIAGNOSIS_PROMPT,
+    DERMA_DIAGNOSIS_STREAM_PROMPT,
     DERMA_GREETING_TEMPLATE,
     DERMA_QUICK_OPTIONS_GREETING,
     DERMA_QUICK_OPTIONS_COLLECTING,
     DERMA_QUICK_OPTIONS_DIAGNOSIS,
+    INFO_EXTRACTION_PROMPT,
+    DIAGNOSIS_EXTRACTION_PROMPT,
 )
 
 
@@ -160,7 +169,7 @@ class DermaLangGraphAgent(LangGraphAgentBase):
         return state
     
     async def _conversation_node(self, state: DermaState) -> DermaState:
-        """对话节点 - 问诊收集信息"""
+        """对话节点 - 问诊收集信息（流式输出优化）"""
         llm = LLMProvider.get_llm()
         
         # 获取最新用户输入
@@ -168,51 +177,61 @@ class DermaLangGraphAgent(LangGraphAgentBase):
         if state["messages"]:
             user_input = _get_message_content(state["messages"][-1])
         
-        # 构建 Prompt
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", DERMA_CONVERSATION_PROMPT),
-            ("human", """问诊信息：
-- 主诉: {chief_complaint}
-- 部位: {skin_location}
-- 症状: {symptoms}
-- 已问诊 {questions_asked} 轮
-
-用户说：{user_input}
-
-请继续问诊或给出建议。输出 JSON 格式：
-{{"message": "你的回复", "next_action": "continue或complete", "extracted_info": {{"chief_complaint": "", "skin_location": "", "duration": "", "symptoms": []}}, "quick_options": [{{"text": "选项文本", "value": "选项值", "category": "类别"}}]}}""")
-        ])
+        # 第一阶段：流式输出自然语言回复
+        prompt_text = DERMA_CONVERSATION_STREAM_PROMPT.format(
+            chief_complaint=state.get("chief_complaint") or "未明确",
+            skin_location=state.get("skin_location") or "未明确",
+            symptoms=", ".join(state.get("symptoms", [])) or "未明确",
+            questions_asked=state["questions_asked"],
+            user_input=user_input
+        )
         
         try:
-            # 使用结构化输出
-            chain = prompt | llm.with_structured_output(ConversationOutput)
-            
-            result = await chain.ainvoke({
-                "chief_complaint": state.get("chief_complaint") or "未明确",
-                "skin_location": state.get("skin_location") or "未明确",
-                "symptoms": ", ".join(state.get("symptoms", [])) or "未明确",
-                "questions_asked": state["questions_asked"],
-                "user_input": user_input
-            })
+            # 流式输出（LangGraph 会自动处理 astream）
+            full_response = ""
+            async for chunk in llm.astream(prompt_text):
+                if hasattr(chunk, "content") and chunk.content:
+                    full_response += chunk.content
             
             # 更新状态
-            state["current_response"] = result.message
-            state["quick_options"] = result.quick_options or DERMA_QUICK_OPTIONS_COLLECTING
+            state["current_response"] = full_response
             state["questions_asked"] += 1
             
-            # 更新医学信息
-            if result.extracted_info:
-                self._update_medical_info(state, result.extracted_info)
-            
-            # 下一步
-            if result.next_action == "complete":
-                state["next_node"] = "diagnosis"
-                state["stage"] = "diagnosis"
-            else:
+            # 第二阶段：后台提取结构化信息
+            try:
+                extractor_prompt = INFO_EXTRACTION_PROMPT.format(response=full_response)
+                extractor = llm.with_structured_output(InfoExtractor)
+                extracted = await extractor.ainvoke(extractor_prompt)
+                
+                # 更新医学信息
+                if extracted.chief_complaint:
+                    state["chief_complaint"] = extracted.chief_complaint
+                if extracted.skin_location:
+                    state["skin_location"] = extracted.skin_location
+                if extracted.duration:
+                    state["duration"] = extracted.duration
+                if extracted.symptoms:
+                    # 合并症状，去重
+                    existing = set(state.get("symptoms", []))
+                    existing.update(extracted.symptoms)
+                    state["symptoms"] = list(existing)
+                
+                # 下一步动作
+                if extracted.next_action == "complete":
+                    state["next_node"] = "diagnosis"
+                    state["stage"] = "diagnosis"
+                    state["quick_options"] = DERMA_QUICK_OPTIONS_DIAGNOSIS
+                else:
+                    state["next_node"] = "end"
+                    state["quick_options"] = DERMA_QUICK_OPTIONS_COLLECTING
+                    
+            except Exception as extract_error:
+                # 提取失败不影响用户体验，使用默认值
                 state["next_node"] = "end"
+                state["quick_options"] = DERMA_QUICK_OPTIONS_COLLECTING
                 
         except Exception as e:
-            # 降级处理：直接使用 LLM
+            # 降级处理
             state["current_response"] = "请继续描述您的症状，我会帮您分析。"
             state["quick_options"] = DERMA_QUICK_OPTIONS_COLLECTING
             state["questions_asked"] += 1
@@ -274,7 +293,7 @@ class DermaLangGraphAgent(LangGraphAgentBase):
         return state
     
     async def _diagnosis_node(self, state: DermaState) -> DermaState:
-        """诊断节点 - 综合分析给出建议"""
+        """诊断节点 - 综合分析给出建议（流式输出优化）"""
         llm = LLMProvider.get_llm()
         
         # 获取图片分析结果
@@ -282,109 +301,72 @@ class DermaLangGraphAgent(LangGraphAgentBase):
         if state.get("skin_analyses"):
             image_analysis_text = state["skin_analyses"][-1].get("message", "")
         
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", DERMA_DIAGNOSIS_PROMPT),
-            ("human", """请根据以下信息给出诊断建议：
-
-- 主诉: {chief_complaint}
-- 部位: {skin_location}
-- 持续时间: {duration}
-- 症状: {symptoms}
-- 图片分析: {image_analysis}
-
-输出 JSON 格式：
-{{"diagnosis_message": "诊断说明", "conditions": [{{"name": "疾病名", "probability": "likely/possible/unlikely", "basis": "依据"}}], "risk_level": "low/medium/high/emergency", "care_advice": "护理建议", "treatment_suggestions": ["建议1"], "need_offline_visit": false, "follow_up_days": 7}}""")
-        ])
+        # 第一阶段：流式输出自然语言诊断
+        prompt_text = DERMA_DIAGNOSIS_STREAM_PROMPT.format(
+            chief_complaint=state.get("chief_complaint", "") or "未明确",
+            skin_location=state.get("skin_location", "") or "未明确",
+            duration=state.get("duration", "") or "未明确",
+            symptoms=", ".join(state.get("symptoms", [])) or "未明确"
+        )
+        
+        # 如果有图片分析，添加到 prompt
+        if image_analysis_text:
+            prompt_text += f"\n\n图片分析结果：{image_analysis_text}"
         
         try:
-            chain = prompt | llm.with_structured_output(DiagnosisOutput)
-            
-            result = await chain.ainvoke({
-                "chief_complaint": state.get("chief_complaint", "") or "未明确",
-                "skin_location": state.get("skin_location", "") or "未明确",
-                "duration": state.get("duration", "") or "未明确",
-                "symptoms": ", ".join(state.get("symptoms", [])) or "未明确",
-                "image_analysis": image_analysis_text or "无图片分析"
-            })
-            
-            # 格式化诊断信息为用户友好的文本
-            formatted_response = self._format_diagnosis_response(result)
+            # 流式输出
+            full_response = ""
+            async for chunk in llm.astream(prompt_text):
+                if hasattr(chunk, "content") and chunk.content:
+                    full_response += chunk.content
             
             # 更新状态
-            state["current_response"] = formatted_response
-            state["possible_conditions"] = [c.model_dump() for c in result.conditions]
-            state["risk_level"] = result.risk_level
-            state["care_advice"] = result.care_advice
-            state["need_offline_visit"] = result.need_offline_visit
+            state["current_response"] = full_response
             state["stage"] = "completed"
+            
+            # 第二阶段：后台提取结构化信息
+            try:
+                extractor_prompt = DIAGNOSIS_EXTRACTION_PROMPT.format(response=full_response)
+                extractor = llm.with_structured_output(DiagnosisExtractor)
+                extracted = await extractor.ainvoke(extractor_prompt)
+                
+                # 更新诊断信息
+                if extracted.conditions:
+                    state["possible_conditions"] = [c.model_dump() for c in extracted.conditions]
+                state["risk_level"] = extracted.risk_level
+                state["need_offline_visit"] = extracted.need_offline_visit
+                
+                # 从回复中提取护理建议（简单文本处理）
+                if "护理建议" in full_response or "建议" in full_response:
+                    # 提取护理建议部分
+                    lines = full_response.split("\n")
+                    care_lines = []
+                    in_care_section = False
+                    for line in lines:
+                        if "护理" in line or "注意" in line:
+                            in_care_section = True
+                        if in_care_section and line.strip():
+                            care_lines.append(line.strip())
+                    if care_lines:
+                        state["care_advice"] = "\n".join(care_lines[:3])  # 取前3条
+                
+            except Exception as extract_error:
+                # 提取失败不影响用户体验，使用默认值
+                state["risk_level"] = "medium"
+                state["need_offline_visit"] = False
+            
             state["quick_options"] = DERMA_QUICK_OPTIONS_DIAGNOSIS
             
         except Exception as e:
             state["current_response"] = "根据您提供的信息，建议您到皮肤科就诊获得更准确的诊断。"
             state["stage"] = "completed"
             state["error"] = str(e)
+            state["quick_options"] = DERMA_QUICK_OPTIONS_DIAGNOSIS
         
         state["next_node"] = "end"
         return state
     
     # === 辅助方法 ===
-    
-    def _format_diagnosis_response(self, result: DiagnosisOutput) -> str:
-        """
-        将结构化诊断结果格式化为用户友好的文本
-        
-        避免直接显示 JSON 格式，提供清晰的诊断说明
-        """
-        lines = []
-        
-        # 诊断说明
-        if result.diagnosis_message:
-            lines.append(result.diagnosis_message)
-            lines.append("")
-        
-        # 可能的诊断
-        if result.conditions:
-            lines.append("**可能的诊断：**")
-            for condition in result.conditions:
-                probability_text = {
-                    "likely": "较可能",
-                    "possible": "可能",
-                    "unlikely": "不太可能"
-                }.get(condition.probability, condition.probability)
-                
-                lines.append(f"\n• **{condition.name}**（{probability_text}）")
-                lines.append(f"  依据：{condition.basis}")
-            lines.append("")
-        
-        # 护理建议
-        if result.care_advice:
-            lines.append("**护理建议：**")
-            lines.append(result.care_advice)
-            lines.append("")
-        
-        # 治疗建议
-        if result.treatment_suggestions:
-            lines.append("**治疗建议：**")
-            for suggestion in result.treatment_suggestions:
-                lines.append(f"• {suggestion}")
-            lines.append("")
-        
-        # 就医提醒
-        if result.need_offline_visit:
-            risk_emoji = {
-                "emergency": "🚨",
-                "high": "⚠️",
-                "medium": "ℹ️",
-                "low": "💡"
-            }.get(result.risk_level, "ℹ️")
-            
-            lines.append(f"{risk_emoji} **重要提醒：**")
-            lines.append("建议您尽快到皮肤科就诊，获得专业医生的面诊和确诊。")
-            
-            if result.follow_up_days:
-                lines.append(f"建议 {result.follow_up_days} 天内复诊。")
-        
-        return "\n".join(lines)
     
     def _update_medical_info(self, state: DermaState, extracted_info: Dict[str, Any]):
         """更新医学信息"""

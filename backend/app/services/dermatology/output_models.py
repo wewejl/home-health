@@ -72,3 +72,31 @@ class DiagnosisOutput(BaseModel):
         default=None,
         description="建议复诊天数"
     )
+
+
+class InfoExtractor(BaseModel):
+    """信息提取器 - 从自然语言回复中提取结构化信息"""
+    chief_complaint: Optional[str] = Field(default=None, description="主诉")
+    skin_location: Optional[str] = Field(default=None, description="皮损部位")
+    duration: Optional[str] = Field(default=None, description="持续时间")
+    symptoms: List[str] = Field(default_factory=list, description="症状列表")
+    next_action: Literal["continue", "complete"] = Field(
+        default="continue",
+        description="下一步动作"
+    )
+
+
+class DiagnosisExtractor(BaseModel):
+    """诊断信息提取器 - 从诊断回复中提取结构化信息"""
+    conditions: List[ConditionInfo] = Field(
+        default_factory=list,
+        description="鉴别诊断列表"
+    )
+    risk_level: Literal["low", "medium", "high", "emergency"] = Field(
+        default="low",
+        description="风险等级"
+    )
+    need_offline_visit: bool = Field(
+        default=False,
+        description="是否需要线下就医"
+    )

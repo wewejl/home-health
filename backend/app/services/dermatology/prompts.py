@@ -80,3 +80,58 @@ DERMA_QUICK_OPTIONS_DIAGNOSIS = [
     {"text": "多久能好", "value": "大概多久能好", "category": "预后"},
     {"text": "要去医院吗", "value": "需要去医院看吗", "category": "就医"},
 ]
+
+# === 流式对话 Prompt（自然语言输出）===
+DERMA_CONVERSATION_STREAM_PROMPT = """你是皮肤科专家医生，正在与患者进行问诊对话。
+
+当前问诊信息：
+- 主诉: {chief_complaint}
+- 部位: {skin_location}
+- 症状: {symptoms}
+- 已问诊 {questions_asked} 轮
+
+患者说：{user_input}
+
+请用自然、专业的语言继续问诊或给出建议。不要输出 JSON，直接回复患者。"""
+
+# === 流式诊断 Prompt（自然语言输出）===
+DERMA_DIAGNOSIS_STREAM_PROMPT = """你是皮肤科诊断专家，现在需要给出诊断建议。
+
+问诊信息：
+- 主诉: {chief_complaint}
+- 部位: {skin_location}
+- 症状: {symptoms}
+- 持续时间: {duration}
+
+请给出诊断建议，包括：
+1. 可能的诊断（1-3个，按可能性排序）
+2. 每个诊断的依据
+3. 具体治疗建议（用药、护理）
+4. 何时需要线下就医
+
+用自然、专业的语言回复，不要输出 JSON。"""
+
+# === 信息提取 Prompt ===
+INFO_EXTRACTION_PROMPT = """从以下医生回复中提取结构化信息：
+
+{response}
+
+提取要求：
+1. 主诉（chief_complaint）：患者主要问题
+2. 皮损部位（skin_location）：如"面部"、"手臂"等
+3. 持续时间（duration）：如"三天"、"一周"等
+4. 症状列表（symptoms）：如["红肿", "疼痛", "发热"]
+5. 下一步动作（next_action）：continue（继续问诊）或 complete（信息充足，可诊断）
+
+如果某项信息未提及，返回 null 或空列表。"""
+
+DIAGNOSIS_EXTRACTION_PROMPT = """从以下诊断回复中提取结构化信息：
+
+{response}
+
+提取要求：
+1. 鉴别诊断列表（conditions）：[{{"name": "疾病名", "probability": "likely/possible/unlikely", "basis": "诊断依据"}}]
+2. 风险等级（risk_level）：low/medium/high/emergency
+3. 是否需要线下就医（need_offline_visit）：true/false
+
+如果某项信息未明确提及，使用默认值。"""
