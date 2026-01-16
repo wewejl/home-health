@@ -5,6 +5,8 @@
 """
 import json
 from typing import Dict, Any, List
+from datetime import datetime
+import uuid
 from langgraph.graph import StateGraph, END, START
 from langchain_core.messages import SystemMessage, ToolMessage, AIMessage
 
@@ -92,8 +94,6 @@ def _build_derma_react_graph():
     
     def call_model(state: DermaReActState) -> Dict[str, Any]:
         """Agent 节点：调用 LLM"""
-        import uuid
-        from datetime import datetime
         
         system_message = SystemMessage(content=DERMA_REACT_PROMPT)
         
