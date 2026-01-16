@@ -47,6 +47,12 @@ class DermaSession(Base):
     care_advice = Column(Text, nullable=True)  # 护理建议
     need_offline_visit = Column(Boolean, default=False)  # 是否需要线下就医
     
+    # ReAct Agent 增强字段
+    advice_history = Column(JSON, default=list)  # 中间建议历史 [{id, title, content, evidence, timestamp}]
+    diagnosis_card = Column(JSON, nullable=True)  # 诊断卡片 {summary, conditions, risk_level, care_plan, references}
+    knowledge_refs = Column(JSON, default=list)  # 知识引用 [{id, title, snippet, source, link}]
+    reasoning_steps = Column(JSON, default=list)  # 推理步骤 [string]
+    
     # 控制标志
     current_task = Column(String(20), default="conversation")  # conversation, skin_analysis, report_interpret
     awaiting_image = Column(Boolean, default=False)  # 是否等待图片上传

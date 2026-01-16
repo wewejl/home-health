@@ -133,6 +133,12 @@ def state_to_db(state: dict, session: DermaSession):
     session.need_offline_visit = state.get("need_offline_visit", False)
     session.current_task = state.get("current_task", "conversation")
     session.awaiting_image = state.get("awaiting_image", False)
+    
+    # ReAct Agent 增强字段
+    session.advice_history = state.get("advice_history", [])
+    session.diagnosis_card = state.get("diagnosis_card")
+    session.knowledge_refs = state.get("knowledge_refs", [])
+    session.reasoning_steps = state.get("reasoning_steps", [])
 
 
 def db_to_state(session: DermaSession) -> dict:
@@ -160,7 +166,12 @@ def db_to_state(session: DermaSession) -> dict:
         "care_advice": session.care_advice or "",
         "need_offline_visit": session.need_offline_visit or False,
         "current_task": session.current_task or DermaTaskType.CONVERSATION,
-        "awaiting_image": session.awaiting_image or False
+        "awaiting_image": session.awaiting_image or False,
+        # ReAct Agent 增强字段
+        "advice_history": session.advice_history or [],
+        "diagnosis_card": session.diagnosis_card,
+        "knowledge_refs": session.knowledge_refs or [],
+        "reasoning_steps": session.reasoning_steps or []
     }
 
 
