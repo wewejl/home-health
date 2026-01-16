@@ -452,8 +452,25 @@ async def stream_agent_response(
         complete_data = {
             "message": final_state.get("current_response", ""),
             "structured_data": extract_structured_data(final_state),
-            "quick_options": final_state.get("quick_options", [])
+            "quick_options": final_state.get("quick_options", []),
+            # ReAct Agent 增强字段
+            "advice_history": final_state.get("advice_history", []),
+            "diagnosis_card": final_state.get("diagnosis_card"),
+            "knowledge_refs": final_state.get("knowledge_refs", []),
+            "reasoning_steps": final_state.get("reasoning_steps", []),
+            # 病历事件关联字段
+            "event_id": final_state.get("event_id"),
+            "is_new_event": final_state.get("is_new_event"),
+            "should_show_dossier_prompt": final_state.get("should_show_dossier_prompt", False),
+            "stage": final_state.get("stage", "collecting")
         }
+        
+        # === 调试日志 ===
+        print(f"[DEBUG] complete_data 发送给前端:")
+        print(f"[DEBUG] - advice_history: {len(complete_data.get('advice_history', []))} 条")
+        print(f"[DEBUG] - diagnosis_card: {'有' if complete_data.get('diagnosis_card') else '无'}")
+        # === 日志结束 ===
+        
         yield f"event: complete\ndata: {json.dumps(complete_data, ensure_ascii=False)}\n\n"
 
 
