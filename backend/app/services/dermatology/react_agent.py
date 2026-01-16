@@ -32,13 +32,51 @@ DERMA_REACT_PROMPT = """你是一位经验丰富的皮肤科专家医生，正�
 - 症状：红肿、瘙痒、疼痛、脱皮等
 - 持续时间
 
-## 可用工具
-- analyze_skin_image: 分析皮肤图片
-- generate_diagnosis: 生成诊断建议
+## 可用工具及使用时机
+
+### 1. analyze_skin_image
+- **用途**: 分析皮肤图片
+- **时机**: 用户上传皮肤照片时
+
+### 2. retrieve_derma_knowledge
+- **用途**: 检索皮肤科医学知识库
+- **时机**: 收集到症状后，生成诊断前
+- **参数**: symptoms（症状列表）, location（部位）, query（补充查询词）
+- **返回**: 相关医学知识引用列表
+
+### 3. generate_structured_diagnosis
+- **用途**: 生成结构化诊断卡
+- **时机**: 收集完主要信息（主诉、部位、症状、持续时间）后
+- **参数**: symptoms, location, duration, knowledge_refs（来自步骤2）, additional_info
+- **返回**: 包含鉴别诊断、风险等级、护理建议的结构化诊断卡
+
+### 4. generate_diagnosis (旧工具，保留兼容)
+- **用途**: 生成文本诊断建议
+- **时机**: 快速给出初步建议时使用
+
+## 诊断工作流（重要）
+
+当收集完以下信息后，按顺序调用工具：
+1. 主诉（chief_complaint）
+2. 部位（skin_location）
+3. 症状列表（symptoms，至少2个）
+4. 持续时间（duration）
+
+**标准流程**:
+```
+步骤1: 调用 retrieve_derma_knowledge(symptoms=症状列表, location=部位)
+步骤2: 调用 generate_structured_diagnosis(
+    symptoms=症状列表,
+    location=部位,
+    duration=持续时间,
+    knowledge_refs=步骤1的结果
+)
+```
 
 ## 输出要求
 - 回复简洁自然（2-4句话）
-- 识别危急情况立即建议就医"""
+- 识别危急情况立即建议就医
+- 调用工具后，基于结果给出专业建议"""
 
 
 def _build_derma_react_graph():
@@ -54,6 +92,9 @@ def _build_derma_react_graph():
     
     def call_model(state: DermaReActState) -> Dict[str, Any]:
         """Agent 节点：调用 LLM"""
+        import uuid
+        from datetime import datetime
+        
         system_message = SystemMessage(content=DERMA_REACT_PROMPT)
         
         # 构建消息列表
@@ -62,11 +103,30 @@ def _build_derma_react_graph():
         # 调用 LLM
         response = model_with_tools.invoke(messages)
         
-        return {"messages": [response]}
+        updates = {"messages": [response]}
+        
+        # 如果 Agent 给出了建议（没有调用工具），提取为中间建议
+        if isinstance(response, AIMessage) and not response.tool_calls:
+            content = response.content
+            # 简单判断：如果回复包含建议关键词
+            if any(keyword in content for keyword in ["建议", "可以", "应该", "注意", "避免", "推荐"]):
+                advice_entry = {
+                    "id": str(uuid.uuid4()),
+                    "title": "护理建议",
+                    "content": content,
+                    "evidence": [],
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+                
+                advice_history = state.get("advice_history", [])
+                updates["advice_history"] = advice_history + [advice_entry]
+        
+        return updates
     
     def tool_node(state: DermaReActState) -> Dict[str, Any]:
-        """工具节点：执行工具调用"""
+        """工具节点：执行工具调用并更新状态"""
         outputs = []
+        updates = {}  # 用于收集 state 更新
         last_message = state["messages"][-1]
         
         if hasattr(last_message, "tool_calls") and last_message.tool_calls:
@@ -77,6 +137,39 @@ def _build_derma_react_graph():
                 # 执行工具
                 if tool_name in tools_by_name:
                     result = tools_by_name[tool_name].invoke(tool_args)
+                    
+                    # 根据工具类型更新 state
+                    if tool_name == "retrieve_derma_knowledge":
+                        # 更新知识引用
+                        if isinstance(result, list):
+                            updates["knowledge_refs"] = result
+                            # 同时添加到推理步骤
+                            current_steps = state.get("reasoning_steps", [])
+                            updates["reasoning_steps"] = current_steps + [
+                                f"检索到 {len(result)} 条相关医学知识"
+                            ]
+                    
+                    elif tool_name == "generate_structured_diagnosis":
+                        # 更新诊断卡
+                        if isinstance(result, dict):
+                            updates["diagnosis_card"] = result
+                            # 更新推理步骤
+                            if "reasoning_steps" in result:
+                                current_steps = state.get("reasoning_steps", [])
+                                updates["reasoning_steps"] = current_steps + result["reasoning_steps"]
+                            # 更新风险等级和就诊建议
+                            if "risk_level" in result:
+                                updates["risk_level"] = result["risk_level"]
+                            if "need_offline_visit" in result:
+                                updates["need_offline_visit"] = result["need_offline_visit"]
+                    
+                    elif tool_name == "analyze_skin_image":
+                        # 保持原有逻辑
+                        if isinstance(result, dict) and "analysis" in result:
+                            skin_analyses = state.get("skin_analyses", [])
+                            updates["skin_analyses"] = skin_analyses + [result]
+                    
+                    # 添加工具消息
                     outputs.append(
                         ToolMessage(
                             content=json.dumps(result, ensure_ascii=False),
@@ -85,7 +178,8 @@ def _build_derma_react_graph():
                         )
                     )
         
-        return {"messages": outputs}
+        # 返回消息和状态更新
+        return {"messages": outputs, **updates}
     
     def should_continue(state: DermaReActState) -> str:
         """判断是否继续执行工具"""
