@@ -104,60 +104,51 @@ class TestToolNodeStateUpdate:
                 assert "diagnosis_card" in result or "risk_level" in result
 
 
-class TestAdviceExtraction:
-    """测试中间建议提取"""
+class TestRecordIntermediateAdviceTool:
+    """测试 record_intermediate_advice 工具"""
     
-    def test_advice_extracted_from_response(self):
-        """测试从 AI 回复中提取建议"""
+    def test_record_advice_updates_state(self):
+        """测试工具调用更新 advice_history"""
         from app.services.dermatology.react_agent import _build_derma_react_graph, reset_derma_react_graph
         
         reset_derma_react_graph()
         
         with patch('app.services.llm_provider.LLMProvider.get_llm') as mock_llm:
-            # 模拟包含建议的回复
-            mock_response = AIMessage(content="建议您保持皮肤清洁干燥，避免抓挠。请问症状持续多久了？")
+            # 模拟 Agent 调用 record_intermediate_advice 工具
+            mock_tool_call = {
+                "name": "record_intermediate_advice",
+                "args": {
+                    "title": "初步护理建议",
+                    "content": "建议保持皮肤清洁干燥，避免抓挠",
+                    "evidence": ["湿疹护理指南"]
+                },
+                "id": "call-789"
+            }
+            mock_ai_response = AIMessage(content="", tool_calls=[mock_tool_call])
+            mock_final_response = AIMessage(content="请问症状持续多久了？")
             
             mock_model = MagicMock()
-            mock_model.bind_tools.return_value.invoke.return_value = mock_response
+            mock_model.bind_tools.return_value.invoke.side_effect = [
+                mock_ai_response,
+                mock_final_response
+            ]
             mock_llm.return_value = mock_model
             
             graph = _build_derma_react_graph()
-            
-            state = create_react_initial_state("test-session", 1)
-            state["messages"] = [HumanMessage(content="我手臂有点痒")]
-            
-            result = graph.invoke(state)
-            
-            # 验证建议被提取
-            assert "advice_history" in result
-            assert len(result["advice_history"]) > 0
-            assert "建议" in result["advice_history"][0]["content"]
-            assert result["advice_history"][0]["title"] == "护理建议"
-    
-    def test_no_advice_extraction_for_questions(self):
-        """测试纯问题不会被提取为建议"""
-        from app.services.dermatology.react_agent import _build_derma_react_graph, reset_derma_react_graph
-        
-        reset_derma_react_graph()
-        
-        with patch('app.services.llm_provider.LLMProvider.get_llm') as mock_llm:
-            # 模拟纯问题回复（不含建议关键词）
-            mock_response = AIMessage(content="请问您的症状持续多久了？")
-            
-            mock_model = MagicMock()
-            mock_model.bind_tools.return_value.invoke.return_value = mock_response
-            mock_llm.return_value = mock_model
-            
-            graph = _build_derma_react_graph()
-            
             state = create_react_initial_state("test-session", 1)
             state["messages"] = [HumanMessage(content="我手臂有红疹")]
             
             result = graph.invoke(state)
             
-            # 验证不会提取为建议
-            advice_history = result.get("advice_history", [])
-            assert len(advice_history) == 0
+            # 验证 advice_history 被更新
+            assert "advice_history" in result
+            assert len(result["advice_history"]) > 0
+            assert result["advice_history"][0]["title"] == "初步护理建议"
+            assert "建议" in result["advice_history"][0]["content"]
+            
+            # 验证 reasoning_steps 同步
+            assert "reasoning_steps" in result
+            assert any("记录护理建议" in step for step in result["reasoning_steps"])
 
 
 if __name__ == "__main__":
