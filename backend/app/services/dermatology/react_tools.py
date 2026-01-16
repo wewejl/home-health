@@ -3,7 +3,10 @@
 
 LLM 可调用的医疗工具集
 """
+import uuid
+from datetime import datetime, timezone
 from typing import List, Optional
+
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
@@ -304,7 +307,7 @@ def generate_structured_diagnosis(
 def record_intermediate_advice(
     title: str,
     content: str,
-    evidence: List[str] = []
+    evidence: Optional[List[str]] = None
 ) -> dict:
     """
     记录中间护理建议
@@ -320,15 +323,15 @@ def record_intermediate_advice(
     Returns:
         结构化建议对象，包含 id、timestamp 等字段
     """
-    import uuid
-    from datetime import datetime
+    if evidence is None:
+        evidence = []
     
     return {
         "id": str(uuid.uuid4()),
         "title": title,
         "content": content,
         "evidence": evidence,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 
