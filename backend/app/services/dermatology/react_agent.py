@@ -119,6 +119,16 @@ def _build_derma_react_graph():
         updates = {}  # 用于收集 state 更新
         last_message = state["messages"][-1]
         
+        # === 调试日志：工具调用 ===
+        if hasattr(last_message, "tool_calls") and last_message.tool_calls:
+            print(f"[DEBUG] tool_node 收到工具调用: {len(last_message.tool_calls)} 个")
+            for tc in last_message.tool_calls:
+                print(f"[DEBUG] - 工具名称: {tc['name']}")
+                print(f"[DEBUG] - 工具参数: {tc['args']}")
+        else:
+            print(f"[DEBUG] tool_node: 没有工具调用")
+        # === 日志结束 ===
+        
         if hasattr(last_message, "tool_calls") and last_message.tool_calls:
             for tool_call in last_message.tool_calls:
                 tool_name = tool_call["name"]
@@ -142,7 +152,20 @@ def _build_derma_react_graph():
                     elif tool_name == "generate_structured_diagnosis":
                         # 更新诊断卡
                         if isinstance(result, dict):
+                            # === 调试日志：诊断工具结果 ===
+                            summary_preview = result.get('summary', 'N/A')[:50] if result.get('summary') else 'N/A'
+                            print(f"[DEBUG] generate_structured_diagnosis 返回:")
+                            print(f"[DEBUG] - summary: {summary_preview}...")
+                            print(f"[DEBUG] - conditions: {len(result.get('conditions', []))} 个")
+                            print(f"[DEBUG] - risk_level: {result.get('risk_level', 'N/A')}")
+                            # === 日志结束 ===
+                            
                             updates["diagnosis_card"] = result
+                            
+                            # === 调试日志：state 更新 ===
+                            print(f"[DEBUG] 已更新 state['diagnosis_card']")
+                            print(f"[DEBUG] - 包含字段: {list(result.keys())}")
+                            # === 日志结束 ===
                             # 更新推理步骤
                             if "reasoning_steps" in result:
                                 current_steps = state.get("reasoning_steps", [])
@@ -162,8 +185,19 @@ def _build_derma_react_graph():
                     elif tool_name == "record_intermediate_advice":
                         # 记录中间建议
                         if isinstance(result, dict):
+                            # === 调试日志：中间建议 ===
+                            content_preview = result.get('content', 'N/A')[:50] if result.get('content') else 'N/A'
+                            print(f"[DEBUG] record_intermediate_advice 返回:")
+                            print(f"[DEBUG] - title: {result.get('title', 'N/A')}")
+                            print(f"[DEBUG] - content: {content_preview}...")
+                            # === 日志结束 ===
+                            
                             advice_history = state.get("advice_history", [])
                             updates["advice_history"] = advice_history + [result]
+                            
+                            # === 调试日志：state 更新 ===
+                            print(f"[DEBUG] 已更新 state['advice_history'], 当前数量: {len(updates['advice_history'])}")
+                            # === 日志结束 ===
                             # 同步推理步骤
                             current_steps = state.get("reasoning_steps", [])
                             updates["reasoning_steps"] = current_steps + [

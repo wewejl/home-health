@@ -22,7 +22,11 @@ from ..schemas.derma import (
     SkinAnalysisResultSchema,
     SkinConditionSchema,
     ReportInterpretationSchema,
-    ReportIndicatorSchema
+    ReportIndicatorSchema,
+    DermaAdviceSchema,
+    DermaDiagnosisCardSchema,
+    DermaKnowledgeRefSchema,
+    DermaConditionSchema
 )
 from ..services.dermatology import DermaAgentWrapper
 from ..services.dermatology.derma_agent import DermaTaskType
@@ -186,8 +190,87 @@ def build_response(state: dict) -> DermaResponse:
         # 病历事件关联字段
         "event_id": state.get("event_id"),
         "is_new_event": state.get("is_new_event"),
-        "should_show_dossier_prompt": state.get("should_show_dossier_prompt", False)
+        "should_show_dossier_prompt": state.get("should_show_dossier_prompt", False),
+        # 诊断展示增强字段
+        "reasoning_steps": state.get("reasoning_steps")
     }
+    
+    # 添加中间建议历史
+    if state.get("advice_history"):
+        # === 调试日志 ===
+        print(f"[DEBUG] build_response: 处理 advice_history")
+        print(f"[DEBUG] - 数量: {len(state['advice_history'])}")
+        for i, adv in enumerate(state['advice_history']):
+            print(f"[DEBUG] - [{i}] title: {adv.get('title', 'N/A')}")
+        # === 日志结束 ===
+        
+        response_data["advice_history"] = [
+            DermaAdviceSchema(
+                id=adv.get("id", ""),
+                title=adv.get("title", ""),
+                content=adv.get("content", ""),
+                evidence=adv.get("evidence", []),
+                timestamp=adv.get("timestamp", "")
+            ) for adv in state["advice_history"]
+        ]
+    else:
+        # === 调试日志 ===
+        print(f"[DEBUG] build_response: state 中没有 advice_history")
+        # === 日志结束 ===
+    
+    # 添加知识引用
+    if state.get("knowledge_refs"):
+        response_data["knowledge_refs"] = [
+            DermaKnowledgeRefSchema(
+                id=ref.get("id", ""),
+                title=ref.get("title", ""),
+                snippet=ref.get("snippet", ""),
+                source=ref.get("source"),
+                link=ref.get("link")
+            ) for ref in state["knowledge_refs"]
+        ]
+    
+    # 添加诊断卡
+    if state.get("diagnosis_card"):
+        card = state["diagnosis_card"]
+        
+        # === 调试日志 ===
+        summary_preview = card.get('summary', 'N/A')[:50] if card.get('summary') else 'N/A'
+        print(f"[DEBUG] build_response: 处理 diagnosis_card")
+        print(f"[DEBUG] - summary: {summary_preview}...")
+        print(f"[DEBUG] - conditions: {len(card.get('conditions', []))} 个")
+        print(f"[DEBUG] - risk_level: {card.get('risk_level', 'N/A')}")
+        # === 日志结束 ===
+        
+        response_data["diagnosis_card"] = DermaDiagnosisCardSchema(
+            summary=card.get("summary", ""),
+            conditions=[
+                DermaConditionSchema(
+                    name=c.get("name", ""),
+                    confidence=c.get("confidence", 0.0),
+                    rationale=c.get("rationale", [])
+                ) for c in card.get("conditions", [])
+            ],
+            risk_level=card.get("risk_level", "low"),
+            need_offline_visit=card.get("need_offline_visit", False),
+            urgency=card.get("urgency"),
+            care_plan=card.get("care_plan", []),
+            references=[
+                DermaKnowledgeRefSchema(
+                    id=ref.get("id", ""),
+                    title=ref.get("title", ""),
+                    snippet=ref.get("snippet", ""),
+                    source=ref.get("source"),
+                    link=ref.get("link")
+                ) for ref in card.get("references", [])
+            ],
+            reasoning_steps=card.get("reasoning_steps", [])
+        )
+    else:
+        # === 调试日志 ===
+        print(f"[DEBUG] build_response: state 中没有 diagnosis_card")
+        print(f"[DEBUG] - state 包含的字段: {list(state.keys())}")
+        # === 日志结束 ===
     
     # 添加皮肤分析结果
     if state.get("latest_analysis"):
