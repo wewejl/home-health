@@ -105,7 +105,6 @@ def _build_derma_react_graph():
     
     def call_model(state: DermaReActState) -> Dict[str, Any]:
         """Agent 节点：调用 LLM"""
-        
         system_message = SystemMessage(content=DERMA_REACT_PROMPT)
         
         # 构建消息列表
@@ -114,25 +113,7 @@ def _build_derma_react_graph():
         # 调用 LLM
         response = model_with_tools.invoke(messages)
         
-        updates = {"messages": [response]}
-        
-        # 如果 Agent 给出了建议（没有调用工具），提取为中间建议
-        if isinstance(response, AIMessage) and not response.tool_calls:
-            content = response.content
-            # 简单判断：如果回复包含建议关键词
-            if any(keyword in content for keyword in ["建议", "可以", "应该", "注意", "避免", "推荐"]):
-                advice_entry = {
-                    "id": str(uuid.uuid4()),
-                    "title": "护理建议",
-                    "content": content,
-                    "evidence": [],
-                    "timestamp": datetime.utcnow().isoformat()
-                }
-                
-                advice_history = state.get("advice_history", [])
-                updates["advice_history"] = advice_history + [advice_entry]
-        
-        return updates
+        return {"messages": [response]}
     
     def tool_node(state: DermaReActState) -> Dict[str, Any]:
         """工具节点：执行工具调用并更新状态"""
