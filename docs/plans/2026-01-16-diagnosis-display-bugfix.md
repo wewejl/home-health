@@ -610,3 +610,24 @@ if state.get("reasoning_steps"):
 - 考虑添加快捷选项已选中的视觉反馈
 - 优化中间建议提取的关键词匹配逻辑
 - 扩充本地知识库内容
+
+### 2026-01-16 中间建议工具化重构
+
+#### 背景
+原实现使用关键词匹配自动提取建议，不符合智能体架构原则。
+
+#### 改动
+- 新增 `record_intermediate_advice` 工具
+- 更新 System Prompt 指导 Agent 使用
+- 扩展 `tool_node` 处理工具返回值
+- 移除 `call_model` 中的关键词匹配逻辑
+- 更新单元测试覆盖工具调用路径
+
+#### 优势
+- 符合 ReAct 架构，所有状态更新通过工具驱动
+- Agent 自主决策何时记录建议
+- 数据流清晰可追踪
+- 易于扩展结构化字段
+
+#### 参考
+详见 [中间建议工具化实施计划](./2026-01-16-intermediate-advice-tooling-implementation.md)
