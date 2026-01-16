@@ -13,6 +13,45 @@ class DermaQuickOptionSchema(BaseModel):
     category: str
 
 
+# === 新增：诊断展示增强 Schema ===
+
+class DermaAdviceSchema(BaseModel):
+    """中间建议"""
+    id: str
+    title: str
+    content: str
+    evidence: List[str] = []
+    timestamp: str
+
+
+class DermaKnowledgeRefSchema(BaseModel):
+    """知识引用"""
+    id: str
+    title: str
+    snippet: str
+    source: Optional[str] = None
+    link: Optional[str] = None
+
+
+class DermaConditionSchema(BaseModel):
+    """鉴别诊断条目"""
+    name: str
+    confidence: float
+    rationale: List[str] = []
+
+
+class DermaDiagnosisCardSchema(BaseModel):
+    """诊断卡"""
+    summary: str
+    conditions: List["DermaConditionSchema"]
+    risk_level: Literal["low", "medium", "high", "emergency"]
+    need_offline_visit: bool
+    urgency: Optional[str] = None
+    care_plan: List[str] = []
+    references: List["DermaKnowledgeRefSchema"] = []
+    reasoning_steps: List[str] = []
+
+
 class SkinConditionSchema(BaseModel):
     """皮肤病情况"""
     name: str
@@ -133,6 +172,12 @@ class DermaResponse(BaseModel):
     event_id: Optional[int] = None
     is_new_event: Optional[bool] = None
     should_show_dossier_prompt: Optional[bool] = None
+    
+    # === 新增：诊断展示增强 ===
+    advice_history: Optional[List[DermaAdviceSchema]] = None
+    diagnosis_card: Optional[DermaDiagnosisCardSchema] = None
+    knowledge_refs: Optional[List[DermaKnowledgeRefSchema]] = None
+    reasoning_steps: Optional[List[str]] = None
 
 
 class DermaSessionSchema(BaseModel):

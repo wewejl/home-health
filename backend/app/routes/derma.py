@@ -1,6 +1,14 @@
 """
-皮肤科AI智能体API路由
-支持：皮肤影像分析、报告解读、智能问诊对话
+皮肤科AI智能体API路由 (已废弃)
+
+⚠️ DEPRECATED: 此路由已废弃，请使用统一的 /v2/sessions 端点
+新的多智能体架构使用:
+- POST /v2/sessions - 创建会话 (agent_type="dermatology")
+- POST /v2/sessions/{session_id}/messages - 发送消息
+- 返回统一的 AgentResponse 格式
+
+原功能：皮肤影像分析、报告解读、智能问诊对话
+迁移日期：2026-01-17
 """
 import uuid
 import json

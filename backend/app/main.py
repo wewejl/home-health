@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base, SessionLocal
 from .routes import (
-    auth_router, departments_router, sessions_router, feedbacks_router, diseases_router, drugs_router,
+    auth_router, departments_router, sessions_router, sessions_v2_router, feedbacks_router, diseases_router, drugs_router,
     diagnosis_router, medical_events_router, ai_router,  # derma_router 已废弃
     admin_auth_router, admin_doctors_router, admin_departments_router,
     admin_knowledge_router, admin_documents_router, admin_feedbacks_router, admin_stats_router,
@@ -32,6 +32,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(departments_router)
 app.include_router(sessions_router)
+app.include_router(sessions_v2_router)  # V2 多智能体架构
 app.include_router(feedbacks_router)
 app.include_router(diseases_router)
 app.include_router(drugs_router)

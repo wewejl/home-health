@@ -111,21 +111,47 @@ class DermaReActWrapper(BaseAgent):
             elif event.get("event") == "on_chain_end":
                 output = event.get("data", {}).get("output")
                 if isinstance(output, dict):
-                    # 合并状态更新而不是替换，确保 advice_history 等字段被保留
+                    # 合并状态更新，特殊处理关键字段避免被空值覆盖
+                    list_fields = ("advice_history", "knowledge_refs", "reasoning_steps", "skin_analyses")
+                    dict_fields = ("diagnosis_card", "latest_analysis", "latest_interpretation")
                     for key, value in output.items():
                         if value is not None:
-                            final_state[key] = value
+                            # 对于列表字段，只有当新值非空时才更新
+                            if key in list_fields:
+                                if value and len(value) > 0:
+                                    existing = final_state.get(key, [])
+                                    # 如果新值包含更多或相同数量的数据，使用新值
+                                    if len(value) >= len(existing):
+                                        final_state[key] = value
+                            # 对于字典字段，只有当新值是有效字典时才更新
+                            elif key in dict_fields:
+                                if isinstance(value, dict) and len(value) > 0:
+                                    final_state[key] = value
+                            else:
+                                final_state[key] = value
                     # === 调试日志 ===
                     if "advice_history" in output:
-                        print(f"[DEBUG] _run_with_stream: 捕获到 advice_history 更新, 数量: {len(output.get('advice_history', []))}")
+                        adv_val = output.get('advice_history')
+                        print(f"[DEBUG] _run_with_stream: 捕获到 advice_history 更新")
+                        print(f"[DEBUG]   - 值类型: {type(adv_val).__name__}")
+                        print(f"[DEBUG]   - 值是否为None: {adv_val is None}")
+                        print(f"[DEBUG]   - 数量: {len(adv_val) if adv_val else 0}")
                     if "diagnosis_card" in output:
+                        diag_val = output.get('diagnosis_card')
                         print(f"[DEBUG] _run_with_stream: 捕获到 diagnosis_card 更新")
+                        print(f"[DEBUG]   - 值类型: {type(diag_val).__name__}")
+                        print(f"[DEBUG]   - 值是否为None: {diag_val is None}")
                     # === 日志结束 ===
         
         # === 调试日志：最终状态 ===
         print(f"[DEBUG] _run_with_stream 最终状态:")
-        print(f"[DEBUG] - advice_history: {len(final_state.get('advice_history', []))} 条")
-        print(f"[DEBUG] - diagnosis_card: {'有' if final_state.get('diagnosis_card') else '无'}")
+        adv_final = final_state.get('advice_history')
+        diag_final = final_state.get('diagnosis_card')
+        print(f"[DEBUG] - advice_history: 类型={type(adv_final).__name__}, 是None={adv_final is None}, 数量={len(adv_final) if adv_final else 0}")
+        print(f"[DEBUG] - diagnosis_card: 类型={type(diag_final).__name__}, 是None={diag_final is None}")
+        if adv_final:
+            for i, adv in enumerate(adv_final):
+                print(f"[DEBUG]   - [{i}] {adv.get('title', 'N/A')}")
         # === 日志结束 ===
         
         return final_state

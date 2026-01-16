@@ -435,6 +435,12 @@ async def stream_agent_response(
                 print(f"  - chief_complaint: {final_state.get('chief_complaint', '')}")
                 print(f"  - skin_location: {final_state.get('skin_location', '')}")
                 print(f"  - questions_asked: {final_state.get('questions_asked', 0)}")
+                # === 调试日志：advice_history ===
+                adv_state = final_state.get('advice_history')
+                print(f"  - advice_history: 类型={type(adv_state).__name__}, 是None={adv_state is None}, 数量={len(adv_state) if adv_state else 0}")
+                diag_state = final_state.get('diagnosis_card')
+                print(f"  - diagnosis_card: 类型={type(diag_state).__name__}, 是None={diag_state is None}")
+                # === 日志结束 ===
                 session_obj.agent_state = final_state
                 session_obj.last_message = ai_content[:100] if ai_content else ""
                 db_save.commit()

@@ -5,9 +5,11 @@ priority: critical
 
 # API 接口契约文档
 
-**版本**: V1.0  
-**更新日期**: 2026-01-15  
+**版本**: V2.0  
+**更新日期**: 2026-01-17  
 **Base URL**: `http://localhost:8100` (开发环境)
+
+> 🆕 **V2.0 更新**: 新增统一多智能体架构 `/v2/sessions` 端点，返回统一的 `AgentResponse` 格式。
 
 > ⚠️ **重要**: 本文档是前后端接口的**单一真相源**。所有接口定义、字段类型、枚举值必须以本文档为准。
 
@@ -19,9 +21,10 @@ priority: critical
 2. [数据类型约定](#数据类型约定)
 3. [认证接口](#认证接口)
 4. [会话接口](#会话接口)
-5. [病历事件接口](#病历事件接口)
-6. [AI 算法接口](#ai-算法接口)
-7. [错误处理](#错误处理)
+5. [**V2 统一会话接口 (新)**](#v2-统一会话接口)
+6. [病历事件接口](#病历事件接口)
+7. [AI 算法接口](#ai-算法接口)
+8. [错误处理](#错误处理)
 
 ---
 
@@ -206,7 +209,102 @@ data: [DONE]
   "stage": "collecting",
   "event_id": "b3ebf9eb-8695-4ad6-b9b3-5e559dc47997",
   "is_new_event": true,
-  "should_show_dossier_prompt": false
+  "should_show_dossier_prompt": false,
+  "advice_history": [
+    {
+      "id": "adv-001",
+      "title": "初步护理建议",
+      "content": "建议保持皮肤清洁干燥，避免抓挠",
+      "evidence": ["湿疹护理指南"],
+      "timestamp": "2026-01-15T10:31:00Z"
+    }
+  ],
+  "diagnosis_card": {
+    "summary": "手臂出现红疹伴瘙痒",
+    "conditions": [
+      {
+        "name": "湿疹",
+        "confidence": 0.8,
+        "rationale": ["红疹", "瘙痒", "对称分布"]
+      }
+    ],
+    "risk_level": "low",
+    "need_offline_visit": false,
+    "urgency": null,
+    "care_plan": ["保持清洁", "避免刺激"],
+    "references": [
+      {
+        "id": "ref-001",
+        "title": "湿疹诊疗指南",
+        "snippet": "湿疹是一种常见皮肤炎症...",
+        "source": "中华皮肤科杂志"
+      }
+    ],
+    "reasoning_steps": ["收集症状", "检索知识库", "生成诊断"]
+  },
+  "knowledge_refs": [
+    {
+      "id": "kb-001",
+      "title": "湿疹诊疗指南",
+      "snippet": "湿疹是一种常见的皮肤炎症...",
+      "source": "中华皮肤科杂志"
+    }
+  ],
+  "reasoning_steps": ["分析症状", "匹配知识库", "生成建议"]
+}
+```
+
+#### 诊断展示增强字段说明
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `advice_history` | `Array<AdviceEntry>?` | 中间建议历史列表 |
+| `diagnosis_card` | `DiagnosisCard?` | 结构化诊断卡 |
+| `knowledge_refs` | `Array<KnowledgeRef>?` | 知识库引用列表 |
+| `reasoning_steps` | `Array<String>?` | 推理步骤列表 |
+
+##### AdviceEntry
+```typescript
+interface AdviceEntry {
+  id: string;
+  title: string;
+  content: string;
+  evidence: string[];
+  timestamp: string;  // ISO 8601
+}
+```
+
+##### DiagnosisCard
+```typescript
+interface DiagnosisCard {
+  summary: string;
+  conditions: DiagnosisCondition[];
+  risk_level: "low" | "medium" | "high" | "emergency";
+  need_offline_visit: boolean;
+  urgency?: string;
+  care_plan: string[];
+  references: KnowledgeRef[];
+  reasoning_steps: string[];
+}
+```
+
+##### DiagnosisCondition
+```typescript
+interface DiagnosisCondition {
+  name: string;
+  confidence: number;  // 0-1
+  rationale: string[];
+}
+```
+
+##### KnowledgeRef
+```typescript
+interface KnowledgeRef {
+  id: string;
+  title: string;
+  snippet: string;
+  source?: string;
+  link?: string;
 }
 ```
 
@@ -229,6 +327,139 @@ GET /sessions/{session_id}/messages?limit=50
     }
   ],
   "has_more": false
+}
+```
+
+---
+
+## V2 统一会话接口
+
+> 🆕 **新架构**: V2 接口使用统一的 `AgentResponse` 响应格式，支持多智能体扩展。
+
+### 1. 创建会话 V2
+
+```http
+POST /v2/sessions
+```
+
+**请求体**:
+```json
+{
+  "doctor_id": 1,
+  "agent_type": "dermatology"
+}
+```
+
+**响应**:
+```json
+{
+  "session_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "agent_type": "dermatology",
+  "doctor_name": "AI皮肤科医生",
+  "status": "active",
+  "created_at": "2026-01-17T10:30:00Z"
+}
+```
+
+### 2. 发送消息 V2 (统一响应格式)
+
+```http
+POST /v2/sessions/{session_id}/messages
+Content-Type: application/json
+Accept: text/event-stream
+```
+
+**请求体**:
+```json
+{
+  "content": "我手臂有红疹，很痒",
+  "attachments": [],
+  "action": "conversation"
+}
+```
+
+**SSE 响应流**:
+```
+event: meta
+data: {"session_id": "xxx", "agent_type": "dermatology"}
+
+event: chunk
+data: {"text": "根据您的描述"}
+
+event: chunk
+data: {"text": "，可能是湿疹"}
+
+event: complete
+data: <AgentResponse JSON>
+```
+
+### 3. AgentResponse 统一响应格式
+
+```typescript
+interface AgentResponse {
+  // 基础字段（必填）
+  message: string;           // AI 回复内容
+  stage: string;             // 当前阶段: greeting | collecting | analyzing | diagnosing | completed
+  progress: number;          // 进度百分比 0-100
+  
+  // 可选字段
+  quick_options: string[];   // 快捷回复选项
+  risk_level?: string;       // 风险等级: low | medium | high | emergency
+  
+  // 病历事件相关
+  event_id?: string;         // 病历事件ID
+  is_new_event: boolean;     // 是否创建新事件
+  should_show_dossier_prompt: boolean;  // 是否提示生成病历
+  
+  // 专科扩展数据
+  specialty_data?: {
+    diagnosis_card?: DiagnosisCardV2;
+    symptoms?: string[];
+    [key: string]: any;
+  };
+  
+  // 状态持久化
+  next_state: object;        // 下次调用需要的状态
+}
+```
+
+### 4. 获取智能体列表 V2
+
+```http
+GET /v2/sessions/agents
+```
+
+**响应**:
+```json
+{
+  "general": {
+    "display_name": "全科AI医生",
+    "description": "通用医疗咨询",
+    "actions": ["conversation"],
+    "accepts_media": []
+  },
+  "dermatology": {
+    "display_name": "皮肤科AI医生",
+    "description": "专业的皮肤科问诊智能体",
+    "actions": ["conversation", "analyze_skin", "interpret_report"],
+    "accepts_media": ["image/jpeg", "image/png", "application/pdf"]
+  }
+}
+```
+
+### 5. 获取智能体能力 V2
+
+```http
+GET /v2/sessions/agents/{agent_type}/capabilities
+```
+
+**响应**:
+```json
+{
+  "display_name": "皮肤科AI医生",
+  "description": "专业的皮肤科问诊智能体",
+  "actions": ["conversation", "analyze_skin", "interpret_report"],
+  "accepts_media": ["image/jpeg", "image/png", "application/pdf"]
 }
 ```
 
@@ -572,6 +803,11 @@ func aggregateSession(sessionId: String, sessionType: String) async throws -> Ag
 ---
 
 ## 版本历史
+
+### V1.1 (2026-01-16)
+- 新增诊断展示增强字段：`advice_history`, `diagnosis_card`, `knowledge_refs`, `reasoning_steps`
+- 新增数据类型：`AdviceEntry`, `DiagnosisCard`, `DiagnosisCondition`, `KnowledgeRef`
+- 新增皮肤科知识检索工具和结构化诊断输出
 
 ### V1.0 (2026-01-15)
 - 初始版本

@@ -40,6 +40,11 @@ class DermaReActState(TypedDict):
     risk_level: str
     care_advice: str
     need_offline_visit: bool
+    
+    # === 新增：诊断展示增强 ===
+    advice_history: List[dict]  # [{id, title, content, evidence, timestamp}]
+    diagnosis_card: Optional[dict]  # 结构化诊断结果
+    reasoning_steps: List[str]  # ["收集症状", "检索文献", "鉴别诊断"]
 
 
 def create_react_initial_state(session_id: str, user_id: int) -> DermaReActState:
@@ -60,5 +65,8 @@ def create_react_initial_state(session_id: str, user_id: int) -> DermaReActState
         pending_attachments=[],
         risk_level="low",
         care_advice="",
-        need_offline_visit=False
+        need_offline_visit=False,
+        advice_history=[],
+        diagnosis_card=None,
+        reasoning_steps=[]
     )
