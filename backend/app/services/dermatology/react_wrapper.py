@@ -111,7 +111,22 @@ class DermaReActWrapper(BaseAgent):
             elif event.get("event") == "on_chain_end":
                 output = event.get("data", {}).get("output")
                 if isinstance(output, dict):
-                    final_state = output
+                    # 合并状态更新而不是替换，确保 advice_history 等字段被保留
+                    for key, value in output.items():
+                        if value is not None:
+                            final_state[key] = value
+                    # === 调试日志 ===
+                    if "advice_history" in output:
+                        print(f"[DEBUG] _run_with_stream: 捕获到 advice_history 更新, 数量: {len(output.get('advice_history', []))}")
+                    if "diagnosis_card" in output:
+                        print(f"[DEBUG] _run_with_stream: 捕获到 diagnosis_card 更新")
+                    # === 日志结束 ===
+        
+        # === 调试日志：最终状态 ===
+        print(f"[DEBUG] _run_with_stream 最终状态:")
+        print(f"[DEBUG] - advice_history: {len(final_state.get('advice_history', []))} 条")
+        print(f"[DEBUG] - diagnosis_card: {'有' if final_state.get('diagnosis_card') else '无'}")
+        # === 日志结束 ===
         
         return final_state
     
