@@ -180,6 +180,17 @@ def _build_derma_react_graph():
                             skin_analyses = state.get("skin_analyses", [])
                             updates["skin_analyses"] = skin_analyses + [result]
                     
+                    elif tool_name == "record_intermediate_advice":
+                        # 记录中间建议
+                        if isinstance(result, dict):
+                            advice_history = state.get("advice_history", [])
+                            updates["advice_history"] = advice_history + [result]
+                            # 同步推理步骤
+                            current_steps = state.get("reasoning_steps", [])
+                            updates["reasoning_steps"] = current_steps + [
+                                f"记录护理建议: {result.get('title', '未命名')}"
+                            ]
+                    
                     # 添加工具消息
                     outputs.append(
                         ToolMessage(
