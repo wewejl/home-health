@@ -306,28 +306,12 @@ struct ModernConsultationView: View {
             Spacer()
             
             if viewModel.isVoiceMode {
-                // 语音模式：显示语音控制栏
-                VStack(spacing: 0) {
-                    // 实时识别显示
-                    if !viewModel.currentRecognition.isEmpty {
-                        HStack {
-                            Image(systemName: "mic.fill")
-                                .foregroundColor(.green)
-                            Text(viewModel.currentRecognition)
-                                .foregroundColor(MedicalColors.textPrimary)
-                            Spacer()
-                            RecordingIndicator()
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .background(Color(.systemGray6))
-                    }
-                    
-                    VoiceControlBar(viewModel: viewModel, onImageTap: {
-                        showImageSourcePicker = true
-                    })
-                }
-                .background(Color(hex: "#E8F5E9"))
+                // 语音模式：显示专业级语音控制栏
+                VoiceControlBar(
+                    viewModel: viewModel,
+                    onImageTap: { showImageSourcePicker = true },
+                    onClose: nil
+                )
             } else {
                 // 文字模式：显示原有输入栏
                 VStack(spacing: 0) {
@@ -746,7 +730,7 @@ struct ModernInputBar: View {
     }
 }
 
-// MARK: - 带语音按钮的输入栏
+// MARK: - 专业级输入栏（带语音按钮）
 struct ModernInputBarWithVoice: View {
     @Binding var messageText: String
     let isSending: Bool
@@ -756,70 +740,82 @@ struct ModernInputBarWithVoice: View {
     let onVoiceTap: () -> Void
     
     var body: some View {
-        HStack(alignment: .bottom, spacing: MedicalSpacing.md) {
+        HStack(alignment: .bottom, spacing: 12) {
             // 功能菜单按钮
             Button(action: onMenuTap) {
                 Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 28))
+                    .font(.system(size: 32))
                     .foregroundColor(isDisabled ? MedicalColors.textMuted : MedicalColors.primaryBlue)
             }
             .disabled(isDisabled)
             
-            // 文本输入框
-            ZStack(alignment: .leading) {
-                if messageText.isEmpty {
-                    Text("输入消息...")
-                        .font(MedicalTypography.bodyMedium)
-                        .foregroundColor(MedicalColors.textMuted)
-                        .padding(.leading, MedicalSpacing.lg)
+            // 输入框容器（包含文本框和麦克风/发送按钮）
+            HStack(alignment: .bottom, spacing: 0) {
+                // 文本输入框
+                ZStack(alignment: .leading) {
+                    if messageText.isEmpty {
+                        Text("输入消息...")
+                            .font(.system(size: 16))
+                            .foregroundColor(MedicalColors.textMuted)
+                            .padding(.leading, 16)
+                    }
+                    
+                    TextField("", text: $messageText, axis: .vertical)
+                        .font(.system(size: 16))
+                        .foregroundColor(MedicalColors.textPrimary)
+                        .lineLimit(1...5)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .disabled(isDisabled)
                 }
                 
-                TextField("", text: $messageText, axis: .vertical)
-                    .font(MedicalTypography.bodyMedium)
-                    .foregroundColor(MedicalColors.textPrimary)
-                    .lineLimit(1...5)
-                    .padding(.horizontal, MedicalSpacing.md)
-                    .padding(.vertical, MedicalSpacing.sm)
-                    .disabled(isDisabled)
-            }
-            .frame(minHeight: 40)
-            .background(MedicalColors.bgSecondary)
-            .cornerRadius(MedicalCornerRadius.md)
-            
-            // 语音按钮
-            Button(action: onVoiceTap) {
-                Image(systemName: "mic.fill")
-                    .font(.system(size: 22))
-                    .foregroundColor(isDisabled ? MedicalColors.textMuted : MedicalColors.secondaryTeal)
-            }
-            .disabled(isDisabled)
-            
-            // 发送按钮
-            Button(action: onSend) {
-                ZStack {
-                    Circle()
-                        .fill(
-                            messageText.isEmpty || isDisabled
-                                ? MedicalColors.textMuted.opacity(0.3)
-                                : MedicalColors.primaryBlue
-                        )
-                        .frame(width: 36, height: 36)
-                    
-                    if isSending {
-                        ProgressView()
-                            .scaleEffect(0.7)
-                            .tint(.white)
-                    } else {
-                        Image(systemName: "arrow.up")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
+                // 右侧按钮：无文字时显示麦克风，有文字时显示发送
+                if messageText.isEmpty {
+                    // 麦克风按钮
+                    Button(action: onVoiceTap) {
+                        Image(systemName: "mic.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(isDisabled ? MedicalColors.textMuted : MedicalColors.secondaryTeal)
+                            .frame(width: 44, height: 44)
                     }
+                    .disabled(isDisabled)
+                } else {
+                    // 发送按钮
+                    Button(action: onSend) {
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    isSending || isDisabled
+                                        ? MedicalColors.textMuted.opacity(0.3)
+                                        : MedicalColors.primaryBlue
+                                )
+                                .frame(width: 32, height: 32)
+                            
+                            if isSending {
+                                ProgressView()
+                                    .scaleEffect(0.6)
+                                    .tint(.white)
+                            } else {
+                                Image(systemName: "arrow.up")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        .padding(.trailing, 6)
+                        .padding(.bottom, 6)
+                    }
+                    .disabled(isDisabled || isSending)
                 }
             }
-            .disabled(messageText.isEmpty || isDisabled || isSending)
+            .background(MedicalColors.bgSecondary)
+            .cornerRadius(22)
+            .overlay(
+                RoundedRectangle(cornerRadius: 22)
+                    .stroke(Color.gray.opacity(0.15), lineWidth: 1)
+            )
         }
-        .padding(.horizontal, MedicalSpacing.lg)
-        .padding(.vertical, MedicalSpacing.md)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 }
 
