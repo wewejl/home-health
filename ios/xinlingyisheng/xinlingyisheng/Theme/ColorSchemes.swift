@@ -1,0 +1,97 @@
+import SwiftUI
+
+enum ColorScheme: String, CaseIterable {
+    case deepOcean = "深海蓝调"
+    case elegantPurple = "优雅紫韵"
+    case forestGreen = "森林绿意"
+    case sunsetWarm = "日落暖橙"
+    case minimalistGray = "极简灰度"
+    
+    var primaryColor: Color {
+        switch self {
+        case .deepOcean:
+            return Color(red: 0.15, green: 0.35, blue: 0.65)
+        case .elegantPurple:
+            return Color(red: 0.52, green: 0.37, blue: 0.95)
+        case .forestGreen:
+            return Color(red: 0.20, green: 0.55, blue: 0.45)
+        case .sunsetWarm:
+            return Color(red: 0.95, green: 0.50, blue: 0.35)
+        case .minimalistGray:
+            return Color(red: 0.30, green: 0.32, blue: 0.35)
+        }
+    }
+    
+    var secondaryColor: Color {
+        switch self {
+        case .deepOcean:
+            return Color(red: 0.25, green: 0.60, blue: 0.85)
+        case .elegantPurple:
+            return Color(red: 0.75, green: 0.57, blue: 1.00)
+        case .forestGreen:
+            return Color(red: 0.35, green: 0.75, blue: 0.60)
+        case .sunsetWarm:
+            return Color(red: 0.98, green: 0.70, blue: 0.50)
+        case .minimalistGray:
+            return Color(red: 0.50, green: 0.52, blue: 0.55)
+        }
+    }
+    
+    var accentColor: Color {
+        switch self {
+        case .deepOcean:
+            return Color(red: 0.40, green: 0.75, blue: 0.95)
+        case .elegantPurple:
+            return Color(red: 0.92, green: 0.75, blue: 1.00)
+        case .forestGreen:
+            return Color(red: 0.50, green: 0.90, blue: 0.70)
+        case .sunsetWarm:
+            return Color(red: 1.00, green: 0.85, blue: 0.65)
+        case .minimalistGray:
+            return Color(red: 0.70, green: 0.72, blue: 0.75)
+        }
+    }
+    
+    var gradientColors: [Color] {
+        [primaryColor, secondaryColor]
+    }
+    
+    var backgroundGlowColor: Color {
+        primaryColor.opacity(0.12)
+    }
+    
+    var secondaryGlowColor: Color {
+        secondaryColor.opacity(0.08)
+    }
+}
+
+struct PremiumColorTheme {
+    static var current: ColorScheme = .elegantPurple
+    
+    static let backgroundLight = Color(red: 0.98, green: 0.98, blue: 0.99)
+    static let backgroundDark = Color(red: 0.06, green: 0.08, blue: 0.12)
+    
+    static let cardLight = Color.white.opacity(0.75)
+    static let cardDark = Color(red: 0.14, green: 0.16, blue: 0.20).opacity(0.75)
+    
+    static let textPrimary = Color.primary
+    static let textSecondary = Color.secondary
+    static let textTertiary = Color.gray.opacity(0.55)
+    static let successColor = Color(red: 0.30, green: 0.72, blue: 0.52)
+    
+    static var primaryColor: Color {
+        current.primaryColor
+    }
+    
+    static var secondaryColor: Color {
+        current.secondaryColor
+    }
+    
+    static var accentColor: Color {
+        current.accentColor
+    }
+    
+    static var gradientColors: [Color] {
+        current.gradientColors
+    }
+}

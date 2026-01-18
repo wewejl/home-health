@@ -406,6 +406,15 @@ async def stream_agent_response(
     
     await agent_task
     
+    # === 调试：检查 final_state ===
+    print(f"[DEBUG] stream_agent_response 在 await agent_task 后:")
+    print(f"[DEBUG] - error_occurred: {error_occurred}")
+    print(f"[DEBUG] - final_state is None: {final_state is None}")
+    print(f"[DEBUG] - final_state type: {type(final_state).__name__ if final_state else 'N/A'}")
+    if final_state:
+        print(f"[DEBUG] - final_state keys: {list(final_state.keys())[:10]}")
+    # === 调试结束 ===
+    
     if error_occurred:
         error_data = {"error": error_occurred}
         yield f"event: error\ndata: {json.dumps(error_data, ensure_ascii=False)}\n\n"
@@ -475,9 +484,18 @@ async def stream_agent_response(
         print(f"[DEBUG] complete_data 发送给前端:")
         print(f"[DEBUG] - advice_history: {len(complete_data.get('advice_history', []))} 条")
         print(f"[DEBUG] - diagnosis_card: {'有' if complete_data.get('diagnosis_card') else '无'}")
-        # === 日志结束 ===
         
-        yield f"event: complete\ndata: {json.dumps(complete_data, ensure_ascii=False)}\n\n"
+        # 打印实际的 JSON 字符串
+        json_str = json.dumps(complete_data, ensure_ascii=False)
+        print(f"[DEBUG] complete_data JSON 长度: {len(json_str)} 字符")
+        print(f"[DEBUG] complete_data JSON 包含 'advice_history': {'advice_history' in json_str}")
+        if 'advice_history' in json_str:
+            # 找到 advice_history 在 JSON 中的位置
+            idx = json_str.find('"advice_history"')
+            print(f"[DEBUG] advice_history 片段: {json_str[idx:idx+200]}")
+        # === 调试结束 ===
+        
+        yield f"event: complete\ndata: {json_str}\n\n"
 
 
 def extract_structured_data(state: Dict) -> Optional[Dict]:

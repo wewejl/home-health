@@ -3,6 +3,7 @@ ReAct Agent API 适配层
 
 实现 BaseAgent 接口，保持与现有 API 兼容
 """
+import re
 from typing import Dict, Any, Optional, Callable, Awaitable, List
 from langchain_core.messages import HumanMessage, AIMessage
 
@@ -10,6 +11,181 @@ from ..base import BaseAgent
 from .react_state import create_react_initial_state
 from .react_agent import get_derma_react_graph
 from .quick_options import generate_quick_options
+
+
+# JSON 特征关键词列表（诊断相关）
+_JSON_FIELD_KEYWORDS = {
+    '"care_plan"', '"conditions"', '"summary"', '"risk_level"',
+    '"confidence"', '"rationale"', '"need_offline_visit"', '"urgency"',
+    '"reasoning_steps"', '"references"', '"evidence"', '"title":', '"content":',
+    '"name":', '"id":', '"timestamp"'
+}
+
+
+def _is_json_content(text: str) -> bool:
+    """检测文本是否为 JSON 格式"""
+    if not text:
+        return False
+    stripped = text.strip()
+    # 检测是否以 { 或 [ 开头
+    if stripped.startswith('{') or stripped.startswith('['):
+        # 检测是否包含 JSON 键名特征
+        for keyword in _JSON_FIELD_KEYWORDS:
+            if keyword in stripped:
+                return True
+        # 检测通用 JSON 模式："key": value
+        if re.search(r'"[a-z_]+"\s*:', stripped):
+            return True
+    return False
+
+
+def _looks_like_json_start(text: str) -> bool:
+    """检测文本是否像是 JSON 块的开始"""
+    stripped = text.strip()
+    # 以 { 开头且紧跟 " 或换行后 "
+    if stripped.startswith('{'):
+        rest = stripped[1:].lstrip()
+        if rest.startswith('"') or rest.startswith('\n'):
+            return True
+    return False
+
+
+def _contains_json_field_keyword(text: str) -> bool:
+    """检测文本是否包含 JSON 字段关键词"""
+    for keyword in _JSON_FIELD_KEYWORDS:
+        if keyword in text:
+            return True
+    return False
+
+
+def _filter_json_from_response(text: str) -> str:
+    """从 AI 回复中过滤掉 JSON 内容"""
+    if not text:
+        return text
+    
+    # 如果整个内容都是 JSON，返回空字符串
+    if _is_json_content(text):
+        return ""
+    
+    # 尝试移除文本中嵌入的 JSON 块（支持嵌套）
+    # 使用更健壮的方法：追踪括号层级
+    result = []
+    i = 0
+    n = len(text)
+    while i < n:
+        if text[i] == '{':
+            # 尝试找到匹配的 }
+            depth = 1
+            j = i + 1
+            while j < n and depth > 0:
+                if text[j] == '{':
+                    depth += 1
+                elif text[j] == '}':
+                    depth -= 1
+                j += 1
+            # 检查这个块是否包含 JSON 特征
+            block = text[i:j]
+            if _contains_json_field_keyword(block) or re.search(r'"[a-z_]+"\s*:', block):
+                # 跳过整个 JSON 块
+                i = j
+                continue
+            else:
+                # 不是 JSON，保留
+                result.append(text[i])
+                i += 1
+        else:
+            result.append(text[i])
+            i += 1
+    
+    cleaned = ''.join(result)
+    # 清理多余的空行
+    cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
+    
+    return cleaned.strip()
+
+
+class StreamingJsonFilter:
+    """
+    流式 JSON 过滤器
+    
+    用于在流式输出时检测并过滤 JSON 块，避免用户看到 "先闪 JSON，再被覆盖" 的现象。
+    """
+    
+    def __init__(self):
+        self._buffer = ""  # 累积缓冲区
+        self._in_json_block = False  # 是否正在 JSON 块内
+        self._brace_depth = 0  # 花括号深度
+        self._pending_output = ""  # 待输出内容
+    
+    def process_chunk(self, chunk: str) -> str:
+        """
+        处理一个流式 chunk，返回应该输出的内容
+        
+        Returns:
+            应该发送给前端的内容，可能为空字符串
+        """
+        if not chunk:
+            return ""
+        
+        output = []
+        
+        for char in chunk:
+            if self._in_json_block:
+                # 正在 JSON 块内，追踪括号
+                self._buffer += char
+                if char == '{':
+                    self._brace_depth += 1
+                elif char == '}':
+                    self._brace_depth -= 1
+                    if self._brace_depth == 0:
+                        # JSON 块结束，检查是否确实是 JSON
+                        if _contains_json_field_keyword(self._buffer) or re.search(r'"[a-z_]+"\s*:', self._buffer):
+                            # 确认是 JSON，丢弃整个块
+                            pass
+                        else:
+                            # 不是 JSON，输出缓冲区内容
+                            output.append(self._buffer)
+                        self._buffer = ""
+                        self._in_json_block = False
+            else:
+                # 不在 JSON 块内
+                if char == '{':
+                    # 可能是 JSON 块开始
+                    # 先输出之前累积的待输出内容
+                    if self._pending_output:
+                        output.append(self._pending_output)
+                        self._pending_output = ""
+                    # 开始追踪
+                    self._in_json_block = True
+                    self._brace_depth = 1
+                    self._buffer = char
+                else:
+                    # 普通字符，累积到待输出
+                    self._pending_output += char
+                    # 如果累积了足够内容且不以 JSON 相关字符结尾，可以输出
+                    if len(self._pending_output) > 20 and not self._pending_output.rstrip().endswith(('"', ':')):
+                        output.append(self._pending_output)
+                        self._pending_output = ""
+        
+        return ''.join(output)
+    
+    def flush(self) -> str:
+        """
+        刷新剩余内容
+        
+        Returns:
+            剩余的待输出内容
+        """
+        result = self._pending_output
+        # 如果还在 JSON 块内但未闭合，也尝试输出（可能不是 JSON）
+        if self._in_json_block and self._buffer:
+            if not _contains_json_field_keyword(self._buffer):
+                result += self._buffer
+        self._pending_output = ""
+        self._buffer = ""
+        self._in_json_block = False
+        self._brace_depth = 0
+        return result
 
 
 def _serialize_messages(messages: list) -> List[dict]:
@@ -84,6 +260,30 @@ class DermaReActWrapper(BaseAgent):
                 ai_response = msg.content
                 break
         
+        # 过滤 JSON 内容
+        ai_response = _filter_json_from_response(ai_response)
+        
+        # 如果过滤后为空，且有诊断卡，生成默认的自然语言回复
+        if not ai_response and final_state.get("diagnosis_card"):
+            diagnosis_card = final_state["diagnosis_card"]
+            summary = diagnosis_card.get("summary", "")
+            risk_level = diagnosis_card.get("risk_level", "low")
+            need_visit = diagnosis_card.get("need_offline_visit", False)
+            care_plan = diagnosis_card.get("care_plan", [])
+            
+            # 生成自然语言回复
+            risk_text = {"low": "低", "medium": "中等", "high": "较高", "emergency": "紧急"}.get(risk_level, "")
+            ai_response = f"根据您的症状描述，{summary}\n\n"
+            if risk_text:
+                ai_response += f"风险等级：{risk_text}\n\n"
+            if care_plan:
+                ai_response += "护理建议：\n"
+                for i, advice in enumerate(care_plan[:5], 1):
+                    ai_response += f"{i}. {advice}\n"
+            if need_visit:
+                urgency = diagnosis_card.get("urgency", "")
+                ai_response += f"\n建议就医：{urgency if urgency else '建议尽早到医院皮肤科就诊确认诊断。'}"
+        
         final_state["current_response"] = ai_response
         
         # 生成快捷选项
@@ -103,11 +303,28 @@ class DermaReActWrapper(BaseAgent):
         """流式输出运行"""
         final_state = state.copy()
         
+        # 使用流式 JSON 过滤器，避免用户看到"先闪 JSON 再被覆盖"的现象
+        json_filter = StreamingJsonFilter()
+        
         async for event in self._graph.astream_events(state, version="v2"):
             if event.get("event") == "on_chat_model_stream":
                 chunk = event.get("data", {}).get("chunk")
                 if chunk and hasattr(chunk, "content") and chunk.content:
-                    await on_chunk(chunk.content)
+                    # 过滤掉工具调用相关的内容
+                    if hasattr(chunk, "tool_calls") and chunk.tool_calls:
+                        continue
+                    
+                    # 使用流式 JSON 过滤器处理
+                    content = chunk.content
+                    
+                    # 快速检查：如果整个 chunk 明显是 JSON，直接跳过
+                    if _is_json_content(content):
+                        continue
+                    
+                    # 通过流式过滤器处理（处理跨 chunk 的 JSON 块）
+                    filtered_content = json_filter.process_chunk(content)
+                    if filtered_content:
+                        await on_chunk(filtered_content)
             elif event.get("event") == "on_chain_end":
                 output = event.get("data", {}).get("output")
                 if isinstance(output, dict):
@@ -142,6 +359,11 @@ class DermaReActWrapper(BaseAgent):
                         print(f"[DEBUG]   - 值类型: {type(diag_val).__name__}")
                         print(f"[DEBUG]   - 值是否为None: {diag_val is None}")
                     # === 日志结束 ===
+        
+        # 刷新流式过滤器中剩余的内容
+        remaining = json_filter.flush()
+        if remaining:
+            await on_chunk(remaining)
         
         # === 调试日志：最终状态 ===
         print(f"[DEBUG] _run_with_stream 最终状态:")

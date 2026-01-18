@@ -46,6 +46,7 @@ class DiagnosisOutput(BaseModel):
     need_offline_visit: bool = Field(default=False, description="是否需要线下就诊")
     urgency: Optional[str] = Field(default=None, description="就诊紧急程度说明")
     care_plan: List[str] = Field(default_factory=list, description="护理建议列表")
+    references: List[dict] = Field(default_factory=list, description="知识引用列表")
     reasoning_steps: List[str] = Field(default_factory=list, description="推理步骤")
 
 
@@ -289,7 +290,11 @@ def generate_structured_diagnosis(
     
     try:
         result = structured_llm.invoke(prompt)
-        return result.model_dump()
+        result_dict = result.model_dump()
+        # 确保包含 references 字段（即使为空）
+        if "references" not in result_dict:
+            result_dict["references"] = knowledge_refs if knowledge_refs else []
+        return result_dict
     except Exception as e:
         # fallback：返回默认结构
         return {
@@ -299,6 +304,7 @@ def generate_structured_diagnosis(
             "need_offline_visit": False,
             "urgency": None,
             "care_plan": ["建议保持皮肤清洁", "避免刺激"],
+            "references": knowledge_refs if knowledge_refs else [],
             "reasoning_steps": ["信息收集", "生成建议"]
         }
 

@@ -1,0 +1,200 @@
+import SwiftUI
+
+// MARK: - 验证码输入组件 - 自适应布局
+struct VerificationCodeInput: View {
+    @Binding var code: String
+    let codeLength: Int
+    var onComplete: ((String) -> Void)?
+    var style: VerificationCodeStyle = VerificationCodeStyle.default
+    
+    @FocusState private var isFocused: Bool
+    
+    init(
+        code: Binding<String>,
+        codeLength: Int = 6,
+        onComplete: ((String) -> Void)? = nil,
+        style: VerificationCodeStyle = .default
+    ) {
+        self._code = code
+        self.codeLength = codeLength
+        self.onComplete = onComplete
+        self.style = style
+    }
+    
+    var body: some View {
+        GeometryReader { geometry in
+            let availableWidth = geometry.size.width
+            let spacing = calculateSpacing(for: availableWidth)
+            let boxSize = calculateBoxSize(for: availableWidth, spacing: spacing)
+            
+            ZStack {
+                TextField("", text: $code)
+                    .keyboardType(.numberPad)
+                    .textContentType(.oneTimeCode)
+                    .focused($isFocused)
+                    .opacity(0.01)
+                    .frame(width: 1, height: 1)
+                    .onChangeCompat(of: code) { newValue in
+                        let filtered = newValue.filter { $0.isNumber }
+                        if filtered.count > codeLength {
+                            code = String(filtered.prefix(codeLength))
+                        } else if filtered != newValue {
+                            code = filtered
+                        }
+                        if code.count == codeLength {
+                            onComplete?(code)
+                        }
+                    }
+                
+                HStack(spacing: spacing) {
+                    ForEach(0..<codeLength, id: \.self) { index in
+                        CodeDigitBox(
+                            digit: getDigit(at: index),
+                            isActive: code.count == index && isFocused,
+                            isFilled: code.count > index,
+                            isCompleted: code.count == codeLength,
+                            style: style,
+                            boxWidth: boxSize.width,
+                            boxHeight: boxSize.height
+                        )
+                    }
+                }
+                .frame(width: availableWidth, height: boxSize.height)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    isFocused = true
+                }
+            }
+            .frame(width: availableWidth, height: boxSize.height)
+        }
+        .frame(height: calculateFixedHeight())
+    }
+    
+    private func calculateSpacing(for width: CGFloat) -> CGFloat {
+        if width < 280 { return 4 }
+        else if width < 320 { return 6 }
+        else if width < 360 { return 8 }
+        return 10
+    }
+    
+    private func calculateBoxSize(for width: CGFloat, spacing: CGFloat) -> CGSize {
+        let totalSpacing = spacing * CGFloat(codeLength - 1)
+        let availableForBoxes = width - totalSpacing
+        let boxWidth = max(28, availableForBoxes / CGFloat(codeLength))
+        let boxHeight = min(54, max(44, boxWidth * 1.2))
+        return CGSize(width: boxWidth, height: boxHeight)
+    }
+    
+    private func calculateFixedHeight() -> CGFloat {
+        if DeviceType.isVeryCompactWidth { return 46 }
+        if DeviceType.isCompactWidth { return 50 }
+        if DeviceType.isStandardWidth { return 52 }
+        return 54
+    }
+    
+    private func getDigit(at index: Int) -> String {
+        guard index < code.count else { return "" }
+        let startIndex = code.index(code.startIndex, offsetBy: index)
+        return String(code[startIndex])
+    }
+}
+
+// MARK: - 单个数字格子
+struct CodeDigitBox: View {
+    let digit: String
+    let isActive: Bool
+    let isFilled: Bool
+    let isCompleted: Bool
+    let style: VerificationCodeStyle
+    let boxWidth: CGFloat
+    let boxHeight: CGFloat
+    
+    private var cornerRadius: CGFloat { min(12, boxWidth * 0.25) }
+    private var fontSize: CGFloat { min(24, max(16, boxWidth * 0.5)) }
+    
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(style.baseFill)
+                .overlay(
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .stroke(borderColor, lineWidth: isActive ? 2 : 1)
+                )
+                .frame(width: boxWidth, height: boxHeight)
+            
+            if digit.isEmpty && isActive {
+                Rectangle()
+                    .fill(style.activeBorder)
+                    .frame(width: 2, height: boxHeight * 0.45)
+                    .blinkingCursor()
+            } else {
+                Text(digit)
+                    .font(.system(size: fontSize, weight: .semibold, design: .rounded))
+                    .foregroundColor(style.textColor)
+            }
+        }
+        .animation(.easeInOut(duration: 0.15), value: isActive)
+        .animation(.easeInOut(duration: 0.15), value: isFilled)
+        .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isCompleted)
+    }
+    
+    private var borderColor: Color {
+        if isCompleted { return style.successBorder ?? style.filledBorder }
+        if isActive { return style.activeBorder }
+        return isFilled ? style.filledBorder : style.emptyBorder
+    }
+}
+
+// MARK: - 样式定义
+struct VerificationCodeStyle {
+    let baseFill: Color
+    let emptyBorder: Color
+    let activeBorder: Color
+    let filledBorder: Color
+    let successBorder: Color?
+    let textColor: Color
+    
+    static let `default` = VerificationCodeStyle(
+        baseFill: Color.dynamicColor(
+            light: Color.white.opacity(0.6),
+            dark: Color(red: 0.18, green: 0.18, blue: 0.22).opacity(0.6)
+        ),
+        emptyBorder: Color.gray.opacity(0.2),
+        activeBorder: PremiumColorTheme.primaryColor,
+        filledBorder: PremiumColorTheme.primaryColor.opacity(0.5),
+        successBorder: PremiumColorTheme.successColor,
+        textColor: PremiumColorTheme.textPrimary
+    )
+}
+
+// MARK: - 光标闪烁动画
+struct BlinkingCursor: ViewModifier {
+    @State private var isVisible = true
+    
+    func body(content: Content) -> some View {
+        content
+            .opacity(isVisible ? 1 : 0)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
+                    isVisible.toggle()
+                }
+            }
+    }
+}
+
+extension View {
+    func blinkingCursor() -> some View {
+        modifier(BlinkingCursor())
+    }
+}
+
+#Preview {
+    VStack(spacing: 20) {
+        VerificationCodeInput(code: .constant("123"))
+            .frame(maxWidth: 320)
+        VerificationCodeInput(code: .constant("123456"))
+            .frame(maxWidth: 280)
+    }
+    .padding()
+    .background(Color.gray.opacity(0.1))
+}
