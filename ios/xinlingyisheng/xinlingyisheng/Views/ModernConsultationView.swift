@@ -323,7 +323,9 @@ struct ModernConsultationView: View {
                         .background(Color(.systemGray6))
                     }
                     
-                    VoiceControlBar(viewModel: viewModel)
+                    VoiceControlBar(viewModel: viewModel, onImageTap: {
+                        showImageSourcePicker = true
+                    })
                 }
                 .background(Color(hex: "#E8F5E9"))
             } else {

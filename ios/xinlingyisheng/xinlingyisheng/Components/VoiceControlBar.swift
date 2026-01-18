@@ -3,32 +3,50 @@ import SwiftUI
 // MARK: - 语音控制栏
 struct VoiceControlBar: View {
     @ObservedObject var viewModel: UnifiedChatViewModel
+    var onImageTap: (() -> Void)? = nil
     
     var body: some View {
         VStack(spacing: 12) {
             // 提示文字
             if viewModel.isAISpeaking {
-                Text("点击或说话打断")
+                HStack {
+                    Image(systemName: "speaker.wave.2.fill")
+                        .foregroundColor(.blue)
+                    Text("AI 正在播报，点击打断")
+                        .font(.system(size: 14))
+                        .foregroundColor(.gray)
+                }
+                .onTapGesture {
+                    viewModel.interruptAISpeech()
+                }
+            } else if viewModel.isRecording {
+                HStack {
+                    Image(systemName: "waveform")
+                        .foregroundColor(.green)
+                    Text("正在聆听...")
+                        .font(.system(size: 14))
+                        .foregroundColor(.green)
+                }
+            } else {
+                Text("点击麦克风开始说话")
                     .font(.system(size: 14))
                     .foregroundColor(.gray)
             }
             
             // 控制按钮
             HStack(spacing: 32) {
-                // 麦克风按钮
+                // 麦克风按钮 - 点击打断 AI 或显示状态
                 VoiceButton(
-                    icon: "mic.fill",
-                    label: "麦克风",
+                    icon: viewModel.isRecording ? "mic.fill" : "mic",
+                    label: viewModel.isRecording ? "聆听中" : "麦克风",
                     isActive: viewModel.isRecording,
-                    action: {}
-                )
-                
-                // AI 功能按钮
-                VoiceButton(
-                    icon: "sparkles",
-                    label: "AI生成",
-                    isActive: false,
-                    action: {}
+                    action: {
+                        // 如果 AI 正在播报，打断它
+                        if viewModel.isAISpeaking {
+                            viewModel.interruptAISpeech()
+                        }
+                        // 麦克风在语音模式下自动开启，此按钮仅显示状态
+                    }
                 )
                 
                 // 图片按钮
@@ -36,7 +54,9 @@ struct VoiceControlBar: View {
                     icon: "photo",
                     label: "图片",
                     isActive: false,
-                    action: {}
+                    action: {
+                        onImageTap?()
+                    }
                 )
                 
                 // 关闭按钮
@@ -52,7 +72,7 @@ struct VoiceControlBar: View {
             }
             
             // 底部提示
-            Text("内容由 AI 生成")
+            Text("内容由 AI 生成，仅供参考")
                 .font(.system(size: 12))
                 .foregroundColor(.gray.opacity(0.6))
         }
@@ -105,5 +125,5 @@ struct VoiceButton: View {
 
 // MARK: - Preview
 #Preview {
-    VoiceControlBar(viewModel: UnifiedChatViewModel())
+    VoiceControlBar(viewModel: UnifiedChatViewModel(), onImageTap: {})
 }
