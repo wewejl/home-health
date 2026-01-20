@@ -1,0 +1,93 @@
+# Home-Health 生产环境 Docker Compose 配置
+# 鑫琳医生 - AI 医生分身系统
+
+version: "3.8"
+
+services:
+  # FastAPI 后端服务
+  backend:
+    image: ghcr.io/wewejl/home-health-backend:${IMAGE_TAG:-latest}
+    container_name: home-health-backend
+    restart: always
+    ports:
+      - "8100:8100"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-480}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1}
+      - LLM_MODEL=${LLM_MODEL:-qwen-plus}
+      - QWEN_VL_MODEL=${QWEN_VL_MODEL:-qwen3-vl-plus}
+      - ALIYUN_SMS_ACCESS_KEY_ID=${ALIYUN_SMS_ACCESS_KEY_ID}
+      - ALIYUN_SMS_ACCESS_KEY_SECRET=${ALIYUN_SMS_ACCESS_KEY_SECRET}
+      - TEST_MODE=false
+    volumes:
+      - ./data/uploads:/app/uploads
+      - ./data/logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - home-health-network
+
+  # React 前端服务 (Nginx)
+  frontend:
+    image: ghcr.io/wewejl/home-health-frontend:${IMAGE_TAG:-latest}
+    container_name: home-health-frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    volumes:
+      # 挂载 SSL 证书（如果使用 HTTPS）
+      - ./ssl/nginx.crt:/etc/nginx/ssl/nginx.crt:ro
+      - ./ssl/nginx.key:/etc/nginx/ssl/nginx.key:ro
+    networks:
+      - home-health-network
+
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: home-health-postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-home_health}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - home-health-network
+
+  # Redis 缓存（可选，用于会话管理）
+  redis:
+    image: redis:7-alpine
+    container_name: home-health-redis
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - home-health-network
+
+networks:
+  home-health-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:

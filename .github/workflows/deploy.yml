@@ -1,0 +1,147 @@
+# Home-Health 自动部署工作流
+# 镜像构建成功后自动部署到生产服务器
+
+name: Deploy to Server
+
+on:
+  workflow_run:
+    workflows: ["Build Docker Images"]
+    types: [completed]
+    branches: [main, develop]
+
+env:
+  # 部署目录
+  DEPLOY_PATH: /opt/home-health
+  # GitHub 用户名（需要与 build.yml 保持一致）
+  GITHUB_USERNAME: ${{ github.repository_owner }}
+
+jobs:
+  deploy:
+    # 只在构建成功后执行
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 获取分支信息
+        id: branch_info
+        run: |
+          # 获取触发的分支名
+          if [[ "${{ github.event.workflow_run.event }}" == "pull_request" ]]; then
+            BRANCH="${{ github.event.workflow_run.pull_request.head.ref }}"
+          else
+            BRANCH="${{ github.event.workflow_run.head_branch }}"
+          fi
+          echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+          echo "部署分支: ${BRANCH}"
+
+      - name: 设置镜像标签
+        id: image_tag
+        run: |
+          # 使用分支名和 Git SHA 作为标签
+          if [[ "${{ steps.branch_info.outputs.branch }}" == "main" ]]; then
+            TAG="latest"
+          else
+            TAG="${{ steps.branch_info.outputs.branch }}-latest"
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "镜像标签: ${TAG}"
+
+      - name: 部署到服务器
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            set -e
+
+            echo "=== 开始部署 ==="
+            echo "部署分支: ${{ steps.branch_info.outputs.branch }}"
+            echo "镜像标签: ${{ steps.image_tag.outputs.tag }}"
+
+            # 确保部署目录存在
+            sudo mkdir -p ${{ env.DEPLOY_PATH }}
+            sudo chown -R ${{ secrets.DEPLOY_USER }}:${{ secrets.DEPLOY_USER }} ${{ env.DEPLOY_PATH }}
+
+            cd ${{ env.DEPLOY_PATH }}
+
+            # 创建 .env 文件（如果不存在）
+            if [ ! -f .env ]; then
+              echo "创建 .env 文件..."
+              cat > .env << 'ENVEOF'
+            GITHUB_USERNAME=${{ github.repository_owner }}
+            IMAGE_TAG=${{ steps.image_tag.outputs.tag }}
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+            LLM_API_KEY=${{ secrets.LLM_API_KEY }}
+            ALIYUN_SMS_ACCESS_KEY_ID=${{ secrets.ALIYUN_SMS_ACCESS_KEY_ID }}
+            ALIYUN_SMS_ACCESS_KEY_SECRET=${{ secrets.ALIYUN_SMS_ACCESS_KEY_SECRET }}
+            ENVEOF
+            else
+              # 更新镜像标签
+              sed -i "s/IMAGE_TAG=.*/IMAGE_TAG=${{ steps.image_tag.outputs.tag }}/" .env
+            fi
+
+            # 拉取 docker-compose.yml
+            echo "更新 docker-compose.yml..."
+            cat > docker-compose.yml << 'COMPOSEEOF'
+            $(cat deployment/docker-compose.yml | sed 's/\${GITHUB_USERNAME}/${{ github.repository_owner }}/g' | sed "s/\${IMAGE_TAG:-latest}/${{ steps.image_tag.outputs.tag }}/g")
+            COMPOSEEOF
+
+            # 拉取最新镜像
+            echo "拉取最新镜像..."
+            docker compose pull
+
+            # 启动服务
+            echo "启动服务..."
+            docker compose up -d
+
+            # 清理未使用的镜像
+            echo "清理旧镜像..."
+            docker image prune -f
+
+            echo "=== 部署完成 ==="
+
+      - name: 健康检查
+        run: |
+          echo "等待服务启动..."
+          sleep 30
+
+          echo "检查后端健康状态..."
+          BACKEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.DEPLOY_HOST }}:8100/health || echo "000")
+          echo "后端状态码: ${BACKEND_STATUS}"
+
+          if [[ "${BACKEND_STATUS}" == "200" ]]; then
+            echo "✅ 后端服务健康"
+          else
+            echo "❌ 后端服务异常"
+            exit 1
+          fi
+
+          echo "检查前端服务..."
+          FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.DEPLOY_HOST }}/ || echo "000")
+          echo "前端状态码: ${FRONTEND_STATUS}"
+
+          if [[ "${FRONTEND_STATUS}" == "200" ]]; then
+            echo "✅ 前端服务健康"
+          else
+            echo "⚠️ 前端服务可能需要检查"
+          fi
+
+      - name: 部署成功通知
+        if: success()
+        run: |
+          echo "🎉 部署成功！"
+          echo "分支: ${{ steps.branch_info.outputs.branch }}"
+          echo "镜像标签: ${{ steps.image_tag.outputs.tag }}"
+          echo "访问地址: http://${{ secrets.DEPLOY_HOST }}/"
+
+      - name: 部署失败通知
+        if: failure()
+        run: |
+          echo "❌ 部署失败，请检查日志"
