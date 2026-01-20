@@ -1,15 +1,20 @@
-# 使用官方Python运行时作为基础镜像
-FROM python:3.12-slim
+# 使用阿里云镜像加速 (docker.1ms.run)
+FROM docker.1ms.run/library/python:3.12-slim
 
 # 设置工作目录
 WORKDIR /app
 
-# 安装系统依赖
-RUN apt-get update && apt-get install -y \
+# 配置阿里云 apt 镜像加速（国内服务器）
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || \
+    sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+    apt-get update && apt-get install -y \
     gcc \
     postgresql-client \
     curl \
     && rm -rf /var/lib/apt/lists/*
+
+# 配置清华 pip 镜像加速
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 复制依赖文件
 COPY requirements.txt .

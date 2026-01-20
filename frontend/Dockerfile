@@ -1,7 +1,10 @@
-# 构建阶段
-FROM node:20-alpine AS builder
+# 构建阶段 - 使用阿里云镜像加速
+FROM docker.1ms.run/library/node:20-alpine AS builder
 
 WORKDIR /app
+
+# 配置淘宝 npm 镜像加速
+RUN npm config set registry https://registry.npmmirror.com
 
 # 复制package文件
 COPY package*.json ./
@@ -15,8 +18,8 @@ COPY . .
 # 构建应用
 RUN npm run build
 
-# 生产阶段
-FROM nginx:alpine
+# 生产阶段 - 使用阿里云镜像加速
+FROM docker.1ms.run/library/nginx:alpine
 
 # 复制构建产物到nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
