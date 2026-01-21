@@ -390,7 +390,7 @@ struct AIFeaturesSection: View {
                         Circle()
                             .fill(
                                 LinearGradient(
-                                    colors: [Color(hex: "#3B82F6"), Color(hex: "#0891B2")],
+                                    colors: [DXYColors.blue, DXYColors.teal],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -413,7 +413,7 @@ struct AIFeaturesSection: View {
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(Color(hex: "#3B82F6"))
+                                .background(DXYColors.blue)
                                 .clipShape(Capsule())
                         }
                         

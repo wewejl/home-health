@@ -31,7 +31,7 @@ struct VoiceControlBar: View {
         }
         .background(
             LinearGradient(
-                colors: [Color(hex: "#F0FDF4"), Color(hex: "#DCFCE7")],
+                colors: [MedicalColors.bgPrimary, MedicalColors.bgSecondary],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -73,11 +73,11 @@ struct VoiceControlBar: View {
                     .foregroundColor(MedicalColors.textSecondary)
             } else if viewModel.isRecording {
                 Circle()
-                    .fill(Color.green)
+                    .fill(MedicalColors.successGreen)
                     .frame(width: 8, height: 8)
                 Text("正在聆听...")
                     .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(Color(hex: "#16A34A"))
+                    .foregroundColor(MedicalColors.successGreen)
             } else {
                 Text("点击开始语音对话")
                     .font(.system(size: 15, weight: .medium))

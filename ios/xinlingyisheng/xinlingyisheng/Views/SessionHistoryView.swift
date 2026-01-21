@@ -205,7 +205,7 @@ struct SessionHistoryCard: View {
         switch session.agent_type {
         case "dermatology": return MedicalColors.secondaryTeal
         case "cardiology": return MedicalColors.statusError
-        case "orthopedics": return Color(hex: "#8B5CF6")
+        case "orthopedics": return MedicalColors.statusWarning  // 使用统一的橙色
         default: return MedicalColors.primaryBlue
         }
     }

@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 REPO="wewejl/home-health"
-RUNNER_TOKEN="AKKKBAGYGCRGLQ3SWK6X57LJN6VS4"  # 有效期 1 小时
+RUNNER_TOKEN="AKKKBAFPTGXLGP3GEXLRVG3JN6Y3O"  # 有效期 1 小时
 RUNNER_NAME="home-health-$(hostname)"
 
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }

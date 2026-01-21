@@ -17,8 +17,8 @@ struct FullScreenVoiceModeView: View {
     private let recordingPurple = DXYColors.primaryPurple             // 录音状态紫色 #5C44FF
     private let textGray = DXYColors.textSecondary                    // 次要文字色
     private let textDarkGray = DXYColors.textPrimary                  // 主要文字色
-    private let buttonBgGray = Color(red: 0.95, green: 0.94, blue: 0.97)  // 按钮背景 #F2F1F7
-    private let dangerRed = Color(red: 1.0, green: 0.35, blue: 0.35)  // 危险红色
+    private let buttonBgGray = DXYColors.tagBackground               // 按钮背景 #F2F1F7
+    private let dangerRed = Color(hex: "#EF4444")                     // 危险红色 (使用 MedicalColors.statusError)
     private let mutedGray = DXYColors.textTertiary                    // 静音灰色
     
     // MARK: - 动画状态

@@ -1,12 +1,13 @@
 # Home-Health 生产环境 Docker Compose 配置
 # 鑫琳医生 - AI 医生分身系统
+# 使用 Docker Hub 镜像（国内访问更快）
 
 version: "3.8"
 
 services:
   # FastAPI 后端服务
   backend:
-    image: ghcr.io/wewejl/home-health-backend:${IMAGE_TAG:-latest}
+    image: wewejl/home-health-backend:${IMAGE_TAG:-latest}
     container_name: home-health-backend
     restart: always
     ports:
@@ -39,7 +40,7 @@ services:
 
   # React 前端服务 (Nginx)
   frontend:
-    image: ghcr.io/wewejl/home-health-frontend:${IMAGE_TAG:-latest}
+    image: wewejl/home-health-frontend:${IMAGE_TAG:-latest}
     container_name: home-health-frontend
     restart: always
     ports:

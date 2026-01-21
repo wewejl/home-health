@@ -377,7 +377,7 @@ struct ModernConsultationView: View {
     private func actionColor(_ action: AgentAction) -> Color {
         switch action {
         case .analyzeSkin: return MedicalColors.secondaryTeal
-        case .interpretReport: return Color(hex: "#8B5CF6")
+        case .interpretReport: return MedicalColors.statusWarning  // 使用统一的橙色
         case .interpretECG: return MedicalColors.statusError
         default: return MedicalColors.primaryBlue
         }

@@ -32,7 +32,7 @@ jobs:
           sed -i 's|wewejl/home-health-frontend:latest|home-health-frontend:latest|g' docker-compose.yml
 
           # 启动服务
-          docker compose up -d
+          docker-compose up -d
 
           # 清理旧镜像
           docker image prune -f
@@ -40,7 +40,7 @@ jobs:
           echo "=== 部署完成 ==="
 
           # 显示服务状态
-          docker compose ps
+          docker-compose ps
 
       - name: 健康检查
         run: |
