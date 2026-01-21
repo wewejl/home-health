@@ -31,6 +31,7 @@ class Disease(Base):
     author_title = Column(String(100), nullable=True)  # 作者职称
     author_avatar = Column(String(255), nullable=True)
     reviewer_info = Column(String(200), nullable=True)  # 审核信息，如"三甲医生专业编审"
+    source = Column(String(50), nullable=True, index=True)  # 数据来源：ICD-10, medical.json, manual
     
     # 排序与状态
     is_hot = Column(Boolean, default=False)  # 是否热门
