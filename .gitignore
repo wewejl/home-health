@@ -46,6 +46,9 @@ coverage/
 htmlcov/
 *.log
 
+# Git worktrees
+.worktrees/
+
 # Misc
 *.swp
 *.swo
