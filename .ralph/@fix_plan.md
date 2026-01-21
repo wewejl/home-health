@@ -1,6 +1,6 @@
 # 医生分身系统完善 - 任务计划
 
-## Phase 1: 查病查药数据导入 (P0)
+## Phase 1: 查病查药数据导入 (P0) ✅ 已完成
 
 ### 数据源准备
 - [x] 确认数据模型已完整（Disease、Drug 模型字段齐全）
@@ -9,9 +9,12 @@
 
 ### 数据导入执行
 - [x] 导入脚本已创建
-- [ ] 在服务器上执行: `python3 scripts/seed_extended_data.py`
-- [ ] 验证疾病数据 ≥1000 条
-- [ ] 验证药品数据 ≥500 条
+- [x] 在服务器上执行数据导入
+- [x] 验证疾病数据 ≥1000 条 (实际: 1701 条)
+- [x] 验证药品数据 ≥500 条 (实际: 641 条)
+- [x] 数据已提交到 Git
+- [x] SSH 配置已保存 (~/.ssh/config)
+- [x] 数据同步脚本已创建 (scripts/sync_data.sh)
 
 ---
 
@@ -121,8 +124,5 @@
 - 遇到问题在 Notes 中记录
 
 ## 下一步
-在服务器上执行扩展数据导入：
-```bash
-cd /opt/home-health/source/backend
-python3 scripts/seed_extended_data.py
-```
+### Phase 2: iOS 查病查药详情页
+创建疾病详情页和药品详情页，实现列表跳转。
