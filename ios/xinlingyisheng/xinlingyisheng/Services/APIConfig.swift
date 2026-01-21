@@ -5,8 +5,15 @@ enum APIConfig {
     enum Environment {
         case development
         case production
-        
-        var baseURL: String { "http://apixinling.natapp1.cc" }
+
+        var baseURL: String {
+            switch self {
+            case .development:
+                return "http://123.206.232.231"
+            case .production:
+                return "http://123.206.232.231"
+            }
+        }
     }
     
     // 当前环境配置 - 切换此处即可切换环境
