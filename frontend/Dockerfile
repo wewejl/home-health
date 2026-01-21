@@ -3,6 +3,10 @@ FROM docker.1ms.run/library/node:20-alpine AS builder
 
 WORKDIR /app
 
+# API 地址（构建时传入，默认生产环境使用相对路径）
+ARG VITE_API_BASE_URL=/api
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 # 配置淘宝 npm 镜像加速
 RUN npm config set registry https://registry.npmmirror.com
 
