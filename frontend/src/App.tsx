@@ -13,6 +13,7 @@ import Knowledge from './pages/Knowledge';
 import Feedbacks from './pages/Feedbacks';
 import Stats from './pages/Stats';
 import DermaChat from './pages/DermaChat';
+import DoctorPersonaChat from './pages/admin/DoctorPersonaChat';
 
 interface AdminUser {
   id: number;
@@ -88,6 +89,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="departments" element={<Departments />} />
               <Route path="doctors" element={<Doctors />} />
+              <Route path="doctors/:id/persona" element={<DoctorPersonaChat />} />
               <Route path="diseases" element={<Diseases />} />
               <Route path="drugs" element={<Drugs />} />
               <Route path="knowledge" element={<Knowledge />} />

@@ -121,7 +121,7 @@ export const diseasesApi = {
 
 // Drug Categories API
 export const drugCategoriesApi = {
-  list: (includeInactive?: boolean) => 
+  list: (includeInactive?: boolean) =>
     api.get('/admin/drug-categories', { params: { include_inactive: includeInactive } }),
   create: (data: any) => api.post('/admin/drug-categories', data),
   update: (id: number, data: any) => api.put(`/admin/drug-categories/${id}`, data),
@@ -139,24 +139,33 @@ export const drugsApi = {
   toggleActive: (id: number) => api.post(`/admin/drugs/${id}/toggle-active`),
 };
 
+// Persona Chat API (医生分身对话式采集)
+export const personaChatApi = {
+  start: (doctorId: number) => api.post(`/admin/doctors/${doctorId}/persona-chat/start`),
+  sendMessage: (doctorId: number, message: string, state: string) =>
+    api.post(`/admin/doctors/${doctorId}/persona-chat`, { message, state }),
+  getStatus: (doctorId: number) => api.get(`/admin/doctors/${doctorId}/persona-status`),
+  reset: (doctorId: number) => api.post(`/admin/doctors/${doctorId}/persona-chat/reset`),
+};
+
 // Dermatology Agent API
 export const dermaAgentApi = {
   // 创建新会话
-  createSession: (chiefComplaint?: string) => 
-    api.post('/derma/start', { 
-      chief_complaint: chiefComplaint || '' 
+  createSession: (chiefComplaint?: string) =>
+    api.post('/derma/start', {
+      chief_complaint: chiefComplaint || ''
     }),
-  
+
   // 发送消息（继续对话）
   sendMessage: (sessionId: string, message: string, history: any[] = []) =>
-    api.post(`/derma/${sessionId}/continue`, { 
+    api.post(`/derma/${sessionId}/continue`, {
       history: history,
       current_input: {
         message: message
       },
       task_type: 'conversation'
     }),
-  
+
   // 创建新会话（SSE 流式）
   createSessionStream: (chiefComplaint?: string, callbacks?: {
     onMeta?: (data: any) => void;
@@ -224,9 +233,9 @@ export const dermaAgentApi = {
     }
   ) => {
     const token = localStorage.getItem('admin_token');
-    
+
     console.log('[SSE] Starting stream request to:', `${API_BASE_URL}/derma/${sessionId}/continue`);
-    
+
     fetch(`${API_BASE_URL}/derma/${sessionId}/continue`, {
       method: 'POST',
       headers: {
@@ -242,7 +251,7 @@ export const dermaAgentApi = {
     }).then(async (response) => {
       console.log('[SSE] Response status:', response.status);
       console.log('[SSE] Response headers:', Object.fromEntries(response.headers.entries()));
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('[SSE] HTTP error response:', errorText);
@@ -282,7 +291,7 @@ export const dermaAgentApi = {
           if (eventMatch && dataMatch) {
             const eventType = eventMatch[1].trim();
             const dataStr = dataMatch[1].trim();
-            
+
             console.log('[SSE] Event type:', eventType);
             console.log('[SSE] Data string:', dataStr);
 
@@ -327,7 +336,7 @@ export const dermaAgentApi = {
       callbacks?.onError?.(error.message);
     });
   },
-  
+
   // 获取会话详情
   getSession: (sessionId: string) =>
     api.get(`/derma/${sessionId}`),

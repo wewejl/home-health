@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Table, Button, Space, Tag, Modal, Form, Input, Select, Switch,
   message, Popconfirm, Typography, Card, Drawer, InputNumber, Tabs
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, PlayCircleOutlined, MessageOutlined } from '@ant-design/icons';
 import { doctorsApi, departmentsApi, knowledgeBasesApi } from '../api';
 
 const { Title } = Typography;
@@ -26,6 +27,7 @@ interface Doctor {
 }
 
 const Doctors: React.FC = () => {
+  const navigate = useNavigate();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [knowledgeBases, setKnowledgeBases] = useState<any[]>([]);
@@ -138,6 +140,11 @@ const Doctors: React.FC = () => {
     }
   };
 
+  // 跳转到对话式配置页面
+  const handlePersonaChat = (doctorId: number) => {
+    navigate(`/admin/doctors/${doctorId}/persona`);
+  };
+
   const columns = [
     { title: 'ID', dataIndex: 'id', width: 60 },
     { title: '姓名', dataIndex: 'name', width: 100 },
@@ -165,9 +172,20 @@ const Doctors: React.FC = () => {
     },
     {
       title: '操作',
-      width: 180,
+      width: 280,
       render: (_: any, record: Doctor) => (
-        <Space>
+        <Space wrap>
+          {record.is_ai && (
+            <Button
+              size="small"
+              icon={<MessageOutlined />}
+              onClick={() => handlePersonaChat(record.id)}
+              type="primary"
+              ghost
+            >
+              配置分身
+            </Button>
+          )}
           <Button size="small" icon={<PlayCircleOutlined />} onClick={() => handleTest(record)}>
             测试
           </Button>
@@ -189,7 +207,7 @@ const Doctors: React.FC = () => {
         </Button>
       </div>
 
-      <Table columns={columns} dataSource={doctors} rowKey="id" loading={loading} scroll={{ x: 1000 }} />
+      <Table columns={columns} dataSource={doctors} rowKey="id" loading={loading} scroll={{ x: 1100 }} />
 
       <Modal
         title={editingDoctor ? '编辑医生' : '新增医生'}
@@ -257,7 +275,7 @@ const Doctors: React.FC = () => {
                       />
                     </Form.Item>
                     <Form.Item name="ai_persona_prompt" label="人设Prompt">
-                      <TextArea rows={6} placeholder="自定义AI人格化提示词..." />
+                      <TextArea rows={6} placeholder="自定义AI人格化提示词，或使用「配置分身」功能通过对话生成..." />
                     </Form.Item>
                   </>
                 ),
