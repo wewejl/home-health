@@ -1,10 +1,10 @@
 {
-    "timestamp": "2026-01-21T12:46:55+00:00",
-    "loop_count": 117,
-    "calls_made_this_hour": 25,
+    "timestamp": "2026-01-21T15:52:45+00:00",
+    "loop_count": 32,
+    "calls_made_this_hour": 29,
     "max_calls_per_hour": 100,
-    "last_action": "interrupted",
-    "status": "stopped",
+    "last_action": "executing",
+    "status": "running",
     "exit_reason": "",
-    "next_reset": "21:46:55"
+    "next_reset": "00:52:45"
 }

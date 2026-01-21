@@ -7,6 +7,7 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 import PyPDF2
 from io import BytesIO
+import PyPDF2.errors
 
 
 class RecordAnalysisService:
@@ -72,8 +73,10 @@ class RecordAnalysisService:
                     text_parts.append(text)
 
             return "\n".join(text_parts)
-        except Exception as e:
-            raise ValueError(f"PDF 解析失败: {str(e)}")
+        except PyPDF2.errors.PdfReadError:
+            raise ValueError("PDF 文件损坏或格式不支持")
+        except Exception:
+            raise ValueError("PDF 解析失败，请检查文件格式")
 
     @staticmethod
     def extract_features(text: str) -> Dict[str, str]:
@@ -175,15 +178,13 @@ class RecordAnalysisService:
 
     @staticmethod
     async def analyze_records(
-        files: List[tuple[str, bytes]],
-        qwen_service
+        files: List[tuple[str, bytes]]
     ) -> Dict[str, Any]:
         """
         分析病历文件，提取诊疗特征并生成 prompt
 
         Args:
             files: 文件列表 [(filename, content), ...]
-            qwen_service: Qwen 服务实例
 
         Returns:
             分析结果

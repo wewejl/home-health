@@ -62,6 +62,21 @@ const DoctorPersonaChat: React.FC = () => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  // 防止用户刷新页面丢失进度
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges && !isComplete) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges, isComplete]);
+
   // 初始化
   useEffect(() => {
     const initChat = async () => {

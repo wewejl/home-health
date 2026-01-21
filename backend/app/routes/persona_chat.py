@@ -76,7 +76,8 @@ async def persona_chat_message(
     try:
         state_dict = json.loads(request.state) if request.state else {}
         state = CollectionState.from_dict(state_dict)
-    except:
+    except json.JSONDecodeError:
+        # state 格式错误，重置为初始状态
         state = CollectionState()
 
     # 处理输入

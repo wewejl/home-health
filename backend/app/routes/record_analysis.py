@@ -10,7 +10,6 @@ from ..database import get_db
 from ..models.doctor import Doctor
 from ..models.admin_user import AdminUser, AuditLog
 from ..services.record_analysis_service import RecordAnalysisService
-from ..services.qwen_service import QwenService
 from .admin_auth import get_current_admin
 
 
@@ -76,8 +75,7 @@ async def analyze_medical_records(
     try:
         # 调用分析服务
         result = await RecordAnalysisService.analyze_records(
-            files=file_data,
-            qwen_service=QwenService
+            files=file_data
         )
 
         # 记录审计日志
@@ -104,7 +102,10 @@ async def analyze_medical_records(
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"分析失败: {str(e)}")
+        # 记录详细错误到日志，但不返回给客户端
+        import logging
+        logging.error(f"Record analysis failed: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="病历分析失败，请检查文件格式后重试")
 
 
 @router.post("/{doctor_id}/save-analysis")
