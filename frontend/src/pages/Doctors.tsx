@@ -4,7 +4,7 @@ import {
   Table, Button, Space, Tag, Modal, Form, Input, Select, Switch,
   message, Popconfirm, Typography, Card, Drawer, InputNumber, Tabs
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, PlayCircleOutlined, MessageOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, PlayCircleOutlined, MessageOutlined, FileTextOutlined } from '@ant-design/icons';
 import { doctorsApi, departmentsApi, knowledgeBasesApi } from '../api';
 
 const { Title } = Typography;
@@ -145,6 +145,11 @@ const Doctors: React.FC = () => {
     navigate(`/admin/doctors/${doctorId}/persona`);
   };
 
+  // 跳转到病历分析页面
+  const handleRecordAnalysis = (doctorId: number) => {
+    navigate(`/admin/doctors/${doctorId}/analyze`);
+  };
+
   const columns = [
     { title: 'ID', dataIndex: 'id', width: 60 },
     { title: '姓名', dataIndex: 'name', width: 100 },
@@ -172,19 +177,28 @@ const Doctors: React.FC = () => {
     },
     {
       title: '操作',
-      width: 280,
+      width: 360,
       render: (_: any, record: Doctor) => (
         <Space wrap>
           {record.is_ai && (
-            <Button
-              size="small"
-              icon={<MessageOutlined />}
-              onClick={() => handlePersonaChat(record.id)}
-              type="primary"
-              ghost
-            >
-              配置分身
-            </Button>
+            <>
+              <Button
+                size="small"
+                icon={<MessageOutlined />}
+                onClick={() => handlePersonaChat(record.id)}
+                type="primary"
+                ghost
+              >
+                配置分身
+              </Button>
+              <Button
+                size="small"
+                icon={<FileTextOutlined />}
+                onClick={() => handleRecordAnalysis(record.id)}
+              >
+                病历分析
+              </Button>
+            </>
           )}
           <Button size="small" icon={<PlayCircleOutlined />} onClick={() => handleTest(record)}>
             测试

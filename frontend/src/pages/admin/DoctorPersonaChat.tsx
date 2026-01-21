@@ -196,19 +196,6 @@ const DoctorPersonaChat: React.FC = () => {
 
   const currentStageIndex = getStageIndex(currentStage);
 
-  // 检测修改指令
-  const detectModifyCommand = (input: string): string | null => {
-    const lowerInput = input.toLowerCase().trim();
-
-    for (const stage of STAGES) {
-      if (lowerInput.includes(`修改${stage.label}`) || lowerInput.includes(`重新${stage.label}`)) {
-        return stage.key;
-      }
-    }
-
-    return null;
-  };
-
   // 键盘事件
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

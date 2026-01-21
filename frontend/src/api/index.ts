@@ -72,6 +72,28 @@ export const doctorsApi = {
     api.put(`/admin/doctors/${id}/activate?is_active=${isActive}`),
   test: (id: number, message: string) =>
     api.post(`/admin/doctors/${id}/test?message=${encodeURIComponent(message)}`),
+  // 病历分析
+  analyzeRecords: (id: number, formData: FormData) => {
+    const apiWithFormData = axios.create({
+      baseURL: API_BASE_URL,
+      timeout: 60000, // 病历分析可能需要更长时间
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+      apiWithFormData.defaults.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return apiWithFormData.post(`/admin/doctors/${id}/analyze-records`, formData);
+  },
+  saveAnalysisResult: (id: number, aiPersonaPrompt: string) =>
+    api.post(`/admin/doctors/${id}/save-analysis`, new URLSearchParams({
+      ai_persona_prompt: aiPersonaPrompt
+    }), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    }),
+  getAnalysisStatus: (id: number) => api.get(`/admin/doctors/${id}/analysis-status`),
 };
 
 // Knowledge Bases API

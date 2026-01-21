@@ -14,6 +14,7 @@ import Feedbacks from './pages/Feedbacks';
 import Stats from './pages/Stats';
 import DermaChat from './pages/DermaChat';
 import DoctorPersonaChat from './pages/admin/DoctorPersonaChat';
+import DoctorRecordAnalysis from './pages/admin/DoctorRecordAnalysis';
 
 interface AdminUser {
   id: number;
@@ -90,6 +91,7 @@ function App() {
               <Route path="departments" element={<Departments />} />
               <Route path="doctors" element={<Doctors />} />
               <Route path="doctors/:id/persona" element={<DoctorPersonaChat />} />
+              <Route path="doctors/:id/analyze" element={<DoctorRecordAnalysis />} />
               <Route path="diseases" element={<Diseases />} />
               <Route path="drugs" element={<Drugs />} />
               <Route path="knowledge" element={<Knowledge />} />

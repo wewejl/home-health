@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base, SessionLocal
 from .routes import (
     auth_router, departments_router, sessions_router, sessions_v2_router, feedbacks_router, diseases_router, drugs_router,
-    medical_events_router, ai_router, persona_chat_router,  # diagnosis_router, derma_router 已废弃
+    medical_events_router, ai_router, persona_chat_router, record_analysis_router,  # diagnosis_router, derma_router 已废弃
     admin_auth_router, admin_doctors_router, admin_departments_router,
     admin_knowledge_router, admin_documents_router, admin_feedbacks_router, admin_stats_router,
     admin_diseases_router, admin_drugs_router, admin_drug_categories_router
@@ -44,6 +44,7 @@ app.include_router(ai_router)
 app.include_router(admin_auth_router)
 app.include_router(admin_doctors_router)
 app.include_router(persona_chat_router)  # 医生分身对话式采集
+app.include_router(record_analysis_router)  # 病历分析
 app.include_router(admin_departments_router)
 app.include_router(admin_knowledge_router)
 app.include_router(admin_documents_router)
