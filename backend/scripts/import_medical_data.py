@@ -24,8 +24,9 @@ from app.models.department import Department
 class MedicalDataImporter:
     """医疗数据导入器"""
 
-    def __init__(self, db: Session = None):
+    def __init__(self, db: Session = None, default_source: str = None):
         self.db = db or SessionLocal()
+        self.default_source = default_source  # 默认数据来源
         self.stats = {
             "diseases_created": 0,
             "diseases_updated": 0,
@@ -176,6 +177,12 @@ class MedicalDataImporter:
         disease.treatment = item.get("treatment", "")
         disease.prevention = item.get("prevention", "")
         disease.care = item.get("care", item.get("precautions", ""))
+        # 设置数据来源
+        if not disease.source and self.default_source:
+            disease.source = self.default_source
+        # 优先使用 item 中的 source
+        if item.get("source"):
+            disease.source = item.get("source")
 
         department = item.get("department", item.get("dept", ""))
         if department:

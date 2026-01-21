@@ -167,45 +167,45 @@ def seed_extended_drugs(db: Session):
         {"name": "双黄连口服液", "pinyin": "shuanghuanglian koufuye", "common_brands": "同仁堂", "indications": "用于清热解毒。", "contraindications": "孕妇慎用；脾胃虚寒者慎用。", "dosage": "口服，一次20ml，一日3次。", "side_effects": "胃肠道反应", "precautions": "忌辛辣油腻食物。", "storage": "密封保存。", "categories": [cold_category]},
 
         # 消化系统类
-        {"name": "多潘立酮", "pinyin": "duopanlitong", "common_brands": "吗丁啉", "indications": "用于消化不良、腹胀、嗳气。", "contraindications": "机械性肠梗阻禁用；嗜铬细胞瘤禁用。", "dosage": "口服，一次10mg，一日3次。", "side_effects": "偶见头痛、头晕", "precautions "孕妇慎用；哺乳期妇女使用时应停止哺乳。", "storage": "密封保存。", "categories": [hot_category, digestive_category]},
-        {"name": "铝碳酸镁", "pinyin": "lv tansuanmei", "common_brands": "达喜", "indications": "用于胃酸过多、反酸、烧心。", "contraindications": "肾功能不全者禁用。", "dosage": "口服，一次1g，一日4次。", "side_effects "便秘", "precautions "长期使用需定期检查血铝。", "storage": "密封保存。", "categories": [digestive_category, hot_category]},
+        {"name": "多潘立酮", "pinyin": "duopanlitong", "common_brands": "吗丁啉", "indications": "用于消化不良、腹胀、嗳气。", "contraindications": "机械性肠梗阻禁用；嗜铬细胞瘤禁用。", "dosage": "口服，一次10mg，一日3次。", "side_effects": "偶见头痛、头晕", "precautions": "孕妇慎用；哺乳期妇女使用时应停止哺乳。", "storage": "密封保存。", "categories": [hot_category, digestive_category]},
+        {"name": "铝碳酸镁", "pinyin": "lv tansuanmei", "common_brands": "达喜", "indications": "用于胃酸过多、反酸、烧心。", "contraindications": "肾功能不全者禁用。", "dosage": "口服，一次1g，一日4次。", "side_effects": "便秘", "precautions": "长期使用需定期检查血铝。", "storage": "密封保存。", "categories": [digestive_category, hot_category]},
         {"name": "果胶铋", "pinyin": "guaojiao bi", "common_brands": "舒克斐", "indications": "用于保护胃粘膜。", "contraindications": "对本品过敏者禁用。", "dosage": "口服，一次1g，一日3次。", "side_effects": "偶见便秘", "precautions": "本品不影响其他药物吸收。", "storage": "密封保存。", "categories": [digestive_category, hot_category]},
 
         # 心脑血管类
-        {"name": "氨氯地平", "pinyin": "anludiping", "common_brands": "络活喜", "indications": "用于高血压、心绞痛。", "contraindications": "严重低血压禁用；对二氢吡啶类过敏者禁用。", "dosage": "口服，一次5mg，一日1次。", "side_effects "头痛、面部潮红、水肿", "precautions "肝功能不全者慎用；避免与葡萄柚汁同服。", "storage": "遮光保存。", "categories": [cardio_category, hot_category]},
-        {"name": "阿托伐他汀", "pinyin": "atuofatating", "common_brands": "立普妥", "indications": "用于高胆固醇血症。", "contraindications": "活动性肝病患者禁用。", "dosage": "口服，一次10mg，一日1次。", "side_effects "肝功能异常、肌肉疼痛", "precautions "定期检查肝功能；避免与葡萄柚汁同服。", "storage": "密封保存。", "categories": [cardio_category]},
-        {"name": "硫酸氢氯吡格雷", "pinyin": "liusuanqinglubigelei", "common_brands": "波立维", "indications": "用于预防心脑血管血栓。", "contraindications "活动性出血者禁用。", "dosage": "口服，一次75mg，一日1次。", "side_effects "出血、淤斑", "precautions "手术前7天需停用；注意出血倾向。", "storage": "密封保存。", "categories": [cardio_category, hot_category]},
+        {"name": "氨氯地平", "pinyin": "anludiping", "common_brands": "络活喜", "indications": "用于高血压、心绞痛。", "contraindications": "严重低血压禁用；对二氢吡啶类过敏者禁用。", "dosage": "口服，一次5mg，一日1次。", "side_effects": "头痛、面部潮红、水肿", "precautions": "肝功能不全者慎用；避免与葡萄柚汁同服。", "storage": "遮光保存。", "categories": [cardio_category, hot_category]},
+        {"name": "阿托伐他汀", "pinyin": "atuofatating", "common_brands": "立普妥", "indications": "用于高胆固醇血症。", "contraindications": "活动性肝病患者禁用。", "dosage": "口服，一次10mg，一日1次。", "side_effects": "肝功能异常、肌肉疼痛", "precautions": "定期检查肝功能；避免与葡萄柚汁同服。", "storage": "密封保存。", "categories": [cardio_category]},
+        {"name": "硫酸氢氯吡格雷", "pinyin": "liusuanqinglubigelei", "common_brands": "波立维", "indications": "用于预防心脑血管血栓。", "contraindications": "活动性出血者禁用。", "dosage": "口服，一次75mg，一日1次。", "side_effects": "出血、淤斑", "precautions": "手术前7天需停用；注意出血倾向。", "storage": "密封保存。", "categories": [cardio_category, hot_category]},
 
         # 抗生素类
         {"name": "头孢拉定", "pinyin": "toubaolading", "common_brands": "先锋霉素6号", "indications": "用于敏感菌所致的各种感染。", "contraindications": "对头孢类抗生素过敏者禁用。", "dosage": "口服，一次0.5g，一日4次。", "side_effects": "胃肠道反应、过敏", "precautions": "青霉素过敏者慎用；饮酒后禁用。", "storage": "密封保存。", "categories": [hot_category]},
-        {"name": "左氧氟沙星", "pinyin": "zuoyangfushaxing", "common_brands": "可乐必妥", "indications": "用于敏感菌引起的各种感染。", "contraindications "对喹诺酮类过敏者禁用；18岁以下禁用。", "dosage": "口服，一次0.2g，一日2次。", "side_effects": "胃肠道反应、中枢神经系统反应", "precautions "避免阳光直射；注意肌腱炎风险。", "storage": "遮光保存。", "categories": [hot_category]},
+        {"name": "左氧氟沙星", "pinyin": "zuoyangfushaxing", "common_brands": "可乐必妥", "indications": "用于敏感菌引起的各种感染。", "contraindications": "对喹诺酮类过敏者禁用；18岁以下禁用。", "dosage": "口服，一次0.2g，一日2次。", "side_effects": "胃肠道反应、中枢神经系统反应", "precautions": "避免阳光直射；注意肌腱炎风险。", "storage": "遮光保存。", "categories": [hot_category]},
 
         # 皮肤用药类
-        {"name": "特非那定", "pinyin": "tefeinading", "common_brands": "扑尔敏", "indications": "用于皮肤过敏。", "contraindications": "对本品过敏者禁用。", "dosage": "口服，一次4mg，一日3次。", "side_effects": "嗜睡、口干", "precautions "服药期间避免驾驶；饮酒后禁用。", "storage": "密封保存。 "categories": [hot_category]},
-        {"name": "氯雷他定", "pinyin": "lufeitading", "common_brands": "开瑞坦", "indications": "用于过敏性鼻炎、荨麻疹。", "contraindications": "对本品过敏者禁用。", "dosage": "口服，一次10mg，一日1次。", "side_effects "头痛、嗜睡", "precautions "部分人可能仍有嗜睡，驾驶时需注意。", "storage": "密封保存。 "categories": [hot_category, skin_category]},
-        {"name": "地奈德", "pinyin": "dinaide", "common_brands": "皮炎平", "indications": "用于湿疹、皮炎、皮肤瘙痒症。", "contraindications": "对本品过敏者禁用。", "dosage": "外用，一日2-3次。", "side_effects "局部刺激", "precautions "避免接触眼睛；不建议大面积使用。", "storage": "密封保存。", "categories": [skin_category]},
+        {"name": "特非那定", "pinyin": "tefeinading", "common_brands": "扑尔敏", "indications": "用于皮肤过敏。", "contraindications": "对本品过敏者禁用。", "dosage": "口服，一次4mg，一日3次。", "side_effects": "嗜睡、口干", "precautions": "服药期间避免驾驶；饮酒后禁用。", "storage": "密封保存。", "categories": [hot_category]},
+        {"name": "氯雷他定", "pinyin": "lufeitading", "common_brands": "开瑞坦", "indications": "用于过敏性鼻炎、荨麻疹。", "contraindications": "对本品过敏者禁用。", "dosage": "口服，一次10mg，一日1次。", "side_effects": "头痛、嗜睡", "precautions": "部分人可能仍有嗜睡，驾驶时需注意。", "storage": "密封保存。", "categories": [hot_category, skin_category]},
+        {"name": "地奈德", "pinyin": "dinaide", "common_brands": "皮炎平", "indications": "用于湿疹、皮炎、皮肤瘙痒症。", "contraindications": "对本品过敏者禁用。", "dosage": "外用，一日2-3次。", "side_effects": "局部刺激", "precautions": "避免接触眼睛；不建议大面积使用。", "storage": "密封保存。", "categories": [skin_category]},
 
         # 镇痛药类
-        {"name": "双氯芬酸钠", "pinyin": "shuanglvfensuanna", "common_brands": "扶他林", "indications": "用于缓解疼痛和炎症。", "contraindications": "活动性消化道溃疡者禁用。", "dosage": "口服，一次25mg，一日3次。", "side_effects "胃肠道反应", "precautions "餐后服用；有胃病史者慎用。", "storage": "密封保存。", "categories": [hot_category]},
-        {"name": "塞来昔布", "pinyin": "selaixibu", "common_brands": "西乐葆", "indications": "用于缓解骨关节炎疼痛。", "contraindications": "对磺胺过敏者禁用。", "dosage": "口服，一次100mg，一日2次。", "side_effects "胃肠道反应、心血管风险", "precautions "有心血管病史者慎用；最低有效剂量。", "storage": "密封保存。", "categories": [hot_category]},
-        {"name": "洛索洛芬", "pinyin": "luosuoluofen", "common_brands": "乐松", "indications": "用于疼痛和炎症。", "contraindications "活动性消化道溃疡者禁用。", "dosage": "口服，一次60mg, 一日3次。", "side_effects "胃肠道反应", "precautions "餐后服用；有哮喘史者慎用。", "storage": "密封保存。", "categories": [hot_category]},
+        {"name": "双氯芬酸钠", "pinyin": "shuanglvfensuanna", "common_brands": "扶他林", "indications": "用于缓解疼痛和炎症。", "contraindications": "活动性消化道溃疡者禁用。", "dosage": "口服，一次25mg，一日3次。", "side_effects": "胃肠道反应", "precautions": "餐后服用；有胃病史者慎用。", "storage": "密封保存。", "categories": [hot_category]},
+        {"name": "塞来昔布", "pinyin": "selaixibu", "common_brands": "西乐葆", "indications": "用于缓解骨关节炎疼痛。", "contraindications": "对磺胺过敏者禁用。", "dosage": "口服，一次100mg，一日2次。", "side_effects": "胃肠道反应、心血管风险", "precautions": "有心血管病史者慎用；最低有效剂量。", "storage": "密封保存。", "categories": [hot_category]},
+        {"name": "洛索洛芬", "pinyin": "luosuoluofen", "common_brands": "乐松", "indications": "用于疼痛和炎症。", "contraindications": "活动性消化道溃疡者禁用。", "dosage": "口服，一次60mg, 一日3次。", "side_effects": "胃肠道反应", "precautions": "餐后服用；有哮喘史者慎用。", "storage": "密封保存。", "categories": [hot_category]},
 
         # 维生素类
-        {"name": "维生素C片", "pinyin": "weishengsu C pian", "common_brands": "力度伸", "indications": "用于维生素C缺乏症。", "contraindications": "对本品过敏者禁用。", "dosage": "口服，一次0.1g，一日3次。", "side_effects "长期大量使用可致腹泻", "precautions "不宜长期大量服用。", "storage": "密封保存。", "categories": [hot_category]},
-        {"name": "维生素D滴剂", "pinyin": "weishengsu D diji", "common_brinds": "星鲨", "indications": "用于预防和治疗维生素D缺乏症。", "contraindications": "高钙血症禁用。", "dosage": "口服，一次1粒，一日1-2次。", "side_effects "过量使用可中毒", "precautions "按推荐剂量服用。", "storage": "密封保存。", "categories": [hot_category]},
-        {"name": "复合维生素B", "pinyin": "fuhe weishengsu B", "common_brands": "金维他", "indications": "用于维生素B族缺乏症。", "contraindications": "对本品任何成分过敏者禁用。", "dosage": "口服，一次1片，一日1次。", "side_effects "罕见过敏反应", "precautions "尿液可能变黄。", "storage": "密封保存。", "categories": [hot_category]},
+        {"name": "维生素C片", "pinyin": "weishengsu C pian", "common_brands": "力度伸", "indications": "用于维生素C缺乏症。", "contraindications": "对本品过敏者禁用。", "dosage": "口服，一次0.1g，一日3次。", "side_effects": "长期大量使用可致腹泻", "precautions": "不宜长期大量服用。", "storage": "密封保存。", "categories": [hot_category]},
+        {"name": "维生素D滴剂", "pinyin": "weishengsu D diji", "common_brands": "星鲨", "indications": "用于预防和治疗维生素D缺乏症。", "contraindications": "高钙血症禁用。", "dosage": "口服，一次1粒，一日1-2次。", "side_effects": "过量使用可中毒", "precautions": "按推荐剂量服用。", "storage": "密封保存。", "categories": [hot_category]},
+        {"name": "复合维生素B", "pinyin": "fuhe weishengsu B", "common_brands": "金维他", "indications": "用于维生素B族缺乏症。", "contraindications": "对本品任何成分过敏者禁用。", "dosage": "口服，一次1片，一日1次。", "side_effects": "罕见过敏反应", "precautions": "尿液可能变黄。", "storage": "密封保存。", "categories": [hot_category]},
 
         # 中成药
-        {"name": "六味地黄丸", "pinyin": "liuwei dihuang wan", "indications": "用于肾阴亏损。", "contraindications": "感冒发热患者不宜服用。", "dosage": "口服，一次8丸，一日3次。", "side_effects "罕见胃肠道不适", "precautions "忌辛辣食物。", "storage": "密封保存。", "categories": [hot_category]},
-        {"name": "逍遥丸", "pinyin": "xiaoyao wan", "indications": "用于肝郁脾虚。", "contraindications": "孕妇慎用；感冒时暂停服用。", "dosage": "口服，一次8丸，一日3次。", "side_effects "罕见胃肠道反应", "precautions "忌食生冷。", "storage": "密封保存。", "categories": [hot_category]},
-        {"name": "复方丹参滴丸", "pinyin": "fufang dansen diwan", "common_brands": "天士力", "indications": "用于气滞血瘀。", "contraindications "孕妇慎用。", "dosage": "口服，一次10丸，一日3次。", "side_effects "胃肠道不适", "precautions "寒凝血瘀者慎用。", "storage": "密封保存。", "categories": [cardio_category, hot_category]},
-        {"name": "安宫牛黄丸", "pinyin": "angong niuhuang wan", "indications": "用于热病神昏。", "contraindications "孕妇禁用。", "dosage": "口服，一次1丸，一日1次。", "side_effects "罕见", "precautions "本品含剧毒药，按说明书服用。", "storage": "密封保存。", "categories": [hot_category]},
+        {"name": "六味地黄丸", "pinyin": "liuwei dihuang wan", "indications": "用于肾阴亏损。", "contraindications": "感冒发热患者不宜服用。", "dosage": "口服，一次8丸，一日3次。", "side_effects": "罕见胃肠道不适", "precautions": "忌辛辣食物。", "storage": "密封保存。", "categories": [hot_category]},
+        {"name": "逍遥丸", "pinyin": "xiaoyao wan", "indications": "用于肝郁脾虚。", "contraindications": "孕妇慎用；感冒时暂停服用。", "dosage": "口服，一次8丸，一日3次。", "side_effects": "罕见胃肠道反应", "precautions": "忌食生冷。", "storage": "密封保存。", "categories": [hot_category]},
+        {"name": "复方丹参滴丸", "pinyin": "fufang dansen diwan", "common_brands": "天士力", "indications": "用于气滞血瘀。", "contraindications": "孕妇慎用。", "dosage": "口服，一次10丸，一日3次。", "side_effects": "胃肠道不适", "precautions": "寒凝血瘀者慎用。", "storage": "密封保存。", "categories": [cardio_category, hot_category]},
+        {"name": "安宫牛黄丸", "pinyin": "angong niuhuang wan", "indications": "用于热病神昏。", "contraindications": "孕妇禁用。", "dosage": "口服，一次1丸，一日1次。", "side_effects": "罕见", "precautions": "本品含剧毒药，按说明书服用。", "storage": "密封保存。", "categories": [hot_category]},
 
         # 其他常用药
-        {"name": "蒙脱石散", "pinyin": "mengtuoshisan", "common_brands": "思密达", "indications": "用于成人及儿童急慢性腹泻。", "contraindications "对本品过敏者禁用。", "dosage": "成人：一次1袋，一日3次。", "side_effects "偶见便秘", "precautions "空腹服用效果更佳。", "storage": "密封保存。", "categories": [hot_category, digestive_category]},
-        {"name": "开塞露", "pinyin": "kaisailu", "indications": "用于便秘。", "contraindications "对本品过敏者禁用。", "dosage": "肛内注入，成人一次20ml。", "side_effects "偶见腹部不适", "precautions "不宜长期使用。", "storage": "密封保存。", "categories": [hot_category]},
-        {"name": "碘伏", "pinyin": "dianfu", "indications": "用于皮肤、黏膜消毒。", "contraindications "对本品过敏者禁用。", "dosage": "外用，涂擦患处。", "side_effects "偶见过敏反应", "precautions "不可内服；避免接触眼睛。", "storage": "密封保存。", "categories": [hot_category]},
-        {"name": "医用酒精", "pinyin": "yiyong jiujing", "indications": "用于皮肤消毒。", "contraindications ": ", "dosage": "外用，涂抹患处。", "side_effects ": "偶见过敏", "precautions ": "易燃，远离火源。", "storage ": "阴凉处保存。", "categories": [hot_category]},
+        {"name": "蒙脱石散", "pinyin": "mengtuoshisan", "common_brands": "思密达", "indications": "用于成人及儿童急慢性腹泻。", "contraindications": "对本品过敏者禁用。", "dosage": "成人：一次1袋，一日3次。", "side_effects": "偶见便秘", "precautions": "空腹服用效果更佳。", "storage": "密封保存。", "categories": [hot_category, digestive_category]},
+        {"name": "开塞露", "pinyin": "kaisailu", "indications": "用于便秘。", "contraindications": "对本品过敏者禁用。", "dosage": "肛内注入，成人一次20ml。", "side_effects": "偶见腹部不适", "precautions": "不宜长期使用。", "storage": "密封保存。", "categories": [hot_category]},
+        {"name": "碘伏", "pinyin": "dianfu", "indications": "用于皮肤、黏膜消毒。", "contraindications": "对本品过敏者禁用。", "dosage": "外用，涂擦患处。", "side_effects": "偶见过敏反应", "precautions": "不可内服；避免接触眼睛。", "storage": "密封保存。", "categories": [hot_category]},
+        {"name": "医用酒精", "pinyin": "yiyong jiujing", "indications": "用于皮肤消毒。", "contraindications": "", "dosage": "外用，涂抹患处。", "side_effects": "偶见过敏", "precautions": "易燃，远离火源。", "storage": "阴凉处保存。", "categories": [hot_category]},
     ]
 
     added_count = 0
