@@ -1,7 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from datetime import datetime
+from pathlib import Path
+from io import BytesIO
+import PyPDF2
+import PyPDF2.errors
+
 from ..database import get_db
 from ..models.knowledge_base import KnowledgeBase, KnowledgeDocument
 from ..models.admin_user import AdminUser, AuditLog
@@ -11,6 +16,7 @@ from ..schemas.knowledge_base import (
     DocumentApproveRequest
 )
 from ..services.knowledge_service import KnowledgeService
+from ..services.record_analysis_service import RecordAnalysisService
 from .admin_auth import get_current_admin
 
 router = APIRouter(prefix="/admin/knowledge-bases", tags=["admin-knowledge"])
@@ -25,14 +31,14 @@ def list_knowledge_bases(
     admin: AdminUser = Depends(get_current_admin)
 ):
     query = db.query(KnowledgeBase)
-    
+
     if doctor_id is not None:
         query = query.filter(KnowledgeBase.doctor_id == doctor_id)
     if department_id is not None:
         query = query.filter(KnowledgeBase.department_id == department_id)
     if is_active is not None:
         query = query.filter(KnowledgeBase.is_active == is_active)
-    
+
     kbs = query.all()
     return [KnowledgeBaseResponse.model_validate(kb) for kb in kbs]
 
@@ -46,10 +52,10 @@ def create_knowledge_base(
     existing = db.query(KnowledgeBase).filter(KnowledgeBase.id == request.id).first()
     if existing:
         raise HTTPException(status_code=400, detail="知识库ID已存在")
-    
+
     kb = KnowledgeBase(**request.model_dump())
     db.add(kb)
-    
+
     log = AuditLog(
         admin_user_id=admin.id,
         action="create",
@@ -58,7 +64,7 @@ def create_knowledge_base(
         changes=request.model_dump()
     )
     db.add(log)
-    
+
     db.commit()
     db.refresh(kb)
     return KnowledgeBaseResponse.model_validate(kb)
@@ -86,11 +92,11 @@ def update_knowledge_base(
     kb = db.query(KnowledgeBase).filter(KnowledgeBase.id == kb_id).first()
     if not kb:
         raise HTTPException(status_code=404, detail="知识库不存在")
-    
+
     update_data = request.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(kb, key, value)
-    
+
     db.commit()
     db.refresh(kb)
     return KnowledgeBaseResponse.model_validate(kb)
@@ -105,7 +111,7 @@ def delete_knowledge_base(
     kb = db.query(KnowledgeBase).filter(KnowledgeBase.id == kb_id).first()
     if not kb:
         raise HTTPException(status_code=404, detail="知识库不存在")
-    
+
     db.delete(kb)
     db.commit()
     return {"message": "删除成功"}
@@ -120,12 +126,12 @@ def reindex_knowledge_base(
     kb = db.query(KnowledgeBase).filter(KnowledgeBase.id == kb_id).first()
     if not kb:
         raise HTTPException(status_code=404, detail="知识库不存在")
-    
+
     # 更新统计
     KnowledgeService.update_kb_stats(db, kb_id)
     kb.last_indexed_at = datetime.utcnow()
     db.commit()
-    
+
     return {"message": "重新索引完成", "total_documents": kb.total_documents}
 
 
@@ -139,12 +145,12 @@ def list_documents(
     admin: AdminUser = Depends(get_current_admin)
 ):
     query = db.query(KnowledgeDocument).filter(KnowledgeDocument.knowledge_base_id == kb_id)
-    
+
     if status:
         query = query.filter(KnowledgeDocument.status == status)
     if doc_type:
         query = query.filter(KnowledgeDocument.doc_type == doc_type)
-    
+
     docs = query.order_by(KnowledgeDocument.created_at.desc()).all()
     return [KnowledgeDocumentResponse.model_validate(d) for d in docs]
 
@@ -159,7 +165,7 @@ def create_document(
     kb = db.query(KnowledgeBase).filter(KnowledgeBase.id == kb_id).first()
     if not kb:
         raise HTTPException(status_code=404, detail="知识库不存在")
-    
+
     doc = KnowledgeService.add_document(
         db=db,
         knowledge_base_id=kb_id,
@@ -170,6 +176,82 @@ def create_document(
         tags=request.tags,
         metadata=request.metadata
     )
+    return KnowledgeDocumentResponse.model_validate(doc)
+
+
+@router.post("/{kb_id}/documents/upload", response_model=KnowledgeDocumentResponse)
+async def upload_document(
+    kb_id: str,
+    file: UploadFile = File(..., description="文档文件（PDF/TXT）"),
+    title: Optional[str] = Form(None),
+    doc_type: Optional[str] = Form("faq"),
+    source: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(get_current_admin)
+):
+    """
+    上传文档文件到知识库
+
+    支持格式：PDF, TXT
+    最大文件大小：10MB
+    """
+    kb = db.query(KnowledgeBase).filter(KnowledgeBase.id == kb_id).first()
+    if not kb:
+        raise HTTPException(status_code=404, detail="知识库不存在")
+
+    # 验证文件
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="文件名不能为空")
+
+    file_ext = Path(file.filename).suffix.lower()
+    if file_ext not in ['.pdf', '.txt']:
+        raise HTTPException(
+            status_code=400,
+            detail=f"不支持的文件格式: {file_ext}，仅支持 PDF、TXT"
+        )
+
+    # 读取文件内容
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="文件大小超过 10MB 限制")
+
+    # 解析文件内容
+    try:
+        extracted_text = RecordAnalysisService.parse_file(content, file.filename)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # 使用文件名作为默认标题
+    doc_title = title or Path(file.filename).stem
+
+    # 创建文档
+    doc = KnowledgeService.add_document(
+        db=db,
+        knowledge_base_id=kb_id,
+        title=doc_title,
+        content=extracted_text,
+        doc_type=doc_type,
+        source=source or f"文件上传: {file.filename}",
+        tags=[],
+        metadata={"original_filename": file.filename, "file_size": len(content)}
+    )
+
+    # 记录审计日志
+    log = AuditLog(
+        admin_user_id=admin.id,
+        action="upload_document",
+        resource_type="knowledge_document",
+        resource_id=str(doc.id),
+        changes={
+            "kb_id": kb_id,
+            "filename": file.filename,
+            "file_size": len(content),
+            "extracted_length": len(extracted_text)
+        }
+    )
+    db.add(log)
+    db.commit()
+
     return KnowledgeDocumentResponse.model_validate(doc)
 
 
@@ -199,14 +281,14 @@ def update_document(
     doc = db.query(KnowledgeDocument).filter(KnowledgeDocument.id == doc_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="文档不存在")
-    
+
     update_data = request.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(doc, key, value)
-    
+
     doc.status = "pending"  # 修改后重新进入审核
     doc.is_indexed = False
-    
+
     db.commit()
     db.refresh(doc)
     return KnowledgeDocumentResponse.model_validate(doc)
@@ -221,14 +303,14 @@ def delete_document(
     doc = db.query(KnowledgeDocument).filter(KnowledgeDocument.id == doc_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="文档不存在")
-    
+
     kb_id = doc.knowledge_base_id
     db.delete(doc)
     db.commit()
-    
+
     # 更新知识库统计
     KnowledgeService.update_kb_stats(db, kb_id)
-    
+
     return {"message": "删除成功"}
 
 
@@ -248,8 +330,8 @@ def approve_document(
     )
     if not doc:
         raise HTTPException(status_code=404, detail="文档不存在")
-    
+
     # 更新知识库统计
     KnowledgeService.update_kb_stats(db, doc.knowledge_base_id)
-    
+
     return KnowledgeDocumentResponse.model_validate(doc)

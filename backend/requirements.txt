@@ -1,6 +1,12 @@
 fastapi==0.115.0
 uvicorn[standard]>=0.31.1
 sqlalchemy==2.0.25
+# Aliyun SMS - 号码认证服务 (推荐用于验证码)
+alibabacloud-dypnsapi20170525>=3.0.0
+alibabacloud-credentials>=0.3.0
+# Aliyun SMS - 传统短信服务 (备用)
+alibabacloud-dysmsapi20170525>=3.0.0
+alibabacloud-tea-openapi>=0.3.0
 pydantic~=2.11.9
 pydantic-settings~=2.10.1
 python-jose[cryptography]==3.3.0

@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from pathlib import Path
 
 
 class Settings(BaseSettings):
@@ -8,6 +9,9 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
     SEED_DATA: bool = True
+
+    # 服务端口 (固定使用 8100)
+    PORT: int = 8100
     
     # 数据库
     DATABASE_URL: str = "sqlite:///./app.db"
@@ -22,6 +26,13 @@ class Settings(BaseSettings):
     
     # 验证码配置
     ENABLE_SMS_VERIFICATION: bool = False  # 临时禁用验证码功能，待接入真实短信服务后启用
+
+    # 短信服务配置（阿里云）
+    SMS_PROVIDER: str = "mock"  # mock/aliyun
+    SMS_ACCESS_KEY_ID: str = ""
+    SMS_ACCESS_KEY_SECRET: str = ""
+    SMS_SIGN_NAME: str = ""
+    SMS_TEMPLATE_CODE: str = ""
     
     # LLM 配置
     LLM_PROVIDER: str = "qwen"
@@ -57,7 +68,9 @@ class Settings(BaseSettings):
     ADMIN_JWT_EXPIRE_HOURS: int = 24
 
     class Config:
-        env_file = ".env"
+        # 支持多环境文件：.env.local 会覆盖 .env
+        env_file = (".env.local", ".env")
+        env_file_encoding = "utf-8"
         extra = "ignore"
 
 

@@ -15,14 +15,14 @@ class Doctor(Base):
     specialty = Column(Text, nullable=True)
     intro = Column(Text, nullable=True)
     avatar_url = Column(String(255), nullable=True)
-    
+
     # 展示字段
     rating = Column(Float, default=5.0)
     monthly_answers = Column(Integer, default=0)
     avg_response_time = Column(String(20), default="5分钟")
     can_prescribe = Column(Boolean, default=False)
     is_top_hospital = Column(Boolean, default=False)
-    
+
     # AI 分身核心字段
     is_ai = Column(Boolean, default=True, index=True)
     ai_persona_prompt = Column(Text, nullable=True)
@@ -32,12 +32,14 @@ class Doctor(Base):
     knowledge_base_id = Column(String(100), nullable=True)
     agent_type = Column(String(20), default="simple")  # simple/crewai/custom
     agent_config = Column(JSON, nullable=True)
-    
+
     # 状态管理
     is_active = Column(Boolean, default=True, index=True)
     verified_by = Column(Integer, nullable=True)
     verified_at = Column(DateTime(timezone=True), nullable=True)
-    
+    # 病历分析完成标记
+    records_analyzed = Column(Boolean, default=False, nullable=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

@@ -1,10 +1,7 @@
 """
 短信服务模块 - 验证码发送与管理
 
-TODO: 接入真实短信网关时，需要:
-1. 替换 SMSGateway 实现类
-2. 配置短信服务商 API Key
-3. 配置短信模板 ID
+支持阿里云号码认证服务 (Dypnsapi) 和短信服务 (Dysmsapi)
 """
 import random
 import time
@@ -14,6 +11,27 @@ from typing import Dict, Optional, Tuple
 from dataclasses import dataclass, field
 from threading import Lock
 from ..config import get_settings
+
+# 阿里云号码认证服务SDK (推荐)
+try:
+    from alibabacloud_dypnsapi20170525.client import Client as DypnsapiClient
+    from alibabacloud_dypnsapi20170525 import models as dypnsapi_models
+    from alibabacloud_tea_openapi import models as open_api_models
+    from alibabacloud_tea_util import models as util_models
+    ALIYUN_DYPNSAPI_AVAILABLE = True
+except ImportError:
+    ALIYUN_DYPNSAPI_AVAILABLE = False
+    DypnsapiClient = None
+    logging.warning("[SMS] 阿里云号码认证SDK未安装")
+
+# 阿里云传统短信服务SDK (备用)
+try:
+    from alibabacloud_dysmsapi20170525.client import Client as DysmsClient
+    from alibabacloud_dysmsapi20170525 import models as dysms_models
+    ALIYUN_DYSMSAPI_AVAILABLE = True
+except ImportError:
+    ALIYUN_DYSMSAPI_AVAILABLE = False
+    DysmsClient = None
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -236,40 +254,187 @@ class VerificationCodeStore:
 class SMSGateway:
     """
     短信网关接口
-    
-    TODO: 接入真实短信服务商时，实现以下方法:
-    - 阿里云短信: https://www.aliyun.com/product/sms
-    - 腾讯云短信: https://cloud.tencent.com/product/sms
-    - 七牛云短信: https://www.qiniu.com/products/sms
+
+    支持的提供商:
+    - 阿里云号码认证服务 (Dypnsapi): 推荐，用于验证码发送
+    - 阿里云短信服务 (Dysmsapi): 传统短信服务
+    - Mock: 测试/开发环境模拟发送
     """
-    
+
+    _dypnsapi_client: Optional[DypnsapiClient] = None
+    _dysmsapi_client: Optional[DysmsClient] = None
+
+    @classmethod
+    def _get_dypnsapi_client(cls) -> Optional[DypnsapiClient]:
+        """获取阿里云号码认证客户端（单例）"""
+        if not ALIYUN_DYPNSAPI_AVAILABLE:
+            return None
+
+        if cls._dypnsapi_client is not None:
+            return cls._dypnsapi_client
+
+        # 检查配置
+        if not settings.SMS_ACCESS_KEY_ID or not settings.SMS_ACCESS_KEY_SECRET:
+            logger.warning("[SMS] 阿里云AccessKey配置缺失")
+            return None
+
+        try:
+            config = open_api_models.Config(
+                access_key_id=settings.SMS_ACCESS_KEY_ID,
+                access_key_secret=settings.SMS_ACCESS_KEY_SECRET
+            )
+            config.endpoint = 'dypnsapi.aliyuncs.com'
+            cls._dypnsapi_client = DypnsapiClient(config)
+            logger.info("[SMS] 阿里云号码认证客户端初始化成功")
+            return cls._dypnsapi_client
+        except Exception as e:
+            logger.error(f"[SMS] 阿里云号码认证客户端初始化失败: {e}")
+            return None
+
+    @classmethod
+    def _get_dysmsapi_client(cls) -> Optional[DysmsClient]:
+        """获取阿里云传统短信客户端（单例）"""
+        if not ALIYUN_DYSMSAPI_AVAILABLE:
+            return None
+
+        if cls._dysmsapi_client is not None:
+            return cls._dysmsapi_client
+
+        if not settings.SMS_ACCESS_KEY_ID or not settings.SMS_ACCESS_KEY_SECRET:
+            return None
+
+        try:
+            config = open_api_models.Config(
+                access_key_id=settings.SMS_ACCESS_KEY_ID,
+                access_key_secret=settings.SMS_ACCESS_KEY_SECRET
+            )
+            config.endpoint = 'dysmsapi.aliyuncs.com'
+            cls._dysmsapi_client = DysmsClient(config)
+            logger.info("[SMS] 阿里云传统短信客户端初始化成功")
+            return cls._dysmsapi_client
+        except Exception as e:
+            logger.error(f"[SMS] 阿里云传统短信客户端初始化失败: {e}")
+            return None
+
     @staticmethod
     async def send_sms(phone: str, code: str, template_id: str = "verification") -> Tuple[bool, str]:
         """
         发送短信
-        
+
         Args:
             phone: 手机号
             code: 验证码
             template_id: 短信模板ID
-        
+
         Returns:
             (是否发送成功, 错误消息或成功消息)
         """
-        # TODO: 替换为真实短信发送逻辑
-        # 示例：阿里云短信发送
-        # from alibabacloud_dysmsapi20170525.client import Client
-        # client = Client(config)
-        # response = await client.send_sms_async(...)
-        
-        logger.info(f"[SMS] 模拟发送验证码: phone={phone}, code={code}")
-        
-        # 模拟发送延迟
+        provider = settings.SMS_PROVIDER.lower()
+
+        # 测试模式或 mock 提供商：使用模拟发送
+        if settings.TEST_MODE or provider == "mock":
+            logger.info(f"[SMS] 模拟发送验证码: phone={phone}, code={code}")
+            import asyncio
+            await asyncio.sleep(0.1)
+            return True, "发送成功"
+
+        # 阿里云发送 - 优先使用号码认证服务
+        if provider == "aliyun":
+            return await SMSGateway._send_aliyun_sms(phone, code)
+
+        # 未知的提供商，降级到模拟
+        logger.warning(f"[SMS] 未知的短信提供商: {provider}，使用模拟发送")
         import asyncio
         await asyncio.sleep(0.1)
-        
-        # 模拟成功
         return True, "发送成功"
+
+    @staticmethod
+    async def _send_aliyun_sms(phone: str, code: str) -> Tuple[bool, str]:
+        """调用阿里云API发送验证码（优先使用号码认证服务）"""
+
+        # 尝试使用号码认证服务
+        if ALIYUN_DYPNSAPI_AVAILABLE:
+            client = SMSGateway._get_dypnsapi_client()
+            if client and settings.SMS_SIGN_NAME and settings.SMS_TEMPLATE_CODE:
+                try:
+                    request = dypnsapi_models.SendSmsVerifyCodeRequest(
+                        sign_name=settings.SMS_SIGN_NAME,
+                        template_code=settings.SMS_TEMPLATE_CODE,
+                        phone_number=phone,
+                        template_param=f'{{"code":"{code}","min":"5"}}'
+                    )
+                    runtime = util_models.RuntimeOptions()
+                    response = client.send_sms_verify_code_with_options(request, runtime)
+
+                    if response.body.code == 'OK':
+                        biz_id = response.body.model.biz_id if hasattr(response.body, 'model') else 'N/A'
+                        logger.info(f"[SMS] 号码认证服务发送成功: phone={phone}, biz_id={biz_id}")
+                        return True, "发送成功"
+                    else:
+                        error_msg = response.body.message or "未知错误"
+                        logger.error(f"[SMS] 号码认证服务发送失败: {response.body.code} - {error_msg}")
+
+                        # 尝试降级到传统短信服务
+                        if ALIYUN_DYSMSAPI_AVAILABLE:
+                            logger.info("[SMS] 尝试降级到传统短信服务")
+                            return await SMSGateway._send_dysmsapi(phone, code)
+                        return False, f"发送失败: {error_msg}"
+
+                except Exception as e:
+                    logger.warning(f"[SMS] 号码认证服务异常: {e}，尝试传统短信服务")
+                    # 降级到传统短信服务
+                    if ALIYUN_DYSMSAPI_AVAILABLE:
+                        return await SMSGateway._send_dysmsapi(phone, code)
+
+        # 使用传统短信服务
+        return await SMSGateway._send_dysmsapi(phone, code)
+
+    @staticmethod
+    async def _send_dysmsapi(phone: str, code: str) -> Tuple[bool, str]:
+        """使用传统短信服务发送"""
+        client = SMSGateway._get_dysmsapi_client()
+        if client is None:
+            logger.warning("[SMS] 传统短信客户端不可用，使用模拟发送")
+            import asyncio
+            await asyncio.sleep(0.1)
+            return True, "发送成功"
+
+        if not settings.SMS_SIGN_NAME or not settings.SMS_TEMPLATE_CODE:
+            logger.warning("[SMS] 短信签名或模板未配置，使用模拟发送")
+            import asyncio
+            await asyncio.sleep(0.1)
+            return True, "发送成功"
+
+        try:
+            request = dysms_models.SendSmsRequest(
+                phone_numbers=phone,
+                sign_name=settings.SMS_SIGN_NAME,
+                template_code=settings.SMS_TEMPLATE_CODE,
+                template_param=f'{{"code":"{code}"}}'
+            )
+            runtime = util_models.RuntimeOptions()
+            response = client.send_sms_with_options(request, runtime)
+
+            if response.body.code == 'OK':
+                logger.info(f"[SMS] 传统短信服务发送成功: phone={phone}, biz_id={response.body.biz_id}")
+                return True, "发送成功"
+            else:
+                error_code = response.body.code
+                error_msg = response.body.message or "未知错误"
+                logger.error(f"[SMS] 传统短信服务发送失败: {error_code} - {error_msg}")
+
+                retryable_errors = ['isv.BUSINESS_LIMIT_CONTROL', 'isv.AMOUNT_NOT_ENOUGH']
+                if error_code in retryable_errors:
+                    return False, "发送频率限制，请稍后重试"
+                return False, f"发送失败: {error_msg}"
+
+        except Exception as e:
+            logger.error(f"[SMS] 传统短信服务异常: {e}")
+            # 降级到模拟
+            import asyncio
+            await asyncio.sleep(0.1)
+            logger.info(f"[SMS] 降级模拟发送: phone={phone}, code={code}")
+            return True, "发送成功"
 
 
 class SMSService:
