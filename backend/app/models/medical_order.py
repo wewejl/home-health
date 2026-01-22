@@ -55,6 +55,14 @@ class NotificationLevel(str, enum.Enum):
     NONE = "none"               # 不通知
 
 
+class CompletionType(str, enum.Enum):
+    """打卡类型"""
+    CHECK = "check"              # 打卡确认
+    PHOTO = "photo"              # 照片证明
+    VALUE = "value"              # 数值录入
+    MEDICATION = "medication"    # 用药记录
+
+
 class TaskInstance(Base):
     """任务实例表 - 系统根据医嘱自动生成的每日任务"""
     __tablename__ = "task_instances"
@@ -80,7 +88,7 @@ class TaskInstance(Base):
 
     # 关系
     order = relationship("MedicalOrder", back_populates="task_instances")
-    # completion_records 关系将在 Task 4 添加
+    completion_records = relationship("CompletionRecord", back_populates="task_instance", cascade="all, delete-orphan")
     patient_rel = relationship("User", foreign_keys=[patient_id])
 
 
@@ -119,3 +127,25 @@ class MedicalOrder(Base):
     task_instances = relationship("TaskInstance", back_populates="order", cascade="all, delete-orphan")
     patient = relationship("User", foreign_keys=[patient_id])
     doctor = relationship("AdminUser", foreign_keys=[doctor_id])
+
+
+class CompletionRecord(Base):
+    """打卡记录表 - 执行时的详细数据记录"""
+    __tablename__ = "completion_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    task_instance_id = Column(Integer, ForeignKey("task_instances.id"), nullable=False, index=True)
+    completed_by = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # 打卡类型和数据
+    completion_type = Column(SQLEnum(CompletionType), nullable=False)
+    value = Column(JSON, nullable=True, default=dict)  # 监测值，如 {"value": 7.8, "unit": "mmol/L"}
+    photo_url = Column(String(500), nullable=True)
+    notes = Column(Text, nullable=True)
+
+    # 时间戳
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # 关系
+    task_instance = relationship("TaskInstance", back_populates="completion_records")
+    completed_by_user = relationship("User", foreign_keys=[completed_by])

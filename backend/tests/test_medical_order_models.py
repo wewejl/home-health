@@ -133,3 +133,53 @@ def test_create_task_instance(db_session):
     assert task.id is not None
     assert task.status == TaskStatus.PENDING
     assert task.scheduled_time.hour == 8
+
+
+def test_create_completion_record(db_session):
+    """测试创建打卡记录"""
+    from app.models.medical_order import CompletionRecord, CompletionType, TaskInstance, MedicalOrder
+
+    # 创建测试数据
+    user = User(phone=_get_unique_phone(), nickname="测试患者3")
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    order = MedicalOrder(
+        patient_id=user.id,
+        order_type=OrderType.MONITORING,
+        title="早餐后血糖",
+        schedule_type=ScheduleType.DAILY,
+        start_date=date.today(),
+        status=OrderStatus.ACTIVE
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    task = TaskInstance(
+        order_id=order.id,
+        patient_id=user.id,
+        scheduled_date=date.today(),
+        scheduled_time=time(9, 0),
+        status=TaskStatus.PENDING
+    )
+    db_session.add(task)
+    db_session.commit()
+    db_session.refresh(task)
+
+    # 创建打卡记录（血糖监测值）
+    record = CompletionRecord(
+        task_instance_id=task.id,
+        completed_by=user.id,
+        completion_type=CompletionType.VALUE,
+        value={"value": 7.8, "unit": "mmol/L"},
+        notes="早餐后血糖正常"
+    )
+
+    db_session.add(record)
+    db_session.commit()
+    db_session.refresh(record)
+
+    assert record.id is not None
+    assert record.value["value"] == 7.8
