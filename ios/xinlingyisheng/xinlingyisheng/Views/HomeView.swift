@@ -18,89 +18,30 @@ struct DXYColors {
     static let promotionOrange = Color(red: 1.0, green: 0.97, blue: 0.91)     // #FFF7E8
 }
 
-// MARK: - 主入口视图（TabView 结构）
-enum BrowseTarget: String, CaseIterable, Identifiable {
-    case disease
-    case drug
-    
-    var id: String { rawValue }
-    var title: String {
-        switch self {
-        case .disease: return "查疾病"
-        case .drug: return "查药品"
-        }
-    }
-}
-
-// MARK: - 查病查药容器
-struct DiseaseDrugBrowseView: View {
-    @Binding var selection: BrowseTarget
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // 顶部分段控制器
-            segmentPicker
-
-            // 内容区域
-            Group {
-                switch selection {
-                case .disease:
-                    DiseaseListView()
-                case .drug:
-                    DrugListView()
-                }
-            }
-        }
-    }
-
-    // MARK: - 分段控制器
-    private var segmentPicker: some View {
-        HStack(spacing: 0) {
-            ForEach(BrowseTarget.allCases) { target in
-                Button(action: { selection = target }) {
-                    Text(target.title)
-                        .font(.system(size: AdaptiveFont.subheadline, weight: selection == target ? .semibold : .regular))
-                        .foregroundColor(selection == target ? .white : DXYColors.textSecondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, ScaleFactor.padding(10))
-                        .background(selection == target ? DXYColors.primaryPurple : Color.clear)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .background(DXYColors.searchBackground)
-        .clipShape(Capsule())
-        .padding(.horizontal, LayoutConstants.horizontalPadding)
-        .padding(.vertical, ScaleFactor.padding(8))
-        .background(Color.white)
-    }
-}
-
 struct HomeView: View {
     @State private var selectedTab = 0
-    @State private var browseSelection: BrowseTarget = .disease
-    
+
     init() {
         // 自定义 TabBar 外观
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor.white
         appearance.shadowColor = UIColor.black.withAlphaComponent(0.06)
-        
+
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
     }
-    
+
     var body: some View {
         TabView(selection: $selectedTab) {
             // 首页
-            HomeContentView(selectedTab: $selectedTab, browseSelection: $browseSelection)
+            HomeContentView(selectedTab: $selectedTab)
                 .tabItem {
                     Image(systemName: selectedTab == 0 ? "house.fill" : "house")
                     Text("首页")
                 }
                 .tag(0)
-            
+
             // 问医生
             CompatibleNavigationStack {
                 AskDoctorView()
@@ -110,7 +51,7 @@ struct HomeView: View {
                 Text("问医生")
             }
             .tag(1)
-            
+
             // 病历资料夹
             CompatibleNavigationStack {
                 MedicalDossierView()
@@ -120,27 +61,38 @@ struct HomeView: View {
                 Text("病历")
             }
             .tag(2)
-            
-            // 查病查药
+
+            // 查疾病
             CompatibleNavigationStack {
-                DiseaseDrugBrowseView(selection: $browseSelection)
+                DiseaseListView()
                     .navigationBarBackgroundHidden()
             }
             .tabItem {
-                Image(systemName: selectedTab == 3 ? "magnifyingglass.circle.fill" : "magnifyingglass.circle")
-                Text("查病查药")
+                Image(systemName: selectedTab == 3 ? "stethoscope.circle.fill" : "stethoscope.circle")
+                Text("查疾病")
             }
             .tag(3)
-            
+
+            // 查药品
+            CompatibleNavigationStack {
+                DrugListView()
+                    .navigationBarBackgroundHidden()
+            }
+            .tabItem {
+                Image(systemName: selectedTab == 4 ? "pill.circle.fill" : "pill.circle")
+                Text("查药品")
+            }
+            .tag(4)
+
             // 我的
             CompatibleNavigationStack {
                 ProfileView()
             }
             .tabItem {
-                Image(systemName: selectedTab == 4 ? "person.fill" : "person")
+                Image(systemName: selectedTab == 5 ? "person.fill" : "person")
                 Text("我的")
             }
-            .tag(4)
+            .tag(5)
         }
         .tint(DXYColors.primaryPurple)
     }
@@ -149,30 +101,29 @@ struct HomeView: View {
 // MARK: - 首页内容视图
 struct HomeContentView: View {
     @Binding var selectedTab: Int
-    @Binding var browseSelection: BrowseTarget
     @State private var searchText = ""
-    
+
     var body: some View {
         ZStack {
             // 背景
             DXYColors.background
                 .ignoresSafeArea()
-            
+
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: AdaptiveSpacing.section) {
                     // 品牌信息行
                     BrandHeaderView()
                         .padding(.top, 8)
-                    
+
                     // 搜索区域
                     SearchSectionView(searchText: $searchText)
-                    
+
                     // 三个核心功能入口
-                    CoreFunctionsView(selectedTab: $selectedTab, browseSelection: $browseSelection)
-                    
+                    CoreFunctionsView(selectedTab: $selectedTab)
+
                     // AI智能体入口
                     AIFeaturesSection()
-                    
+
                     // 科室网格
                     DepartmentGridView()
                 }
@@ -182,7 +133,7 @@ struct HomeContentView: View {
         }
         .navigationBarHidden(true)
     }
-    
+
     private var adaptiveBottomPadding: CGFloat {
         ScaleFactor.padding(20)
     }
@@ -319,8 +270,7 @@ struct SearchSectionView: View {
 // MARK: - 核心功能入口
 struct CoreFunctionsView: View {
     @Binding var selectedTab: Int
-    @Binding var browseSelection: BrowseTarget
-    
+
     var body: some View {
         HStack(spacing: ScaleFactor.spacing(24)) {
             CoreFunctionItem(
@@ -330,27 +280,21 @@ struct CoreFunctionsView: View {
                 backgroundColor: DXYColors.teal,
                 action: { selectedTab = 1 }
             )
-            
+
             CoreFunctionItem(
                 icon: "stethoscope",
                 title: "查疾病",
                 subtitle: "权威疾病...",
                 backgroundColor: Color(red: 0.42, green: 0.42, blue: 1.0),
-                action: {
-                    browseSelection = .disease
-                    selectedTab = 3
-                }
+                action: { selectedTab = 3 }
             )
-            
+
             CoreFunctionItem(
                 icon: "pills",
                 title: "查药品",
                 subtitle: "7万药品说...",
                 backgroundColor: DXYColors.blue,
-                action: {
-                    browseSelection = .drug
-                    selectedTab = 3
-                }
+                action: { selectedTab = 4 }
             )
         }
         .padding(.top, 8)
