@@ -55,7 +55,7 @@ struct DrugDetailView: View {
                 }
             }
         }
-        .navigationBarBackgroundHidden()
+        .navigationBarHidden(true)
         .onAppear {
             loadDrugDetail()
         }

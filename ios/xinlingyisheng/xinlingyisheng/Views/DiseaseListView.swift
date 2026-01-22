@@ -264,15 +264,11 @@ struct DiseaseListView: View {
     
     // MARK: - 公共空态
     private func emptyState(icon: String, message: String) -> some View {
-        VStack(spacing: ScaleFactor.spacing(12)) {
-            Image(systemName: icon)
-                .font(.system(size: AdaptiveFont.custom(40)))
-                .foregroundColor(DXYColors.textTertiary)
-            Text(message)
-                .font(.system(size: AdaptiveFont.subheadline))
-                .foregroundColor(DXYColors.textTertiary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        UnifiedEmptyStateView(
+            icon: icon,
+            title: "",
+            message: message
+        )
     }
     
     // MARK: - 数据加载

@@ -2,7 +2,6 @@ import SwiftUI
 
 // MARK: - 查药品页面
 struct DrugListView: View {
-    @Environment(\.dismiss) private var dismiss
     
     @State private var categories: [DrugCategoryWithDrugsModel] = []
     @State private var isLoading = true
@@ -36,22 +35,13 @@ struct DrugListView: View {
     // MARK: - 顶部导航栏
     private var navigationBar: some View {
         HStack {
-            Button(action: { dismiss() }) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: AdaptiveFont.title3, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
-            }
-            
             Spacer()
-            
+
             Text("查药品")
                 .font(.system(size: AdaptiveFont.body, weight: .semibold))
                 .foregroundColor(DXYColors.textPrimary)
-            
+
             Spacer()
-            
-            Color.clear
-                .frame(width: ScaleFactor.size(18), height: ScaleFactor.size(18))
         }
         .padding(.horizontal, LayoutConstants.horizontalPadding)
         .padding(.vertical, ScaleFactor.padding(12))
@@ -208,15 +198,11 @@ struct DrugListView: View {
     
     // MARK: - 公共空态
     private func emptyState(icon: String, message: String) -> some View {
-        VStack(spacing: ScaleFactor.spacing(12)) {
-            Image(systemName: icon)
-                .font(.system(size: AdaptiveFont.custom(40)))
-                .foregroundColor(DXYColors.textTertiary)
-            Text(message)
-                .font(.system(size: AdaptiveFont.subheadline))
-                .foregroundColor(DXYColors.textTertiary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        UnifiedEmptyStateView(
+            icon: icon,
+            title: "",
+            message: message
+        )
     }
     
     // MARK: - 数据加载

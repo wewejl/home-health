@@ -35,16 +35,44 @@ enum BrowseTarget: String, CaseIterable, Identifiable {
 // MARK: - 查病查药容器
 struct DiseaseDrugBrowseView: View {
     @Binding var selection: BrowseTarget
-    
+
     var body: some View {
-        Group {
-            switch selection {
-            case .disease:
-                DiseaseListView()
-            case .drug:
-                DrugListView()
+        VStack(spacing: 0) {
+            // 顶部分段控制器
+            segmentPicker
+
+            // 内容区域
+            Group {
+                switch selection {
+                case .disease:
+                    DiseaseListView()
+                case .drug:
+                    DrugListView()
+                }
             }
         }
+    }
+
+    // MARK: - 分段控制器
+    private var segmentPicker: some View {
+        HStack(spacing: 0) {
+            ForEach(BrowseTarget.allCases) { target in
+                Button(action: { selection = target }) {
+                    Text(target.title)
+                        .font(.system(size: AdaptiveFont.subheadline, weight: selection == target ? .semibold : .regular))
+                        .foregroundColor(selection == target ? .white : DXYColors.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, ScaleFactor.padding(10))
+                        .background(selection == target ? DXYColors.primaryPurple : Color.clear)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .background(DXYColors.searchBackground)
+        .clipShape(Capsule())
+        .padding(.horizontal, LayoutConstants.horizontalPadding)
+        .padding(.vertical, ScaleFactor.padding(8))
+        .background(Color.white)
     }
 }
 
