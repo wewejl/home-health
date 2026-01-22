@@ -1,20 +1,16 @@
 version: '3.8'
 
-# 从指定环境文件加载配置
-# 优先级: .env.production > .env > 默认值
-env_file:
-  - .env.production
-  - .env
-
 services:
   # PostgreSQL数据库
   postgres:
     image: postgres:16-alpine
     container_name: home-health-postgres
+    env_file:
+      - .env.production
+      - .env
     environment:
       POSTGRES_DB: xinlin_prod
       POSTGRES_USER: xinlin_prod
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
