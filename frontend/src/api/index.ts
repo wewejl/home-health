@@ -108,6 +108,25 @@ export const knowledgeBasesApi = {
     api.get(`/admin/knowledge-bases/${kbId}/documents`, { params }),
   createDocument: (kbId: string, data: any) =>
     api.post(`/admin/knowledge-bases/${kbId}/documents`, data),
+  uploadDocument: (kbId: string, file: File, options?: { title?: string; doc_type?: string; source?: string }) => {
+    const apiWithFormData = axios.create({
+      baseURL: API_BASE_URL,
+      timeout: 60000,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+      apiWithFormData.defaults.headers['Authorization'] = `Bearer ${token}`;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    if (options?.title) formData.append('title', options.title);
+    if (options?.doc_type) formData.append('doc_type', options.doc_type);
+    if (options?.source) formData.append('source', options.source);
+    return apiWithFormData.post(`/admin/knowledge-bases/${kbId}/documents/upload`, formData);
+  },
 };
 
 // Documents API

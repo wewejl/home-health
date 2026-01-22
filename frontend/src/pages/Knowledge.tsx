@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Table, Button, Space, Tag, Modal, Form, Input, Select,
-  message, Popconfirm, Typography, Card, Badge
+  Table, Button, Space, Tag, Modal, Form, Input, Select, Tabs,
+  message, Popconfirm, Typography, Card, Badge, Upload
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SyncOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SyncOutlined, UploadOutlined } from '@ant-design/icons';
+import type { UploadFile } from 'antd/es/upload/interface';
 import { knowledgeBasesApi, documentsApi, departmentsApi, doctorsApi } from '../api';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
+const { Dragger } = Upload;
 
 interface KnowledgeBase {
   id: string;
@@ -36,6 +38,7 @@ const Knowledge: React.FC = () => {
   const [departments, setDepartments] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
   const [kbModalVisible, setKbModalVisible] = useState(false);
   const [docModalVisible, setDocModalVisible] = useState(false);
@@ -43,6 +46,7 @@ const Knowledge: React.FC = () => {
   const [editingDoc, setEditingDoc] = useState<Document | null>(null);
   const [kbForm] = Form.useForm();
   const [docForm] = Form.useForm();
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -137,6 +141,7 @@ const Knowledge: React.FC = () => {
     if (!selectedKb) return;
     setEditingDoc(null);
     docForm.resetFields();
+    setFileList([]);
     setDocModalVisible(true);
   };
 
@@ -159,6 +164,39 @@ const Knowledge: React.FC = () => {
     }
   };
 
+  const handleUploadFile = async () => {
+    if (!selectedKb || fileList.length === 0) {
+      message.error('请选择文件');
+      return;
+    }
+
+    const file = fileList[0].originFileObj;
+    if (!file) {
+      message.error('文件无效');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const values = await docForm.validateFields();
+      await knowledgeBasesApi.uploadDocument(selectedKb.id, file, {
+        title: values.title,
+        doc_type: values.doc_type,
+        source: values.source,
+      });
+      message.success('上传成功');
+      setDocModalVisible(false);
+      setFileList([]);
+      docForm.resetFields();
+      fetchDocuments(selectedKb.id);
+      fetchData();
+    } catch (error: any) {
+      message.error(error.response?.data?.detail || '上传失败');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleApproveDoc = async (docId: number, approved: boolean) => {
     try {
       await documentsApi.approve(docId, { approved });
@@ -178,6 +216,19 @@ const Knowledge: React.FC = () => {
     } catch (error) {
       message.error('删除失败');
     }
+  };
+
+  const uploadProps = {
+    name: 'file',
+    multiple: false,
+    fileList,
+    beforeUpload: () => false,
+    onChange: (info: any) => {
+      setFileList(info.fileList);
+    },
+    onRemove: () => {
+      setFileList([]);
+    },
   };
 
   const kbColumns = [
@@ -247,10 +298,79 @@ const Knowledge: React.FC = () => {
     },
   ];
 
+  const textInputContent = (
+    <Form form={docForm} layout="vertical">
+      <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
+        <Input placeholder="文档标题" />
+      </Form.Item>
+      <Form.Item name="content" label="内容" rules={[{ required: true, message: '请输入内容' }]}>
+        <TextArea rows={8} placeholder="文档内容" />
+      </Form.Item>
+      <Form.Item name="doc_type" label="类型">
+        <Select
+          allowClear
+          placeholder="选择类型"
+          options={[
+            { value: 'case', label: '病例' },
+            { value: 'faq', label: 'FAQ' },
+            { value: 'guideline', label: '指南' },
+            { value: 'sop', label: 'SOP' },
+          ]}
+        />
+      </Form.Item>
+      <Form.Item name="source" label="来源">
+        <Input placeholder="如：刘武医生提供" />
+      </Form.Item>
+    </Form>
+  );
+
+  const fileUploadContent = (
+    <Form form={docForm} layout="vertical">
+      <Form.Item label="上传文件 (PDF/TXT)">
+        <Dragger {...uploadProps}>
+          <p className="ant-upload-drag-icon">
+            <UploadOutlined />
+          </p>
+          <p className="ant-upload-text">点击或拖拽文件到此区域上传</p>
+          <p className="ant-upload-hint">支持 PDF、TXT 格式，单个文件最大 10MB</p>
+        </Dragger>
+      </Form.Item>
+      <Form.Item name="title" label="标题（可选）" tooltip="不填则使用文件名">
+        <Input placeholder="留空则使用文件名" />
+      </Form.Item>
+      <Form.Item name="doc_type" label="类型" initialValue="faq">
+        <Select
+          options={[
+            { value: 'case', label: '病例' },
+            { value: 'faq', label: 'FAQ' },
+            { value: 'guideline', label: '指南' },
+            { value: 'sop', label: 'SOP' },
+          ]}
+        />
+      </Form.Item>
+      <Form.Item name="source" label="来源">
+        <Input placeholder="文档来源" />
+      </Form.Item>
+    </Form>
+  );
+
+  const tabItems = [
+    {
+      key: 'text',
+      label: '文本输入',
+      children: textInputContent,
+    },
+    {
+      key: 'file',
+      label: '文件上传',
+      children: fileUploadContent,
+    },
+  ];
+
   return (
     <div>
       <Title level={4}>知识库管理</Title>
-      
+
       <div style={{ display: 'flex', gap: 16 }}>
         <Card
           title="知识库列表"
@@ -296,17 +416,17 @@ const Knowledge: React.FC = () => {
           <Form.Item name="id" label="知识库ID" rules={[{ required: !editingKb }]} hidden={!!editingKb}>
             <Input placeholder="唯一标识，如 kb-dermatology-liuwu" />
           </Form.Item>
-          <Form.Item name="name" label="名称" rules={[{ required: true }]}>
-            <Input />
+          <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
+            <Input placeholder="知识库名称" />
           </Form.Item>
           <Form.Item name="description" label="描述">
-            <TextArea rows={2} />
+            <TextArea rows={2} placeholder="知识库描述" />
           </Form.Item>
           <Form.Item name="doctor_id" label="关联医生">
-            <Select allowClear options={doctors.map((d) => ({ value: d.id, label: d.name }))} />
+            <Select allowClear placeholder="选择医生" options={doctors.map((d) => ({ value: d.id, label: d.name }))} />
           </Form.Item>
           <Form.Item name="department_id" label="关联科室">
-            <Select allowClear options={departments.map((d) => ({ value: d.id, label: d.name }))} />
+            <Select allowClear placeholder="选择科室" options={departments.map((d) => ({ value: d.id, label: d.name }))} />
           </Form.Item>
         </Form>
       </Modal>
@@ -314,32 +434,42 @@ const Knowledge: React.FC = () => {
       <Modal
         title={editingDoc ? '编辑文档' : '添加文档'}
         open={docModalVisible}
-        onOk={handleSubmitDoc}
-        onCancel={() => setDocModalVisible(false)}
+        onOk={editingDoc ? handleSubmitDoc : handleUploadFile}
+        onCancel={() => {
+          setDocModalVisible(false);
+          setFileList([]);
+          docForm.resetFields();
+        }}
         width={600}
+        confirmLoading={uploading}
+        okText={editingDoc ? '保存' : '上传'}
       >
-        <Form form={docForm} layout="vertical">
-          <Form.Item name="title" label="标题" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="content" label="内容" rules={[{ required: true }]}>
-            <TextArea rows={8} />
-          </Form.Item>
-          <Form.Item name="doc_type" label="类型">
-            <Select
-              allowClear
-              options={[
-                { value: 'case', label: '病例' },
-                { value: 'faq', label: 'FAQ' },
-                { value: 'guideline', label: '指南' },
-                { value: 'sop', label: 'SOP' },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item name="source" label="来源">
-            <Input placeholder="如：刘武医生提供" />
-          </Form.Item>
-        </Form>
+        {editingDoc ? (
+          <Form form={docForm} layout="vertical">
+            <Form.Item name="title" label="标题" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="content" label="内容" rules={[{ required: true }]}>
+              <TextArea rows={8} />
+            </Form.Item>
+            <Form.Item name="doc_type" label="类型">
+              <Select
+                allowClear
+                options={[
+                  { value: 'case', label: '病例' },
+                  { value: 'faq', label: 'FAQ' },
+                  { value: 'guideline', label: '指南' },
+                  { value: 'sop', label: 'SOP' },
+                ]}
+              />
+            </Form.Item>
+            <Form.Item name="source" label="来源">
+              <Input placeholder="如：刘武医生提供" />
+            </Form.Item>
+          </Form>
+        ) : (
+          <Tabs items={tabItems} />
+        )}
       </Modal>
     </div>
   );

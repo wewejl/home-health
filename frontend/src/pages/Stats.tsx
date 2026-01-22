@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Row, Col, Table, Typography, Spin, Select } from 'antd';
+import { Line } from '@ant-design/charts';
 import { statsApi } from '../api';
 
 const { Title } = Typography;
@@ -64,6 +65,38 @@ const Stats: React.FC = () => {
     },
   ];
 
+  // 图表数据 - 转换为 @ant-design/charts 格式
+  const chartData = trends.flatMap(item => [
+    { date: item.date, type: '会话数', value: item.sessions },
+    { date: item.date, type: '消息数', value: item.messages },
+  ]);
+
+  const chartConfig = {
+    data: chartData,
+    xField: 'date',
+    yField: 'value',
+    seriesField: 'type',
+    smooth: true,
+    animation: {
+      appear: {
+        animation: 'path-in',
+        duration: 1000,
+      },
+    },
+    legend: {
+      position: 'top' as const,
+    },
+    point: {
+      size: 4,
+      shape: 'circle' as const,
+    },
+    tooltip: {
+      formatter: (datum: any) => {
+        return { name: datum.type, value: datum.value };
+      },
+    },
+  };
+
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: 50 }}>
@@ -76,23 +109,29 @@ const Stats: React.FC = () => {
     <div>
       <Title level={4}>统计分析</Title>
 
+      {/* 趋势图表 */}
+      <Card
+        title="趋势图表"
+        extra={
+          <Select
+            value={days}
+            onChange={setDays}
+            style={{ width: 120 }}
+            options={[
+              { value: 7, label: '最近7天' },
+              { value: 14, label: '最近14天' },
+              { value: 30, label: '最近30天' },
+            ]}
+          />
+        }
+        style={{ marginBottom: 16 }}
+      >
+        <Line {...chartConfig} height={300} />
+      </Card>
+
       <Row gutter={16}>
         <Col span={12}>
-          <Card
-            title="趋势数据"
-            extra={
-              <Select
-                value={days}
-                onChange={setDays}
-                style={{ width: 120 }}
-                options={[
-                  { value: 7, label: '最近7天' },
-                  { value: 14, label: '最近14天' },
-                  { value: 30, label: '最近30天' },
-                ]}
-              />
-            }
-          >
+          <Card title="趋势数据表格">
             <Table
               columns={trendColumns}
               dataSource={trends}
