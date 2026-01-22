@@ -3,10 +3,11 @@ import SwiftUI
 struct EventDetailView: View {
     let event: MedicalEvent
     @ObservedObject var viewModel: MedicalDossierViewModel
-    
+
     @State private var showExportConfig = false
     @State private var showMoreActions = false
     @State private var showMergeSheet = false
+    @State private var showNoteEditor = false
     @State private var selectedEventsForMerge: Set<String> = []
     @Environment(\.dismiss) private var dismiss
     
@@ -24,7 +25,12 @@ struct EventDetailView: View {
                         if let analysis = event.aiAnalysis {
                             AIAnalysisCardView(analysis: analysis)
                         }
-                        
+
+                        // 备注卡片
+                        if let notes = event.notes, !notes.isEmpty {
+                            notesSection(notes: notes)
+                        }
+
                         // 相关病历
                         relatedEventsSection
                         
@@ -49,8 +55,8 @@ struct EventDetailView: View {
                         Label("编辑标题", systemImage: "pencil")
                     }
                     
-                    Button(action: {}) {
-                        Label("添加备注", systemImage: "note.text.badge.plus")
+                    Button(action: { showNoteEditor = true }) {
+                        Label(event.notes == nil ? "添加备注" : "编辑备注", systemImage: "note.text.badge.plus")
                     }
                     
                     Divider()
@@ -87,6 +93,18 @@ struct EventDetailView: View {
                     Task {
                         await viewModel.mergeEvents(eventIds: eventIds, newTitle: title)
                         showMergeSheet = false
+                    }
+                }
+            )
+        }
+        .sheet(isPresented: $showNoteEditor) {
+            NoteEditorView(
+                eventId: event.id,
+                initialContent: event.notes ?? "",
+                viewModel: viewModel,
+                onSave: {
+                    Task {
+                        await viewModel.loadEventDetail(eventId: event.id)
                     }
                 }
             )
@@ -386,7 +404,47 @@ struct EventDetailView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, ScaleFactor.padding(40))
     }
-    
+
+    // MARK: - Notes Section
+
+    private func notesSection(notes: String) -> some View {
+        VStack(alignment: .leading, spacing: ScaleFactor.spacing(12)) {
+            HStack {
+                HStack(spacing: ScaleFactor.spacing(6)) {
+                    Image(systemName: "note.text")
+                        .font(.system(size: AdaptiveFont.body))
+                        .foregroundColor(DXYColors.primaryPurple)
+                    Text("我的备注")
+                        .font(.system(size: AdaptiveFont.body, weight: .semibold))
+                        .foregroundColor(DXYColors.textPrimary)
+                }
+
+                Spacer()
+
+                Button(action: { showNoteEditor = true }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "pencil")
+                        Text("编辑")
+                    }
+                    .font(.system(size: AdaptiveFont.footnote))
+                    .foregroundColor(DXYColors.primaryPurple)
+                }
+            }
+
+            Text(notes)
+                .font(.system(size: AdaptiveFont.subheadline))
+                .foregroundColor(DXYColors.textPrimary)
+                .lineSpacing(4)
+                .padding(ScaleFactor.padding(12))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(DXYColors.background)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .padding(ScaleFactor.padding(16))
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadius, style: .continuous))
+    }
+
     private var exportButton: some View {
         VStack(spacing: 0) {
             Divider()

@@ -94,6 +94,17 @@ struct NoteDTO: Decodable, Identifiable {
     let updated_at: Date
 }
 
+// MARK: - Note Request Models
+struct NoteCreateRequest: Encodable {
+    let content: String
+    let is_important: Bool?
+}
+
+struct NoteUpdateRequest: Encodable {
+    let content: String
+    let is_important: Bool?
+}
+
 struct AggregateSessionResponse: Decodable {
     let event_id: String
     let message: String
@@ -147,14 +158,14 @@ class MedicalEventAPIService {
         sessionType: String
     ) async throws -> AggregateSessionResponse {
         let endpoint = APIConfig.Endpoints.medicalEvents + "/aggregate"
-        
+
         let requestBody: [String: Any] = [
             "session_id": sessionId,
             "session_type": sessionType
         ]
-        
+
         let jsonData = try JSONSerialization.data(withJSONObject: requestBody)
-        
+
         return try await makeRequest(
             endpoint: endpoint,
             method: "POST",
@@ -162,6 +173,68 @@ class MedicalEventAPIService {
             requiresAuth: true
         )
     }
+
+    // MARK: - Note Management
+    /// Add a note to a medical event
+    func addNote(
+        eventId: String,
+        content: String,
+        isImportant: Bool = false
+    ) async throws -> NoteDTO {
+        let endpoint = APIConfig.Endpoints.medicalEventDetail(eventId: eventId) + "/notes"
+
+        let request = NoteCreateRequest(content: content, is_important: isImportant)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let jsonData = try encoder.encode(request)
+
+        return try await makeRequest(
+            endpoint: endpoint,
+            method: "POST",
+            body: jsonData,
+            requiresAuth: true
+        )
+    }
+
+    /// Update an existing note
+    func updateNote(
+        eventId: String,
+        noteId: String,
+        content: String,
+        isImportant: Bool = false
+    ) async throws -> NoteDTO {
+        let endpoint = APIConfig.Endpoints.medicalEventDetail(eventId: eventId) + "/notes/\(noteId)"
+
+        let request = NoteUpdateRequest(content: content, is_important: isImportant)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let jsonData = try encoder.encode(request)
+
+        return try await makeRequest(
+            endpoint: endpoint,
+            method: "PUT",
+            body: jsonData,
+            requiresAuth: true
+        )
+    }
+
+    /// Delete a note
+    func deleteNote(
+        eventId: String,
+        noteId: String
+    ) async throws {
+        let endpoint = APIConfig.Endpoints.medicalEventDetail(eventId: eventId) + "/notes/\(noteId)"
+
+        let _: EmptyResponse = try await makeRequest(
+            endpoint: endpoint,
+            method: "DELETE",
+            requiresAuth: true
+        )
+    }
+
+    // MARK: - Empty Response for DELETE
+    struct EmptyResponse: Decodable {}
+
     
     // MARK: - Private Request Helper
     private func makeRequest<T: Decodable>(

@@ -25,7 +25,11 @@ class MedicalDossierViewModel: ObservableObject {
     // MARK: - Merge State
     @Published var isMerging: Bool = false
     @Published var mergeResult: MergeEventsResponse?
-    
+
+    // MARK: - Note State
+    @Published var isSavingNote: Bool = false
+    @Published var noteError: String?
+
     // MARK: - Private Properties
     private var cancellables = Set<AnyCancellable>()
     
@@ -302,5 +306,57 @@ class MedicalDossierViewModel: ObservableObject {
         }
         
         return items
+    }
+
+    // MARK: - Note Management
+
+    /// 添加或更新事件备注
+    func saveNote(for eventId: String, content: String, isImportant: Bool = false) async -> Bool {
+        isSavingNote = true
+        noteError = nil
+
+        do {
+            // 首先获取事件详情，查看是否已有备注
+            let detail = try await MedicalEventAPIService.shared.fetchEventDetail(eventId: eventId)
+
+            if let existingNote = detail.notes.first {
+                // 更新现有备注
+                _ = try await MedicalEventAPIService.shared.updateNote(
+                    eventId: eventId,
+                    noteId: String(existingNote.id),
+                    content: content,
+                    isImportant: isImportant
+                )
+            } else {
+                // 创建新备注
+                _ = try await MedicalEventAPIService.shared.addNote(
+                    eventId: eventId,
+                    content: content,
+                    isImportant: isImportant
+                )
+            }
+
+            // 刷新事件数据
+            await loadEventDetail(eventId: eventId)
+
+            isSavingNote = false
+            return true
+        } catch {
+            noteError = "保存备注失败: \(error.localizedDescription)"
+            isSavingNote = false
+            return false
+        }
+    }
+
+    /// 删除事件备注
+    func deleteNote(for eventId: String, noteId: String) async -> Bool {
+        do {
+            try await MedicalEventAPIService.shared.deleteNote(eventId: eventId, noteId: noteId)
+            await loadEventDetail(eventId: eventId)
+            return true
+        } catch {
+            noteError = "删除备注失败: \(error.localizedDescription)"
+            return false
+        }
     }
 }

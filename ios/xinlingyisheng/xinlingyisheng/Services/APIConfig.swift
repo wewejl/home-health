@@ -9,9 +9,9 @@ enum APIConfig {
         var baseURL: String {
             switch self {
             case .development:
-                return "http://123.206.232.231"
+                return "http://123.206.232.231/api"
             case .production:
-                return "http://123.206.232.231"
+                return "http://123.206.232.231/api"
             }
         }
     }
@@ -103,7 +103,7 @@ enum APIConfig {
 }
 
 enum SpeechAPIConfig {
-    static let baseURL: String = "http://192.168.2.7:8100/api/v1"
+    static let baseURL: String = "http://123.206.232.231/api/v1"
     enum Endpoints {
         static let transcription = "/transcriptions"
     }
