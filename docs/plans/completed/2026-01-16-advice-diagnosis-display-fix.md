@@ -1,5 +1,6 @@
 # 中间建议和诊断卡片显示修复实施计划
 
+> **状态:** ✅ 已完成
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** 修复中间建议和诊断卡片不显示的问题，添加调试日志验证数据流

@@ -1,5 +1,6 @@
 # 中间建议工具化实施计划
 
+> **状态:** ✅ 已完成
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** 将中间建议提取从关键词匹配改为 Agent 主动工具调用，符合 ReAct 智能体架构

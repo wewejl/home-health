@@ -1,5 +1,6 @@
 # 诊断展示增强实施计划
 
+> **状态:** ✅ 已完成
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** 让皮肤科 ReAct Agent 实现"查资料 → 推理 → 结构化诊断"的完整流程，前端展示中间建议、引用证据和诊断卡。
