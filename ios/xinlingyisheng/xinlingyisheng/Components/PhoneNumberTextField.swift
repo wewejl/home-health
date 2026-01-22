@@ -26,7 +26,8 @@ struct PhoneNumberTextField: View {
     }
 
     var body: some View {
-        HStack(spacing: AdaptiveSpacing.item) {
+        // 内部输入区域
+        let inputField = HStack(spacing: AdaptiveSpacing.item) {
             Image(systemName: "phone.fill")
                 .font(.system(size: iconSize, weight: .medium))
                 .foregroundColor(textFieldIsFocused ? PremiumColorTheme.primaryColor : PremiumColorTheme.textSecondary)
@@ -40,37 +41,44 @@ struct PhoneNumberTextField: View {
                 .onChangeCompat(of: displayNumber) { newValue in
                     handlePhoneInput(newValue)
                 }
-                .onAppear {
-                    if isFocused {
-                        textFieldIsFocused = true
-                    }
-                }
-                .onChangeCompat(of: isFocused) { newValue in
-                    textFieldIsFocused = newValue
-                }
         }
         .padding(.horizontal, horizontalPadding)
         .padding(.vertical, verticalPadding)
-        .frame(maxWidth: .infinity)
-        .frame(minHeight: LayoutConstants.inputHeight)
-        .background(
-            RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusSmall, style: .continuous)
-                .fill(Color.dynamicColor(
-                    light: Color.white.opacity(0.5),
-                    dark: Color(red: 0.18, green: 0.18, blue: 0.22).opacity(0.5)
-                ))
-                .overlay(
-                    RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusSmall, style: .continuous)
-                        .stroke(
-                            textFieldIsFocused ? PremiumColorTheme.primaryColor : Color.clear,
-                            lineWidth: 1.5
-                        )
-                )
-        )
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusSmall, style: .continuous))
-        .onTapGesture {
-            textFieldIsFocused = true
-        }
+
+        return inputField
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: LayoutConstants.inputHeight)
+            .background(
+                RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusSmall, style: .continuous)
+                    .fill(Color.dynamicColor(
+                        light: Color.white.opacity(0.5),
+                        dark: Color(red: 0.18, green: 0.18, blue: 0.22).opacity(0.5)
+                    ))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusSmall, style: .continuous)
+                            .stroke(
+                                textFieldIsFocused ? PremiumColorTheme.primaryColor : Color.clear,
+                                lineWidth: 1.5
+                            )
+                    )
+            )
+            .contentShape(Rectangle())
+            .simultaneousGesture(
+                TapGesture()
+                    .onEnded { _ in
+                        textFieldIsFocused = true
+                    }
+            )
+            .onAppear {
+                if isFocused {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        textFieldIsFocused = true
+                    }
+                }
+            }
+            .onChangeCompat(of: isFocused) { newValue in
+                textFieldIsFocused = newValue
+            }
     }
     
     private func handlePhoneInput(_ input: String) {

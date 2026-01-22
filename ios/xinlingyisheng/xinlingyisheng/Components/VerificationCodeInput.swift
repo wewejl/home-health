@@ -31,6 +31,7 @@ struct VerificationCodeInput: View {
             let boxSize = calculateBoxSize(for: availableWidth, spacing: spacing)
 
             ZStack {
+                // 隐藏的 TextField 用于接收输入
                 TextField("", text: $code)
                     .keyboardType(.numberPad)
                     .textContentType(.oneTimeCode)
@@ -50,7 +51,9 @@ struct VerificationCodeInput: View {
                     }
                     .onAppear {
                         if isExternallyFocused {
-                            isFocused = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                isFocused = true
+                            }
                         }
                     }
                     .onChangeCompat(of: isExternallyFocused) { newValue in
@@ -58,7 +61,8 @@ struct VerificationCodeInput: View {
                             isFocused = true
                         }
                     }
-                
+
+                // 显示的数字格子
                 HStack(spacing: spacing) {
                     ForEach(0..<codeLength, id: \.self) { index in
                         CodeDigitBox(
@@ -74,15 +78,18 @@ struct VerificationCodeInput: View {
                 }
                 .frame(width: availableWidth, height: boxSize.height)
                 .contentShape(Rectangle())
-                .onTapGesture {
-                    isFocused = true
-                }
+                .simultaneousGesture(
+                    TapGesture()
+                        .onEnded { _ in
+                            isFocused = true
+                        }
+                )
             }
             .frame(width: availableWidth, height: boxSize.height)
         }
         .frame(height: calculateFixedHeight())
     }
-    
+
     private func calculateSpacing(for width: CGFloat) -> CGFloat {
         if width < 280 { return 4 }
         else if width < 320 { return 6 }
