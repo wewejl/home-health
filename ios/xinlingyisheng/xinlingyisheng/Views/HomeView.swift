@@ -35,12 +35,14 @@ struct HomeView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             // 首页
-            HomeContentView(selectedTab: $selectedTab)
-                .tabItem {
-                    Image(systemName: selectedTab == 0 ? "house.fill" : "house")
-                    Text("首页")
-                }
-                .tag(0)
+            CompatibleNavigationStack {
+                HomeContentView(selectedTab: $selectedTab)
+            }
+            .tabItem {
+                Image(systemName: selectedTab == 0 ? "house.fill" : "house")
+                Text("首页")
+            }
+            .tag(0)
 
             // 问医生
             CompatibleNavigationStack {
@@ -62,37 +64,15 @@ struct HomeView: View {
             }
             .tag(2)
 
-            // 查疾病
-            CompatibleNavigationStack {
-                DiseaseListView()
-                    .navigationBarBackgroundHidden()
-            }
-            .tabItem {
-                Image(systemName: selectedTab == 3 ? "stethoscope.circle.fill" : "stethoscope.circle")
-                Text("查疾病")
-            }
-            .tag(3)
-
-            // 查药品
-            CompatibleNavigationStack {
-                DrugListView()
-                    .navigationBarBackgroundHidden()
-            }
-            .tabItem {
-                Image(systemName: selectedTab == 4 ? "pill.circle.fill" : "pill.circle")
-                Text("查药品")
-            }
-            .tag(4)
-
             // 我的
             CompatibleNavigationStack {
                 ProfileView()
             }
             .tabItem {
-                Image(systemName: selectedTab == 5 ? "person.fill" : "person")
+                Image(systemName: selectedTab == 3 ? "person.fill" : "person")
                 Text("我的")
             }
-            .tag(5)
+            .tag(3)
         }
         .tint(DXYColors.primaryPurple)
     }
@@ -273,6 +253,7 @@ struct CoreFunctionsView: View {
 
     var body: some View {
         HStack(spacing: ScaleFactor.spacing(24)) {
+            // 问医生 - 跳转 Tab
             CoreFunctionItem(
                 icon: "plus.bubble",
                 title: "问医生",
@@ -281,21 +262,33 @@ struct CoreFunctionsView: View {
                 action: { selectedTab = 1 }
             )
 
-            CoreFunctionItem(
-                icon: "stethoscope",
-                title: "查疾病",
-                subtitle: "权威疾病...",
-                backgroundColor: Color(red: 0.42, green: 0.42, blue: 1.0),
-                action: { selectedTab = 3 }
-            )
+            // 查疾病 - NavigationLink
+            NavigationLink {
+                DiseaseListView()
+                    .navigationBarBackgroundHidden()
+            } label: {
+                CoreFunctionItemContent(
+                    icon: "stethoscope",
+                    title: "查疾病",
+                    subtitle: "权威疾病...",
+                    backgroundColor: Color(red: 0.42, green: 0.42, blue: 1.0)
+                )
+            }
+            .buttonStyle(.plain)
 
-            CoreFunctionItem(
-                icon: "pills",
-                title: "查药品",
-                subtitle: "7万药品说...",
-                backgroundColor: DXYColors.blue,
-                action: { selectedTab = 4 }
-            )
+            // 查药品 - NavigationLink
+            NavigationLink {
+                DrugListView()
+                    .navigationBarBackgroundHidden()
+            } label: {
+                CoreFunctionItemContent(
+                    icon: "pills",
+                    title: "查药品",
+                    subtitle: "7万药品说...",
+                    backgroundColor: DXYColors.blue
+                )
+            }
+            .buttonStyle(.plain)
         }
         .padding(.top, 8)
     }
@@ -307,31 +300,17 @@ struct CoreFunctionItem: View {
     let subtitle: String
     let backgroundColor: Color
     var action: () -> Void = {}
-    
+
     @State private var isPressed = false
-    
+
     var body: some View {
         Button(action: action) {
-            VStack(spacing: ScaleFactor.spacing(8)) {
-                ZStack {
-                    Circle()
-                        .fill(backgroundColor)
-                        .frame(width: ScaleFactor.size(64), height: ScaleFactor.size(64))
-                    
-                    Image(systemName: icon)
-                        .font(.system(size: AdaptiveFont.largeTitle, weight: .light))
-                        .foregroundColor(.white)
-                }
-                
-                Text(title)
-                    .font(.system(size: AdaptiveFont.subheadline, weight: .semibold))
-                    .foregroundColor(DXYColors.textPrimary)
-                
-                Text(subtitle)
-                    .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(DXYColors.textTertiary)
-            }
-            .frame(maxWidth: .infinity)
+            CoreFunctionItemContent(
+                icon: icon,
+                title: title,
+                subtitle: subtitle,
+                backgroundColor: backgroundColor
+            )
         }
         .buttonStyle(PlainButtonStyle())
         .scaleEffect(isPressed ? 0.96 : 1.0)
@@ -341,6 +320,37 @@ struct CoreFunctionItem: View {
                 .onChanged { _ in isPressed = true }
                 .onEnded { _ in isPressed = false }
         )
+    }
+}
+
+// MARK: - 核心功能项内容（纯视图，用于 NavigationLink）
+struct CoreFunctionItemContent: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let backgroundColor: Color
+
+    var body: some View {
+        VStack(spacing: ScaleFactor.spacing(8)) {
+            ZStack {
+                Circle()
+                    .fill(backgroundColor)
+                    .frame(width: ScaleFactor.size(64), height: ScaleFactor.size(64))
+
+                Image(systemName: icon)
+                    .font(.system(size: AdaptiveFont.largeTitle, weight: .light))
+                    .foregroundColor(.white)
+            }
+
+            Text(title)
+                .font(.system(size: AdaptiveFont.subheadline, weight: .semibold))
+                .foregroundColor(DXYColors.textPrimary)
+
+            Text(subtitle)
+                .font(.system(size: AdaptiveFont.footnote))
+                .foregroundColor(DXYColors.textTertiary)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
