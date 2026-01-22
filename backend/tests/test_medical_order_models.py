@@ -5,12 +5,18 @@ import pytest
 import sys
 import os
 from datetime import date, time
+import time as time_module
 
 # 添加项目路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from app.models.medical_order import OrderType, ScheduleType, OrderStatus, TaskStatus
 from app.models.user import User
+
+
+def _get_unique_phone():
+    """生成唯一的测试手机号"""
+    return f"199{int(time_module.time() * 1000) % 100000000:08d}"
 
 
 def test_order_type_enum():
@@ -58,7 +64,7 @@ def test_create_medical_order(db_session):
     from app.models.medical_order import MedicalOrder
 
     # 创建测试用户
-    user = User(phone="13800000001", nickname="测试患者")
+    user = User(phone=_get_unique_phone(), nickname="测试患者")
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
@@ -87,3 +93,43 @@ def test_create_medical_order(db_session):
     assert order.title == "胰岛素注射"
     assert order.ai_generated is True
     assert order.status == OrderStatus.DRAFT
+
+
+def test_create_task_instance(db_session):
+    """测试创建任务实例"""
+    from app.models.medical_order import TaskInstance, MedicalOrder
+
+    # 创建测试用户和医嘱
+    user = User(phone=_get_unique_phone(), nickname="测试患者2")
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    order = MedicalOrder(
+        patient_id=user.id,
+        order_type=OrderType.MEDICATION,
+        title="早餐前胰岛素",
+        schedule_type=ScheduleType.DAILY,
+        start_date=date.today(),
+        status=OrderStatus.ACTIVE
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    # 创建任务实例
+    task = TaskInstance(
+        order_id=order.id,
+        patient_id=user.id,
+        scheduled_date=date.today(),
+        scheduled_time=time(8, 0),
+        status=TaskStatus.PENDING
+    )
+
+    db_session.add(task)
+    db_session.commit()
+    db_session.refresh(task)
+
+    assert task.id is not None
+    assert task.status == TaskStatus.PENDING
+    assert task.scheduled_time.hour == 8

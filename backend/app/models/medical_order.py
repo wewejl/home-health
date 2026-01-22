@@ -55,17 +55,32 @@ class NotificationLevel(str, enum.Enum):
     NONE = "none"               # 不通知
 
 
-# 占位类 - TaskInstance 将在 Task 3 中完整实现
 class TaskInstance(Base):
-    """任务实例表 - 占位实现，Task 3 完整实现"""
+    """任务实例表 - 系统根据医嘱自动生成的每日任务"""
     __tablename__ = "task_instances"
 
     id = Column(Integer, primary_key=True, index=True)
     order_id = Column(Integer, ForeignKey("medical_orders.id"), nullable=False, index=True)
     patient_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
+    # 调度信息
+    scheduled_date = Column(Date, nullable=False, index=True)
+    scheduled_time = Column(Time, nullable=False)
+
+    # 状态
+    status = Column(SQLEnum(TaskStatus), default=TaskStatus.PENDING, index=True)
+
+    # 完成信息
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    completion_notes = Column(Text, nullable=True)
+
+    # 时间戳
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
     # 关系
     order = relationship("MedicalOrder", back_populates="task_instances")
+    # completion_records 关系将在 Task 4 添加
     patient_rel = relationship("User", foreign_keys=[patient_id])
 
 
