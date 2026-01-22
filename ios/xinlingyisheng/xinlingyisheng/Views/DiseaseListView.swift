@@ -2,6 +2,8 @@ import SwiftUI
 
 // MARK: - 查疾病列表
 struct DiseaseListView: View {
+    @Environment(\.dismiss) private var dismiss
+
     @State private var departments: [DepartmentWithDiseasesModel] = []
     @State private var selectedDepartmentIndex: Int = 0
     @State private var isLoading = true
@@ -35,12 +37,18 @@ struct DiseaseListView: View {
     // MARK: - 顶部导航栏
     private var navigationBar: some View {
         HStack {
+            Button(action: { dismiss() }) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: AdaptiveFont.title3, weight: .medium))
+                    .foregroundColor(DXYColors.textPrimary)
+            }
+
             Spacer()
-            
+
             Text("查疾病")
                 .font(.system(size: AdaptiveFont.body, weight: .semibold))
                 .foregroundColor(DXYColors.textPrimary)
-            
+
             Spacer()
         }
         .padding(.horizontal, LayoutConstants.horizontalPadding)

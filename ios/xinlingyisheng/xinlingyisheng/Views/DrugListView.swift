@@ -2,7 +2,8 @@ import SwiftUI
 
 // MARK: - 查药品页面
 struct DrugListView: View {
-    
+    @Environment(\.dismiss) private var dismiss
+
     @State private var categories: [DrugCategoryWithDrugsModel] = []
     @State private var isLoading = true
     
@@ -35,6 +36,12 @@ struct DrugListView: View {
     // MARK: - 顶部导航栏
     private var navigationBar: some View {
         HStack {
+            Button(action: { dismiss() }) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: AdaptiveFont.title3, weight: .medium))
+                    .foregroundColor(DXYColors.textPrimary)
+            }
+
             Spacer()
 
             Text("查药品")
