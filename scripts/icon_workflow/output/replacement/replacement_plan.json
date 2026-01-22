@@ -1,0 +1,706 @@
+{
+  "total_files": 23,
+  "files": {
+    "ios/xinlingyisheng/xinlingyisheng/Views/FullScreenVoiceModeView.swift": [
+      {
+        "line": 97,
+        "icon": "face.smiling",
+        "match": "Image(systemName: \"face.smiling\")"
+      },
+      {
+        "line": 155,
+        "icon": "mic.slash.fill",
+        "match": "Image(systemName: \"mic.slash.fill\")"
+      },
+      {
+        "line": 263,
+        "icon": "speaker.wave.2.fill",
+        "match": "Image(systemName: \"speaker.wave.2.fill\")"
+      },
+      {
+        "line": 291,
+        "icon": "exclamationmark.triangle.fill",
+        "match": "Image(systemName: \"exclamationmark.triangle.fill\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/ModernConsultationView.swift": [
+      {
+        "line": 275,
+        "icon": "chevron.down",
+        "match": "Image(systemName: \"chevron.down\")"
+      },
+      {
+        "line": 432,
+        "icon": "chevron.left",
+        "match": "Image(systemName: \"chevron.left\")"
+      },
+      {
+        "line": 461,
+        "icon": "square.and.pencil",
+        "match": "Image(systemName: \"square.and.pencil\")"
+      },
+      {
+        "line": 471,
+        "icon": "clock.arrow.circlepath",
+        "match": "Image(systemName: \"clock.arrow.circlepath\")"
+      },
+      {
+        "line": 481,
+        "icon": "doc.text.fill",
+        "match": "Image(systemName: \"doc.text.fill\")"
+      },
+      {
+        "line": 548,
+        "icon": "brain.head.profile",
+        "match": "Image(systemName: \"brain.head.profile\")"
+      },
+      {
+        "line": 677,
+        "icon": "plus.circle.fill",
+        "match": "Image(systemName: \"plus.circle.fill\")"
+      },
+      {
+        "line": 720,
+        "icon": "arrow.up",
+        "match": "Image(systemName: \"arrow.up\")"
+      },
+      {
+        "line": 746,
+        "icon": "plus.circle.fill",
+        "match": "Image(systemName: \"plus.circle.fill\")"
+      },
+      {
+        "line": 776,
+        "icon": "mic.fill",
+        "match": "Image(systemName: \"mic.fill\")"
+      },
+      {
+        "line": 799,
+        "icon": "arrow.up",
+        "match": "Image(systemName: \"arrow.up\")"
+      },
+      {
+        "line": 833,
+        "icon": "checkmark.circle.fill",
+        "match": "Image(systemName: \"checkmark.circle.fill\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/ProfileView.swift": [
+      {
+        "line": 32,
+        "icon": "rectangle.portrait.and.arrow.right",
+        "match": "Image(systemName: \"rectangle.portrait.and.arrow.right\")"
+      },
+      {
+        "line": 77,
+        "icon": "person.fill",
+        "match": "Image(systemName: \"person.fill\")"
+      },
+      {
+        "line": 94,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      },
+      {
+        "line": 137,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/LoginView.swift": [
+      {
+        "line": 254,
+        "icon": "checkmark.circle.fill",
+        "match": "Image(systemName: \"checkmark.circle.fill\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/HomeView.swift": [
+      {
+        "line": 202,
+        "icon": "checkmark.seal.fill",
+        "match": "Image(systemName: \"checkmark.seal.fill\")"
+      },
+      {
+        "line": 213,
+        "icon": "heart.fill",
+        "match": "Image(systemName: \"heart.fill\")"
+      },
+      {
+        "line": 229,
+        "icon": "envelope",
+        "match": "Image(systemName: \"envelope\")"
+      },
+      {
+        "line": 248,
+        "icon": "magnifyingglass",
+        "match": "Image(systemName: \"magnifyingglass\")"
+      },
+      {
+        "line": 400,
+        "icon": "brain.head.profile",
+        "match": "Image(systemName: \"brain.head.profile\")"
+      },
+      {
+        "line": 427,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/AskDoctorView.swift": [
+      {
+        "line": 34,
+        "icon": "building.2.slash",
+        "match": "Image(systemName: \"building.2.slash\")"
+      },
+      {
+        "line": 256,
+        "icon": "magnifyingglass",
+        "match": "Image(systemName: \"magnifyingglass\")"
+      },
+      {
+        "line": 394,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      },
+      {
+        "line": 419,
+        "icon": "cross.fill",
+        "match": "Image(systemName: \"cross.fill\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/SessionHistoryView.swift": [
+      {
+        "line": 62,
+        "icon": "bubble.left.and.bubble.right",
+        "match": "Image(systemName: \"bubble.left.and.bubble.right\")"
+      },
+      {
+        "line": 170,
+        "icon": "bubble.left.fill",
+        "match": "Image(systemName: \"bubble.left.fill\")"
+      },
+      {
+        "line": 179,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/ProfileSetupView.swift": [
+      {
+        "line": 122,
+        "icon": "person.crop.circle.badge.plus",
+        "match": "Image(systemName: \"person.crop.circle.badge.plus\")"
+      },
+      {
+        "line": 296,
+        "icon": "person.fill.viewfinder",
+        "match": "Image(systemName: \"person.fill.viewfinder\")"
+      },
+      {
+        "line": 376,
+        "icon": "calendar",
+        "match": "Image(systemName: \"calendar\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/DiseaseDetailView.swift": [
+      {
+        "line": 54,
+        "icon": "exclamationmark.triangle",
+        "match": "Image(systemName: \"exclamationmark.triangle\")"
+      },
+      {
+        "line": 79,
+        "icon": "chevron.left",
+        "match": "Image(systemName: \"chevron.left\")"
+      },
+      {
+        "line": 90,
+        "icon": "magnifyingglass",
+        "match": "Image(systemName: \"magnifyingglass\")"
+      },
+      {
+        "line": 96,
+        "icon": "square.and.arrow.up",
+        "match": "Image(systemName: \"square.and.arrow.up\")"
+      },
+      {
+        "line": 122,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      },
+      {
+        "line": 150,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      },
+      {
+        "line": 232,
+        "icon": "doc.text",
+        "match": "Image(systemName: \"doc.text\")"
+      },
+      {
+        "line": 313,
+        "icon": "person.circle.fill",
+        "match": "Image(systemName: \"person.circle.fill\")"
+      },
+      {
+        "line": 320,
+        "icon": "person.circle.fill",
+        "match": "Image(systemName: \"person.circle.fill\")"
+      },
+      {
+        "line": 331,
+        "icon": "checkmark.seal.fill",
+        "match": "Image(systemName: \"checkmark.seal.fill\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/ColorSchemeSelector.swift": [
+      {
+        "line": 21,
+        "icon": "chevron.down",
+        "match": "Image(systemName: \"chevron.down\")"
+      },
+      {
+        "line": 79,
+        "icon": "checkmark.circle.fill",
+        "match": "Image(systemName: \"checkmark.circle.fill\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/DepartmentDetailView.swift": [
+      {
+        "line": 43,
+        "icon": "person.2.slash",
+        "match": "Image(systemName: \"person.2.slash\")"
+      },
+      {
+        "line": 227,
+        "icon": "chevron.left",
+        "match": "Image(systemName: \"chevron.left\")"
+      },
+      {
+        "line": 243,
+        "icon": "square.and.pencil",
+        "match": "Image(systemName: \"square.and.pencil\")"
+      },
+      {
+        "line": 260,
+        "icon": "magnifyingglass",
+        "match": "Image(systemName: \"magnifyingglass\")"
+      },
+      {
+        "line": 299,
+        "icon": "chevron.down",
+        "match": "Image(systemName: \"chevron.down\")"
+      },
+      {
+        "line": 303,
+        "icon": "slider.horizontal.3",
+        "match": "Image(systemName: \"slider.horizontal.3\")"
+      },
+      {
+        "line": 375,
+        "icon": "person.fill",
+        "match": "Image(systemName: \"person.fill\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/DrugListView.swift": [
+      {
+        "line": 40,
+        "icon": "chevron.left",
+        "match": "Image(systemName: \"chevron.left\")"
+      },
+      {
+        "line": 78,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      },
+      {
+        "line": 91,
+        "icon": "magnifyingglass",
+        "match": "Image(systemName: \"magnifyingglass\")"
+      },
+      {
+        "line": 111,
+        "icon": "xmark.circle.fill",
+        "match": "Image(systemName: \"xmark.circle.fill\")"
+      },
+      {
+        "line": 327,
+        "icon": "flame.fill",
+        "match": "Image(systemName: \"flame.fill\")"
+      },
+      {
+        "line": 334,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      },
+      {
+        "line": 354,
+        "icon": "flame.fill",
+        "match": "Image(systemName: \"flame.fill\")"
+      },
+      {
+        "line": 361,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/MyQuestionsView.swift": [
+      {
+        "line": 19,
+        "icon": "chevron.left",
+        "match": "Image(systemName: \"chevron.left\")"
+      },
+      {
+        "line": 46,
+        "icon": "exclamationmark.triangle",
+        "match": "Image(systemName: \"exclamationmark.triangle\")"
+      },
+      {
+        "line": 61,
+        "icon": "bubble.left.and.bubble.right",
+        "match": "Image(systemName: \"bubble.left.and.bubble.right\")"
+      },
+      {
+        "line": 131,
+        "icon": "person.fill",
+        "match": "Image(systemName: \"person.fill\")"
+      },
+      {
+        "line": 155,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      },
+      {
+        "line": 198,
+        "icon": "chevron.left",
+        "match": "Image(systemName: \"chevron.left\")"
+      },
+      {
+        "line": 207,
+        "icon": "person.fill",
+        "match": "Image(systemName: \"person.fill\")"
+      },
+      {
+        "line": 267,
+        "icon": "paperplane.fill",
+        "match": "Image(systemName: \"paperplane.fill\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/DrugDetailView.swift": [
+      {
+        "line": 43,
+        "icon": "exclamationmark.triangle",
+        "match": "Image(systemName: \"exclamationmark.triangle\")"
+      },
+      {
+        "line": 68,
+        "icon": "chevron.left",
+        "match": "Image(systemName: \"chevron.left\")"
+      },
+      {
+        "line": 77,
+        "icon": "magnifyingglass",
+        "match": "Image(systemName: \"magnifyingglass\")"
+      },
+      {
+        "line": 83,
+        "icon": "square.and.arrow.up",
+        "match": "Image(systemName: \"square.and.arrow.up\")"
+      },
+      {
+        "line": 109,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      },
+      {
+        "line": 141,
+        "icon": "person.circle.fill",
+        "match": "Image(systemName: \"person.circle.fill\")"
+      },
+      {
+        "line": 153,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      },
+      {
+        "line": 238,
+        "icon": "doc.text",
+        "match": "Image(systemName: \"doc.text\")"
+      },
+      {
+        "line": 311,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/DiseaseListView.swift": [
+      {
+        "line": 68,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      },
+      {
+        "line": 87,
+        "icon": "magnifyingglass",
+        "match": "Image(systemName: \"magnifyingglass\")"
+      },
+      {
+        "line": 107,
+        "icon": "xmark.circle.fill",
+        "match": "Image(systemName: \"xmark.circle.fill\")"
+      },
+      {
+        "line": 367,
+        "icon": "flame.fill",
+        "match": "Image(systemName: \"flame.fill\")"
+      },
+      {
+        "line": 374,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/EventDetailWrapperView.swift": [
+      {
+        "line": 41,
+        "icon": "exclamationmark.triangle",
+        "match": "Image(systemName: \"exclamationmark.triangle\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/VoiceRecorderView.swift": [
+      {
+        "line": 18,
+        "icon": "xmark.circle.fill",
+        "match": "Image(systemName: \"xmark.circle.fill\")"
+      },
+      {
+        "line": 136,
+        "icon": "xmark",
+        "match": "Image(systemName: \"xmark\")"
+      },
+      {
+        "line": 153,
+        "icon": "stop.fill",
+        "match": "Image(systemName: \"stop.fill\")"
+      },
+      {
+        "line": 173,
+        "icon": "mic.fill",
+        "match": "Image(systemName: \"mic.fill\")"
+      },
+      {
+        "line": 253,
+        "icon": "mic.fill",
+        "match": "Image(systemName: \"mic.fill\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/ExportedConversationRow.swift": [
+      {
+        "line": 15,
+        "icon": "doc.text.fill",
+        "match": "Image(systemName: \"doc.text.fill\")"
+      },
+      {
+        "line": 52,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/MedicalDossierView.swift": [
+      {
+        "line": 54,
+        "icon": "magnifyingglass",
+        "match": "Image(systemName: \"magnifyingglass\")"
+      },
+      {
+        "line": 64,
+        "icon": "xmark.circle.fill",
+        "match": "Image(systemName: \"xmark.circle.fill\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/PDFViewerSheet.swift": [
+      {
+        "line": 52,
+        "icon": "ellipsis.circle",
+        "match": "Image(systemName: \"ellipsis.circle\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/PDFPreviewView.swift": [
+      {
+        "line": 43,
+        "icon": "square.and.arrow.up",
+        "match": "Image(systemName: \"square.and.arrow.up\")"
+      },
+      {
+        "line": 73,
+        "icon": "chevron.left",
+        "match": "Image(systemName: \"chevron.left\")"
+      },
+      {
+        "line": 84,
+        "icon": "chevron.right",
+        "match": "Image(systemName: \"chevron.right\")"
+      },
+      {
+        "line": 105,
+        "icon": "square.and.arrow.down",
+        "match": "Image(systemName: \"square.and.arrow.down\")"
+      },
+      {
+        "line": 125,
+        "icon": "square.and.arrow.up",
+        "match": "Image(systemName: \"square.and.arrow.up\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/ExportConfigView.swift": [
+      {
+        "line": 172,
+        "icon": "lock.shield",
+        "match": "Image(systemName: \"lock.shield\")"
+      },
+      {
+        "line": 203,
+        "icon": "doc.text.viewfinder",
+        "match": "Image(systemName: \"doc.text.viewfinder\")"
+      }
+    ],
+    "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/EventDetailView.swift": [
+      {
+        "line": 78,
+        "icon": "ellipsis.circle",
+        "match": "Image(systemName: \"ellipsis.circle\")"
+      },
+      {
+        "line": 126,
+        "icon": "brain.head.profile",
+        "match": "Image(systemName: \"brain.head.profile\")"
+      },
+      {
+        "line": 146,
+        "icon": "arrow.clockwise",
+        "match": "Image(systemName: \"arrow.clockwise\")"
+      },
+      {
+        "line": 182,
+        "icon": "sparkles",
+        "match": "Image(systemName: \"sparkles\")"
+      },
+      {
+        "line": 291,
+        "icon": "link",
+        "match": "Image(systemName: \"link\")"
+      },
+      {
+        "line": 303,
+        "icon": "arrow.triangle.merge",
+        "match": "Image(systemName: \"arrow.triangle.merge\")"
+      },
+      {
+        "line": 357,
+        "icon": "clock.arrow.circlepath",
+        "match": "Image(systemName: \"clock.arrow.circlepath\")"
+      },
+      {
+        "line": 396,
+        "icon": "bubble.left.and.bubble.right",
+        "match": "Image(systemName: \"bubble.left.and.bubble.right\")"
+      },
+      {
+        "line": 414,
+        "icon": "note.text",
+        "match": "Image(systemName: \"note.text\")"
+      },
+      {
+        "line": 426,
+        "icon": "pencil",
+        "match": "Image(systemName: \"pencil\")"
+      },
+      {
+        "line": 454,
+        "icon": "square.and.arrow.up",
+        "match": "Image(systemName: \"square.and.arrow.up\")"
+      }
+    ]
+  },
+  "summary": {
+    "total_icons_used": 115,
+    "unique_icons": [
+      "xmark.circle.fill",
+      "cross.fill",
+      "note.text",
+      "doc.text",
+      "xmark",
+      "person.2.slash",
+      "rectangle.portrait.and.arrow.right",
+      "paperplane.fill",
+      "square.and.arrow.down",
+      "lock.shield",
+      "exclamationmark.triangle.fill",
+      "envelope",
+      "bubble.left.fill",
+      "stop.fill",
+      "mic.slash.fill",
+      "speaker.wave.2.fill",
+      "clock.arrow.circlepath",
+      "heart.fill",
+      "calendar",
+      "checkmark.seal.fill",
+      "person.fill",
+      "doc.text.viewfinder",
+      "link",
+      "ellipsis.circle",
+      "mic.fill",
+      "doc.text.fill",
+      "brain.head.profile",
+      "plus.circle.fill",
+      "arrow.up",
+      "square.and.pencil",
+      "magnifyingglass",
+      "person.crop.circle.badge.plus",
+      "person.fill.viewfinder",
+      "person.circle.fill",
+      "flame.fill",
+      "exclamationmark.triangle",
+      "arrow.clockwise",
+      "arrow.triangle.merge",
+      "pencil",
+      "square.and.arrow.up",
+      "chevron.left",
+      "chevron.down",
+      "sparkles",
+      "slider.horizontal.3",
+      "checkmark.circle.fill",
+      "building.2.slash",
+      "chevron.right",
+      "bubble.left.and.bubble.right",
+      "face.smiling"
+    ],
+    "files_to_modify": [
+      "ios/xinlingyisheng/xinlingyisheng/Views/FullScreenVoiceModeView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/ModernConsultationView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/ProfileView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/LoginView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/HomeView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/AskDoctorView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/SessionHistoryView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/ProfileSetupView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/DiseaseDetailView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/ColorSchemeSelector.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/DepartmentDetailView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/DrugListView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/MyQuestionsView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/DrugDetailView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/DiseaseListView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/EventDetailWrapperView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/VoiceRecorderView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/ExportedConversationRow.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/MedicalDossierView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/PDFViewerSheet.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/PDFPreviewView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/ExportConfigView.swift",
+      "ios/xinlingyisheng/xinlingyisheng/Views/MedicalDossier/EventDetailView.swift"
+    ],
+    "unique_count": 49
+  }
+}

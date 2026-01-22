@@ -238,7 +238,6 @@ struct PhoneInputSection: View {
                 viewModel.onPhoneComplete()
             }
         )
-        .focused(focusedField, equals: .phone)
         .onChangeCompat(of: viewModel.displayPhoneNumber) { newValue in
             viewModel.handlePhoneInput(newValue)
         }
@@ -296,9 +295,9 @@ struct CodeInputSection: View {
                     filledBorder: PremiumColorTheme.primaryColor.opacity(0.55),
                     successBorder: PremiumColorTheme.successColor,
                     textColor: PremiumColorTheme.textPrimary
-                )
+                ),
+                isExternallyFocused: focusedField.wrappedValue == .code
             )
-            .focused(focusedField, equals: .code)
             .frame(maxWidth: .infinity)
         }
     }

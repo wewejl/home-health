@@ -1,10 +1,16 @@
 version: '3.8'
 
+# 从指定环境文件加载配置
+# 优先级: .env.production > .env > 默认值
+env_file:
+  - .env.production
+  - .env
+
 services:
   # PostgreSQL数据库
   postgres:
     image: postgres:16-alpine
-    container_name: xinlin-postgres
+    container_name: home-health-postgres
     environment:
       POSTGRES_DB: xinlin_prod
       POSTGRES_USER: xinlin_prod
@@ -19,7 +25,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - xinlin-network
+      - home-health-network
     restart: unless-stopped
 
   # 后端API服务
@@ -27,50 +33,68 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: xinlin-backend
+    container_name: home-health-backend
+    env_file:
+      - .env.production
+      - .env
     environment:
       # 应用配置
       APP_NAME: 鑫琳医生 API
-      APP_VERSION: 1.0.0
+      APP_VERSION: 2.0.0
       DEBUG: ${DEBUG:-false}
-      SEED_DATA: ${SEED_DATA:-true}
-      
+      SEED_DATA: ${SEED_DATA:-false}
+
+      # CORS 配置
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+
       # 数据库配置
       DATABASE_URL: postgresql+psycopg://xinlin_prod:${POSTGRES_PASSWORD:-changeme123}@postgres:5432/xinlin_prod
-      
+
       # JWT配置
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-your-secret-key-change-in-production}
       JWT_ALGORITHM: HS256
       JWT_ACCESS_TOKEN_EXPIRE_MINUTES: 480
       JWT_REFRESH_TOKEN_EXPIRE_DAYS: 7
-      
+
+      # Admin JWT配置
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-admin-secret-key-change-in-production}
+      ADMIN_JWT_EXPIRE_HOURS: 24
+
       # 测试模式
-      TEST_MODE: ${TEST_MODE:-true}
+      TEST_MODE: ${TEST_MODE:-false}
       ENABLE_SMS_VERIFICATION: ${ENABLE_SMS_VERIFICATION:-false}
-      
+
       # LLM配置
       LLM_PROVIDER: qwen
       LLM_MODEL: qwen-plus
       LLM_BASE_URL: https://dashscope.aliyuncs.com/compatible-mode/v1
       LLM_API_KEY: ${LLM_API_KEY}
       LLM_TEMPERATURE: 0.7
-      
+      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-2000}
+
       # Qwen-VL多模态配置
-      QWEN_VL_MODEL: qwen-vl-plus
-      
-      # Admin JWT配置
-      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-admin-secret-key-change-in-production}
-      ADMIN_JWT_EXPIRE_HOURS: 24
+      QWEN_VL_MODEL: qwen3-vl-plus
+
+      # 短信服务配置
+      SMS_PROVIDER: ${SMS_PROVIDER:-aliyun}
+      SMS_ACCESS_KEY_ID: ${SMS_ACCESS_KEY_ID}
+      SMS_ACCESS_KEY_SECRET: ${SMS_ACCESS_KEY_SECRET}
+      SMS_SIGN_NAME: ${SMS_SIGN_NAME:-鑫琳医生}
+      SMS_TEMPLATE_CODE: ${SMS_TEMPLATE_CODE}
+
+      # 日志级别
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     ports:
       - "8100:8100"
     depends_on:
       postgres:
         condition: service_healthy
     networks:
-      - xinlin-network
+      - home-health-network
     restart: unless-stopped
     volumes:
       - ./backend/uploads:/app/uploads
+      - ./backend/logs:/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
       interval: 30s
@@ -78,18 +102,31 @@ services:
       retries: 3
       start_period: 40s
 
+  # Redis 缓存服务
+  redis:
+    image: redis:7-alpine
+    container_name: home-health-redis
+    networks:
+      - home-health-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   # 前端Web服务
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: xinlin-frontend
+    container_name: home-health-frontend
     ports:
       - "80:80"
     depends_on:
       - backend
     networks:
-      - xinlin-network
+      - home-health-network
     restart: unless-stopped
 
 volumes:
@@ -97,5 +134,5 @@ volumes:
     driver: local
 
 networks:
-  xinlin-network:
+  home-health-network:
     driver: bridge

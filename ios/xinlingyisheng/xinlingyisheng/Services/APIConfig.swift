@@ -9,27 +9,52 @@ enum APIConfig {
         var baseURL: String {
             switch self {
             case .development:
-                return "http://123.206.232.231/api"
+                // 开发环境：使用本地服务器或测试服务器
+                // 优先从环境变量读取，否则使用默认值
+                return ProcessInfo.processInfo.environment["API_BASE_URL"]
+                    ?? "http://123.206.232.231/api"
             case .production:
-                return "http://123.206.232.231/api"
+                // 生产环境：使用生产服务器
+                return ProcessInfo.processInfo.environment["API_BASE_URL"]
+                    ?? "http://123.206.232.231/api"
+            }
+        }
+
+        var isDebug: Bool {
+            switch self {
+            case .development: return true
+            case .production: return false
             }
         }
     }
-    
+
     // 当前环境配置 - 切换此处即可切换环境
+    // 注意：正式发布时请改为 .production
+    #if DEBUG
     static let currentEnvironment: Environment = .development
-    
+    #else
+    static let currentEnvironment: Environment = .production
+    #endif
+
     // 基础 URL
     static var baseURL: String {
         return currentEnvironment.baseURL
     }
-    
+
     // 请求超时时间
     static let requestTimeout: TimeInterval = 30
-    
-    // MARK: - Feature Flags
-    // 验证码功能开关 - false时隐藏验证码相关UI（临时方案，待接入真实短信服务后启用）
-    static let enableSMSVerification: Bool = false
+
+    // 流式响应超时时间（AI 对话可能需要更长时间）
+    static let streamTimeout: TimeInterval = 300
+
+    // MARK: - Environment Info
+    static let environmentName: String = {
+        #if DEBUG
+        return "Development"
+        #else
+        return "Production"
+        #endif
+    }()
     
     enum Endpoints {
         static let login = "/auth/login"
@@ -103,7 +128,13 @@ enum APIConfig {
 }
 
 enum SpeechAPIConfig {
-    static let baseURL: String = "http://123.206.232.231/api/v1"
+    static let baseURL: String = {
+        // 语音识别 API 基础 URL
+        let apiBase = ProcessInfo.processInfo.environment["API_BASE_URL"]
+            ?? "http://123.206.232.231/api"
+        return apiBase + "/v1"
+    }()
+
     enum Endpoints {
         static let transcription = "/transcriptions"
     }

@@ -1,0 +1,459 @@
+{
+  "total": 49,
+  "by_type": {
+    "navigation": 4,
+    "action": 8,
+    "status": 9,
+    "control": 1,
+    "communication": 7,
+    "medical": 4,
+    "document": 7,
+    "user": 6,
+    "share": 1,
+    "search": 1,
+    "emotion": 1
+  },
+  "icons": [
+    {
+      "name": "chevron.right",
+      "usage_context": "",
+      "icon_type": "navigation",
+      "prompt_en": "minimalist chevron arrow pointing right icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, thin stroke, directional arrow",
+      "prompt_zh": "向右箭头",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "chevron.left",
+      "usage_context": "",
+      "icon_type": "navigation",
+      "prompt_en": "minimalist chevron arrow pointing left icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, thin stroke, directional arrow",
+      "prompt_zh": "向左箭头",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "chevron.down",
+      "usage_context": "",
+      "icon_type": "navigation",
+      "prompt_en": "minimalist chevron arrow pointing down icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, thin stroke, directional arrow",
+      "prompt_zh": "向下箭头",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "arrow.up",
+      "usage_context": "",
+      "icon_type": "navigation",
+      "prompt_en": "minimalist arrow pointing up icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, thin stroke, directional arrow",
+      "prompt_zh": "向上箭头",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "arrow.clockwise",
+      "usage_context": "",
+      "icon_type": "action",
+      "prompt_en": "minimalist circular refresh arrow clockwise icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive",
+      "prompt_zh": "顺时针刷新箭头",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "arrow.triangle.merge",
+      "usage_context": "",
+      "icon_type": "action",
+      "prompt_en": "minimalist merge arrows triangle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive",
+      "prompt_zh": "合并箭头",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "plus.circle.fill",
+      "usage_context": "",
+      "icon_type": "action",
+      "prompt_en": "minimalist plus sign inside circle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive",
+      "prompt_zh": "圆形加号",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "pencil",
+      "usage_context": "",
+      "icon_type": "action",
+      "prompt_en": "minimalist pencil for editing icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive",
+      "prompt_zh": "铅笔编辑",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "xmark.circle.fill",
+      "usage_context": "",
+      "icon_type": "action",
+      "prompt_en": "minimalist X mark inside circle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive",
+      "prompt_zh": "圆形叉号关闭",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "xmark",
+      "usage_context": "",
+      "icon_type": "action",
+      "prompt_en": "minimalist X mark icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive",
+      "prompt_zh": "叉号",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "checkmark.circle.fill",
+      "usage_context": "",
+      "icon_type": "status",
+      "prompt_en": "minimalist checkmark inside circle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility",
+      "prompt_zh": "圆形对勾",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "checkmark.seal.fill",
+      "usage_context": "",
+      "icon_type": "status",
+      "prompt_en": "minimalist checkmark inside seal shield icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility",
+      "prompt_zh": "盾牌对勾认证",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "slider.horizontal.3",
+      "usage_context": "",
+      "icon_type": "control",
+      "prompt_en": "minimalist horizontal slider control icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, UI control element",
+      "prompt_zh": "水平滑块",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "square.and.pencil",
+      "usage_context": "",
+      "icon_type": "action",
+      "prompt_en": "minimalist square with pencil icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive",
+      "prompt_zh": "方块和铅笔编辑",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "ellipsis.circle",
+      "usage_context": "",
+      "icon_type": "action",
+      "prompt_en": "minimalist three dots inside circle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive",
+      "prompt_zh": "三个点更多",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "flame.fill",
+      "usage_context": "",
+      "icon_type": "status",
+      "prompt_en": "minimalist flame fire icon icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility",
+      "prompt_zh": "火焰热门",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "sparkles",
+      "usage_context": "",
+      "icon_type": "status",
+      "prompt_en": "minimalist sparkles magic effect icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility",
+      "prompt_zh": "闪亮特效",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "stop.fill",
+      "usage_context": "",
+      "icon_type": "status",
+      "prompt_en": "minimalist stop sign square icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility",
+      "prompt_zh": "停止方块",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "lock.shield",
+      "usage_context": "",
+      "icon_type": "status",
+      "prompt_en": "minimalist lock inside shield icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility",
+      "prompt_zh": "盾牌锁",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "clock.arrow.circlepath",
+      "usage_context": "",
+      "icon_type": "status",
+      "prompt_en": "minimalist clock with circular arrow icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility",
+      "prompt_zh": "时钟刷新历史",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "exclamationmark.triangle",
+      "usage_context": "",
+      "icon_type": "status",
+      "prompt_en": "minimalist exclamation inside triangle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility",
+      "prompt_zh": "警告三角",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "exclamationmark.triangle.fill",
+      "usage_context": "",
+      "icon_type": "status",
+      "prompt_en": "minimalist filled exclamation triangle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility",
+      "prompt_zh": "填充警告三角",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "bubble.left.and.bubble.right",
+      "usage_context": "",
+      "icon_type": "communication",
+      "prompt_en": "minimalist two chat bubbles icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, message or communication symbol",
+      "prompt_zh": "对话气泡",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "bubble.left.fill",
+      "usage_context": "",
+      "icon_type": "communication",
+      "prompt_en": "minimalist chat bubble filled icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, message or communication symbol",
+      "prompt_zh": "左气泡消息",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "envelope",
+      "usage_context": "",
+      "icon_type": "communication",
+      "prompt_en": "minimalist envelope mail icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, message or communication symbol",
+      "prompt_zh": "信封邮件",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "speaker.wave.2.fill",
+      "usage_context": "",
+      "icon_type": "communication",
+      "prompt_en": "minimalist speaker with sound waves icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, message or communication symbol",
+      "prompt_zh": "扬声器音量",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "mic.fill",
+      "usage_context": "",
+      "icon_type": "communication",
+      "prompt_en": "minimalist microphone icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, message or communication symbol",
+      "prompt_zh": "麦克风",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "mic.slash.fill",
+      "usage_context": "",
+      "icon_type": "communication",
+      "prompt_en": "minimalist microphone with slash icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, message or communication symbol",
+      "prompt_zh": "禁用麦克风",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "paperplane.fill",
+      "usage_context": "",
+      "icon_type": "communication",
+      "prompt_en": "minimalist paper plane send icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, message or communication symbol",
+      "prompt_zh": "纸飞机发送",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "brain.head.profile",
+      "usage_context": "",
+      "icon_type": "medical",
+      "prompt_en": "minimalist brain inside head profile icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, healthcare symbol, professional",
+      "prompt_zh": "大脑头部轮廓",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "heart.fill",
+      "usage_context": "",
+      "icon_type": "medical",
+      "prompt_en": "minimalist heart shape icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, healthcare symbol, professional",
+      "prompt_zh": "爱心心脏",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "cross.fill",
+      "usage_context": "",
+      "icon_type": "medical",
+      "prompt_en": "minimalist medical cross icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, healthcare symbol, professional",
+      "prompt_zh": "医疗十字",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "note.text",
+      "usage_context": "",
+      "icon_type": "medical",
+      "prompt_en": "minimalist note with text lines icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, healthcare symbol, professional",
+      "prompt_zh": "文本笔记",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "doc.text",
+      "usage_context": "",
+      "icon_type": "document",
+      "prompt_en": "minimalist document with text lines icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, file or document symbol",
+      "prompt_zh": "文本文档",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "doc.text.fill",
+      "usage_context": "",
+      "icon_type": "document",
+      "prompt_en": "minimalist filled document with text icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, file or document symbol",
+      "prompt_zh": "填充文本文档",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "doc.text.viewfinder",
+      "usage_context": "",
+      "icon_type": "document",
+      "prompt_en": "minimalist document with viewfinder icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, file or document symbol",
+      "prompt_zh": "取景框文档",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "calendar",
+      "usage_context": "",
+      "icon_type": "document",
+      "prompt_en": "minimalist calendar date icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, file or document symbol",
+      "prompt_zh": "日历",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "link",
+      "usage_context": "",
+      "icon_type": "document",
+      "prompt_en": "minimalist chain link icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, file or document symbol",
+      "prompt_zh": "链接",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "square.and.arrow.down",
+      "usage_context": "",
+      "icon_type": "document",
+      "prompt_en": "minimalist square with down arrow icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, file or document symbol",
+      "prompt_zh": "下载",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "square.and.arrow.up",
+      "usage_context": "",
+      "icon_type": "document",
+      "prompt_en": "minimalist square with up arrow icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, file or document symbol",
+      "prompt_zh": "上传",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "person.fill",
+      "usage_context": "",
+      "icon_type": "user",
+      "prompt_en": "minimalist person silhouette icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, user or account symbol",
+      "prompt_zh": "用户人形",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "person.circle.fill",
+      "usage_context": "",
+      "icon_type": "user",
+      "prompt_en": "minimalist person inside circle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, user or account symbol",
+      "prompt_zh": "圆形用户头像",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "person.2.slash",
+      "usage_context": "",
+      "icon_type": "user",
+      "prompt_en": "minimalist two people with slash icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, user or account symbol",
+      "prompt_zh": "禁止两人",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "person.crop.circle.badge.plus",
+      "usage_context": "",
+      "icon_type": "user",
+      "prompt_en": "minimalist person circle with plus badge icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, user or account symbol",
+      "prompt_zh": "带加号用户",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "person.fill.viewfinder",
+      "usage_context": "",
+      "icon_type": "user",
+      "prompt_en": "minimalist person with viewfinder icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, user or account symbol",
+      "prompt_zh": "取景框用户",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "building.2.slash",
+      "usage_context": "",
+      "icon_type": "user",
+      "prompt_en": "minimalist two buildings with slash icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, user or account symbol",
+      "prompt_zh": "禁止建筑",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "rectangle.portrait.and.arrow.right",
+      "usage_context": "",
+      "icon_type": "share",
+      "prompt_en": "minimalist rectangle with right arrow icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, sharing or export symbol",
+      "prompt_zh": "分享箭头",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "magnifyingglass",
+      "usage_context": "",
+      "icon_type": "search",
+      "prompt_en": "minimalist magnifying glass icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, search or find symbol",
+      "prompt_zh": "放大镜搜索",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    },
+    {
+      "name": "face.smiling",
+      "usage_context": "",
+      "icon_type": "emotion",
+      "prompt_en": "minimalist smiling face icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, emoji style icon",
+      "prompt_zh": "笑脸",
+      "color_primary": "#5C44FF",
+      "color_secondary": "#A5A5B5"
+    }
+  ]
+}

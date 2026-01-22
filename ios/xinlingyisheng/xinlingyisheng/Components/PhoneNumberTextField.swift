@@ -6,36 +6,47 @@ struct PhoneNumberTextField: View {
     @Binding var displayNumber: String
     var isFocused: Bool = false
     var onComplete: (() -> Void)?
-    
+
+    @FocusState private var textFieldIsFocused: Bool
+
     private var iconSize: CGFloat {
         DeviceType.isCompactWidth ? 16 : 18
     }
-    
+
     private var fontSize: CGFloat {
         DeviceType.isCompactWidth ? 15 : 16
     }
-    
+
     private var horizontalPadding: CGFloat {
         DeviceType.isCompactWidth ? 14 : 18
     }
-    
+
     private var verticalPadding: CGFloat {
         DeviceType.isCompactWidth ? 12 : 14
     }
-    
+
     var body: some View {
         HStack(spacing: AdaptiveSpacing.item) {
             Image(systemName: "phone.fill")
                 .font(.system(size: iconSize, weight: .medium))
-                .foregroundColor(isFocused ? PremiumColorTheme.primaryColor : PremiumColorTheme.textSecondary)
+                .foregroundColor(textFieldIsFocused ? PremiumColorTheme.primaryColor : PremiumColorTheme.textSecondary)
                 .frame(width: 24)
-            
+
             TextField("请输入手机号", text: $displayNumber)
                 .font(.system(size: fontSize, weight: .regular, design: .rounded))
                 .keyboardType(.phonePad)
                 .textContentType(.telephoneNumber)
+                .focused($textFieldIsFocused)
                 .onChangeCompat(of: displayNumber) { newValue in
                     handlePhoneInput(newValue)
+                }
+                .onAppear {
+                    if isFocused {
+                        textFieldIsFocused = true
+                    }
+                }
+                .onChangeCompat(of: isFocused) { newValue in
+                    textFieldIsFocused = newValue
                 }
         }
         .padding(.horizontal, horizontalPadding)
@@ -51,12 +62,15 @@ struct PhoneNumberTextField: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusSmall, style: .continuous)
                         .stroke(
-                            isFocused ? PremiumColorTheme.primaryColor : Color.clear,
+                            textFieldIsFocused ? PremiumColorTheme.primaryColor : Color.clear,
                             lineWidth: 1.5
                         )
                 )
         )
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusSmall, style: .continuous))
+        .onTapGesture {
+            textFieldIsFocused = true
+        }
     }
     
     private func handlePhoneInput(_ input: String) {

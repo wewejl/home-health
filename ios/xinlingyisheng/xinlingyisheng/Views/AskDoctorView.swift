@@ -5,8 +5,6 @@ struct AskDoctorView: View {
     @State private var searchText = ""
     @State private var selectedDepartment: DepartmentModel?
     @State private var showMyQuestions = false
-    @State private var showAIDiagnosis = false
-    
     // API数据状态
     @State private var departments: [DepartmentModel] = []
     @State private var isLoadingDepartments = false
@@ -51,12 +49,7 @@ struct AskDoctorView: View {
                             
                             // 信任标签
                             TrustBadgesView()
-                            
-                            // 快捷入口
-                            QuickAccessView(
-                                showAIDiagnosis: $showAIDiagnosis
-                            )
-                            
+
                             // 科室列表（从 API 加载）
                             DepartmentListView(
                                 departments: filteredDepartments,
@@ -324,92 +317,6 @@ struct TrustBadgesView: View {
     }
 }
 
-
-
-// MARK: - 快捷入口
-struct QuickAccessView: View {
-    @Binding var showAIDiagnosis: Bool
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: ScaleFactor.spacing(12)) {
-            Text("智能服务")
-                .font(.system(size: AdaptiveFont.body, weight: .semibold))
-                .foregroundColor(DXYColors.textPrimary)
-            
-            HStack(spacing: ScaleFactor.spacing(12)) {
-                // AI诊室入口（单独显示，占据更多空间）
-                QuickAccessCard(
-                    icon: "stethoscope",
-                    title: "AI诊室",
-                    subtitle: "智能问诊",
-                    color: DXYColors.primaryPurple
-                ) {
-                    showAIDiagnosis = true
-                }
-            }
-        }
-        .padding(ScaleFactor.padding(16))
-        .background(DXYColors.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadius, style: .continuous))
-        .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
-    }
-}
-
-// MARK: - 快捷入口卡片
-struct QuickAccessCard: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-    let color: Color
-    var action: () -> Void = {}
-    
-    @State private var isPressed = false
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: ScaleFactor.spacing(12)) {
-                // 图标
-                ZStack {
-                    Circle()
-                        .fill(color.opacity(0.15))
-                        .frame(width: ScaleFactor.size(44), height: ScaleFactor.size(44))
-                    
-                    Image(systemName: icon)
-                        .font(.system(size: AdaptiveFont.title2))
-                        .foregroundColor(color)
-                }
-                
-                VStack(alignment: .leading, spacing: ScaleFactor.spacing(2)) {
-                    Text(title)
-                        .font(.system(size: AdaptiveFont.subheadline, weight: .semibold))
-                        .foregroundColor(DXYColors.textPrimary)
-                    
-                    Text(subtitle)
-                        .font(.system(size: AdaptiveFont.footnote))
-                        .foregroundColor(DXYColors.textTertiary)
-                }
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .font(.system(size: AdaptiveFont.subheadline))
-                    .foregroundColor(DXYColors.textTertiary)
-            }
-            .padding(ScaleFactor.padding(12))
-            .frame(maxWidth: .infinity)
-            .background(color.opacity(0.05))
-            .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall))
-        }
-        .buttonStyle(PlainButtonStyle())
-        .scaleEffect(isPressed ? 0.98 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isPressed)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
-    }
-}
 
 // MARK: - 底部品牌区
 struct BrandFooterView: View {

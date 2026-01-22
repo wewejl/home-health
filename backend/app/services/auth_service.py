@@ -19,38 +19,32 @@ class AuthService:
     async def send_verification_code(phone: str, client_ip: str = "0.0.0.0") -> Tuple[bool, str, int]:
         """
         发送验证码
-        
+
         Args:
             phone: 手机号
             client_ip: 客户端IP
-        
+
         Returns:
             (是否成功, 消息, 过期时间秒数)
         """
-        # 如果验证码功能被禁用，返回模拟成功
-        if not settings.ENABLE_SMS_VERIFICATION:
-            logger.info(f"[AUTH] 验证码功能已禁用，跳过发送: phone={phone[-4:]}")
-            return True, "验证码功能已禁用", 300
-        
         return await sms_service.send_verification_code(phone, client_ip)
     
     @staticmethod
     def verify_code(phone: str, code: str) -> Tuple[bool, str]:
         """
         验证验证码
-        
+
         Args:
             phone: 手机号
             code: 验证码
-        
+
         Returns:
             (是否验证成功, 错误消息)
+
+        验证规则:
+        - 测试模式 (TEST_MODE=true): 000000 为万能验证码
+        - 生产模式: 必须使用真实发送的验证码
         """
-        # 如果验证码功能被禁用，直接通过验证
-        if not settings.ENABLE_SMS_VERIFICATION:
-            logger.info(f"[AUTH] 验证码功能已禁用，自动通过验证: phone={phone[-4:]}")
-            return True, ""
-        
         return sms_service.verify_code(phone, code)
 
     @staticmethod

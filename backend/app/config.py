@@ -21,14 +21,17 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    
-    TEST_MODE: bool = True
-    
-    # 验证码配置
-    ENABLE_SMS_VERIFICATION: bool = False  # 临时禁用验证码功能，待接入真实短信服务后启用
 
-    # 短信服务配置（阿里云）
-    SMS_PROVIDER: str = "mock"  # mock/aliyun
+    # 测试模式
+    TEST_MODE: bool = True
+    # - true 时: 验证码 000000 为万能验证码，其他验证码正常验证（但不发真实短信）
+    # - false 时: 所有验证码必须真实验证，发送真实短信（需配置阿里云）
+
+    # 短信服务配置（已废弃，由 SMS_PROVIDER 和 TEST_MODE 控制）
+    ENABLE_SMS_VERIFICATION: bool = False  # 保留此配置仅为兼容，不再使用
+
+    # 短信服务提供商
+    SMS_PROVIDER: str = "mock"  # mock=模拟发送(仅日志), aliyun=阿里云短信
     SMS_ACCESS_KEY_ID: str = ""
     SMS_ACCESS_KEY_SECRET: str = ""
     SMS_SIGN_NAME: str = ""

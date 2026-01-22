@@ -36,9 +36,12 @@ build/
 
 # Docker / env
 .env
-.env.*
+.env.local
 !.env.example
 !.env.docker
+
+# 注意: .env.production 随代码部署到服务器，需要提交
+# 如果有本地测试配置，请使用 .env.local
 
 # Coverage / reports
 coverage/

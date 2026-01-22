@@ -6,27 +6,30 @@ struct VerificationCodeInput: View {
     let codeLength: Int
     var onComplete: ((String) -> Void)?
     var style: VerificationCodeStyle = VerificationCodeStyle.default
-    
+    var isExternallyFocused: Bool = false  // 外部传入的焦点状态
+
     @FocusState private var isFocused: Bool
-    
+
     init(
         code: Binding<String>,
         codeLength: Int = 6,
         onComplete: ((String) -> Void)? = nil,
-        style: VerificationCodeStyle = .default
+        style: VerificationCodeStyle = .default,
+        isExternallyFocused: Bool = false
     ) {
         self._code = code
         self.codeLength = codeLength
         self.onComplete = onComplete
         self.style = style
+        self.isExternallyFocused = isExternallyFocused
     }
-    
+
     var body: some View {
         GeometryReader { geometry in
             let availableWidth = geometry.size.width
             let spacing = calculateSpacing(for: availableWidth)
             let boxSize = calculateBoxSize(for: availableWidth, spacing: spacing)
-            
+
             ZStack {
                 TextField("", text: $code)
                     .keyboardType(.numberPad)
@@ -43,6 +46,16 @@ struct VerificationCodeInput: View {
                         }
                         if code.count == codeLength {
                             onComplete?(code)
+                        }
+                    }
+                    .onAppear {
+                        if isExternallyFocused {
+                            isFocused = true
+                        }
+                    }
+                    .onChangeCompat(of: isExternallyFocused) { newValue in
+                        if newValue {
+                            isFocused = true
                         }
                     }
                 

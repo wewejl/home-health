@@ -1,0 +1,152 @@
+# 星流 Star-3 Alpha 图标生成 Prompts
+# 总计 49 个图标
+
+# 使用方法: 复制每行的 prompt 到 LiblibAI 生成
+
+# chevron.right - 向右箭头
+minimalist chevron arrow pointing right icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, thin stroke, directional arrow
+
+# chevron.left - 向左箭头
+minimalist chevron arrow pointing left icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, thin stroke, directional arrow
+
+# chevron.down - 向下箭头
+minimalist chevron arrow pointing down icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, thin stroke, directional arrow
+
+# arrow.up - 向上箭头
+minimalist arrow pointing up icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, thin stroke, directional arrow
+
+# arrow.clockwise - 顺时针刷新箭头
+minimalist circular refresh arrow clockwise icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive
+
+# arrow.triangle.merge - 合并箭头
+minimalist merge arrows triangle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive
+
+# plus.circle.fill - 圆形加号
+minimalist plus sign inside circle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive
+
+# pencil - 铅笔编辑
+minimalist pencil for editing icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive
+
+# xmark.circle.fill - 圆形叉号关闭
+minimalist X mark inside circle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive
+
+# xmark - 叉号
+minimalist X mark icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive
+
+# checkmark.circle.fill - 圆形对勾
+minimalist checkmark inside circle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility
+
+# checkmark.seal.fill - 盾牌对勾认证
+minimalist checkmark inside seal shield icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility
+
+# slider.horizontal.3 - 水平滑块
+minimalist horizontal slider control icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, UI control element
+
+# square.and.pencil - 方块和铅笔编辑
+minimalist square with pencil icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive
+
+# ellipsis.circle - 三个点更多
+minimalist three dots inside circle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, action button style, interactive
+
+# flame.fill - 火焰热门
+minimalist flame fire icon icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility
+
+# sparkles - 闪亮特效
+minimalist sparkles magic effect icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility
+
+# stop.fill - 停止方块
+minimalist stop sign square icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility
+
+# lock.shield - 盾牌锁
+minimalist lock inside shield icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility
+
+# clock.arrow.circlepath - 时钟刷新历史
+minimalist clock with circular arrow icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility
+
+# exclamationmark.triangle - 警告三角
+minimalist exclamation inside triangle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility
+
+# exclamationmark.triangle.fill - 填充警告三角
+minimalist filled exclamation triangle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, status indicator, clear visibility
+
+# bubble.left.and.bubble.right - 对话气泡
+minimalist two chat bubbles icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, message or communication symbol
+
+# bubble.left.fill - 左气泡消息
+minimalist chat bubble filled icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, message or communication symbol
+
+# envelope - 信封邮件
+minimalist envelope mail icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, message or communication symbol
+
+# speaker.wave.2.fill - 扬声器音量
+minimalist speaker with sound waves icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, message or communication symbol
+
+# mic.fill - 麦克风
+minimalist microphone icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, message or communication symbol
+
+# mic.slash.fill - 禁用麦克风
+minimalist microphone with slash icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, message or communication symbol
+
+# paperplane.fill - 纸飞机发送
+minimalist paper plane send icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, message or communication symbol
+
+# brain.head.profile - 大脑头部轮廓
+minimalist brain inside head profile icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, healthcare symbol, professional
+
+# heart.fill - 爱心心脏
+minimalist heart shape icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, healthcare symbol, professional
+
+# cross.fill - 医疗十字
+minimalist medical cross icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, healthcare symbol, professional
+
+# note.text - 文本笔记
+minimalist note with text lines icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, healthcare symbol, professional
+
+# doc.text - 文本文档
+minimalist document with text lines icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, file or document symbol
+
+# doc.text.fill - 填充文本文档
+minimalist filled document with text icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, file or document symbol
+
+# doc.text.viewfinder - 取景框文档
+minimalist document with viewfinder icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, file or document symbol
+
+# calendar - 日历
+minimalist calendar date icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, file or document symbol
+
+# link - 链接
+minimalist chain link icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, file or document symbol
+
+# square.and.arrow.down - 下载
+minimalist square with down arrow icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, file or document symbol
+
+# square.and.arrow.up - 上传
+minimalist square with up arrow icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, file or document symbol
+
+# person.fill - 用户人形
+minimalist person silhouette icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, user or account symbol
+
+# person.circle.fill - 圆形用户头像
+minimalist person inside circle icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, user or account symbol
+
+# person.2.slash - 禁止两人
+minimalist two people with slash icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, user or account symbol
+
+# person.crop.circle.badge.plus - 带加号用户
+minimalist person circle with plus badge icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, user or account symbol
+
+# person.fill.viewfinder - 取景框用户
+minimalist person with viewfinder icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, user or account symbol
+
+# building.2.slash - 禁止建筑
+minimalist two buildings with slash icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, user or account symbol
+
+# rectangle.portrait.and.arrow.right - 分享箭头
+minimalist rectangle with right arrow icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, sharing or export symbol
+
+# magnifyingglass - 放大镜搜索
+minimalist magnifying glass icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, search or find symbol
+
+# face.smiling - 笑脸
+minimalist smiling face icon, duotone style, flat design, vector style, clean lines, primary color #5C44FF purple, secondary color #A5A5B5 gray, white background, isolated, simple geometric shapes, no shading, no gradients, no 3d effect, modern mobile app icon style, transparent background PNG format, emoji style icon
+

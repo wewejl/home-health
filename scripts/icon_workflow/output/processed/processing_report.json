@@ -1,0 +1,639 @@
+[
+  {
+    "name": "brain_head_profile",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      325,
+      366
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/brain_head_profile"
+  },
+  {
+    "name": "mic_slash_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      230,
+      328
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/mic_slash_fill"
+  },
+  {
+    "name": "clock_arrow_circlepath",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      349,
+      339
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/clock_arrow_circlepath"
+  },
+  {
+    "name": "bubble_left_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      292,
+      173
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/bubble_left_fill"
+  },
+  {
+    "name": "mic_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      226,
+      411
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/mic_fill"
+  },
+  {
+    "name": "magnifyingglass",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      361,
+      383
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/magnifyingglass"
+  },
+  {
+    "name": "chevron_right",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      363,
+      262
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/chevron_right"
+  },
+  {
+    "name": "chevron_left",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      272,
+      339
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/chevron_left"
+  },
+  {
+    "name": "xmark_circle_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      394,
+      394
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/xmark_circle_fill"
+  },
+  {
+    "name": "bubble_left_and_bubble_right",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      447,
+      275
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/bubble_left_and_bubble_right"
+  },
+  {
+    "name": "arrow_up",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      266,
+      275
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/arrow_up"
+  },
+  {
+    "name": "arrow_clockwise",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      352,
+      348
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/arrow_clockwise"
+  },
+  {
+    "name": "square_and_arrow_down",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      395,
+      387
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/square_and_arrow_down"
+  },
+  {
+    "name": "envelope",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      308,
+      294
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/envelope"
+  },
+  {
+    "name": "arrow_triangle_merge",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      319,
+      310
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/arrow_triangle_merge"
+  },
+  {
+    "name": "link",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      306,
+      457
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/link"
+  },
+  {
+    "name": "exclamationmark_triangle",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      405,
+      352
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/exclamationmark_triangle"
+  },
+  {
+    "name": "square_and_arrow_up",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      282,
+      363
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/square_and_arrow_up"
+  },
+  {
+    "name": "sparkles",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      337,
+      335
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/sparkles"
+  },
+  {
+    "name": "checkmark_seal_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      379,
+      450
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/checkmark_seal_fill"
+  },
+  {
+    "name": "doc_text_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      265,
+      366
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/doc_text_fill"
+  },
+  {
+    "name": "flame_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      269,
+      305
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/flame_fill"
+  },
+  {
+    "name": "doc_text_viewfinder",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      332,
+      361
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/doc_text_viewfinder"
+  },
+  {
+    "name": "person_fill_viewfinder",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      245,
+      408
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/person_fill_viewfinder"
+  },
+  {
+    "name": "cross_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      356,
+      394
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/cross_fill"
+  },
+  {
+    "name": "speaker_wave_2_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      363,
+      246
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/speaker_wave_2_fill"
+  },
+  {
+    "name": "person_2_slash",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      369,
+      267
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/person_2_slash"
+  },
+  {
+    "name": "person_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      512,
+      512
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/person_fill"
+  },
+  {
+    "name": "checkmark_circle_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      332,
+      335
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/checkmark_circle_fill"
+  },
+  {
+    "name": "heart_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      342,
+      323
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/heart_fill"
+  },
+  {
+    "name": "building_2_slash",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      337,
+      349
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/building_2_slash"
+  },
+  {
+    "name": "person_crop_circle_badge_plus",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      318,
+      317
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/person_crop_circle_badge_plus"
+  },
+  {
+    "name": "face_smiling",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      477,
+      481
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/face_smiling"
+  },
+  {
+    "name": "person_circle_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      439,
+      437
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/person_circle_fill"
+  },
+  {
+    "name": "calendar",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      382,
+      420
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/calendar"
+  },
+  {
+    "name": "note_text",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      300,
+      339
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/note_text"
+  },
+  {
+    "name": "slider_horizontal_3",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      245,
+      53
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/slider_horizontal_3"
+  },
+  {
+    "name": "pencil",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      216,
+      209
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/pencil"
+  },
+  {
+    "name": "exclamationmark_triangle_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      306,
+      278
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/exclamationmark_triangle_fill"
+  },
+  {
+    "name": "rectangle_portrait_and_arrow_right",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      373,
+      230
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/rectangle_portrait_and_arrow_right"
+  },
+  {
+    "name": "chevron_down",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      363,
+      362
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/chevron_down"
+  },
+  {
+    "name": "stop_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      409,
+      409
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/stop_fill"
+  },
+  {
+    "name": "plus_circle_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      358,
+      381
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/plus_circle_fill"
+  },
+  {
+    "name": "square_and_pencil",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      470,
+      474
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/square_and_pencil"
+  },
+  {
+    "name": "doc_text",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      325,
+      374
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/doc_text"
+  },
+  {
+    "name": "xmark",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      382,
+      393
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/xmark"
+  },
+  {
+    "name": "lock_shield",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      349,
+      384
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/lock_shield"
+  },
+  {
+    "name": "ellipsis_circle",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      382,
+      382
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/ellipsis_circle"
+  },
+  {
+    "name": "paperplane_fill",
+    "status": "success",
+    "original_size": [
+      512,
+      512
+    ],
+    "processed_size": [
+      319,
+      196
+    ],
+    "variants_path": "scripts/icon_workflow/output/processed/variants/paperplane_fill"
+  }
+]

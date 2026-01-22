@@ -1,0 +1,351 @@
+{
+  "total": 49,
+  "negative_prompt": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass",
+  "primary_color": "#5C44FF",
+  "secondary_color": "#A5A5B5",
+  "icons": [
+    {
+      "name": "chevron.right",
+      "type": "navigation",
+      "zh": "向右箭头",
+      "prompt": "thick bold arrow pointing right, 45 degree angle, V shape, filled arrowhead, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "chevron.left",
+      "type": "navigation",
+      "zh": "向左箭头",
+      "prompt": "thick bold arrow pointing left, 45 degree angle, V shape, filled arrowhead, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "chevron.down",
+      "type": "navigation",
+      "zh": "向下箭头",
+      "prompt": "thick bold arrow pointing down, inverted V shape, filled arrowhead, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "arrow.up",
+      "type": "navigation",
+      "zh": "向上箭头",
+      "prompt": "vertical straight arrow, thick line, filled arrowhead pointing up, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "arrow.clockwise",
+      "type": "action",
+      "zh": "顺时针刷新",
+      "prompt": "circular arrow arc, clockwise direction, refresh metaphor, 270 degree arc, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "arrow.triangle.merge",
+      "type": "action",
+      "zh": "合并箭头",
+      "prompt": "two arrows converging into triangle, merge concept, arrows pointing inward, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "plus.circle.fill",
+      "type": "action",
+      "zh": "圆形加号",
+      "prompt": "circle outline with plus sign in center, add button style, rounded shape, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "pencil",
+      "type": "action",
+      "zh": "铅笔编辑",
+      "prompt": "simple pencil shape, diagonal orientation, pointed tip, eraser at bottom, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "xmark.circle.fill",
+      "type": "action",
+      "zh": "圆形叉号",
+      "prompt": "filled circle with white X mark, close button style, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "xmark",
+      "type": "action",
+      "zh": "叉号",
+      "prompt": "simple X shape, two crossed lines, equal thickness, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "checkmark.circle.fill",
+      "type": "status",
+      "zh": "圆形对勾",
+      "prompt": "filled circle with white checkmark, success state, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "checkmark.seal.fill",
+      "type": "status",
+      "zh": "盾牌对勾",
+      "prompt": "shield badge shape with checkmark, verified badge, security symbol, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "slider.horizontal.3",
+      "type": "control",
+      "zh": "水平滑块",
+      "prompt": "horizontal line with circular handle, slider control, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "square.and.pencil",
+      "type": "action",
+      "zh": "编辑方块",
+      "prompt": "square outline with diagonal pencil, edit icon, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "ellipsis.circle",
+      "type": "action",
+      "zh": "更多选项",
+      "prompt": "circle outline with three horizontal dots, more options, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "flame.fill",
+      "type": "status",
+      "zh": "火焰热门",
+      "prompt": "simple flame shape, curved lines, hot symbol, trending up, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "sparkles",
+      "type": "status",
+      "zh": "闪亮特效",
+      "prompt": "three star shapes, sparkle effect, magic wand style, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "stop.fill",
+      "type": "status",
+      "zh": "停止",
+      "prompt": "filled square or octagon, stop symbol, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "lock.shield",
+      "type": "status",
+      "zh": "盾牌锁",
+      "prompt": "shield outline with lock symbol, security icon, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "clock.arrow.circlepath",
+      "type": "status",
+      "zh": "刷新历史",
+      "prompt": "clock face with circular arrow around, history refresh, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "exclamationmark.triangle",
+      "type": "status",
+      "zh": "警告三角",
+      "prompt": "triangle outline with exclamation point, warning symbol, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "exclamationmark.triangle.fill",
+      "type": "status",
+      "zh": "填充警告",
+      "prompt": "filled triangle with white exclamation, warning, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "bubble.left.and.bubble.right",
+      "type": "communication",
+      "zh": "对话气泡",
+      "prompt": "two rounded message bubbles, conversation icon, chat symbol, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "bubble.left.fill",
+      "type": "communication",
+      "zh": "消息气泡",
+      "prompt": "filled rounded message bubble, chat icon, tail on one side, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "envelope",
+      "type": "communication",
+      "zh": "信封邮件",
+      "prompt": "envelope shape with pointed flap, mail icon, closed letter, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "speaker.wave.2.fill",
+      "type": "communication",
+      "zh": "扬声器",
+      "prompt": "speaker cone with two curved sound wave lines, volume icon, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "mic.fill",
+      "type": "communication",
+      "zh": "麦克风",
+      "prompt": "microphone shape with rounded top, stand base, recording icon, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "mic.slash.fill",
+      "type": "communication",
+      "zh": "静音麦克风",
+      "prompt": "microphone with diagonal line through, muted icon, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "paperplane.fill",
+      "type": "communication",
+      "zh": "纸飞机发送",
+      "prompt": "paper airplane pointing right, send message icon, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "brain.head.profile",
+      "type": "medical",
+      "zh": "大脑头部",
+      "prompt": "side profile head silhouette with brain shape inside, medical icon, neuroscience, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "heart.fill",
+      "type": "medical",
+      "zh": "爱心心脏",
+      "prompt": "classic heart shape with rounded bottom, love heart symbol, filled, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "cross.fill",
+      "type": "medical",
+      "zh": "医疗十字",
+      "prompt": "plus cross shape, medical symbol, equal length arms, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "note.text",
+      "type": "medical",
+      "zh": "文本笔记",
+      "prompt": "notepad or document with horizontal text lines, note icon, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "doc.text",
+      "type": "document",
+      "zh": "文本文档",
+      "prompt": "rectangle page with horizontal text lines, document icon, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "doc.text.fill",
+      "type": "document",
+      "zh": "填充文档",
+      "prompt": "filled rectangle page with text lines, document, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "doc.text.viewfinder",
+      "type": "document",
+      "zh": "扫描文档",
+      "prompt": "document with scanner frame corners, scan icon, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "calendar",
+      "type": "document",
+      "zh": "日历",
+      "prompt": "rectangle with date grid, calendar icon, date picker, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "link",
+      "type": "document",
+      "zh": "链接",
+      "prompt": "chain link shape, URL hyperlink, connection symbol, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "square.and.arrow.down",
+      "type": "document",
+      "zh": "下载",
+      "prompt": "square with downward arrow, download icon, save to device, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "square.and.arrow.up",
+      "type": "document",
+      "zh": "上传",
+      "prompt": "square with upward arrow, upload icon, share file, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "person.fill",
+      "type": "user",
+      "zh": "用户",
+      "prompt": "simple person silhouette, head and shoulders, user icon, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "person.circle.fill",
+      "type": "user",
+      "zh": "用户头像",
+      "prompt": "circle with person silhouette inside, avatar placeholder, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "person.2.slash",
+      "type": "user",
+      "zh": "禁止两人",
+      "prompt": "two person silhouettes with diagonal line, private users, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "person.crop.circle.badge.plus",
+      "type": "user",
+      "zh": "添加用户",
+      "prompt": "circle with person and small plus badge, add user, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "person.fill.viewfinder",
+      "type": "user",
+      "zh": "扫描用户",
+      "prompt": "person silhouette with scanning frame corners, scan user, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "building.2.slash",
+      "type": "user",
+      "zh": "私人场所",
+      "prompt": "two building shapes with diagonal line, private location, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "rectangle.portrait.and.arrow.right",
+      "type": "share",
+      "zh": "分享",
+      "prompt": "rectangle with arrow pointing right, share export, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "magnifyingglass",
+      "type": "search",
+      "zh": "搜索放大镜",
+      "prompt": "magnifying glass shape, circle with handle, search icon, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    },
+    {
+      "name": "face.smiling",
+      "type": "emotion",
+      "zh": "笑脸",
+      "prompt": "simple smiley face, two dots for eyes, curved smile, happy emoji, flat vector icon, minimalist design, duotone style with two colors, clean smooth curves, thick consistent stroke width, centered composition, high contrast, suitable for small size (48x48px), no shading, no gradients, no 3d effects, no textures, no patterns, solid colors only, isolated on transparent background, PNG with alpha channel, modern mobile app icon style primary color #5C44FF, secondary color #A5A5B5",
+      "negative": "photorealistic, 3d render, realistic, shading, shadows, gradients, texture, noise, grain, blur, fuzzy, messy, complex details, thin lines, intricate, ornate, decorative, watermark, text, logo, signature, white background, solid background, cartoon, anime, sketch, hand drawn, glossy, shiny, metallic, glass"
+    }
+  ]
+}

@@ -194,6 +194,75 @@ struct PulseLine: View {
     }
 }
 
+struct AIVineBadge: View {
+    var size: CGFloat
+    @State private var rotate = false
+
+    var body: some View {
+        ZStack {
+            // AI 神经网络点阵效果
+            ForEach(0..<8) { i in
+                let angle = Double(i) * .pi / 4
+                let radius = size * 0.28
+                let x = cos(angle) * radius
+                let y = sin(angle) * radius
+
+                Circle()
+                    .fill(Color.white.opacity(0.7))
+                    .frame(width: size * 0.08, height: size * 0.08)
+                    .offset(x: x, y: y)
+                    .scaleEffect(rotate ? 1.1 : 0.9)
+                    .animation(
+                        Animation.easeInOut(duration: 1.2)
+                            .repeatForever(autoreverses: true)
+                            .delay(Double(i) * 0.1),
+                        value: rotate
+                    )
+
+                // 连接线
+                if i < 4 {
+                    Path { path in
+                        path.move(to: CGPoint(x: 0, y: 0))
+                        path.addLine(to: CGPoint(x: x, y: y))
+                    }
+                    .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                }
+            }
+
+            // 中心医疗十字
+            PlusSignView(size: size * 0.4)
+                .foregroundColor(.white)
+                .shadow(color: Color.white.opacity(0.5), radius: 8, x: 0, y: 4)
+        }
+        .frame(width: size, height: size)
+        .onAppear {
+            rotate = true
+        }
+    }
+}
+
+// 医疗十字组件
+struct PlusSignView: View {
+    var size: CGFloat
+    var thickness: CGFloat = 0.2
+
+    var body: some View {
+        GeometryReader { geometry in
+            let width = geometry.size.width
+            let height = geometry.size.height
+            let t = width * thickness
+
+            ZStack {
+                RoundedRectangle(cornerRadius: t * 0.5)
+                    .frame(width: t, height: height)
+                RoundedRectangle(cornerRadius: t * 0.5)
+                    .frame(width: width, height: t)
+            }
+        }
+        .frame(width: size, height: size)
+    }
+}
+
 struct MinimalistLogoView: View {
     var size: CGFloat = 80
     var style: LogoStyle = .heartPulse

@@ -10,7 +10,15 @@ from .routes import (
 )
 from .services.admin_auth_service import AdminAuthService
 from .seed import seed_data
+from datetime import datetime
 import os
+import time
+import httpx
+import logging
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 Base.metadata.create_all(bind=engine)
 
@@ -20,9 +28,22 @@ app = FastAPI(
     version="2.0.0"
 )
 
+# CORS 配置 - 根据环境变量动态设置
+def get_cors_origins():
+    """根据环境获取允许的 CORS 源"""
+    allowed_origins_str = os.getenv("CORS_ALLOWED_ORIGINS", "")
+    if allowed_origins_str:
+        return [origin.strip() for origin in allowed_origins_str.split(",")]
+    # 开发环境默认允许所有来源
+    debug_mode = os.getenv("DEBUG", "false").lower() == "true"
+    if debug_mode:
+        return ["*"]
+    # 生产环境默认只允许同源
+    return []
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -86,4 +107,70 @@ def root():
 
 @app.get("/health")
 def health():
+    """基础健康检查端点"""
     return {"status": "healthy"}
+
+
+@app.get("/health/detailed")
+async def health_detailed():
+    """详细健康检查端点 - 包含数据库、LLM 服务状态"""
+    start_time = time.time()
+    health_info = {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "2.0.0",
+        "checks": {}
+    }
+
+    # 数据库健康检查
+    db_status = {"status": "unknown"}
+    try:
+        db = SessionLocal()
+        db.execute("SELECT 1")
+        db.close()
+        db_status = {"status": "healthy"}
+    except Exception as e:
+        db_status = {"status": "unhealthy", "error": str(e)}
+        health_info["status"] = "degraded"
+    health_info["checks"]["database"] = db_status
+
+    # LLM 服务健康检查
+    llm_status = {"status": "unknown"}
+    llm_api_key = os.getenv("LLM_API_KEY")
+    if llm_api_key and llm_api_key.startswith("sk-"):
+        llm_status = {"status": "configured", "provider": os.getenv("LLM_PROVIDER", "qwen")}
+    else:
+        llm_status = {"status": "not_configured"}
+        health_info["status"] = "degraded"
+    health_info["checks"]["llm"] = llm_status
+
+    # 环境信息
+    health_info["environment"] = {
+        "debug": os.getenv("DEBUG", "false").lower() == "true",
+        "test_mode": os.getenv("TEST_MODE", "false").lower() == "true",
+        "cors_origins_configured": bool(os.getenv("CORS_ALLOWED_ORIGINS"))
+    }
+
+    # 响应时间
+    health_info["response_time_ms"] = round((time.time() - start_time) * 1000, 2)
+
+    return health_info
+
+
+@app.get("/health/ready")
+async def readiness():
+    """就绪检查 - 用于 Kubernetes 等容器编排"""
+    try:
+        db = SessionLocal()
+        db.execute("SELECT 1")
+        db.close()
+        return {"status": "ready"}
+    except Exception as e:
+        logger.error(f"Readiness check failed: {e}")
+        return {"status": "not_ready", "error": str(e)}, 503
+
+
+@app.get("/health/live")
+async def liveness():
+    """存活检查 - 用于 Kubernetes 等容器编排"""
+    return {"status": "alive", "timestamp": datetime.utcnow().isoformat()}

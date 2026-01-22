@@ -1,0 +1,203 @@
+{
+  "total": 49,
+  "success": 49,
+  "failed": 0,
+  "icons": [
+    {
+      "name": "chevron.right",
+      "status": "success"
+    },
+    {
+      "name": "chevron.left",
+      "status": "success"
+    },
+    {
+      "name": "chevron.down",
+      "status": "success"
+    },
+    {
+      "name": "arrow.up",
+      "status": "success"
+    },
+    {
+      "name": "arrow.clockwise",
+      "status": "success"
+    },
+    {
+      "name": "arrow.triangle.merge",
+      "status": "success"
+    },
+    {
+      "name": "plus.circle.fill",
+      "status": "success"
+    },
+    {
+      "name": "pencil",
+      "status": "success"
+    },
+    {
+      "name": "xmark.circle.fill",
+      "status": "success"
+    },
+    {
+      "name": "xmark",
+      "status": "success"
+    },
+    {
+      "name": "checkmark.circle.fill",
+      "status": "success"
+    },
+    {
+      "name": "checkmark.seal.fill",
+      "status": "success"
+    },
+    {
+      "name": "slider.horizontal.3",
+      "status": "success"
+    },
+    {
+      "name": "square.and.pencil",
+      "status": "success"
+    },
+    {
+      "name": "ellipsis.circle",
+      "status": "success"
+    },
+    {
+      "name": "flame.fill",
+      "status": "success"
+    },
+    {
+      "name": "sparkles",
+      "status": "success"
+    },
+    {
+      "name": "stop.fill",
+      "status": "success"
+    },
+    {
+      "name": "lock.shield",
+      "status": "success"
+    },
+    {
+      "name": "clock.arrow.circlepath",
+      "status": "success"
+    },
+    {
+      "name": "exclamationmark.triangle",
+      "status": "success"
+    },
+    {
+      "name": "exclamationmark.triangle.fill",
+      "status": "success"
+    },
+    {
+      "name": "bubble.left.and.bubble.right",
+      "status": "success"
+    },
+    {
+      "name": "bubble.left.fill",
+      "status": "success"
+    },
+    {
+      "name": "envelope",
+      "status": "success"
+    },
+    {
+      "name": "speaker.wave.2.fill",
+      "status": "success"
+    },
+    {
+      "name": "mic.fill",
+      "status": "success"
+    },
+    {
+      "name": "mic.slash.fill",
+      "status": "success"
+    },
+    {
+      "name": "paperplane.fill",
+      "status": "success"
+    },
+    {
+      "name": "brain.head.profile",
+      "status": "success"
+    },
+    {
+      "name": "heart.fill",
+      "status": "success"
+    },
+    {
+      "name": "cross.fill",
+      "status": "success"
+    },
+    {
+      "name": "note.text",
+      "status": "success"
+    },
+    {
+      "name": "doc.text",
+      "status": "success"
+    },
+    {
+      "name": "doc.text.fill",
+      "status": "success"
+    },
+    {
+      "name": "doc.text.viewfinder",
+      "status": "success"
+    },
+    {
+      "name": "calendar",
+      "status": "success"
+    },
+    {
+      "name": "link",
+      "status": "success"
+    },
+    {
+      "name": "square.and.arrow.down",
+      "status": "success"
+    },
+    {
+      "name": "square.and.arrow.up",
+      "status": "success"
+    },
+    {
+      "name": "person.fill",
+      "status": "success"
+    },
+    {
+      "name": "person.circle.fill",
+      "status": "success"
+    },
+    {
+      "name": "person.2.slash",
+      "status": "success"
+    },
+    {
+      "name": "person.crop.circle.badge.plus",
+      "status": "success"
+    },
+    {
+      "name": "person.fill.viewfinder",
+      "status": "success"
+    },
+    {
+      "name": "building.2.slash",
+      "status": "success"
+    },
+    {
+      "name": "rectangle.portrait.and.arrow.right",
+      "status": "success"
+    },
+    {
+      "name": "magnifyingglass",
+      "status": "success"
+    },
+    {
+      "name": "face.smiling",
+      "status": "success"
+    }
+  ]
+}
