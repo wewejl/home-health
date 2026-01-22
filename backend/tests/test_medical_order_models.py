@@ -6,6 +6,7 @@ import sys
 import os
 from datetime import date, time
 import time as time_module
+import random
 
 # 添加项目路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -13,10 +14,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from app.models.medical_order import OrderType, ScheduleType, OrderStatus, TaskStatus
 from app.models.user import User
 
+_phone_counter = 0
 
 def _get_unique_phone():
     """生成唯一的测试手机号"""
-    return f"199{int(time_module.time() * 1000) % 100000000:08d}"
+    global _phone_counter
+    _phone_counter += 1
+    return f"199{_phone_counter:08d}"
 
 
 def test_order_type_enum():
@@ -183,3 +187,32 @@ def test_create_completion_record(db_session):
 
     assert record.id is not None
     assert record.value["value"] == 7.8
+
+
+def test_create_family_bond(db_session):
+    """测试创建家属关系"""
+    from app.models.medical_order import FamilyBond, NotificationLevel
+
+    # 创建患者和家属用户
+    patient = User(phone=_get_unique_phone(), nickname="患者")
+    family = User(phone=_get_unique_phone(), nickname="家属")
+    db_session.add_all([patient, family])
+    db_session.commit()
+    db_session.refresh(patient)
+    db_session.refresh(family)
+
+    # 创建家属关系
+    bond = FamilyBond(
+        patient_id=patient.id,
+        family_member_id=family.id,
+        relationship_type="子女",
+        notification_level=NotificationLevel.ALL
+    )
+
+    db_session.add(bond)
+    db_session.commit()
+    db_session.refresh(bond)
+
+    assert bond.id is not None
+    assert bond.relationship_type == "子女"
+    assert bond.notification_level == NotificationLevel.ALL

@@ -149,3 +149,22 @@ class CompletionRecord(Base):
     # 关系
     task_instance = relationship("TaskInstance", back_populates="completion_records")
     completed_by_user = relationship("User", foreign_keys=[completed_by])
+
+
+class FamilyBond(Base):
+    """患者家属关系表"""
+    __tablename__ = "family_bonds"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    family_member_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    relationship_type = Column(String(50), nullable=False)  # 父母/子女/配偶等
+    notification_level = Column(SQLEnum(NotificationLevel), default=NotificationLevel.ALL)
+
+    # 时间戳
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # 关系
+    patient = relationship("User", foreign_keys=[patient_id])
+    family_member = relationship("User", foreign_keys=[family_member_id])
