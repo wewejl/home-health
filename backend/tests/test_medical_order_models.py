@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from app.models.medical_order import OrderType, ScheduleType, OrderStatus, TaskStatus
 from app.models.user import User
 
-_phone_counter = 0
+_phone_counter = 1000000  # 从较大的数字开始，避免与数据库冲突
 
 def _get_unique_phone():
     """生成唯一的测试手机号"""

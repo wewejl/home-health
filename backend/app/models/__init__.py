@@ -14,6 +14,11 @@ from .medical_event import (
     MedicalEvent, EventAttachment, EventNote, ExportRecord, ExportAccessLog,
     EventStatus, RiskLevel, AgentType, AttachmentType
 )
+from .medical_order import (
+    MedicalOrder, TaskInstance, CompletionRecord, FamilyBond,
+    OrderType, ScheduleType, OrderStatus, TaskStatus,
+    CompletionType, NotificationLevel
+)
 
 __all__ = [
     "User", "Department", "Doctor", "Session", "Message", "SenderType",
@@ -21,5 +26,8 @@ __all__ = [
     "SessionFeedback", "Disease", "Drug", "DrugCategory",
     # "DiagnosisSession", "DermaSession",  # 已废弃，使用统一 Session 表
     "MedicalEvent", "EventAttachment", "EventNote", "ExportRecord", "ExportAccessLog",
-    "EventStatus", "RiskLevel", "AgentType", "AttachmentType"
+    "EventStatus", "RiskLevel", "AgentType", "AttachmentType",
+    "MedicalOrder", "TaskInstance", "CompletionRecord", "FamilyBond",
+    "OrderType", "ScheduleType", "OrderStatus", "TaskStatus",
+    "CompletionType", "NotificationLevel"
 ]
