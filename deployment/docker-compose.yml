@@ -1,36 +1,42 @@
 # Home-Health 生产环境 Docker Compose 配置
 # 灵犀医生 - AI 医生分身系统
-# 使用 Docker Hub 镜像（国内访问更快）
+# 使用国内镜像加速
 
 version: "3.8"
 
 services:
   # FastAPI 后端服务
   backend:
-    image: wewejl/home-health-backend:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: home-health-backend:latest
     container_name: home-health-backend
     restart: always
     ports:
       - "8100:8100"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-xinlin_prod}:${POSTGRES_PASSWORD:-xinlin_prod_2025}@postgres:5432/${POSTGRES_DB:-xinlin_prod}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-xinlin_prod_secret_2025}
       - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-480}
-      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_API_KEY=${LLM_API_KEY:-sk-61e2b328d6614408867ac61240423740}
       - LLM_BASE_URL=${LLM_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1}
       - LLM_MODEL=${LLM_MODEL:-qwen-plus}
       - QWEN_VL_MODEL=${QWEN_VL_MODEL:-qwen3-vl-plus}
-      - ALIYUN_SMS_ACCESS_KEY_ID=${ALIYUN_SMS_ACCESS_KEY_ID}
-      - ALIYUN_SMS_ACCESS_KEY_SECRET=${ALIYUN_SMS_ACCESS_KEY_SECRET}
-      - TEST_MODE=false
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-sk-61e2b328d6614408867ac61240423740}
+      - ASR_PROVIDER=${ASR_PROVIDER:-glm}
+      - GLM_API_KEY=${GLM_API_KEY:-e41549d719a2419b8354d2bddeaa7d04.wSiNz6XV5wieTWj7}
+      - ALIYUN_SMS_ACCESS_KEY_ID=${ALIYUN_SMS_ACCESS_KEY_ID:-}
+      - ALIYUN_SMS_ACCESS_KEY_SECRET=${ALIYUN_SMS_ACCESS_KEY_SECRET:-}
+      - TEST_MODE=true
     volumes:
-      - ./data/uploads:/app/uploads
-      - ./data/logs:/app/logs
+      - ./backend/uploads:/app/uploads
+      - ./backend/logs:/app/logs
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8100/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -40,43 +46,41 @@ services:
 
   # React 前端服务 (Nginx)
   frontend:
-    image: wewejl/home-health-frontend:${IMAGE_TAG:-latest}
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: home-health-frontend:latest
     container_name: home-health-frontend
     restart: always
     ports:
       - "80:80"
-      - "443:443"
     depends_on:
       - backend
-    volumes:
-      # 挂载 SSL 证书（如果使用 HTTPS）
-      - ./ssl/nginx.crt:/etc/nginx/ssl/nginx.crt:ro
-      - ./ssl/nginx.key:/etc/nginx/ssl/nginx.key:ro
     networks:
       - home-health-network
 
   # PostgreSQL 数据库
   postgres:
-    image: postgres:15-alpine
+    image: docker.1ms.run/library/postgres:15-alpine
     container_name: home-health-postgres
     restart: always
     environment:
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB:-home_health}
+      - POSTGRES_USER=${POSTGRES_USER:-xinlin_prod}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-xinlin_prod_2025}
+      - POSTGRES_DB=${POSTGRES_DB:-xinlin_prod}
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-xinlin_prod}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - home-health-network
 
-  # Redis 缓存（可选，用于会话管理）
+  # Redis 缓存
   redis:
-    image: redis:7-alpine
+    image: docker.1ms.run/library/redis:7-alpine
     container_name: home-health-redis
     restart: always
     command: redis-server --appendonly yes

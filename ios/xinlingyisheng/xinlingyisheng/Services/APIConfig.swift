@@ -29,8 +29,8 @@ enum APIConfig {
         }
     }
 
-    // 当前环境配置 - 开发环境使用本地服务器
-    static let currentEnvironment: Environment = .development
+    // 当前环境配置 - 生产环境使用线上服务器
+    static let currentEnvironment: Environment = .production
 
     // 基础 URL
     static var baseURL: String {

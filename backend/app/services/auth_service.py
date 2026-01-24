@@ -116,30 +116,40 @@ class AuthService:
     def verify_token(token: str, token_type: str = "access") -> Optional[int]:
         """
         验证JWT Token
-        
+
         Args:
-            token: JWT Token
+            token: JWT Token 或测试令牌 (test_N 格式)
             token_type: 期望的Token类型
-        
+
         Returns:
             用户ID 或 None
         """
+        # 测试模式：支持 test_N 格式的测试令牌
+        if settings.TEST_MODE and token.startswith("test_"):
+            try:
+                user_id = int(token.split("_")[1])
+                logger.info(f"[AUTH] 测试模式认证: user_id={user_id}")
+                return user_id
+            except (ValueError, IndexError):
+                logger.warning(f"[AUTH] 无效的测试令牌格式: {token}")
+                return None
+
         try:
             payload = jwt.decode(
-                token, 
-                settings.JWT_SECRET_KEY, 
+                token,
+                settings.JWT_SECRET_KEY,
                 algorithms=[settings.JWT_ALGORITHM]
             )
-            
+
             # 检查Token类型
             if payload.get("type", "access") != token_type:
                 logger.warning(f"[AUTH] Token类型不匹配: expected={token_type}, got={payload.get('type')}")
                 return None
-            
+
             user_id = payload.get("sub")
             if user_id is None:
                 return None
-            
+
             return int(user_id)
         except JWTError as e:
             logger.warning(f"[AUTH] Token验证失败: {str(e)}")
