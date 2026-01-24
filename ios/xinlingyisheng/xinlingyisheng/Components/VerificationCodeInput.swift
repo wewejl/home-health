@@ -36,8 +36,9 @@ struct VerificationCodeInput: View {
                     .keyboardType(.numberPad)
                     .textContentType(.oneTimeCode)
                     .focused($isFocused)
-                    .opacity(0.01)
-                    .frame(width: 1, height: 1)
+                    .opacity(0)
+                    .frame(width: 0, height: 0)
+                    .accessibility(hidden: true)
                     .onChangeCompat(of: code) { newValue in
                         let filtered = newValue.filter { $0.isNumber }
                         if filtered.count > codeLength {

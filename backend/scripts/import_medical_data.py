@@ -57,7 +57,7 @@ class MedicalDataImporter:
         # 如果科室不存在，返回默认科室（皮肤科）
         return 1
 
-    def import_diseases_from_csv(self, csv_path: str, encoding: str = "utf-8") -> None:
+    def import_diseases_from_csv(self, csv_path: str, encoding: str = "utf-8-sig") -> None:
         """从 CSV 文件导入疾病数据
 
         CSV 格式要求：
@@ -111,9 +111,21 @@ class MedicalDataImporter:
         disease.prevention = row.get("prevention", disease.prevention or "").strip()
         disease.care = row.get("care", disease.care or "").strip()
 
-        # 科室关联
+        # 科室关联 - 支持 department 和 department_id/recommended_department 两种格式
+        department_id_str = row.get("department_id", "").strip()
+        recommended_dept = row.get("recommended_department", "").strip()
+
+        if department_id_str and department_id_str.isdigit():
+            disease.department_id = int(department_id_str)
+        if recommended_dept:
+            disease.recommended_department = recommended_dept
+            # 如果没有 department_id，尝试通过科室名称获取
+            if not department_id_str:
+                disease.department_id = self._get_department_id(recommended_dept)
+
+        # 兼容旧格式：department 列
         department = row.get("department", "").strip()
-        if department:
+        if department and not disease.department_id:
             disease.department_id = self._get_department_id(department)
             disease.recommended_department = department
 

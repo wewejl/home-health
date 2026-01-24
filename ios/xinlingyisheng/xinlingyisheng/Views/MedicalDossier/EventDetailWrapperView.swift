@@ -1,5 +1,6 @@
 import SwiftUI
 
+// MARK: - 病历详情包装视图（治愈系风格）
 struct EventDetailWrapperView: View {
     let eventId: String
     @StateObject private var viewModel = MedicalDossierViewModel()
@@ -7,73 +8,39 @@ struct EventDetailWrapperView: View {
     @State private var isLoading = true
     @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
-        Group {
-            if isLoading {
-                loadingView
-            } else if let event = event {
-                EventDetailView(event: event, viewModel: viewModel)
-            } else {
-                errorView
-            }
-        }
-        .task {
-            await loadEvent()
-        }
-    }
-    
-    private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .scaleEffect(1.2)
-            
-            Text("正在加载病历详情...")
-                .font(.system(size: 14))
-                .foregroundColor(DXYColors.textSecondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DXYColors.background)
-    }
-    
-    private var errorView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 48))
-                .foregroundColor(DXYColors.textTertiary)
-            
-            Text(errorMessage ?? "加载失败")
-                .font(.system(size: 16))
-                .foregroundColor(DXYColors.textSecondary)
-            
-            Button(action: {
-                Task {
-                    await loadEvent()
+        GeometryReader { geometry in
+            let layout = AdaptiveLayout(screenWidth: geometry.size.width)
+
+            Group {
+                if isLoading {
+                    HealingEventWrapperLoadingView(layout: layout)
+                } else if let event = event {
+                    EventDetailView(event: event, viewModel: viewModel)
+                } else {
+                    HealingEventWrapperErrorView(
+                        errorMessage: errorMessage,
+                        layout: layout
+                    ) {
+                        Task {
+                            await loadEvent()
+                        }
+                    } onDismiss: {
+                        dismiss()
+                    }
                 }
-            }) {
-                Text("重试")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 10)
-                    .background(DXYColors.teal)
-                    .clipShape(Capsule())
             }
-            
-            Button(action: { dismiss() }) {
-                Text("返回")
-                    .font(.system(size: 14))
-                    .foregroundColor(DXYColors.textSecondary)
+            .task {
+                await loadEvent()
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DXYColors.background)
     }
-    
+
     private func loadEvent() async {
         isLoading = true
         errorMessage = nil
-        
+
         do {
             let detailDTO = try await MedicalEventAPIService.shared.fetchEventDetail(eventId: eventId)
             self.event = detailDTO.toMedicalEvent()
@@ -86,8 +53,155 @@ struct EventDetailWrapperView: View {
     }
 }
 
+// MARK: - 治愈系加载视图
+struct HealingEventWrapperLoadingView: View {
+    let layout: AdaptiveLayout
+
+    var body: some View {
+        ZStack {
+            // 治愈系背景
+            HealingEventWrapperBackground(layout: layout)
+
+            VStack(spacing: layout.cardSpacing) {
+                Spacer()
+
+                // 加载动画
+                ZStack {
+                    Circle()
+                        .stroke(HealingColors.forestMist.opacity(0.2), lineWidth: 3)
+                        .frame(width: layout.iconLargeSize * 1.2, height: layout.iconLargeSize * 1.2)
+
+                    Circle()
+                        .fill(HealingColors.forestMist.opacity(0.1))
+                        .frame(width: 50 + CGFloat(sin(Date().timeIntervalSince1970) * 10) * 10)
+                        .animation(.easeInOut(duration: 1).repeatForever(autoreverses: true), value: true)
+                }
+
+                Text("正在加载病历详情...")
+                    .font(.system(size: layout.captionFontSize + 1))
+                    .foregroundColor(HealingColors.textSecondary)
+
+                Spacer()
+            }
+        }
+    }
+}
+
+// MARK: - 治愈系错误视图
+struct HealingEventWrapperErrorView: View {
+    let errorMessage: String?
+    let layout: AdaptiveLayout
+    let onRetry: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            // 治愈系背景
+            HealingEventWrapperBackground(layout: layout)
+
+            VStack(spacing: layout.cardSpacing) {
+                Spacer()
+
+                // 错误图标
+                ZStack {
+                    Circle()
+                        .fill(HealingColors.terracotta.opacity(0.15))
+                        .frame(width: layout.iconLargeSize * 1.6, height: layout.iconLargeSize * 1.6)
+
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: layout.bodyFontSize + 12, weight: .light))
+                        .foregroundColor(HealingColors.terracotta)
+                }
+
+                // 错误消息
+                Text(errorMessage ?? "加载失败")
+                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .foregroundColor(HealingColors.textPrimary)
+
+                Text("请检查网络连接后重试")
+                    .font(.system(size: layout.captionFontSize + 1))
+                    .foregroundColor(HealingColors.textSecondary)
+
+                // 操作按钮
+                HStack(spacing: layout.cardSpacing) {
+                    Button(action: onRetry) {
+                        Text("重试")
+                            .font(.system(size: layout.bodyFontSize - 1, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, layout.cardInnerPadding)
+                            .background(
+                                LinearGradient(
+                                    colors: [HealingColors.forestMist, HealingColors.deepSage],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .shadow(color: HealingColors.forestMist.opacity(0.3), radius: 6, y: 2)
+                    }
+
+                    Button(action: onDismiss) {
+                        Text("返回")
+                            .font(.system(size: layout.bodyFontSize - 1))
+                            .foregroundColor(HealingColors.textSecondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, layout.cardInnerPadding)
+                            .background(HealingColors.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .stroke(HealingColors.textTertiary.opacity(0.3), lineWidth: 1)
+                            )
+                    }
+                }
+                .padding(.horizontal, layout.horizontalPadding * 2)
+
+                Spacer()
+            }
+        }
+    }
+}
+
+// MARK: - 治愈系包装器背景
+struct HealingEventWrapperBackground: View {
+    let layout: AdaptiveLayout
+
+    var body: some View {
+        ZStack {
+            // 渐变背景
+            LinearGradient(
+                colors: [
+                    HealingColors.warmCream,
+                    HealingColors.softPeach.opacity(0.4),
+                    HealingColors.softSage.opacity(0.2)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            GeometryReader { geo in
+                // 顶部装饰光晕
+                Circle()
+                    .fill(HealingColors.softSage.opacity(0.08))
+                    .frame(width: layout.decorativeCircleSize * 0.5, height: layout.decorativeCircleSize * 0.5)
+                    .offset(x: geo.size.width * 0.3, y: -geo.size.height * 0.15)
+                    .ignoresSafeArea()
+
+                // 底部装饰光晕
+                Circle()
+                    .fill(HealingColors.mutedCoral.opacity(0.04))
+                    .frame(width: layout.decorativeCircleSize * 0.4, height: layout.decorativeCircleSize * 0.4)
+                    .offset(x: -geo.size.width * 0.4, y: geo.size.height * 0.2)
+                    .ignoresSafeArea()
+            }
+        }
+    }
+}
+
 #Preview {
-    NavigationStack {
+    CompatibleNavigationStack {
         EventDetailWrapperView(eventId: "123")
     }
 }

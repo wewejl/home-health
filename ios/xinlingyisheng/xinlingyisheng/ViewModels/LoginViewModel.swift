@@ -104,39 +104,45 @@ class LoginViewModel: ObservableObject {
             showErrorMessage(.phoneInvalid)
             return
         }
-        
+
+        // 防止重复发送：如果正在发送或已发送且倒计时未结束，直接返回
+        if uiState == .sendingCode || countdown > 0 {
+            return
+        }
+
         // 取消之前的任务
         sendCodeTask?.cancel()
-        
+
         sendCodeTask = Task {
             uiState = .sendingCode
-            
+
             do {
                 // 调用 API 发送验证码
                 try await APIService.shared.sendVerificationCode(phone: phoneNumber)
-                
+
                 guard !Task.isCancelled else { return }
-                
+
                 uiState = .codeSent
                 withAnimation(.easeInOut(duration: 0.3)) {
                     showCodeSentNotice = true
                 }
                 startCountdown()
-                
+
                 // 自动切换到验证码输入步骤
                 if step == .phoneInput {
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                         step = .codeInput
                     }
                 }
-                
+
             } catch let error as APIError {
                 guard !Task.isCancelled else { return }
                 uiState = .error(.server(error.errorDescription ?? "发送失败"))
                 showErrorMessage(.server(error.errorDescription ?? "发送失败"))
             } catch {
                 guard !Task.isCancelled else { return }
-                uiState = .error(.network(error.localizedDescription))
+                // 恢复到空闲状态
+                uiState = .idle
                 showErrorMessage(.network(error.localizedDescription))
             }
         }

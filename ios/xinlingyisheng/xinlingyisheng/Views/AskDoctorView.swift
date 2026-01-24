@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - 问医生页面主视图
+// MARK: - 问医生页面主视图（治愈系风格）
 struct AskDoctorView: View {
     @State private var searchText = ""
     @State private var selectedDepartment: DepartmentModel?
@@ -10,57 +10,70 @@ struct AskDoctorView: View {
     @State private var isLoadingDepartments = false
     @State private var departmentError: String?
     @State private var showError = false
-    
-    var body: some View {
-        ZStack(alignment: .top) {
-            // 背景
-            DXYColors.background
-                .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
-                // 自定义导航栏
-                AskDoctorNavBar(showMyQuestions: $showMyQuestions)
-                
-                if isLoadingDepartments {
-                    Spacer()
-                    ProgressView("加载科室中...")
-                        .progressViewStyle(CircularProgressViewStyle())
-                    Spacer()
-                } else if departments.isEmpty {
-                    Spacer()
-                    VStack(spacing: ScaleFactor.spacing(12)) {
-                        Image(systemName: "building.2.slash")
-                            .font(.system(size: AdaptiveFont.custom(48)))
-                            .foregroundColor(DXYColors.textTertiary)
-                        Text("暂无科室数据")
-                            .font(.system(size: AdaptiveFont.body))
-                            .foregroundColor(DXYColors.textSecondary)
-                        Button("点击重试") {
-                            loadDepartments()
-                        }
-                        .foregroundColor(DXYColors.primaryPurple)
-                    }
-                    Spacer()
-                } else {
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: AdaptiveSpacing.section) {
-                            // 搜索区域
-                            AskDoctorSearchView(searchText: $searchText)
-                            
-                            // 信任标签
-                            TrustBadgesView()
 
-                            // 科室列表（从 API 加载）
-                            DepartmentListView(
-                                departments: filteredDepartments,
-                                selectedDepartment: $selectedDepartment
-                            )
-                            
-                            // 底部品牌区
-                            BrandFooterView()
+    var body: some View {
+        GeometryReader { geometry in
+            let layout = AdaptiveLayout(screenWidth: geometry.size.width)
+
+            ZStack(alignment: .top) {
+                // 背景
+                HealingColors.background
+                    .ignoresSafeArea()
+
+                // 右上角装饰光晕
+                Circle()
+                    .fill(HealingColors.softSage.opacity(0.08))
+                    .frame(width: layout.decorativeCircleSize * 0.4, height: layout.decorativeCircleSize * 0.4)
+                    .offset(x: geometry.size.width * 0.6, y: -geometry.size.height * 0.1)
+                    .ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    // 自定义导航栏
+                    AskDoctorNavBar(showMyQuestions: $showMyQuestions, layout: layout)
+
+                    if isLoadingDepartments {
+                        Spacer()
+                        ProgressView("加载科室中...")
+                            .tint(HealingColors.forestMist)
+                            .progressViewStyle(CircularProgressViewStyle())
+                        Spacer()
+                    } else if departments.isEmpty {
+                        Spacer()
+                        VStack(spacing: layout.cardSpacing) {
+                            Image(systemName: "building.2.slash")
+                                .font(.system(size: 42, weight: .light))
+                                .foregroundColor(HealingColors.textTertiary)
+                            Text("暂无科室数据")
+                                .font(.system(size: layout.bodyFontSize, weight: .regular))
+                                .foregroundColor(HealingColors.textSecondary)
+                            Button("点击重试") {
+                                loadDepartments()
+                            }
+                            .buttonStyle(HealingButtonStyle())
                         }
-                        .padding(.horizontal, LayoutConstants.horizontalPadding)
-                        .padding(.bottom, adaptiveBottomPadding)
+                        Spacer()
+                    } else {
+                        ScrollView(.vertical, showsIndicators: false) {
+                            VStack(spacing: layout.cardSpacing + 4) {
+                                // 搜索区域
+                                AskDoctorSearchView(searchText: $searchText, layout: layout)
+
+                                // 信任标签
+                                TrustBadgesView(layout: layout)
+
+                                // 科室列表（从 API 加载）
+                                DepartmentListView(
+                                    departments: filteredDepartments,
+                                    selectedDepartment: $selectedDepartment,
+                                    layout: layout
+                                )
+
+                                // 底部品牌区
+                                BrandFooterView(layout: layout)
+                            }
+                            .padding(.horizontal, layout.horizontalPadding)
+                            .padding(.bottom, adaptiveBottomPadding(layout))
+                        }
                     }
                 }
             }
@@ -84,7 +97,7 @@ struct AskDoctorView: View {
             Text(departmentError ?? "加载失败")
         }
     }
-    
+
     // 搜索过滤
     private var filteredDepartments: [DepartmentModel] {
         if searchText.isEmpty {
@@ -95,14 +108,15 @@ struct AskDoctorView: View {
             (dept.description?.contains(searchText) ?? false)
         }
     }
-    
+
     // 加载科室数据
     private func loadDepartments() {
         isLoadingDepartments = true
         departmentError = nil
-        
+
         Task {
             do {
+                // 获取所有科室
                 let departmentModels = try await APIService.shared.getDepartments()
                 await MainActor.run {
                     departments = departmentModels
@@ -123,83 +137,92 @@ struct AskDoctorView: View {
             }
         }
     }
-    
-    private var adaptiveBottomPadding: CGFloat {
-        ScaleFactor.padding(40)
+
+    private func adaptiveBottomPadding(_ layout: AdaptiveLayout) -> CGFloat {
+        layout.cardInnerPadding * 8
     }
 }
 
-// MARK: - 科室列表视图（使用 API 数据）
+// MARK: - 科室列表视图（治愈系风格）
 struct DepartmentListView: View {
     let departments: [DepartmentModel]
     @Binding var selectedDepartment: DepartmentModel?
-    
-    let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
-    ]
-    
+    let layout: AdaptiveLayout
+
+    var columns: [GridItem] {
+        [
+            GridItem(.flexible(), spacing: layout.cardSpacing - 2),
+            GridItem(.flexible(), spacing: layout.cardSpacing - 2)
+        ]
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: ScaleFactor.spacing(16)) {
+        VStack(alignment: .leading, spacing: layout.cardSpacing) {
             Text("全部科室")
-                .font(.system(size: AdaptiveFont.title3, weight: .bold))
-                .foregroundColor(DXYColors.textPrimary)
-            
-            LazyVGrid(columns: columns, spacing: ScaleFactor.spacing(12)) {
+                .font(.system(size: layout.bodyFontSize, weight: .bold))
+                .foregroundColor(HealingColors.textPrimary)
+
+            LazyVGrid(columns: columns, spacing: layout.cardSpacing - 2) {
                 ForEach(departments) { dept in
-                    DepartmentCardView(department: dept) {
+                    HealingDepartmentCard(department: dept, layout: layout) {
                         selectedDepartment = dept
                     }
+                    .fluidFadeIn(delay: 0.1)
                 }
             }
         }
-        .padding(ScaleFactor.padding(16))
-        .background(DXYColors.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadius, style: .continuous))
+        .padding(layout.cardInnerPadding)
+        .background(HealingColors.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
     }
 }
 
-// MARK: - 科室卡片视图
-struct DepartmentCardView: View {
+// MARK: - 治愈系科室卡片
+struct HealingDepartmentCard: View {
     let department: DepartmentModel
-    var onTap: () -> Void = {}
-    
+    let layout: AdaptiveLayout
+    let onTap: () -> Void
+
     @State private var isPressed = false
-    
+
     var body: some View {
         Button(action: onTap) {
-            HStack(alignment: .top, spacing: ScaleFactor.spacing(10)) {
+            HStack(alignment: .top, spacing: layout.cardSpacing / 2) {
                 // 左侧图标
-                Image(systemName: SFSymbolResolver.resolve(department.icon))
-                    .font(.system(size: AdaptiveFont.title1, weight: .light))
-                    .foregroundColor(DXYColors.primaryPurple)
-                    .frame(width: ScaleFactor.size(32), height: ScaleFactor.size(32))
-                
-                VStack(alignment: .leading, spacing: ScaleFactor.spacing(4)) {
+                ZStack {
+                    Circle()
+                        .fill(HealingColors.deepSage.opacity(0.15))
+                    Image(systemName: SFSymbolResolver.resolve(department.icon))
+                        .font(.system(size: 20 * layout.iconScale, weight: .light))
+                        .foregroundColor(HealingColors.forestMist)
+                }
+                .frame(width: 36 * layout.iconScale, height: 36 * layout.iconScale)
+
+                VStack(alignment: .leading, spacing: layout.cardSpacing / 3) {
                     Text(department.name)
-                        .font(.system(size: AdaptiveFont.subheadline, weight: .semibold))
-                        .foregroundColor(DXYColors.textPrimary)
+                        .font(.system(size: layout.bodyFontSize - 3, weight: .semibold))
+                        .foregroundColor(HealingColors.textPrimary)
                         .lineLimit(1)
-                    
+
                     if let desc = department.description {
                         Text(desc)
-                            .font(.system(size: AdaptiveFont.caption))
-                            .foregroundColor(DXYColors.textTertiary)
+                            .font(.system(size: layout.captionFontSize, weight: .regular))
+                            .foregroundColor(HealingColors.textTertiary)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
                     }
                 }
-                
+
                 Spacer(minLength: 0)
             }
-            .padding(ScaleFactor.padding(12))
-            .frame(maxWidth: .infinity, minHeight: ScaleFactor.size(70), alignment: .topLeading)
-            .background(DXYColors.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall, style: .continuous))
+            .padding(layout.cardInnerPadding - 2)
+            .frame(maxWidth: .infinity, minHeight: layout.cardInnerPadding * 4, alignment: .topLeading)
+            .background(HealingColors.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall, style: .continuous)
-                    .stroke(Color.gray.opacity(0.1), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(HealingColors.textTertiary.opacity(0.2), lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())
@@ -213,129 +236,167 @@ struct DepartmentCardView: View {
     }
 }
 
-// MARK: - 自定义导航栏
+// MARK: - 治愈系导航栏
 struct AskDoctorNavBar: View {
     @Binding var showMyQuestions: Bool
-    
+    let layout: AdaptiveLayout
+
     var body: some View {
-        Text("问医生")
-            .font(.system(size: AdaptiveFont.title3, weight: .semibold))
-            .foregroundColor(DXYColors.textPrimary)
-            .frame(maxWidth: .infinity)
-            .overlay(alignment: .trailing) {
-                Button(action: { showMyQuestions = true }) {
+        HStack {
+            Text("问医生")
+                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                .foregroundColor(HealingColors.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .center)
+
+            Button(action: { showMyQuestions = true }) {
+                HStack(spacing: 4) {
                     Text("我的提问")
-                        .font(.system(size: AdaptiveFont.subheadline))
-                        .foregroundColor(DXYColors.textSecondary)
+                        .font(.system(size: layout.captionFontSize, weight: .medium))
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: layout.captionFontSize - 2, weight: .semibold))
                 }
+                .foregroundColor(HealingColors.forestMist)
             }
-        .padding(.horizontal, ScaleFactor.padding(16))
-        .padding(.vertical, ScaleFactor.padding(12))
-        .background(DXYColors.cardBackground)
+        }
+        .padding(.horizontal, layout.horizontalPadding)
+        .padding(.vertical, layout.cardInnerPadding - 2)
+        .background(HealingColors.cardBackground)
     }
 }
 
-// MARK: - 搜索区域
+// MARK: - 治愈系搜索区域
 struct AskDoctorSearchView: View {
     @Binding var searchText: String
-    
+    let layout: AdaptiveLayout
+
     let hotTags = ["血糖监测", "血压管理", "感冒发烧", "皮肤问题", "儿童健康"]
-    
+
     var body: some View {
-        VStack(spacing: ScaleFactor.spacing(12)) {
+        VStack(spacing: layout.cardSpacing - 2) {
             // 搜索框
-            HStack(spacing: ScaleFactor.spacing(8)) {
-                HStack(spacing: ScaleFactor.spacing(8)) {
+            HStack(spacing: layout.cardSpacing / 2) {
+                HStack(spacing: layout.cardSpacing / 2) {
                     Image(systemName: "magnifyingglass")
-                        .font(.system(size: AdaptiveFont.body))
-                        .foregroundColor(DXYColors.textTertiary)
-                    
+                        .font(.system(size: layout.bodyFontSize - 2))
+                        .foregroundColor(HealingColors.textTertiary)
+
                     TextField("疾病 / 症状 / 医院 / 医生名", text: $searchText)
-                        .font(.system(size: AdaptiveFont.subheadline))
-                        .foregroundColor(DXYColors.textPrimary)
+                        .font(.system(size: layout.bodyFontSize - 2))
+                        .foregroundColor(HealingColors.textPrimary)
                 }
-                .padding(.horizontal, ScaleFactor.padding(14))
-                .padding(.vertical, ScaleFactor.padding(12))
-                .background(DXYColors.searchBackground)
-                .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall, style: .continuous))
-                
+                .padding(.horizontal, layout.cardInnerPadding - 2)
+                .padding(.vertical, layout.cardInnerPadding - 4)
+                .background(HealingColors.warmCream.opacity(0.5))
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+
                 Button(action: {}) {
                     Text("搜索")
-                        .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
+                        .font(.system(size: layout.captionFontSize, weight: .medium))
                         .foregroundColor(.white)
-                        .padding(.horizontal, ScaleFactor.padding(18))
-                        .padding(.vertical, ScaleFactor.padding(12))
-                        .background(DXYColors.primaryPurple)
-                        .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall, style: .continuous))
+                        .padding(.horizontal, layout.cardInnerPadding)
+                        .padding(.vertical, layout.cardInnerPadding - 4)
+                        .background(
+                            LinearGradient(
+                                colors: [HealingColors.deepSage, HealingColors.forestMist],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 }
             }
-            
+
             // 热搜标签
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: ScaleFactor.spacing(8)) {
+                HStack(spacing: layout.cardSpacing / 2) {
                     ForEach(hotTags, id: \.self) { tag in
                         Text(tag)
-                            .font(.system(size: AdaptiveFont.footnote))
-                            .foregroundColor(DXYColors.textSecondary)
-                            .padding(.horizontal, ScaleFactor.padding(12))
-                            .padding(.vertical, ScaleFactor.padding(6))
-                            .background(DXYColors.tagBackground)
+                            .font(.system(size: layout.captionFontSize))
+                            .foregroundColor(HealingColors.textSecondary)
+                            .padding(.horizontal, layout.cardInnerPadding - 2)
+                            .padding(.vertical, layout.cardSpacing / 2)
+                            .background(HealingColors.warmSand.opacity(0.6))
                             .clipShape(Capsule())
                     }
                 }
             }
         }
-        .padding(.top, ScaleFactor.padding(8))
+        .padding(.top, layout.cardSpacing / 2)
     }
 }
 
-// MARK: - 信任标签
+// MARK: - 治愈系信任标签
 struct TrustBadgesView: View {
+    let layout: AdaptiveLayout
+
     let badges = [
         ("checkmark.seal.fill", "医生实名认证"),
         ("shield.checkered", "平台双重质控"),
         ("clock.fill", "医生7×24h在线")
     ]
-    
+
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(badges, id: \.1) { icon, text in
-                HStack(spacing: ScaleFactor.spacing(4)) {
+            ForEach(Array(badges.enumerated()), id: \.offset) { _, element in
+                let (icon, text) = element
+                HStack(spacing: 4) {
                     Image(systemName: icon)
-                        .font(.system(size: AdaptiveFont.caption))
+                        .font(.system(size: layout.captionFontSize - 1))
+                        .foregroundColor(HealingColors.deepSage)
+
                     Text(text)
-                        .font(.system(size: AdaptiveFont.footnote))
+                        .font(.system(size: layout.captionFontSize - 1))
                 }
-                .foregroundColor(DXYColors.textTertiary)
-                
+                .foregroundColor(HealingColors.textTertiary)
+
                 if text != badges.last?.1 {
                     Spacer()
                 }
             }
         }
-        .padding(.horizontal, ScaleFactor.padding(4))
+        .padding(.horizontal, 4)
     }
 }
 
 
-// MARK: - 底部品牌区
+// MARK: - 治愈系底部品牌区
 struct BrandFooterView: View {
+    let layout: AdaptiveLayout
+
     var body: some View {
-        VStack(spacing: ScaleFactor.spacing(8)) {
-            HStack(spacing: ScaleFactor.spacing(6)) {
+        VStack(spacing: layout.cardSpacing / 2) {
+            HStack(spacing: 6) {
                 Image(systemName: "cross.fill")
-                    .font(.system(size: AdaptiveFont.subheadline))
+                    .font(.system(size: layout.bodyFontSize - 2))
                 Text("鑫琳医生")
-                    .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
+                    .font(.system(size: layout.bodyFontSize - 2, weight: .medium))
             }
-            .foregroundColor(DXYColors.primaryPurple.opacity(0.6))
-            
+            .foregroundColor(HealingColors.forestMist.opacity(0.7))
+
             Text("一起发现健康生活")
-                .font(.system(size: AdaptiveFont.footnote))
-                .foregroundColor(DXYColors.textTertiary)
+                .font(.system(size: layout.captionFontSize))
+                .foregroundColor(HealingColors.textTertiary)
         }
-        .padding(.top, ScaleFactor.padding(24))
-        .padding(.bottom, ScaleFactor.padding(16))
+        .padding(.top, layout.cardSpacing)
+        .padding(.bottom, layout.cardInnerPadding)
+    }
+}
+
+// MARK: - 治愈系按钮样式
+struct HealingButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundColor(HealingColors.forestMist)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(HealingColors.softSage.opacity(0.15))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(HealingColors.deepSage.opacity(0.3), lineWidth: 1)
+            )
     }
 }
 

@@ -1,164 +1,176 @@
 import SwiftUI
 
+// MARK: - 语音录制视图（治愈系风格）
 struct VoiceRecorderView: View {
     @StateObject private var viewModel = VoiceTranscriptionViewModel()
     @Binding var transcribedText: String
     @Binding var extractedSymptoms: [String]
     let onDismiss: () -> Void
-    
+
     var body: some View {
-        VStack(spacing: ScaleFactor.spacing(24)) {
-            // 标题
-            HStack {
-                Text("语音输入")
-                    .font(.system(size: AdaptiveFont.title3, weight: .bold))
-                    .foregroundColor(DXYColors.textPrimary)
+        GeometryReader { geometry in
+            let layout = AdaptiveLayout(screenWidth: geometry.size.width)
+
+            VStack(spacing: layout.cardSpacing + 4) {
+                // 标题
+                HStack {
+                    Text("语音输入")
+                        .font(.system(size: layout.bodyFontSize + 1, weight: .semibold))
+                        .foregroundColor(HealingColors.textPrimary)
+                    Spacer()
+                    Button(action: onDismiss) {
+                        ZStack {
+                            Circle()
+                                .fill(HealingColors.textTertiary.opacity(0.15))
+                                .frame(width: 28, height: 28)
+
+                            Image(systemName: "xmark")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(HealingColors.textTertiary)
+                        }
+                    }
+                }
+                .padding(.horizontal, layout.horizontalPadding)
+                .padding(.top, layout.cardInnerPadding)
+
                 Spacer()
-                Button(action: onDismiss) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(DXYColors.textTertiary)
+
+                // 录音可视化
+                recordingVisualization(layout: layout)
+
+                // 时长显示
+                Text(viewModel.formattedDuration)
+                    .font(.system(size: layout.titleFontSize + 4, weight: .light, design: .monospaced))
+                    .foregroundColor(viewModel.isRecording ? HealingColors.forestMist : HealingColors.textSecondary)
+
+                // 状态提示
+                statusText(layout: layout)
+
+                Spacer()
+
+                // 控制按钮
+                controlButtons(layout: layout)
+
+                // 转写结果
+                if !viewModel.transcribedText.isEmpty {
+                    transcriptionResultView(layout: layout)
+                }
+
+                // 错误提示
+                if let error = viewModel.errorMessage {
+                    Text(error)
+                        .font(.system(size: layout.captionFontSize))
+                        .foregroundColor(HealingColors.terracotta)
+                        .padding(.horizontal)
                 }
             }
-            .padding(.horizontal, LayoutConstants.horizontalPadding)
-            .padding(.top, ScaleFactor.padding(20))
-            
-            Spacer()
-            
-            // 录音可视化
-            recordingVisualization
-            
-            // 时长显示
-            Text(viewModel.formattedDuration)
-                .font(.system(size: AdaptiveFont.largeTitle, weight: .light, design: .monospaced))
-                .foregroundColor(viewModel.isRecording ? DXYColors.primaryPurple : DXYColors.textSecondary)
-            
-            // 状态提示
-            statusText
-            
-            Spacer()
-            
-            // 控制按钮
-            controlButtons
-            
-            // 转写结果
-            if !viewModel.transcribedText.isEmpty {
-                transcriptionResultView
+            .padding(.bottom, layout.cardInnerPadding * 2)
+            .background(HealingColors.cardBackground)
+            .onChange(of: viewModel.transcribedText) { _, newValue in
+                transcribedText = newValue
             }
-            
-            // 错误提示
-            if let error = viewModel.errorMessage {
-                Text(error)
-                    .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(.red)
-                    .padding(.horizontal)
+            .onChange(of: viewModel.extractedSymptoms) { _, newValue in
+                extractedSymptoms = newValue
             }
-        }
-        .padding(.bottom, ScaleFactor.padding(30))
-        .background(Color.white)
-        .onChange(of: viewModel.transcribedText) { _, newValue in
-            transcribedText = newValue
-        }
-        .onChange(of: viewModel.extractedSymptoms) { _, newValue in
-            extractedSymptoms = newValue
         }
     }
-    
-    private var recordingVisualization: some View {
+
+    private func recordingVisualization(layout: AdaptiveLayout) -> some View {
         ZStack {
             // 外圈动画
             Circle()
-                .stroke(DXYColors.primaryPurple.opacity(0.2), lineWidth: 3)
+                .stroke(HealingColors.forestMist.opacity(0.2), lineWidth: 3)
                 .frame(width: 160, height: 160)
-            
+
             if viewModel.isRecording {
                 Circle()
-                    .stroke(DXYColors.primaryPurple.opacity(0.3), lineWidth: 3)
+                    .stroke(HealingColors.forestMist.opacity(0.3), lineWidth: 3)
                     .frame(width: 160 + CGFloat(viewModel.audioLevel) * 40, height: 160 + CGFloat(viewModel.audioLevel) * 40)
                     .animation(.easeInOut(duration: 0.1), value: viewModel.audioLevel)
             }
-            
+
             // 主按钮
             Circle()
-                .fill(viewModel.isRecording ? DXYColors.primaryPurple : DXYColors.background)
+                .fill(viewModel.isRecording ? HealingColors.forestMist : HealingColors.warmCream.opacity(0.5))
                 .frame(width: 120, height: 120)
                 .overlay(
                     Group {
                         if viewModel.isTranscribing {
                             ProgressView()
                                 .scaleEffect(1.5)
-                                .tint(DXYColors.primaryPurple)
+                                .tint(HealingColors.forestMist)
                         } else {
                             Image(systemName: viewModel.isRecording ? "waveform" : "mic.fill")
                                 .font(.system(size: 40))
-                                .foregroundColor(viewModel.isRecording ? .white : DXYColors.primaryPurple)
+                                .foregroundColor(viewModel.isRecording ? .white : HealingColors.forestMist)
                         }
                     }
                 )
-                .shadow(color: DXYColors.primaryPurple.opacity(0.3), radius: viewModel.isRecording ? 20 : 0)
+                .shadow(color: HealingColors.forestMist.opacity(0.3), radius: viewModel.isRecording ? 20 : 5)
         }
     }
-    
-    private var statusText: some View {
+
+    @ViewBuilder
+    private func statusText(layout: AdaptiveLayout) -> some View {
         Group {
             if viewModel.isTranscribing {
-                HStack(spacing: 8) {
+                HStack(spacing: layout.cardSpacing / 2) {
                     ProgressView()
                         .scaleEffect(0.8)
                     Text("正在转写...")
                 }
-                .font(.system(size: AdaptiveFont.subheadline))
-                .foregroundColor(DXYColors.textSecondary)
+                .font(.system(size: layout.captionFontSize + 1))
+                .foregroundColor(HealingColors.textSecondary)
             } else if viewModel.isRecording {
                 Text("正在录音，请描述您的症状")
-                    .font(.system(size: AdaptiveFont.subheadline))
-                    .foregroundColor(DXYColors.primaryPurple)
+                    .font(.system(size: layout.captionFontSize + 1))
+                    .foregroundColor(HealingColors.forestMist)
             } else if viewModel.transcribedText.isEmpty {
                 Text("点击开始录音")
-                    .font(.system(size: AdaptiveFont.subheadline))
-                    .foregroundColor(DXYColors.textTertiary)
+                    .font(.system(size: layout.captionFontSize + 1))
+                    .foregroundColor(HealingColors.textTertiary)
             } else {
                 Text("录音已转写完成")
-                    .font(.system(size: AdaptiveFont.subheadline))
-                    .foregroundColor(DXYColors.teal)
+                    .font(.system(size: layout.captionFontSize + 1))
+                    .foregroundColor(HealingColors.forestMist)
             }
         }
     }
-    
-    private var controlButtons: some View {
-        HStack(spacing: ScaleFactor.spacing(40)) {
+
+    private func controlButtons(layout: AdaptiveLayout) -> some View {
+        HStack(spacing: layout.cardSpacing + 8) {
             if viewModel.isRecording {
                 // 取消按钮
                 Button(action: {
                     viewModel.cancelRecording()
                 }) {
-                    VStack(spacing: 6) {
+                    VStack(spacing: 4) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 24))
+                            .font(.system(size: 20))
                             .foregroundColor(.white)
-                            .frame(width: 56, height: 56)
-                            .background(DXYColors.textTertiary)
+                            .frame(width: 50, height: 50)
+                            .background(HealingColors.textTertiary)
                             .clipShape(Circle())
                         Text("取消")
-                            .font(.system(size: AdaptiveFont.caption))
-                            .foregroundColor(DXYColors.textSecondary)
+                            .font(.system(size: layout.captionFontSize))
+                            .foregroundColor(HealingColors.textSecondary)
                     }
                 }
-                
+
                 // 停止按钮
                 Button(action: {
                     viewModel.stopRecording()
                 }) {
-                    VStack(spacing: 6) {
+                    VStack(spacing: 4) {
                         Image(systemName: "stop.fill")
-                            .font(.system(size: 24))
+                            .font(.system(size: 20))
                             .foregroundColor(.white)
-                            .frame(width: 56, height: 56)
-                            .background(Color.red)
+                            .frame(width: 50, height: 50)
+                            .background(HealingColors.terracotta)
                             .clipShape(Circle())
                         Text("完成")
-                            .font(.system(size: AdaptiveFont.caption))
-                            .foregroundColor(DXYColors.textSecondary)
+                            .font(.system(size: layout.captionFontSize))
+                            .foregroundColor(HealingColors.textSecondary)
                     }
                 }
             } else {
@@ -169,93 +181,127 @@ struct VoiceRecorderView: View {
                     }
                     viewModel.startRecording()
                 }) {
-                    VStack(spacing: 6) {
+                    VStack(spacing: 4) {
                         Image(systemName: "mic.fill")
-                            .font(.system(size: 28))
+                            .font(.system(size: 24))
                             .foregroundColor(.white)
-                            .frame(width: 72, height: 72)
-                            .background(DXYColors.primaryPurple)
+                            .frame(width: 64, height: 64)
+                            .background(
+                                LinearGradient(
+                                    colors: [HealingColors.forestMist, HealingColors.deepSage],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
                             .clipShape(Circle())
+                            .shadow(color: HealingColors.forestMist.opacity(0.4), radius: 8, y: 4)
                         Text(viewModel.transcribedText.isEmpty ? "开始录音" : "重新录音")
-                            .font(.system(size: AdaptiveFont.caption))
-                            .foregroundColor(DXYColors.textSecondary)
+                            .font(.system(size: layout.captionFontSize))
+                            .foregroundColor(HealingColors.textSecondary)
                     }
                 }
                 .disabled(viewModel.isTranscribing)
             }
         }
-        .padding(.horizontal, LayoutConstants.horizontalPadding)
+        .padding(.horizontal, layout.horizontalPadding)
     }
-    
-    private var transcriptionResultView: some View {
-        VStack(alignment: .leading, spacing: ScaleFactor.spacing(12)) {
-            Divider()
-            
-            Text("转写结果")
-                .font(.system(size: AdaptiveFont.footnote, weight: .medium))
-                .foregroundColor(DXYColors.textTertiary)
-            
+
+    private func transcriptionResultView(layout: AdaptiveLayout) -> some View {
+        VStack(alignment: .leading, spacing: layout.cardSpacing) {
+            Rectangle()
+                .fill(HealingColors.softSage.opacity(0.3))
+                .frame(height: 1)
+
+            HStack(spacing: layout.cardSpacing / 2) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: layout.captionFontSize))
+                    .foregroundColor(HealingColors.forestMist)
+                Text("转写结果")
+                    .font(.system(size: layout.captionFontSize + 1, weight: .medium))
+                    .foregroundColor(HealingColors.textSecondary)
+            }
+
             Text(viewModel.transcribedText)
-                .font(.system(size: AdaptiveFont.body))
-                .foregroundColor(DXYColors.textPrimary)
-                .padding(ScaleFactor.padding(12))
+                .font(.system(size: layout.captionFontSize + 1))
+                .foregroundColor(HealingColors.textPrimary)
+                .padding(layout.cardInnerPadding)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(DXYColors.background)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-            
+                .background(HealingColors.warmCream.opacity(0.6))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
             if !viewModel.extractedSymptoms.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("识别到的症状")
-                        .font(.system(size: AdaptiveFont.footnote, weight: .medium))
-                        .foregroundColor(DXYColors.textTertiary)
-                    
+                VStack(alignment: .leading, spacing: layout.cardSpacing / 2) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "list.bullet")
+                            .font(.system(size: layout.captionFontSize - 1))
+                            .foregroundColor(HealingColors.forestMist)
+                        Text("识别到的症状")
+                            .font(.system(size: layout.captionFontSize, weight: .medium))
+                            .foregroundColor(HealingColors.textSecondary)
+                    }
+
                     FlowLayout(spacing: 6) {
                         ForEach(viewModel.extractedSymptoms, id: \.self) { symptom in
                             Text(symptom)
-                                .font(.system(size: AdaptiveFont.footnote))
-                                .foregroundColor(DXYColors.teal)
+                                .font(.system(size: layout.captionFontSize))
+                                .foregroundColor(HealingColors.dustyBlue)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
-                                .background(DXYColors.teal.opacity(0.1))
+                                .background(HealingColors.dustyBlue.opacity(0.15))
                                 .clipShape(Capsule())
                         }
                     }
                 }
             }
-            
+
             // 使用结果按钮
             Button(action: {
                 transcribedText = viewModel.transcribedText
                 extractedSymptoms = viewModel.extractedSymptoms
                 onDismiss()
             }) {
-                Text("使用此结果")
-                    .font(.system(size: AdaptiveFont.body, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, ScaleFactor.padding(14))
-                    .background(DXYColors.primaryPurple)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                HStack(spacing: layout.cardSpacing / 2) {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: layout.captionFontSize + 1))
+                    Text("使用此结果")
+                        .font(.system(size: layout.bodyFontSize - 1, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, layout.cardInnerPadding)
+                .background(
+                    LinearGradient(
+                        colors: [HealingColors.forestMist, HealingColors.deepSage],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .shadow(color: HealingColors.forestMist.opacity(0.3), radius: 6, y: 3)
             }
         }
-        .padding(.horizontal, LayoutConstants.horizontalPadding)
-        .padding(.top, ScaleFactor.padding(16))
+        .padding(.horizontal, layout.horizontalPadding)
+        .padding(.top, layout.cardSpacing)
     }
 }
 
+// MARK: - 语音输入按钮
 struct VoiceInputButton: View {
     @State private var showRecorder = false
     @Binding var text: String
     @Binding var symptoms: [String]
-    
+
     var body: some View {
         Button(action: { showRecorder = true }) {
-            Image(systemName: "mic.fill")
-                .font(.system(size: AdaptiveFont.title3))
-                .foregroundColor(DXYColors.primaryPurple)
-                .frame(width: 44, height: 44)
-                .background(DXYColors.primaryPurple.opacity(0.1))
-                .clipShape(Circle())
+            ZStack {
+                Circle()
+                    .fill(HealingColors.forestMist.opacity(0.15))
+                    .frame(width: 44, height: 44)
+
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(HealingColors.forestMist)
+            }
         }
         .sheet(isPresented: $showRecorder) {
             VoiceRecorderView(
@@ -271,7 +317,7 @@ struct VoiceInputButton: View {
 #Preview {
     @Previewable @State var text = ""
     @Previewable @State var symptoms: [String] = []
-    
+
     return VoiceRecorderView(
         transcribedText: $text,
         extractedSymptoms: $symptoms,

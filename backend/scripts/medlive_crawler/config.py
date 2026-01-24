@@ -1,0 +1,32 @@
+"""
+MedLive 医脉通爬虫配置
+"""
+import os
+
+# 医脉通 Cookie（需要从浏览器获取）
+MEDLIVE_COOKIE = os.getenv(
+    "MEDLIVE_COOKIE",
+    "Hm_lvt_62d92d99f7c1e7a31a11759de376479f=1769004987; HMACCOUNT=56C35BF8E24E5BB6; ymt_pk_id=e738b79d24d848ed; mrauth=Ug0CUw9VXTDc3rDU2IjVuN4%3D; PHPSESSID=ST-3194918-hVWqe09x4w6oxlIAfd7f-cas; _pk_ref.3.a971=%5B%22%22%2C%22%22%2C1769091133%2C%22https%3A%2F%2Fcn.bing.com%2F%22%5D; _pk_ses.3.a971=*; XSRF-TOKEN=eyJpdiI6ImdHd2ZjRSt1cDNcL3JDT2dobkxOQ0t3PT0iLCJ2YWx1ZSI6ImdKTnpUKzhtWjZqblFNZkVrOUJNTTQ4SkNuMTVPaDNobHNjNmVcL09JMkNiNDE5aUY0aGRwSGdSOHBJMVVUQnBNWlZcL1ZxK0VQYjdpdWVQcGdjMTV2ZVE9PSIsIm1hYyI6ImYyNmNiM2ExNzRhNGY2ODRkODBmYjM4N2RiM2MzNzlkNDc0MGZiMjI4M2RlZDc5Yjc5NGQ2NzIzNjU1NzRhNWEifQ%3D%3D; oncologist_session=eyJpdiI6IjM1OFdrMEJKOE1LRzd0RVNkdjlc3BnPT0iLCJ2YWx1ZSI6IndpeEVhTHJRZnlsNTJWamt2Tk5BXC9UN3hMcnFWWU41MXJYWjBqWkcyNEhKV2Z6bERPRGFUMElcL215ODAzV2hUU2wyZEh0UmZSUEsrOUpnbmJKalwveUZBPT0iLCJtYWMiOiI3YzlkZDlmZjlmNWQxZDhmYWJiNzcwMGIwYmRlMTI5N2UzOTBiOWQyMjg1OWJjNGRmYWQ5ZDZiMWIxOGUwMWRiIn0%3D; ymtinfo=eyJ1aWQiOiI2OTM3NzY5IiwicmVzb3VyY2UiOiJ3ZWIiLCJleHRfdmVyc2lvbiI6IjEiLCJhcHBfbmFtZSI6Im1lZGxpdmUifQ%3D%3D; Hm_lpvt_62d92d99f7c1e7a31a11759de376479f=1769093264; _pk_id.3.a971=e738b79d24d848ed.1769004987.4.1769093264.1769084134."
+)
+
+# 目标 URL
+BASE_URL = "https://yzy.medlive.cn/pc/wikiDetail?wiki_id={wiki_id}"
+
+# 要爬取的 wiki_id 列表（可以手动指定，或通过 API 获取）
+WIKI_IDS = [
+    "90",   # 三尖瓣疾病
+    "1",    # 软组织肉瘤
+    "1486", # 变应性鼻炎
+    # 更多 ID...
+]
+
+# 数据库配置
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "sqlite:///./app.db"
+)
+
+# 请求配置
+REQUEST_TIMEOUT = 30
+DELAY_BETWEEN_REQUESTS = 1  # 秒，避免请求过快
+MAX_RETRIES = 3

@@ -21,6 +21,9 @@ import {
   MedicineBoxOutlined,
   FileSearchOutlined,
   RobotOutlined,
+  MonitorOutlined,
+  HeartOutlined,
+  VideoCameraOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -81,6 +84,21 @@ const MainLayout: React.FC<MainLayoutProps> = ({ user, onLogout }) => {
       key: '/stats',
       icon: <BarChartOutlined />,
       label: '统计分析',
+    },
+    {
+      key: '/medical-orders',
+      icon: <HeartOutlined />,
+      label: '医嘱执行监督',
+    },
+    {
+      key: '/patient-compliance',
+      icon: <MonitorOutlined />,
+      label: '患者依从性',
+    },
+    {
+      key: '/rounding',
+      icon: <VideoCameraOutlined />,
+      label: '远程查房',
     },
   ];
 

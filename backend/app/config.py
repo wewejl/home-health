@@ -14,7 +14,8 @@ class Settings(BaseSettings):
     PORT: int = 8100
     
     # 数据库
-    DATABASE_URL: str = "sqlite:///./app.db"
+    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5433/home_health"
+    KNOWLEDGE_DB_URL: str = "sqlite:///./knowledge.db"  # 知识库独立存储
     
     # JWT 配置
     JWT_SECRET_KEY: str = "dev-secret-key-change-in-production"
@@ -62,9 +63,14 @@ class Settings(BaseSettings):
     AI_AGGREGATION_SIMILARITY_THRESHOLD: float = 0.7
     
     # 语音转写配置
-    ASR_PROVIDER: str = "mock"  # mock/aliyun/openai
+    ASR_PROVIDER: str = "mock"  # mock/aliyun/openai/glm
     ASR_SAMPLE_RATE: int = 16000
     OPENAI_API_KEY: str = ""  # 用于 Whisper API
+
+    # GLM-ASR 配置（智谱语音识别）
+    GLM_API_KEY: str = ""
+    GLM_ASR_MODEL: str = "glm-asr-2512"
+    GLM_ASR_BASE_URL: str = "https://open.bigmodel.cn/api/paas/v4/audio/transcriptions"
     
     # Admin JWT 配置
     ADMIN_JWT_SECRET: str = "admin-secret-key-change-in-production"

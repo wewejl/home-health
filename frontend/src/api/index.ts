@@ -383,4 +383,79 @@ export const dermaAgentApi = {
     api.get(`/derma/${sessionId}`),
 };
 
+// Medical Orders API (医嘱执行监督)
+export const medicalOrdersApi = {
+  // 医嘱 CRUD
+  list: (status?: string) =>
+    api.get('/medical-orders', { params: { status } }),
+  get: (id: number) => api.get(`/medical-orders/${id}`),
+  create: (data: {
+    order_type: string;
+    title: string;
+    description?: string;
+    schedule_type: string;
+    start_date: string;
+    end_date?: string;
+    frequency?: string;
+    reminder_times?: string[];
+    ai_generated?: boolean;
+    ai_session_id?: string;
+  }) => api.post('/medical-orders', data),
+  update: (id: number, data: {
+    title?: string;
+    description?: string;
+    end_date?: string;
+    frequency?: string;
+    reminder_times?: string[];
+  }) => api.put(`/medical-orders/${id}`, data),
+  activate: (id: number, confirm: boolean) =>
+    api.post(`/medical-orders/${id}/activate`, { confirm }),
+
+  // 任务查询
+  getDailyTasks: (taskDate: string) =>
+    api.get(`/medical-orders/tasks/${taskDate}`),
+  getPendingTasks: (taskDate: string) =>
+    api.get(`/medical-orders/tasks/${taskDate}/pending`),
+
+  // 打卡操作
+  completeTask: (taskId: number, data: {
+    completion_type: string;
+    value?: Record<string, any>;
+    photo_url?: string;
+    notes?: string;
+  }) => api.post(`/medical-orders/tasks/${taskId}/complete`, data),
+
+  // 依从性查询
+  getDailyCompliance: (taskDate: string) =>
+    api.get(`/medical-orders/compliance/daily`, { params: { task_date: taskDate } }),
+  getWeeklyCompliance: () =>
+    api.get('/medical-orders/compliance/weekly'),
+  getOrderCompliance: (orderId: number) =>
+    api.get(`/medical-orders/compliance/order/${orderId}`),
+  getAbnormalRecords: (days: number = 30) =>
+    api.get('/medical-orders/compliance/abnormal', { params: { days } }),
+
+  // 家属关系
+  createFamilyBond: (data: {
+    patient_id: number;
+    family_member_phone: string;
+    relationship: string;
+    notification_level: string;
+  }) => api.post('/medical-orders/family-bonds', data),
+  getFamilyBonds: () =>
+    api.get('/medical-orders/family-bonds'),
+  deleteFamilyBond: (bondId: number) =>
+    api.delete(`/medical-orders/family-bonds/${bondId}`),
+  getFamilyMemberTasks: (patientId: number, taskDate: string) =>
+    api.get(`/medical-orders/family-bonds/${patientId}/tasks`, { params: { task_date: taskDate } }),
+
+  // 预警管理
+  getAlerts: (activeOnly: boolean = true, limit: number = 50) =>
+    api.get('/medical-orders/alerts', { params: { active_only: activeOnly, limit } }),
+  acknowledgeAlert: (alertId: number) =>
+    api.post(`/medical-orders/alerts/${alertId}/acknowledge`),
+  checkAlerts: () =>
+    api.post('/medical-orders/alerts/check'),
+};
+
 export default api;

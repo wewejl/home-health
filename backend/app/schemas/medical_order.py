@@ -146,6 +146,7 @@ class FamilyBondResponse(BaseModel):
     notification_level: str
     family_member_name: Optional[str] = None
     family_member_phone: Optional[str] = None
+    patient_name: Optional[str] = None
 
     class Config:
         from_attributes = True

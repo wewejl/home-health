@@ -1,6 +1,7 @@
 import SwiftUI
 
-// MARK: - LoginView
+// MARK: - 登录页面（治愈系风格）
+
 struct LoginView: View {
     @StateObject private var viewModel = LoginViewModel()
     @FocusState private var focusedField: LoginField?
@@ -10,129 +11,175 @@ struct LoginView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let safeWidth = max(geometry.size.width, 1)
-            let horizontalPadding = AdaptiveSpacing.card
+            let layout = AdaptiveLayout(screenWidth: geometry.size.width)
 
             ZStack {
-                LoginBackgroundView()
+                // 背景层 - 治愈系渐变
+                HealingLoginBackgroundView(layout: layout)
+                    .ignoresSafeArea(.container, edges: .top)
 
+                // 内容层 - 可滚动
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
-                        Spacer()
-                            .frame(height: adaptiveTopSpacing(safeTop: geometry.safeAreaInsets.top))
+                        // 顶部安全区域占位
+                        Spacer(minLength: topSpacing(layout: layout))
 
-                        LoginHeaderView()
-                            .padding(.bottom, AdaptiveSpacing.section)
+                        // 头部
+                        HealingLoginHeaderView(layout: layout)
+                            .padding(.bottom, layout.cardSpacing)
 
-                        LoginFormCard(
+                        // 表单卡片
+                        HealingLoginFormCard(
                             viewModel: viewModel,
                             focusedField: $focusedField,
-                            openURL: openURL,
-                            availableWidth: safeWidth - horizontalPadding * 2
+                            layout: layout
                         )
-                        .padding(.horizontal, horizontalPadding)
+                        .padding(.horizontal, layout.horizontalPadding)
 
-                        Spacer()
-                            .frame(height: adaptiveBottomSpacing(safeBottom: geometry.safeAreaInsets.bottom))
+                        // 底部额外空间
+                        Spacer(minLength: bottomSpacing(layout: layout))
                     }
-                    .frame(minHeight: geometry.size.height)
+                    .frame(maxWidth: .infinity)
                 }
-                .scrollDismissesKeyboardCompat()
 
+                // 加载遮罩
                 if viewModel.isLoading {
-                    LoadingOverlay()
+                    HealingLoadingOverlay(layout: layout)
                 }
             }
-            .ignoresSafeArea(.container, edges: .all)
-        }
-        .onAppear {
-            DeviceInfoLogger.log(context: "LoginView")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                focusedField = .phone
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    if focusedField == .phone {
+                        Button("下一步") {
+                            focusedField = .code
+                        }
+                        .font(.system(size: layout.bodyFontSize, weight: .medium))
+                        .foregroundColor(HealingColors.forestMist)
+                    } else if focusedField == .code {
+                        Button("完成") {
+                            focusedField = nil
+                        }
+                        .font(.system(size: layout.bodyFontSize, weight: .medium))
+                        .foregroundColor(HealingColors.forestMist)
+                    }
+                }
             }
-        }
-        .onDisappear {
-            viewModel.cleanup()
-        }
-        .onChangeCompat(of: viewModel.uiState) { newState in
-            if newState == .success {
-                onLoginSuccess?()
+            .onAppear {
+                DeviceInfoLogger.log(context: "LoginView")
+                // 延迟聚焦手机号输入框
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    focusedField = .phone
+                }
             }
-        }
-        .alert("提示", isPresented: $viewModel.showError) {
-            Button("确定", role: .cancel) {}
-        } message: {
-            Text(viewModel.errorMessage)
+            .onDisappear {
+                viewModel.cleanup()
+            }
+            .onChangeCompat(of: viewModel.uiState) { newState in
+                if newState == .success {
+                    onLoginSuccess?()
+                }
+            }
+            .alert("提示", isPresented: $viewModel.showError) {
+                Button("确定", role: .cancel) {}
+            } message: {
+                Text(viewModel.errorMessage)
+            }
         }
     }
 
-    // MARK: - 自适应间距辅助函数
-    private func adaptiveTopSpacing(safeTop: CGFloat) -> CGFloat {
-        return max(safeTop + ScaleFactor.padding(20), ScaleFactor.size(44))
+    // MARK: - 布局常量
+    private func topSpacing(layout: AdaptiveLayout) -> CGFloat {
+        layout.cardInnerPadding * 3
     }
 
-    private func adaptiveBottomSpacing(safeBottom: CGFloat) -> CGFloat {
-        return max(safeBottom + ScaleFactor.padding(24), ScaleFactor.size(40))
+    private func bottomSpacing(layout: AdaptiveLayout) -> CGFloat {
+        layout.cardInnerPadding * 10
     }
 }
 
-// MARK: - 背景视图
-struct LoginBackgroundView: View {
+// MARK: - 治愈系背景视图
+
+struct HealingLoginBackgroundView: View {
+    let layout: AdaptiveLayout
+
     var body: some View {
         ZStack {
+            // 渐变背景
             LinearGradient(
                 colors: [
-                    Color.dynamicColor(
-                        light: PremiumColorTheme.backgroundLight,
-                        dark: PremiumColorTheme.backgroundDark
-                    ),
-                    Color.dynamicColor(
-                        light: Color(red: 0.92, green: 0.95, blue: 0.98),
-                        dark: Color(red: 0.05, green: 0.08, blue: 0.15)
-                    )
+                    HealingColors.warmCream,
+                    HealingColors.softPeach.opacity(0.6),
+                    HealingColors.softSage.opacity(0.3)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
 
             GeometryReader { geo in
-                let size = min(geo.size.width, geo.size.height) * 0.6
+                let size = min(geo.size.width, geo.size.height) * 0.7
 
+                // 左上光晕
                 Circle()
-                    .fill(PremiumColorTheme.current.backgroundGlowColor)
+                    .fill(HealingColors.softSage.opacity(0.12))
                     .frame(width: size, height: size)
+                    .blur(radius: 60)
+                    .offset(x: -geo.size.width * 0.2, y: -geo.size.height * 0.2)
+
+                // 右下光晕
+                Circle()
+                    .fill(HealingColors.mutedCoral.opacity(0.08))
+                    .frame(width: size * 1.3, height: size * 1.3)
                     .blur(radius: 80)
-                    .offset(x: -geo.size.width * 0.2, y: -geo.size.height * 0.15)
+                    .offset(x: geo.size.width * 0.3, y: geo.size.height * 0.3)
+
+                // 装饰性圆点
+                Circle()
+                    .fill(HealingColors.forestMist.opacity(0.05))
+                    .frame(width: layout.decorativeCircleSize * 0.25, height: layout.decorativeCircleSize * 0.25)
+                    .offset(x: geo.size.width * 0.7, y: -geo.size.height * 0.3)
 
                 Circle()
-                    .fill(PremiumColorTheme.current.secondaryGlowColor)
-                    .frame(width: size * 1.2, height: size * 1.2)
-                    .blur(radius: 90)
-                    .offset(x: geo.size.width * 0.3, y: geo.size.height * 0.4)
+                    .fill(HealingColors.dustyBlue.opacity(0.05))
+                    .frame(width: layout.decorativeCircleSize * 0.17, height: layout.decorativeCircleSize * 0.17)
+                    .offset(x: geo.size.width * 0.2, y: geo.size.height * 0.6)
             }
         }
     }
 }
 
-// MARK: - 头部视图
-struct LoginHeaderView: View {
-    @State private var showContent = false
+// MARK: - 治愈系头部视图
 
-    private var logoSize: CGFloat { ScaleFactor.size(90) }
-    private var titleSize: CGFloat { AdaptiveFont.largeTitle }
-    private var subtitleSize: CGFloat { AdaptiveFont.subheadline }
+struct HealingLoginHeaderView: View {
+    @State private var showContent = false
+    let layout: AdaptiveLayout
 
     var body: some View {
-        VStack(spacing: AdaptiveSpacing.item + 4) {
-            LogoView(style: .aiVine, size: logoSize)
+        VStack(spacing: layout.cardSpacing / 2) {
+            // Logo 区域
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [HealingColors.softSage, HealingColors.deepSage],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: logoSize, height: logoSize)
+
+                Image(systemName: "cross.fill")
+                    .font(.system(size: logoSize * 0.4, weight: .light))
+                    .foregroundColor(.white)
+            }
 
             Text("鑫琳医生")
-                .font(.system(size: titleSize, weight: .bold, design: .default))
-                .foregroundColor(PremiumColorTheme.textPrimary)
+                .font(.system(size: layout.titleFontSize, weight: .bold))
+                .foregroundColor(HealingColors.textPrimary)
 
-            Text("智能诊疗助手，随时获取专业建议")
-                .font(.system(size: subtitleSize, weight: .regular, design: .rounded))
-                .foregroundColor(PremiumColorTheme.textSecondary)
+            Text("智能诊疗助手 · 随时获取专业建议")
+                .font(.system(size: layout.captionFontSize + 1))
+                .foregroundColor(HealingColors.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .opacity(showContent ? 1 : 0)
@@ -143,139 +190,210 @@ struct LoginHeaderView: View {
             }
         }
     }
+
+    private var logoSize: CGFloat {
+        layout.iconLargeSize * 2.2
+    }
 }
 
-// MARK: - 登录表单卡片
-struct LoginFormCard: View {
+// MARK: - 治愈系登录表单卡片
+
+struct HealingLoginFormCard: View {
     @ObservedObject var viewModel: LoginViewModel
     var focusedField: FocusState<LoginField?>.Binding
-    let openURL: OpenURLAction
-    let availableWidth: CGFloat
+    let layout: AdaptiveLayout
 
     @State private var showContent = false
 
-    private var cardPadding: CGFloat { ScaleFactor.padding(20) }
-    private var itemSpacing: CGFloat { ScaleFactor.spacing(18) }
-    private var titleSize: CGFloat { AdaptiveFont.title2 }
-
     var body: some View {
-        GlassmorphicCard {
-            VStack(spacing: itemSpacing) {
-                VStack(alignment: .leading, spacing: ScaleFactor.spacing(6)) {
-                    Text("手机号登录")
-                        .font(.system(size: titleSize, weight: .bold, design: .default))
-                        .foregroundColor(PremiumColorTheme.textPrimary)
+        VStack(spacing: layout.cardSpacing) {
+            // 标题
+            VStack(alignment: .leading, spacing: 4) {
+                Text("手机号登录")
+                    .font(.system(size: layout.bodyFontSize + 2, weight: .bold))
+                    .foregroundColor(HealingColors.textPrimary)
 
-                    Text("未注册的手机号将自动创建账号")
-                        .font(.system(size: AdaptiveFont.footnote, weight: .regular, design: .rounded))
-                        .foregroundColor(PremiumColorTheme.textSecondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.bottom, ScaleFactor.padding(4))
-
-                PhoneInputSection(viewModel: viewModel, focusedField: focusedField)
-
-                if viewModel.showCodeSentNotice {
-                    CodeSentNotice(phoneText: viewModel.maskedPhoneText)
-                }
-
-                CodeInputSection(
-                    viewModel: viewModel,
-                    focusedField: focusedField,
-                    availableWidth: availableWidth - cardPadding * 2
-                )
-
-                AgreementSection(
-                    isAgreed: viewModel.isAgreed,
-                    onToggle: viewModel.toggleAgreement,
-                    openURL: openURL
-                )
-
-                PrimaryButton(title: "登录 / 注册", action: viewModel.login)
-                    .padding(.top, ScaleFactor.padding(8))
-                    .disabled(!viewModel.canLogin && !viewModel.isLoading)
-                    .opacity(viewModel.canLogin || viewModel.isLoading ? 1.0 : 0.6)
+                Text("未注册的手机号将自动创建账号")
+                    .font(.system(size: layout.captionFontSize))
+                    .foregroundColor(HealingColors.textSecondary)
             }
-            .padding(.horizontal, cardPadding)
-            .padding(.vertical, cardPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            // 手机号输入
+            HealingPhoneInputSection(
+                viewModel: viewModel,
+                focusedField: focusedField,
+                layout: layout
+            )
+
+            // 验证码已发送提示
+            if viewModel.showCodeSentNotice {
+                HealingCodeSentNotice(
+                    phoneText: viewModel.maskedPhoneText,
+                    layout: layout
+                )
+            }
+
+            // 验证码输入
+            HealingCodeInputSection(
+                viewModel: viewModel,
+                focusedField: focusedField,
+                layout: layout
+            )
+
+            // 协议同意
+            HealingAgreementSection(
+                isAgreed: viewModel.isAgreed,
+                onToggle: viewModel.toggleAgreement,
+                layout: layout
+            )
+
+            // 登录按钮
+            Button(action: viewModel.login) {
+                HStack(spacing: layout.cardSpacing / 2) {
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .tint(.white)
+                            .progressViewStyle(CircularProgressViewStyle())
+                    } else {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: layout.captionFontSize + 2))
+
+                        Text("登录 / 注册")
+                            .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    }
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, layout.cardInnerPadding + 2)
+                .background(
+                    LinearGradient(
+                        colors: [HealingColors.deepSage, HealingColors.forestMist],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(Capsule())
+                .shadow(color: HealingColors.forestMist.opacity(0.3), radius: 8, x: 0, y: 4)
+            }
+            .disabled(!viewModel.canLogin && !viewModel.isLoading)
+            .opacity(viewModel.canLogin || viewModel.isLoading ? 1.0 : 0.6)
         }
+        .padding(layout.cardInnerPadding + 6)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(HealingColors.cardBackground)
+                .shadow(color: Color.black.opacity(0.06), radius: 16, x: 0, y: 6)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(HealingColors.softSage.opacity(0.2), lineWidth: 1)
+        )
         .opacity(showContent ? 1 : 0)
-        .offset(y: showContent ? 0 : ScaleFactor.size(16))
+        .offset(y: showContent ? 0 : 16)
         .onAppear {
             withAnimation(.spring(response: 0.8, dampingFraction: 0.8).delay(0.2)) {
                 showContent = true
             }
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                if focusedField.wrappedValue == .phone {
-                    Button("下一步") { focusedField.wrappedValue = .code }
-                        .font(.system(size: AdaptiveFont.body, weight: .medium))
-                        .foregroundColor(PremiumColorTheme.primaryColor)
-                } else if focusedField.wrappedValue == .code {
-                    Button("完成") { focusedField.wrappedValue = nil }
-                        .font(.system(size: AdaptiveFont.body, weight: .medium))
-                        .foregroundColor(PremiumColorTheme.primaryColor)
-                }
-            }
-        }
     }
 }
 
-// MARK: - 手机号输入区域
-struct PhoneInputSection: View {
+// MARK: - 治愈系手机号输入区域
+
+struct HealingPhoneInputSection: View {
     @ObservedObject var viewModel: LoginViewModel
     var focusedField: FocusState<LoginField?>.Binding
+    let layout: AdaptiveLayout
 
     var body: some View {
-        PhoneNumberTextField(
-            phoneNumber: $viewModel.phoneNumber,
-            displayNumber: $viewModel.displayPhoneNumber,
-            isFocused: focusedField.wrappedValue == .phone,
-            onComplete: {
-                focusedField.wrappedValue = .code
-                viewModel.onPhoneComplete()
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Image(systemName: "phone.fill")
+                    .font(.system(size: layout.captionFontSize))
+                    .foregroundColor(HealingColors.textSecondary)
+
+                Text("手机号码")
+                    .font(.system(size: layout.captionFontSize + 1))
+                    .foregroundColor(HealingColors.textSecondary)
             }
-        )
-        .onChangeCompat(of: viewModel.displayPhoneNumber) { newValue in
-            viewModel.handlePhoneInput(newValue)
+
+            HStack {
+                PhoneNumberTextField(
+                    phoneNumber: $viewModel.phoneNumber,
+                    displayNumber: $viewModel.displayPhoneNumber,
+                    isFocused: focusedField.wrappedValue == .phone,
+                    onPhoneChange: { phone, display in
+                        viewModel.handlePhoneInput(display)
+                    },
+                    onComplete: {
+                        focusedField.wrappedValue = .code
+                        viewModel.onPhoneComplete()
+                    }
+                )
+            }
+            .padding(.horizontal, layout.cardInnerPadding)
+            .padding(.vertical, layout.cardInnerPadding - 2)
+            .background(HealingColors.warmCream.opacity(0.5))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 }
 
-// MARK: - 验证码已发送提示
-struct CodeSentNotice: View {
+// MARK: - 治愈系验证码已发送提示
+
+struct HealingCodeSentNotice: View {
     let phoneText: String
+    let layout: AdaptiveLayout
 
     var body: some View {
-        HStack(spacing: ScaleFactor.spacing(6)) {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(PremiumColorTheme.primaryColor)
-                .font(.system(size: AdaptiveFont.subheadline))
+        HStack(spacing: layout.cardSpacing / 2) {
+            ZStack {
+                Circle()
+                    .fill(HealingColors.forestMist.opacity(0.15))
+                    .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
+
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: layout.captionFontSize))
+                    .foregroundColor(HealingColors.forestMist)
+            }
+
             Text("验证码已发送至 \(phoneText)")
-                .font(.system(size: AdaptiveFont.footnote))
-                .foregroundColor(PremiumColorTheme.textSecondary)
+                .font(.system(size: layout.captionFontSize))
+                .foregroundColor(HealingColors.textSecondary)
+
             Spacer()
         }
+        .padding(layout.cardInnerPadding)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(HealingColors.forestMist.opacity(0.1))
+        )
         .transition(.move(edge: .top).combined(with: .opacity))
     }
 }
 
-// MARK: - 验证码输入区域
-struct CodeInputSection: View {
+// MARK: - 治愈系验证码输入区域
+
+struct HealingCodeInputSection: View {
     @ObservedObject var viewModel: LoginViewModel
     var focusedField: FocusState<LoginField?>.Binding
-    let availableWidth: CGFloat
+    let layout: AdaptiveLayout
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AdaptiveSpacing.item) {
+        VStack(alignment: .leading, spacing: layout.cardSpacing / 2) {
             HStack {
+                Image(systemName: "key.fill")
+                    .font(.system(size: layout.captionFontSize))
+                    .foregroundColor(HealingColors.textSecondary)
+
                 Text("验证码")
-                    .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(PremiumColorTheme.textSecondary)
+                    .font(.system(size: layout.captionFontSize + 1))
+                    .foregroundColor(HealingColors.textSecondary)
+
                 Spacer()
-                SendCodeButton(viewModel: viewModel)
+
+                HealingSendCodeButton(viewModel: viewModel, layout: layout)
             }
 
             VerificationCodeInput(
@@ -286,33 +404,28 @@ struct CodeInputSection: View {
                     viewModel.onCodeComplete()
                 },
                 style: VerificationCodeStyle(
-                    baseFill: Color.dynamicColor(
-                        light: Color.white.opacity(0.65),
-                        dark: Color(red: 0.18, green: 0.18, blue: 0.22).opacity(0.85)
-                    ),
-                    emptyBorder: Color.white.opacity(0.25),
-                    activeBorder: PremiumColorTheme.primaryColor,
-                    filledBorder: PremiumColorTheme.primaryColor.opacity(0.55),
-                    successBorder: PremiumColorTheme.successColor,
-                    textColor: PremiumColorTheme.textPrimary
+                    baseFill: HealingColors.warmCream.opacity(0.6),
+                    emptyBorder: HealingColors.softSage.opacity(0.3),
+                    activeBorder: HealingColors.forestMist,
+                    filledBorder: HealingColors.forestMist.opacity(0.6),
+                    successBorder: HealingColors.forestMist,
+                    textColor: HealingColors.textPrimary
                 ),
                 isExternallyFocused: focusedField.wrappedValue == .code
             )
-            .frame(maxWidth: .infinity)
         }
     }
 }
 
-// MARK: - 发送验证码按钮
-struct SendCodeButton: View {
+// MARK: - 治愈系发送验证码按钮
+
+struct HealingSendCodeButton: View {
     @ObservedObject var viewModel: LoginViewModel
+    let layout: AdaptiveLayout
 
     private var isDisabled: Bool { !viewModel.canSendCode }
     private var buttonColor: Color {
-        isDisabled ? PremiumColorTheme.textTertiary : PremiumColorTheme.primaryColor
-    }
-    private var backgroundColor: Color {
-        isDisabled ? PremiumColorTheme.textTertiary.opacity(0.1) : PremiumColorTheme.primaryColor.opacity(0.18)
+        isDisabled ? HealingColors.textTertiary : HealingColors.forestMist
     }
 
     var body: some View {
@@ -322,127 +435,140 @@ struct SendCodeButton: View {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: buttonColor))
                         .scaleEffect(0.8)
-                        .frame(width: 16, height: 16)
+                        .frame(width: layout.iconSmallSize / 2, height: layout.iconSmallSize / 2)
                 } else if viewModel.countdown > 0 {
                     ZStack {
                         Circle()
-                            .stroke(buttonColor.opacity(0.3), lineWidth: 2)
-                            .frame(width: ScaleFactor.size(16), height: ScaleFactor.size(16))
+                            .stroke(buttonColor.opacity(0.2), lineWidth: 2)
+                            .frame(width: layout.iconSmallSize - 4, height: layout.iconSmallSize - 4)
+
                         Circle()
                             .trim(from: 0, to: CGFloat(viewModel.countdown) / 60.0)
-                            .stroke(buttonColor, lineWidth: 2)
-                            .frame(width: ScaleFactor.size(16), height: ScaleFactor.size(16))
+                            .stroke(
+                                LinearGradient(
+                                    colors: [HealingColors.deepSage, HealingColors.forestMist],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                style: StrokeStyle(lineWidth: 2, lineCap: .round)
+                            )
+                            .frame(width: layout.iconSmallSize - 4, height: layout.iconSmallSize - 4)
                             .rotationEffect(.degrees(-90))
+                            .animation(.linear(duration: 1).repeatForever(autoreverses: false), value: UUID())
                     }
                 }
+
                 Text(viewModel.codeButtonText)
-                    .font(.system(size: AdaptiveFont.subheadline, weight: .medium, design: .rounded))
+                    .font(.system(size: layout.captionFontSize, weight: .medium))
                     .foregroundColor(buttonColor)
             }
-            .padding(.horizontal, ScaleFactor.padding(12))
-            .padding(.vertical, ScaleFactor.padding(8))
-            .background(
-                RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall, style: .continuous)
-                    .fill(backgroundColor)
-            )
         }
         .disabled(isDisabled)
-        .animation(.easeInOut(duration: 0.2), value: isDisabled)
     }
 }
 
-// MARK: - 协议同意区域
-struct AgreementSection: View {
+// MARK: - 治愈系协议同意区域
+
+struct HealingAgreementSection: View {
     let isAgreed: Bool
     let onToggle: () -> Void
-    let openURL: OpenURLAction
+    let layout: AdaptiveLayout
 
     var body: some View {
         Button(action: onToggle) {
-            HStack(alignment: .center, spacing: ScaleFactor.spacing(10)) {
-                Image(systemName: isAgreed ? "checkmark.square.fill" : "square")
-                    .font(.system(size: AdaptiveFont.title2))
-                    .foregroundColor(isAgreed ? PremiumColorTheme.primaryColor : PremiumColorTheme.textSecondary)
+            HStack(alignment: .center, spacing: 8) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(isAgreed ? HealingColors.forestMist : HealingColors.warmSand.opacity(0.5))
+                        .frame(width: layout.captionFontSize + 8, height: layout.captionFontSize + 8)
 
-                VStack(alignment: .leading, spacing: ScaleFactor.spacing(2)) {
+                    Image(systemName: isAgreed ? "checkmark" : "")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
                     Text("同意并遵守以下条款")
-                        .font(.system(size: AdaptiveFont.footnote))
-                        .foregroundColor(PremiumColorTheme.textSecondary)
-                    HStack(spacing: ScaleFactor.spacing(6)) {
-                        AgreementLink(title: "《用户协议》", type: .terms, openURL: openURL)
-                        AgreementLink(title: "《隐私政策》", type: .privacy, openURL: openURL)
+                        .font(.system(size: 12))
+                        .foregroundColor(HealingColors.textSecondary)
+
+                    HStack(spacing: 4) {
+                        HealingAgreementLink(title: "《用户协议》", url: "terms")
+                        Text("·")
+                            .foregroundColor(HealingColors.textTertiary)
+                        HealingAgreementLink(title: "《隐私政策》", url: "privacy")
                     }
                 }
-                .font(.system(size: AdaptiveFont.footnote, weight: .regular, design: .rounded))
                 Spacer()
             }
         }
         .buttonStyle(.plain)
-        .padding(.top, AdaptiveSpacing.item)
-        .contentShape(Rectangle())
+        .padding(.top, 8)
     }
 }
 
-// MARK: - 协议链接
-struct AgreementLink: View {
+// MARK: - 治愈系协议链接
+
+struct HealingAgreementLink: View {
     let title: String
-    let type: AgreementLinkType
-    let openURL: OpenURLAction
+    let url: String
 
     var body: some View {
-        Button(action: { if let url = type.url { openURL(url) } }) {
+        Link(destination: URL(string: url) ?? URL(string: "https://xinlinyisheng.com")!) {
             Text(title)
-                .font(.system(size: AdaptiveFont.footnote, weight: .medium))
-                .foregroundColor(PremiumColorTheme.secondaryColor)
-                .underline()
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-enum AgreementLinkType {
-    case terms, privacy
-    var url: URL? {
-        switch self {
-        case .terms: return URL(string: AppURLConstants.termsOfServiceURL)
-        case .privacy: return URL(string: AppURLConstants.privacyPolicyURL)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(HealingColors.forestMist)
+                .underline(true, color: HealingColors.forestMist)
         }
     }
 }
 
-// MARK: - App URL Constants
-enum AppURLConstants {
-    // TODO: 替换为正式的协议链接
-    static let termsOfServiceURL = "https://xinlinyisheng.com/terms"
-    static let privacyPolicyURL = "https://xinlinyisheng.com/privacy"
-    static let helpCenterURL = "https://xinlingyisheng.com/help"
-    static let feedbackURL = "https://xinlinyisheng.com/feedback"
-}
+// MARK: - 治愈系加载遮罩
 
-// MARK: - 加载遮罩
-struct LoadingOverlay: View {
+struct HealingLoadingOverlay: View {
+    let layout: AdaptiveLayout
+
     var body: some View {
         ZStack {
             Color.black.opacity(0.3)
                 .ignoresSafeArea()
 
-            VStack(spacing: ScaleFactor.spacing(16)) {
-                ProgressView()
-                    .scaleEffect(1.5)
-                    .tint(.white)
+            VStack(spacing: layout.cardSpacing) {
+                ZStack {
+                    Circle()
+                        .stroke(HealingColors.forestMist.opacity(0.3), lineWidth: 3)
+                        .frame(width: layout.iconLargeSize * 1.5, height: layout.iconLargeSize * 1.5)
+
+                    Circle()
+                        .trim(from: 0, to: 0.7)
+                        .stroke(
+                            LinearGradient(
+                                colors: [HealingColors.deepSage, HealingColors.forestMist],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                        )
+                        .frame(width: layout.iconLargeSize * 1.5, height: layout.iconLargeSize * 1.5)
+                        .rotationEffect(.degrees(360))
+                        .animation(.linear(duration: 1).repeatForever(autoreverses: false), value: UUID())
+                }
+
                 Text("登录中...")
-                    .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
+                    .font(.system(size: layout.captionFontSize + 1))
                     .foregroundColor(.white)
             }
-            .padding(ScaleFactor.padding(32))
+            .padding(layout.cardInnerPadding * 4)
             .background(
-                RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadius, style: .continuous)
-                    .fill(Color.black.opacity(0.6))
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color.black.opacity(0.7))
             )
         }
         .transition(.opacity)
     }
 }
+
+// MARK: - Preview
 
 #Preview {
     LoginView()

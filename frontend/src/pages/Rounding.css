@@ -1,0 +1,395 @@
+/* ============================================
+   远程查房页面样式 - 医疗监控看板风格
+   ============================================ */
+
+.rounding-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a0e1a 0%, #0f1729 100%);
+  padding: 24px;
+  color: #f1f5f9;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+/* ============================================
+   Header
+   ============================================ */
+
+.rounding-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.rounding-title {
+  color: #f1f5f9;
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.rounding-subtitle {
+  color: #64748b;
+  font-size: 14px;
+  margin: 4px 0 0 0;
+}
+
+/* ============================================
+   Stats Bar
+   ============================================ */
+
+.stats-bar {
+  display: flex;
+  gap: 24px;
+  padding: 16px 20px;
+  background: rgba(17, 24, 39, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f1f5f9;
+  font-size: 18px;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.stat-value {
+  color: #f1f5f9;
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+}
+
+/* ============================================
+   Filter Bar
+   ============================================ */
+
+.filter-bar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.search-input .ant-input {
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #f1f5f9;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 14px;
+}
+
+.search-input .ant-input::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+.search-input .ant-input:hover,
+.search-input .ant-input:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.filter-select .ant-select-selector {
+  background: rgba(17, 24, 39, 0.8) !important;
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  color: #f1f5f9 !important;
+  border-radius: 12px !important;
+  padding: 8px 16px !important;
+}
+
+.filter-select .ant-select-selection-item {
+  color: #f1f5f9;
+}
+
+.filter-select .ant-select-arrow {
+  color: #64748b;
+}
+
+/* ============================================
+   Patient Grid
+   ============================================ */
+
+.patient-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .patient-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
+   Patient Card
+   ============================================ */
+
+.patient-card {
+  background: linear-gradient(145deg, rgba(17, 24, 39, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.patient-card .ant-card-body {
+  padding: 20px;
+}
+
+/* 状态条 */
+.patient-card-status-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.patient-card-status-bar-success {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.patient-card-status-bar-warning {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.patient-card-status-bar-danger {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+/* 卡片边框颜色 */
+.patient-card-success {
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.patient-card-warning {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.patient-card-danger {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* 卡片悬停效果 */
+.patient-card:hover {
+  transform: translateY(-4px);
+}
+
+.patient-card-success:hover {
+  box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.patient-card-warning:hover {
+  box-shadow: 0 20px 40px -10px rgba(245, 158, 11, 0.3);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.patient-card-danger:hover {
+  box-shadow: 0 20px 40px -10px rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+/* 卡片头部 */
+.patient-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.patient-avatar {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  flex-shrink: 0;
+}
+
+.patient-info {
+  flex: 1;
+}
+
+.patient-name {
+  color: #f1f5f9;
+  font-size: 16px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.last-seen {
+  color: #64748b;
+  font-size: 12px;
+}
+
+/* 状态区域 */
+.patient-status-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.completion-percent {
+  font-family: 'SF Mono', 'Monaco', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+/* 进度条 */
+.progress-wrapper {
+  margin-bottom: 12px;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(30, 41, 59, 0.8);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease-out;
+}
+
+.progress-bar-fill-success {
+  background: #10b981;
+}
+
+.progress-bar-fill-warning {
+  background: #f59e0b;
+}
+
+.progress-bar-fill-danger {
+  background: #ef4444;
+}
+
+/* 进度底部 */
+.progress-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.completion-rate {
+  font-family: 'SF Mono', 'Monaco', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+/* 警告徽章 */
+.alert-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.alert-badge-success {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.alert-badge-warning {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.alert-badge-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+  }
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+
+.rounding-page .ant-empty-description {
+  color: #64748b;
+}
+
+/* ============================================
+   Spin
+   ============================================ */
+
+.rounding-page .ant-spin-text {
+  color: #64748b;
+}
+
+.rounding-page .ant-spin-dot-item {
+  background-color: #3b82f6;
+}

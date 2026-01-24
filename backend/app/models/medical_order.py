@@ -6,6 +6,7 @@
 - TaskInstance: 任务实例表
 - CompletionRecord: 打卡记录表
 - FamilyBond: 患者家属关系表
+- Alert: 预警记录表
 """
 import enum
 from datetime import date, datetime, time
@@ -168,3 +169,57 @@ class FamilyBond(Base):
     # 关系
     patient = relationship("User", foreign_keys=[patient_id])
     family_member = relationship("User", foreign_keys=[family_member_id])
+
+
+class AlertType(str, enum.Enum):
+    """预警类型"""
+    GLUCOSE_LOW = "glucose_low"           # 低血糖
+    GLUCOSE_HIGH = "glucose_high"         # 高血糖
+    BLOOD_PRESSURE_HIGH = "bp_high"       # 高血压
+    TEMPERATURE_HIGH = "temp_high"       # 发烧
+    TASK_OVERDUE = "task_overdue"         # 任务超时
+    COMPLIANCE_LOW = "compliance_low"     # 依从性低
+
+
+class AlertSeverity(str, enum.Enum):
+    """预警级别"""
+    INFO = "info"       # 提醒
+    WARNING = "warning" # 警告
+    CRITICAL = "critical"  # 紧急
+
+
+class Alert(Base):
+    """预警记录表"""
+    __tablename__ = "alerts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # 预警信息
+    alert_type = Column(SQLEnum(AlertType), nullable=False, index=True)
+    severity = Column(SQLEnum(AlertSeverity), nullable=False, index=True)
+    title = Column(String(200), nullable=False)
+    message = Column(Text, nullable=False)
+
+    # 关联数据
+    task_instance_id = Column(Integer, ForeignKey("task_instances.id"), nullable=True)
+    completion_record_id = Column(Integer, ForeignKey("completion_records.id"), nullable=True)
+
+    # 数值数据（用于记录触发预警的原始值）
+    value_data = Column(JSON, nullable=True, default=dict)
+
+    # 状态
+    is_acknowledged = Column(Boolean, default=False)  # 是否已确认
+    acknowledged_at = Column(DateTime(timezone=True), nullable=True)
+
+    # 通知状态
+    notification_sent = Column(Boolean, default=False)
+    notification_sent_at = Column(DateTime(timezone=True), nullable=True)
+
+    # 时间戳
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # 关系
+    patient = relationship("User", foreign_keys=[patient_id])
+    task_instance = relationship("TaskInstance")
+    completion_record = relationship("CompletionRecord")

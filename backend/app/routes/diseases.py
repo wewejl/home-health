@@ -1,9 +1,16 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 from typing import List, Optional
 from ..database import get_db
-from ..schemas.disease import DiseaseListResponse, DiseaseDetailResponse, DiseaseSearchResponse
+from ..schemas.disease import (
+    DiseaseListResponse,
+    DiseaseDetailResponse,
+    DiseaseSearchResponse,
+    MedLiveDiseaseResponse,
+    DiseaseSection,
+    DiseaseSectionItem
+)
 from ..models.disease import Disease
 from ..models.department import Department
 
@@ -29,7 +36,6 @@ def _to_detail_response(disease: Disease) -> DiseaseDetailResponse:
         id=disease.id,
         name=disease.name,
         pinyin=disease.pinyin,
-        aliases=disease.aliases,
         department_id=disease.department_id,
         department_name=disease.department.name if disease.department else None,
         recommended_department=disease.recommended_department,
@@ -47,6 +53,42 @@ def _to_detail_response(disease: Disease) -> DiseaseDetailResponse:
         is_hot=disease.is_hot,
         view_count=disease.view_count,
         updated_at=disease.updated_at
+    )
+
+
+def _to_medlive_response(disease: Disease) -> MedLiveDiseaseResponse:
+    """转换疾病模型为 MedLive 格式响应"""
+    sections_data = disease.sections or []
+
+    # 转换 sections 数据为 Pydantic 模型
+    sections = [
+        DiseaseSection(
+            id=s.get("id", ""),
+            title=s.get("title", ""),
+            icon=s.get("icon", ""),
+            content=s.get("content"),
+            items=[
+                DiseaseSectionItem(
+                    id=item.get("id", ""),
+                    title=item.get("title"),
+                    content=item.get("content", ""),
+                    level=item.get("level", 0)
+                )
+                for item in (s.get("items") or [])
+            ] if s.get("items") else None
+        )
+        for s in sections_data
+    ]
+
+    return MedLiveDiseaseResponse(
+        id=disease.id,
+        name=disease.name,
+        department=disease.recommended_department or (
+            disease.department.name if disease.department else None
+        ),
+        source=disease.source or "医脉通",
+        url=disease.url,
+        sections=sections
     )
 
 
@@ -76,16 +118,15 @@ def search_diseases(
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db)
 ):
-    """搜索疾病（支持拼音、同义词、模糊匹配）"""
+    """搜索疾病（支持拼音、模糊匹配）"""
     query = db.query(Disease).filter(Disease.is_active == True)
-    
-    # 构建搜索条件：名称、拼音、拼音缩写、同义词
+
+    # 构建搜索条件：名称、拼音、拼音缩写
     search_pattern = f"%{q}%"
     search_conditions = or_(
         Disease.name.ilike(search_pattern),
         Disease.pinyin.ilike(search_pattern),
-        Disease.pinyin_abbr.ilike(search_pattern),
-        Disease.aliases.ilike(search_pattern)
+        Disease.pinyin_abbr.ilike(search_pattern)
     )
     query = query.filter(search_conditions)
     
@@ -124,49 +165,40 @@ def get_hot_diseases(
 
 
 @router.get("/departments-with-diseases")
-def get_departments_with_diseases(db: Session = Depends(get_db)):
-    """获取所有科室及其热门疾病（用于疾病目录页左侧科室列表）"""
+def get_departments_with_diseases(
+    db: Session = Depends(get_db),
+    limit: int = Query(100, description="每个科室最多返回的疾病数量，默认100（设为0返回所有）")
+):
+    """获取所有科室及其疾病列表（问疾病页面使用，返回所有科室）"""
     departments = db.query(Department).order_by(Department.sort_order).all()
-    
+
     result = []
     for dept in departments:
-        # 先获取热门疾病
-        hot_query = db.query(Disease).filter(
+        # 获取该科室下的所有疾病，按浏览量排序
+        diseases_query = db.query(Disease).filter(
             Disease.department_id == dept.id,
-            Disease.is_active == True,
-            Disease.is_hot == True
-        ).order_by(Disease.view_count.desc(), Disease.sort_order)
-        hot_diseases = hot_query.limit(10).all()
-        
-        # 如果热门疾病不足，补充该科室下的其他疾病，避免前端空白
-        if len(hot_diseases) < 10:
-            existing_ids = [d.id for d in hot_diseases]
-            fallback_query = db.query(Disease).filter(
-                Disease.department_id == dept.id,
-                Disease.is_active == True
-            )
-            if existing_ids:
-                fallback_query = fallback_query.filter(~Disease.id.in_(existing_ids))
-            fallback_diseases = fallback_query.order_by(
-                Disease.view_count.desc(),
-                Disease.sort_order
-            ).limit(10 - len(hot_diseases)).all()
-            hot_diseases.extend(fallback_diseases)
-        
+            Disease.is_active == True
+        ).order_by(Disease.is_hot.desc(), Disease.view_count.desc(), Disease.sort_order)
+
+        if limit > 0:
+            diseases_query = diseases_query.limit(limit)
+
+        diseases = diseases_query.all()
+
         # 获取该科室下的疾病总数
         disease_count = db.query(Disease).filter(
             Disease.department_id == dept.id,
             Disease.is_active == True
         ).count()
-        
+
         result.append({
             "id": dept.id,
             "name": dept.name,
             "icon": dept.icon,
             "disease_count": disease_count,
-            "hot_diseases": [_to_list_response(d) for d in hot_diseases]
+            "hot_diseases": [_to_list_response(d) for d in diseases]
         })
-    
+
     return result
 
 
@@ -177,14 +209,50 @@ def get_disease_detail(disease_id: int, db: Session = Depends(get_db)):
         Disease.id == disease_id,
         Disease.is_active == True
     ).first()
-    
+
     if not disease:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="疾病不存在")
-    
+
     # 增加浏览次数
     disease.view_count += 1
     db.commit()
     db.refresh(disease)
-    
+
     return _to_detail_response(disease)
+
+
+@router.get("/{disease_id}/medlive", response_model=MedLiveDiseaseResponse)
+def get_disease_detail_medlive(disease_id: int, db: Session = Depends(get_db)):
+    """获取疾病详情（MedLive 格式，包含 sections）"""
+    disease = db.query(Disease).filter(
+        Disease.id == disease_id,
+        Disease.is_active == True
+    ).first()
+
+    if not disease:
+        raise HTTPException(status_code=404, detail="疾病不存在")
+
+    # 如果没有 sections 数据，返回错误
+    if not disease.sections:
+        raise HTTPException(status_code=404, detail="该疾病暂无 MedLive 格式数据")
+
+    # 增加浏览次数
+    disease.view_count += 1
+    db.commit()
+    db.refresh(disease)
+
+    return _to_medlive_response(disease)
+
+
+@router.get("/wiki-id/{wiki_id}", response_model=MedLiveDiseaseResponse)
+def get_disease_by_wiki_id(wiki_id: str, db: Session = Depends(get_db)):
+    """通过医脉通 wiki_id 获取疾病详情（MedLive 格式）"""
+    disease = db.query(Disease).filter(
+        Disease.wiki_id == wiki_id,
+        Disease.is_active == True
+    ).first()
+
+    if not disease:
+        raise HTTPException(status_code=404, detail=f"wiki_id={wiki_id} 的疾病不存在")
+
+    return _to_medlive_response(disease)

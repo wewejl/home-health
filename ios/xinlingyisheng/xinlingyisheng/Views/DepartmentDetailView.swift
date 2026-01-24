@@ -1,89 +1,128 @@
 import SwiftUI
 
-// MARK: - 科室详情页（医生列表）
+// MARK: - 科室详情页（治愈系风格）
 struct DepartmentDetailView: View {
     @Environment(\.dismiss) private var dismiss
     let departmentName: String
     let departmentId: Int?
-    
+
     @State private var searchText = ""
     @State private var selectedSortIndex = 0
     @State private var selectedRegion = "全国"
     @State private var selectedDoctor: DoctorInfo?
-    
+
     // 数据加载状态
     @State private var doctors: [DoctorInfo] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var showError = false
-    
+
     // 支持仅传入 departmentName 的初始化（向后兼容）
     init(departmentName: String, departmentId: Int? = nil) {
         self.departmentName = departmentName
         self.departmentId = departmentId
     }
-    
+
     var body: some View {
-        ZStack(alignment: .top) {
-            DXYColors.background
-                .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
-                // 导航栏
-                DepartmentNavBar(title: departmentName, dismiss: dismiss)
-                
-                if isLoading {
-                    Spacer()
-                    ProgressView("加载中...")
-                        .progressViewStyle(CircularProgressViewStyle())
-                    Spacer()
-                } else if doctors.isEmpty {
-                    Spacer()
-                    VStack(spacing: ScaleFactor.spacing(12)) {
-                        Image(systemName: "person.2.slash")
-                            .font(.system(size: AdaptiveFont.custom(48)))
-                            .foregroundColor(DXYColors.textTertiary)
-                        Text("暂无医生数据")
-                            .font(.system(size: AdaptiveFont.body))
-                            .foregroundColor(DXYColors.textSecondary)
-                        if departmentId != nil {
-                            Button("点击重试") {
-                                loadDoctors()
-                            }
-                            .foregroundColor(DXYColors.primaryPurple)
+        GeometryReader { geometry in
+            let layout = AdaptiveLayout(screenWidth: geometry.size.width)
+
+            ZStack(alignment: .top) {
+                // 治愈系背景
+                HealingDepartmentBackground(layout: layout)
+
+                VStack(spacing: 0) {
+                    // 导航栏
+                    HealingDepartmentNavBar(
+                        title: departmentName,
+                        dismiss: dismiss,
+                        layout: layout
+                    )
+
+                    if isLoading {
+                        Spacer()
+                        VStack(spacing: layout.cardSpacing) {
+                            ProgressView()
+                                .tint(HealingColors.forestMist)
+                                .scaleEffect(1.2)
+                            Text("加载医生中...")
+                                .font(.system(size: layout.captionFontSize + 1))
+                                .foregroundColor(HealingColors.textSecondary)
                         }
-                    }
-                    Spacer()
-                } else {
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 16) {
-                            // 搜索框
-                            DepartmentSearchBar(searchText: $searchText)
-                            
-                            // 筛选栏
-                            FilterBarView()
-                            
-                            // 快捷筛选标签
-                            QuickFilterTagsView()
-                            
-                            // 医生列表
-                            LazyVStack(spacing: 0) {
-                                ForEach(filteredDoctors) { doctor in
-                                    DoctorCardView(doctor: doctor, onAskDoctor: {
-                                        selectedDoctor = doctor
-                                    })
-                                    
-                                    if doctor.id != filteredDoctors.last?.id {
-                                        Divider()
-                                            .padding(.horizontal, 16)
+                        Spacer()
+                    } else if doctors.isEmpty {
+                        Spacer()
+                        VStack(spacing: layout.cardSpacing) {
+                            ZStack {
+                                Circle()
+                                    .fill(HealingColors.forestMist.opacity(0.1))
+                                    .frame(width: layout.iconLargeSize * 2, height: layout.iconLargeSize * 2)
+
+                                Image(systemName: "person.2.slash")
+                                    .font(.system(size: layout.titleFontSize, weight: .light))
+                                    .foregroundColor(HealingColors.forestMist.opacity(0.6))
+                            }
+
+                            Text("暂无医生数据")
+                                .font(.system(size: layout.bodyFontSize))
+                                .foregroundColor(HealingColors.textSecondary)
+
+                            if departmentId != nil {
+                                Button(action: { loadDoctors() }) {
+                                    HStack(spacing: layout.cardSpacing / 2) {
+                                        Image(systemName: "arrow.clockwise")
+                                            .font(.system(size: layout.captionFontSize))
+                                        Text("点击重试")
+                                            .font(.system(size: layout.captionFontSize + 1, weight: .medium))
                                     }
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, layout.cardInnerPadding + 4)
+                                    .padding(.vertical, layout.cardInnerPadding - 2)
+                                    .background(
+                                        LinearGradient(
+                                            colors: [HealingColors.deepSage, HealingColors.forestMist],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .clipShape(Capsule())
                                 }
                             }
-                            .background(DXYColors.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: LayoutConstants.cornerRadius, style: .continuous))
                         }
-                        .padding(.horizontal, LayoutConstants.horizontalPadding)
-                        .padding(.bottom, adaptiveBottomPadding)
+                        Spacer()
+                    } else {
+                        ScrollView(.vertical, showsIndicators: false) {
+                            VStack(spacing: layout.cardSpacing) {
+                                // 搜索框
+                                HealingDepartmentSearchBar(
+                                    searchText: $searchText,
+                                    layout: layout
+                                )
+
+                                // 筛选栏
+                                HealingFilterBarView(layout: layout)
+
+                                // 快捷筛选标签
+                                HealingQuickFilterTagsView(layout: layout)
+
+                                // 医生列表
+                                LazyVStack(spacing: layout.cardSpacing / 2) {
+                                    ForEach(filteredDoctors) { doctor in
+                                        HealingDoctorCardView(
+                                            doctor: doctor,
+                                            layout: layout,
+                                            onAskDoctor: {
+                                                selectedDoctor = doctor
+                                            }
+                                        )
+                                        .fluidFadeIn(delay: 0.05)
+                                    }
+                                }
+                                .padding(.top, layout.cardSpacing / 2)
+                            }
+                            .padding(.horizontal, layout.horizontalPadding)
+                            .padding(.bottom, adaptiveBottomPadding(layout: layout))
+                        }
                     }
                 }
             }
@@ -102,19 +141,17 @@ struct DepartmentDetailView: View {
             loadDoctors()
         }
         .alert("提示", isPresented: $showError) {
-            Button("重试") {
-                loadDoctors()
-            }
+            Button("重试") { loadDoctors() }
             Button("取消", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "加载失败")
         }
     }
-    
-    private var adaptiveBottomPadding: CGFloat {
-        ScaleFactor.padding(40)
+
+    private func adaptiveBottomPadding(layout: AdaptiveLayout) -> CGFloat {
+        layout.cardInnerPadding * 8
     }
-    
+
     // 搜索过滤
     private var filteredDoctors: [DoctorInfo] {
         if searchText.isEmpty {
@@ -126,19 +163,18 @@ struct DepartmentDetailView: View {
             doctor.specialty.contains(searchText)
         }
     }
-    
+
     // 加载医生数据
     private func loadDoctors() {
-        // 如果没有 departmentId，显示错误信息
         guard let deptId = departmentId else {
             errorMessage = "科室ID缺失，无法加载医生数据"
             showError = true
             return
         }
-        
+
         isLoading = true
         errorMessage = nil
-        
+
         Task {
             do {
                 let doctorModels = try await APIService.shared.getDoctors(departmentId: deptId)
@@ -167,16 +203,478 @@ struct DepartmentDetailView: View {
     }
 }
 
+// MARK: - 治愈系科室背景
+struct HealingDepartmentBackground: View {
+    let layout: AdaptiveLayout
+
+    var body: some View {
+        ZStack {
+            // 渐变背景
+            LinearGradient(
+                colors: [
+                    HealingColors.warmCream,
+                    HealingColors.softPeach.opacity(0.5),
+                    HealingColors.warmSand.opacity(0.3)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            GeometryReader { geo in
+                // 右上角光晕
+                Circle()
+                    .fill(HealingColors.softSage.opacity(0.08))
+                    .frame(width: layout.decorativeCircleSize * 0.5, height: layout.decorativeCircleSize * 0.5)
+                    .offset(x: geo.size.width * 0.4, y: -geo.size.height * 0.15)
+                    .ignoresSafeArea()
+
+                // 左下角光晕
+                Circle()
+                    .fill(HealingColors.mutedCoral.opacity(0.04))
+                    .frame(width: layout.decorativeCircleSize * 0.35, height: layout.decorativeCircleSize * 0.35)
+                    .offset(x: -geo.size.width * 0.25, y: geo.size.height * 0.35)
+                    .ignoresSafeArea()
+            }
+        }
+    }
+}
+
+// MARK: - 治愈系科室导航栏
+struct HealingDepartmentNavBar: View {
+    let title: String
+    let dismiss: DismissAction
+    let layout: AdaptiveLayout
+
+    var body: some View {
+        HStack {
+            Button(action: { dismiss() }) {
+                ZStack {
+                    Circle()
+                        .fill(HealingColors.cardBackground)
+                        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: layout.captionFontSize + 2, weight: .medium))
+                        .foregroundColor(HealingColors.textPrimary)
+                }
+                .frame(width: layout.iconSmallSize + 8, height: layout.iconSmallSize + 8)
+            }
+
+            Spacer()
+
+            Text(title)
+                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                .foregroundColor(HealingColors.textPrimary)
+
+            Spacer()
+
+            Button(action: {}) {
+                ZStack {
+                    Circle()
+                        .fill(HealingColors.cardBackground)
+                        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+
+                    Image(systemName: "square.and.pencil")
+                        .font(.system(size: layout.captionFontSize + 1))
+                        .foregroundColor(HealingColors.textSecondary)
+                }
+                .frame(width: layout.iconSmallSize + 8, height: layout.iconSmallSize + 8)
+            }
+        }
+        .padding(.horizontal, layout.horizontalPadding)
+        .padding(.vertical, layout.cardInnerPadding)
+        .background(HealingColors.cardBackground.opacity(0.8))
+        .background(
+            Rectangle()
+                .fill(HealingColors.cardBackground.opacity(0.8))
+                .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 2)
+        )
+    }
+}
+
+// MARK: - 治愈系搜索框
+struct HealingDepartmentSearchBar: View {
+    @Binding var searchText: String
+    let layout: AdaptiveLayout
+
+    var body: some View {
+        HStack(spacing: layout.cardSpacing / 2) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: layout.bodyFontSize - 2))
+                .foregroundColor(HealingColors.textTertiary)
+
+            TextField("搜索医生 / 医院 / 擅长疾病", text: $searchText)
+                .font(.system(size: layout.bodyFontSize - 2))
+                .foregroundColor(HealingColors.textPrimary)
+
+            if !searchText.isEmpty {
+                Button(action: { searchText = "" }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: layout.captionFontSize + 2))
+                        .foregroundColor(HealingColors.textTertiary)
+                }
+            }
+        }
+        .padding(.horizontal, layout.cardInnerPadding)
+        .padding(.vertical, layout.cardInnerPadding - 2)
+        .background(HealingColors.warmCream.opacity(0.6))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(HealingColors.softSage.opacity(0.2), lineWidth: 1)
+        )
+    }
+}
+
+// MARK: - 治愈系筛选栏
+struct HealingFilterBarView: View {
+    let layout: AdaptiveLayout
+
+    let filters = [
+        ("综合排序", true),
+        ("全国", true),
+        ("医生擅长", true),
+        ("筛选", false)
+    ]
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(filters, id: \.0) { filter, hasDropdown in
+                Button(action: {}) {
+                    HStack(spacing: 4) {
+                        Text(filter)
+                            .font(.system(size: layout.captionFontSize + 1, weight: .medium))
+                            .foregroundColor(filter == "筛选" ? HealingColors.forestMist : HealingColors.textSecondary)
+
+                        if hasDropdown {
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: layout.captionFontSize - 2, weight: .semibold))
+                                .foregroundColor(HealingColors.textTertiary)
+                        } else {
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.system(size: layout.captionFontSize + 1))
+                                .foregroundColor(HealingColors.forestMist)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+
+                if filter != "筛选" {
+                    Spacer()
+                }
+            }
+        }
+        .padding(.horizontal, layout.cardInnerPadding)
+        .padding(.vertical, layout.cardInnerPadding - 2)
+        .background(HealingColors.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color.black.opacity(0.02), radius: 4, x: 0, y: 2)
+    }
+}
+
+// MARK: - 治愈系快捷筛选标签
+struct HealingQuickFilterTagsView: View {
+    @State private var selectedTags: Set<String> = []
+    let layout: AdaptiveLayout
+
+    let tags = [
+        ("crown.fill", "新人专享价", HealingColors.terracotta),
+        ("yensign.circle.fill", "优质价格", HealingColors.warmSand),
+        ("person.fill", "主任专家", HealingColors.forestMist)
+    ]
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: layout.cardSpacing / 2) {
+                ForEach(tags, id: \.1) { icon, text, color in
+                    Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            if selectedTags.contains(text) {
+                                selectedTags.remove(text)
+                            } else {
+                                selectedTags.insert(text)
+                            }
+                        }
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: icon)
+                                .font(.system(size: layout.captionFontSize))
+                            Text(text)
+                                .font(.system(size: layout.captionFontSize, weight: .medium))
+                        }
+                        .foregroundColor(selectedTags.contains(text) ? .white : color)
+                        .padding(.horizontal, layout.cardInnerPadding)
+                        .padding(.vertical, layout.cardSpacing / 2)
+                        .background(
+                            selectedTags.contains(text) ?
+                            LinearGradient(
+                                colors: [color, color.opacity(0.8)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            ) :
+                            LinearGradient(
+                                colors: [color.opacity(0.15), color.opacity(0.1)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .clipShape(Capsule())
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - 治愈系医生卡片
+struct HealingDoctorCardView: View {
+    let doctor: DoctorInfo
+    let layout: AdaptiveLayout
+    var onAskDoctor: () -> Void = {}
+
+    @State private var isPressed = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: layout.cardSpacing) {
+            // 顶部：头像 + 基本信息
+            HStack(alignment: .top, spacing: layout.cardSpacing) {
+                // 头像
+                ZStack(alignment: .bottomLeading) {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [doctor.avatarColor, doctor.avatarColor.opacity(0.6)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: layout.iconLargeSize + 8, height: layout.iconLargeSize + 8)
+                        .overlay(
+                            Circle()
+                                .stroke(HealingColors.cardBackground, lineWidth: 2)
+                        )
+                        .shadow(color: doctor.avatarColor.opacity(0.3), radius: 8, x: 0, y: 4)
+
+                    Image(systemName: "person.fill")
+                        .font(.system(size: layout.bodyFontSize + 4))
+                        .foregroundColor(.white)
+
+                    if doctor.hasRecommendBadge {
+                        HStack(spacing: 2) {
+                            Image(systemName: "hand.thumbsup.fill")
+                                .font(.system(size: layout.captionFontSize - 3))
+                            Text("力荐")
+                                .font(.system(size: layout.captionFontSize - 3, weight: .semibold))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule()
+                                .fill(HealingColors.terracotta)
+                        )
+                        .offset(x: -4, y: 4)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: layout.cardSpacing / 3) {
+                    // 姓名 + 职称 + 标签
+                    HStack(spacing: layout.cardSpacing / 3) {
+                        Text(doctor.name)
+                            .font(.system(size: layout.bodyFontSize + 1, weight: .semibold))
+                            .foregroundColor(HealingColors.textPrimary)
+
+                        Text(doctor.title)
+                            .font(.system(size: layout.captionFontSize))
+                            .foregroundColor(HealingColors.textSecondary)
+
+                        if doctor.canPrescribe {
+                            HStack(spacing: 2) {
+                                Image(systemName: "prescription")
+                                    .font(.system(size: layout.captionFontSize - 2))
+                                Text("处方")
+                                    .font(.system(size: layout.captionFontSize - 2, weight: .medium))
+                            }
+                            .foregroundColor(HealingColors.forestMist)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(HealingColors.softSage.opacity(0.25))
+                            .clipShape(Capsule())
+                        }
+
+                        if doctor.isTopHospital {
+                            Text("三甲")
+                                .font(.system(size: layout.captionFontSize - 1, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(
+                                    Capsule()
+                                        .fill(HealingColors.dustyBlue)
+                                )
+                        }
+                    }
+
+                    // 医院 + 科室
+                    HStack(spacing: layout.cardSpacing / 2) {
+                        Image(systemName: "building.2.fill")
+                            .font(.system(size: layout.captionFontSize - 1))
+                            .foregroundColor(HealingColors.textTertiary)
+
+                        Text(doctor.hospital)
+                            .font(.system(size: layout.captionFontSize))
+                            .foregroundColor(HealingColors.textSecondary)
+                            .lineLimit(1)
+
+                        Text("·")
+                            .foregroundColor(HealingColors.textTertiary)
+
+                        Text(doctor.department)
+                            .font(.system(size: layout.captionFontSize))
+                            .foregroundColor(HealingColors.textSecondary)
+                    }
+
+                    // 擅长
+                    HStack(spacing: 4) {
+                        Image(systemName: "star.fill")
+                            .font(.system(size: layout.captionFontSize - 2))
+                            .foregroundColor(HealingColors.warmSand)
+
+                        Text("擅长：\(doctor.specialty)")
+                            .font(.system(size: layout.captionFontSize))
+                            .foregroundColor(HealingColors.textSecondary)
+                            .lineLimit(2)
+                    }
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            // 统计信息
+            HStack(spacing: layout.cardSpacing) {
+                // 评分
+                HStack(spacing: 4) {
+                    ZStack {
+                        Circle()
+                            .fill(HealingColors.terracotta.opacity(0.15))
+                            .frame(width: layout.iconSmallSize - 4, height: layout.iconSmallSize - 4)
+
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: layout.captionFontSize))
+                            .foregroundColor(HealingColors.terracotta)
+                    }
+
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("评分")
+                            .font(.system(size: layout.captionFontSize - 2))
+                            .foregroundColor(HealingColors.textTertiary)
+                        Text(String(format: "%.1f", doctor.rating))
+                            .font(.system(size: layout.captionFontSize, weight: .semibold))
+                            .foregroundColor(HealingColors.terracotta)
+                    }
+                }
+
+                // 月回答
+                HStack(spacing: 4) {
+                    ZStack {
+                        Circle()
+                            .fill(HealingColors.forestMist.opacity(0.15))
+                            .frame(width: layout.iconSmallSize - 4, height: layout.iconSmallSize - 4)
+
+                        Image(systemName: "bubble.left.fill")
+                            .font(.system(size: layout.captionFontSize))
+                            .foregroundColor(HealingColors.forestMist)
+                    }
+
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("月回答")
+                            .font(.system(size: layout.captionFontSize - 2))
+                            .foregroundColor(HealingColors.textTertiary)
+                        Text("\(doctor.monthlyAnswers)")
+                            .font(.system(size: layout.captionFontSize, weight: .semibold))
+                            .foregroundColor(HealingColors.forestMist)
+                    }
+                }
+
+                // 响应时间
+                HStack(spacing: 4) {
+                    ZStack {
+                        Circle()
+                            .fill(HealingColors.dustyBlue.opacity(0.15))
+                            .frame(width: layout.iconSmallSize - 4, height: layout.iconSmallSize - 4)
+
+                        Image(systemName: "clock.fill")
+                            .font(.system(size: layout.captionFontSize))
+                            .foregroundColor(HealingColors.dustyBlue)
+                    }
+
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("响应")
+                            .font(.system(size: layout.captionFontSize - 2))
+                            .foregroundColor(HealingColors.textTertiary)
+                        Text(doctor.avgResponseTime)
+                            .font(.system(size: layout.captionFontSize, weight: .semibold))
+                            .foregroundColor(HealingColors.dustyBlue)
+                    }
+                }
+
+                Spacer()
+            }
+
+            // 底部：问医生按钮
+            Button(action: onAskDoctor) {
+                HStack(spacing: layout.cardSpacing / 2) {
+                    Image(systemName: "cross.case.fill")
+                        .font(.system(size: layout.captionFontSize + 1))
+
+                    Text("咨询医生")
+                        .font(.system(size: layout.bodyFontSize - 1, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, layout.cardInnerPadding)
+                .background(
+                    LinearGradient(
+                        colors: [HealingColors.deepSage, HealingColors.forestMist],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(Capsule())
+                .shadow(color: HealingColors.forestMist.opacity(0.25), radius: 8, x: 0, y: 4)
+            }
+        }
+        .padding(layout.cardInnerPadding + 2)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(HealingColors.cardBackground)
+                .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(HealingColors.softSage.opacity(0.15), lineWidth: 1)
+        )
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
+    }
+}
+
 // MARK: - 医生信息模型（仅映射后端字段）
 struct DoctorInfo: Identifiable, Hashable {
     static func == (lhs: DoctorInfo, rhs: DoctorInfo) -> Bool {
         lhs.id == rhs.id
     }
-    
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-    
+
     let doctorId: Int
     var id: Int { doctorId }
     let name: String
@@ -190,15 +688,21 @@ struct DoctorInfo: Identifiable, Hashable {
     let rating: Double
     let monthlyAnswers: Int
     let avgResponseTime: String
-    
-    // UI 展示用字段（使用默认值，后端可扩展）
+
+    // UI 展示用字段
     var badges: [String] { [] }
     var avatarColor: Color {
-        let colors: [Color] = [.blue, .purple, .pink, .orange, .green, .cyan]
-        return colors[doctorId % colors.count].opacity(0.3)
+        let colors: [Color] = [
+            HealingColors.terracotta,
+            HealingColors.forestMist,
+            HealingColors.dustyBlue,
+            HealingColors.warmSand,
+            HealingColors.mutedCoral
+        ]
+        return colors[doctorId % colors.count]
     }
     var hasRecommendBadge: Bool { doctorId % 2 == 0 }
-    
+
     // 从 API 模型初始化
     init(from model: DoctorModel, departmentName: String) {
         self.doctorId = model.id
@@ -213,297 +717,6 @@ struct DoctorInfo: Identifiable, Hashable {
         self.rating = model.rating
         self.monthlyAnswers = model.monthly_answers
         self.avgResponseTime = model.avg_response_time
-    }
-}
-
-// MARK: - 科室导航栏
-struct DepartmentNavBar: View {
-    let title: String
-    let dismiss: DismissAction
-    
-    var body: some View {
-        HStack {
-            Button(action: { dismiss() }) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: AdaptiveFont.title3, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
-                    .frame(width: ScaleFactor.size(44), height: ScaleFactor.size(44))
-                    .contentShape(Rectangle())
-            }
-            
-            Spacer()
-            
-            Text(title)
-                .font(.system(size: AdaptiveFont.title3, weight: .semibold))
-                .foregroundColor(DXYColors.textPrimary)
-            
-            Spacer()
-            
-            Button(action: {}) {
-                Image(systemName: "square.and.pencil")
-                    .font(.system(size: AdaptiveFont.title3, weight: .regular))
-                    .foregroundColor(DXYColors.textPrimary)
-            }
-        }
-        .padding(.horizontal, ScaleFactor.padding(16))
-        .padding(.vertical, ScaleFactor.padding(12))
-        .background(DXYColors.cardBackground)
-    }
-}
-
-// MARK: - 搜索框
-struct DepartmentSearchBar: View {
-    @Binding var searchText: String
-    
-    var body: some View {
-        HStack(spacing: ScaleFactor.spacing(8)) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: AdaptiveFont.body))
-                .foregroundColor(DXYColors.textTertiary)
-            
-            TextField("疾病 / 症状 / 医院 / 医生名", text: $searchText)
-                .font(.system(size: AdaptiveFont.subheadline))
-                .foregroundColor(DXYColors.textPrimary)
-        }
-        .padding(.horizontal, ScaleFactor.padding(16))
-        .padding(.vertical, ScaleFactor.padding(12))
-        .background(DXYColors.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusLarge, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusLarge, style: .continuous)
-                .stroke(Color.gray.opacity(0.15), lineWidth: 1)
-        )
-        .padding(.top, ScaleFactor.padding(8))
-    }
-}
-
-// MARK: - 筛选栏
-struct FilterBarView: View {
-    let filters = [
-        ("综合排序", true),
-        ("全国", true),
-        ("医生擅长", true),
-        ("筛选", false)
-    ]
-    
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(filters, id: \.0) { filter, hasDropdown in
-                Button(action: {}) {
-                    HStack(spacing: ScaleFactor.spacing(4)) {
-                        Text(filter)
-                            .font(.system(size: AdaptiveFont.subheadline))
-                            .foregroundColor(filter == "筛选" ? DXYColors.primaryPurple : DXYColors.textSecondary)
-                        
-                        if hasDropdown {
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: AdaptiveFont.custom(10), weight: .medium))
-                                .foregroundColor(DXYColors.textTertiary)
-                        } else {
-                            Image(systemName: "slider.horizontal.3")
-                                .font(.system(size: AdaptiveFont.footnote))
-                                .foregroundColor(DXYColors.primaryPurple)
-                        }
-                    }
-                }
-                
-                if filter != "筛选" {
-                    Spacer()
-                }
-            }
-        }
-        .padding(.horizontal, 4)
-    }
-}
-
-// MARK: - 快捷筛选标签
-struct QuickFilterTagsView: View {
-    @State private var selectedTags: Set<String> = []
-    
-    let tags = [
-        ("crown.fill", "新人专享价", DXYColors.orange),
-        ("yensign.circle.fill", "49元以下", DXYColors.teal),
-        ("person.fill", "只看主任", DXYColors.primaryPurple)
-    ]
-    
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(tags, id: \.1) { icon, text, color in
-                    Button(action: {
-                        if selectedTags.contains(text) {
-                            selectedTags.remove(text)
-                        } else {
-                            selectedTags.insert(text)
-                        }
-                    }) {
-                        HStack(spacing: ScaleFactor.spacing(4)) {
-                            Image(systemName: icon)
-                                .font(.system(size: AdaptiveFont.footnote))
-                            Text(text)
-                                .font(.system(size: AdaptiveFont.footnote))
-                        }
-                        .foregroundColor(selectedTags.contains(text) ? .white : color)
-                        .padding(.horizontal, ScaleFactor.padding(12))
-                        .padding(.vertical, ScaleFactor.padding(8))
-                        .background(
-                            selectedTags.contains(text) ? color : color.opacity(0.12)
-                        )
-                        .clipShape(Capsule())
-                    }
-                }
-            }
-        }
-    }
-}
-
-// MARK: - 医生卡片
-struct DoctorCardView: View {
-    let doctor: DoctorInfo
-    var onAskDoctor: () -> Void = {}
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: ScaleFactor.spacing(12)) {
-            // 顶部：头像 + 基本信息
-            HStack(alignment: .top, spacing: ScaleFactor.spacing(12)) {
-                // 头像
-                ZStack(alignment: .bottomLeading) {
-                    Circle()
-                        .fill(doctor.avatarColor)
-                        .frame(width: ScaleFactor.size(56), height: ScaleFactor.size(56))
-                        .overlay(
-                            Image(systemName: "person.fill")
-                                .font(.system(size: AdaptiveFont.title1))
-                                .foregroundColor(.white)
-                        )
-                    
-                    if doctor.hasRecommendBadge {
-                        Text("患者力荐")
-                            .font(.system(size: AdaptiveFont.custom(8), weight: .medium))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, ScaleFactor.padding(4))
-                            .padding(.vertical, ScaleFactor.padding(2))
-                            .background(DXYColors.orange)
-                            .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(4)))
-                            .offset(x: ScaleFactor.size(-4), y: ScaleFactor.size(4))
-                    }
-                }
-                
-                VStack(alignment: .leading, spacing: ScaleFactor.spacing(6)) {
-                    // 姓名 + 职称 + 标签
-                    HStack(spacing: ScaleFactor.spacing(6)) {
-                        Text(doctor.name)
-                            .font(.system(size: AdaptiveFont.body, weight: .semibold))
-                            .foregroundColor(DXYColors.textPrimary)
-                        
-                        Text(doctor.title)
-                            .font(.system(size: AdaptiveFont.footnote))
-                            .foregroundColor(DXYColors.textSecondary)
-                        
-                        if doctor.canPrescribe {
-                            Text("可开处方")
-                                .font(.system(size: AdaptiveFont.caption, weight: .medium))
-                                .foregroundColor(DXYColors.primaryPurple)
-                                .padding(.horizontal, ScaleFactor.padding(6))
-                                .padding(.vertical, ScaleFactor.padding(2))
-                                .background(DXYColors.lightPurple)
-                                .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(4)))
-                        }
-                        
-                        if doctor.isTopHospital {
-                            Text("三甲")
-                                .font(.system(size: AdaptiveFont.caption, weight: .medium))
-                                .foregroundColor(DXYColors.teal)
-                                .padding(.horizontal, ScaleFactor.padding(6))
-                                .padding(.vertical, ScaleFactor.padding(2))
-                                .background(DXYColors.teal.opacity(0.15))
-                                .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(4)))
-                        }
-                    }
-                    
-                    // 医院 + 科室
-                    HStack(spacing: ScaleFactor.spacing(8)) {
-                        Text(doctor.hospital)
-                            .font(.system(size: AdaptiveFont.footnote))
-                            .foregroundColor(DXYColors.textSecondary)
-                            .lineLimit(1)
-                        
-                        Text(doctor.department)
-                            .font(.system(size: AdaptiveFont.footnote))
-                            .foregroundColor(DXYColors.textSecondary)
-                    }
-                    
-                    // 擅长
-                    Text("擅长：\(doctor.specialty)")
-                        .font(.system(size: AdaptiveFont.footnote))
-                        .foregroundColor(DXYColors.textSecondary)
-                        .lineLimit(1)
-                }
-                
-                Spacer(minLength: 0)
-            }
-            
-            // 评分 + 回答数 + 响应时间
-            HStack(spacing: ScaleFactor.spacing(12)) {
-                HStack(spacing: ScaleFactor.spacing(4)) {
-                    Text("用户评分")
-                        .foregroundColor(DXYColors.textTertiary)
-                    Text(String(format: "%.2f", doctor.rating))
-                        .foregroundColor(DXYColors.orange)
-                        .fontWeight(.medium)
-                }
-                
-                HStack(spacing: ScaleFactor.spacing(4)) {
-                    Text("月回答")
-                        .foregroundColor(DXYColors.textTertiary)
-                    Text("\(doctor.monthlyAnswers)")
-                        .foregroundColor(DXYColors.orange)
-                        .fontWeight(.medium)
-                }
-                
-                HStack(spacing: ScaleFactor.spacing(4)) {
-                    Text("平...")
-                        .foregroundColor(DXYColors.textTertiary)
-                    Text(doctor.avgResponseTime)
-                        .foregroundColor(DXYColors.teal)
-                        .fontWeight(.medium)
-                }
-            }
-            .font(.system(size: AdaptiveFont.footnote))
-            
-            // 徽章标签
-            if !doctor.badges.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: ScaleFactor.spacing(8)) {
-                        ForEach(doctor.badges, id: \.self) { badge in
-                            Text(badge)
-                                .font(.system(size: AdaptiveFont.caption))
-                                .foregroundColor(DXYColors.textTertiary)
-                                .padding(.horizontal, ScaleFactor.padding(8))
-                                .padding(.vertical, ScaleFactor.padding(4))
-                                .background(DXYColors.tagBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(4)))
-                        }
-                    }
-                }
-            }
-            
-            // 底部：问医生按钮
-            HStack {
-                Spacer()
-                
-                Button(action: onAskDoctor) {
-                    Text("问医生")
-                        .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                        .foregroundColor(DXYColors.primaryPurple)
-                        .padding(.horizontal, ScaleFactor.padding(20))
-                        .padding(.vertical, ScaleFactor.padding(10))
-                        .background(DXYColors.lightPurple)
-                        .clipShape(Capsule())
-                }
-            }
-        }
-        .padding(ScaleFactor.padding(16))
     }
 }
 

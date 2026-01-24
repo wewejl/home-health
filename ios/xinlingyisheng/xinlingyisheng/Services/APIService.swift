@@ -4,8 +4,22 @@ import Foundation
 
 class APIService {
     static let shared = APIService()
-    private init() {}
-    
+    private init() {
+        // 配置 URLSession 增加超时时间
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 30.0  // 请求超时 30 秒
+        config.timeoutIntervalForResource = 60.0  // 资源超时 60 秒
+        URLSession.shared.delegateQueue.maxConcurrentOperationCount = 5
+    }
+
+    // 使用自定义的 URLSession
+    private var urlSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 30.0
+        config.timeoutIntervalForResource = 60.0
+        return URLSession(configuration: config)
+    }()
+
     private func makeRequest<T: Decodable>(
         endpoint: String,
         method: String = "GET",
@@ -40,7 +54,7 @@ class APIService {
         }
         
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await urlSession.data(for: request)
             
             if let httpResponse = response as? HTTPURLResponse {
                 print("[API] 📥 Status: \(httpResponse.statusCode)")
@@ -138,8 +152,12 @@ class APIService {
     }
     
     // MARK: - Departments
-    func getDepartments() async throws -> [DepartmentModel] {
-        return try await makeRequest(endpoint: APIConfig.Endpoints.departments)
+    func getDepartments(primaryOnly: Bool = false) async throws -> [DepartmentModel] {
+        var endpoint = APIConfig.Endpoints.departments
+        if primaryOnly {
+            endpoint += "?primary_only=true"
+        }
+        return try await makeRequest(endpoint: endpoint)
     }
     
     func getDoctors(departmentId: Int) async throws -> [DoctorModel] {
@@ -222,6 +240,15 @@ class APIService {
     func getDiseaseDetail(diseaseId: Int) async throws -> DiseaseDetailModel {
         return try await makeRequest(endpoint: APIConfig.Endpoints.diseaseDetail(diseaseId: diseaseId))
     }
+
+    // MARK: - MedLive Diseases
+    func getDiseaseDetailMedLive(diseaseId: Int) async throws -> MedLiveDiseaseModel {
+        return try await makeRequest(endpoint: APIConfig.Endpoints.diseaseDetailMedLive(diseaseId: diseaseId))
+    }
+
+    func getDiseaseByWikiId(wikiId: String) async throws -> MedLiveDiseaseModel {
+        return try await makeRequest(endpoint: APIConfig.Endpoints.diseaseByWikiId(wikiId: wikiId))
+    }
     
     // MARK: - Drugs
     func getDrugCategoriesWithDrugs(limit: Int = 10) async throws -> [DrugCategoryWithDrugsModel] {
@@ -247,9 +274,111 @@ class APIService {
     func getDrugDetail(drugId: Int) async throws -> DrugDetailModel {
         return try await makeRequest(endpoint: APIConfig.Endpoints.drugDetail(drugId: drugId))
     }
+
+    // MARK: - Medical Orders (医嘱执行监督)
+
+    /// 获取医嘱列表
+    func getMedicalOrders(status: String? = nil) async throws -> [MedicalOrder] {
+        var endpoint = APIConfig.Endpoints.medicalOrders
+        if let status = status {
+            endpoint += "?status=\(status)"
+        }
+        return try await makeRequest(endpoint: endpoint, requiresAuth: true)
+    }
+
+    /// 获取医嘱详情
+    func getMedicalOrder(orderId: Int) async throws -> MedicalOrder {
+        return try await makeRequest(endpoint: "\(APIConfig.Endpoints.medicalOrders)/\(orderId)", requiresAuth: true)
+    }
+
+    /// 创建医嘱
+    func createMedicalOrder(_ request: MedicalOrderCreateRequest) async throws -> MedicalOrder {
+        let data = try JSONEncoder().encode(request)
+        return try await makeRequest(endpoint: APIConfig.Endpoints.medicalOrders, method: "POST", body: data, requiresAuth: true)
+    }
+
+    /// 更新医嘱
+    func updateMedicalOrder(orderId: Int, request: MedicalOrderUpdateRequest) async throws -> MedicalOrder {
+        let data = try JSONEncoder().encode(request)
+        return try await makeRequest(endpoint: "\(APIConfig.Endpoints.medicalOrders)/\(orderId)", method: "PUT", body: data, requiresAuth: true)
+    }
+
+    /// 激活医嘱
+    func activateOrder(orderId: Int, request: ActivateOrderRequest) async throws -> MedicalOrder {
+        let data = try JSONEncoder().encode(request)
+        return try await makeRequest(endpoint: "\(APIConfig.Endpoints.medicalOrders)/\(orderId)/activate", method: "POST", body: data, requiresAuth: true)
+    }
+
+    /// 获取指定日期的任务列表
+    func getDailyTasks(date: String) async throws -> TaskListResponse {
+        return try await makeRequest(endpoint: "\(APIConfig.Endpoints.medicalTasks)/\(date)", requiresAuth: true)
+    }
+
+    /// 获取待完成任务
+    func getPendingTasks(date: String) async throws -> [TaskInstance] {
+        return try await makeRequest(endpoint: "\(APIConfig.Endpoints.medicalTasks)/\(date)/pending", requiresAuth: true)
+    }
+
+    /// 完成任务打卡
+    func completeTask(request: CompletionRecordRequest) async throws -> CompletionRecord {
+        let data = try JSONEncoder().encode(request)
+        return try await makeRequest(endpoint: "\(APIConfig.Endpoints.medicalTasks)/\(request.task_instance_id)/complete", method: "POST", body: data, requiresAuth: true)
+    }
+
+    /// 获取日依从性
+    func getDailyCompliance(date: String) async throws -> ComplianceSummary {
+        return try await makeRequest(endpoint: "\(APIConfig.Endpoints.compliance)/daily?task_date=\(date)", requiresAuth: true)
+    }
+
+    /// 获取周依从性
+    func getWeeklyCompliance() async throws -> WeeklyComplianceResponse {
+        return try await makeRequest(endpoint: "\(APIConfig.Endpoints.compliance)/weekly", requiresAuth: true)
+    }
+
+    /// 获取异常记录
+    func getAbnormalRecords(days: Int = 30) async throws -> [AbnormalRecord] {
+        return try await makeRequest(endpoint: "\(APIConfig.Endpoints.compliance)/abnormal?days=\(days)", requiresAuth: true)
+    }
+
+    /// 获取预警列表
+    func getAlerts(activeOnly: Bool = true, limit: Int = 50) async throws -> [Alert] {
+        var endpoint = "\(APIConfig.Endpoints.alerts)?active_only=\(activeOnly)&limit=\(limit)"
+        return try await makeRequest(endpoint: endpoint, requiresAuth: true)
+    }
+
+    /// 确认预警
+    func acknowledgeAlert(alertId: Int) async throws -> AcknowledgeAlertResponse {
+        return try await makeRequest(endpoint: "\(APIConfig.Endpoints.alerts)/\(alertId)/acknowledge", method: "POST", requiresAuth: true)
+    }
+
+    /// 检查并创建预警
+    func checkAlerts() async throws -> [Alert] {
+        return try await makeRequest(endpoint: APIConfig.Endpoints.alerts + "/check", method: "POST", requiresAuth: true)
+    }
+
+    /// 获取家属关系
+    func getFamilyBonds() async throws -> [FamilyBond] {
+        return try await makeRequest(endpoint: APIConfig.Endpoints.familyBonds, requiresAuth: true)
+    }
+
+    /// 创建家属关系
+    func createFamilyBond(_ request: FamilyBondCreateRequest) async throws -> FamilyBond {
+        let data = try JSONEncoder().encode(request)
+        return try await makeRequest(endpoint: APIConfig.Endpoints.familyBonds, method: "POST", body: data, requiresAuth: true)
+    }
+
+    /// 删除家属关系
+    func deleteFamilyBond(bondId: Int) async throws -> EmptyResponse {
+        return try await makeRequest(endpoint: "\(APIConfig.Endpoints.familyBonds)/\(bondId)", method: "DELETE", requiresAuth: true)
+    }
 }
 
 // MARK: - Request/Response Models
+
+struct EmptyResponse: Decodable {
+    let success: Bool?
+    let message: String?
+}
 
 struct SendCodeRequest: Encodable {
     let phone: String

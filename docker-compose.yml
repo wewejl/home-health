@@ -4,25 +4,18 @@ services:
   # PostgreSQL数据库
   postgres:
     image: postgres:16-alpine
-    container_name: home-health-postgres
-    env_file:
-      - .env.production
-      - .env
+    container_name: home_health_db
     environment:
-      POSTGRES_DB: xinlin_prod
-      POSTGRES_USER: xinlin_prod
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      POSTGRES_DB: home_health
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U xinlin_prod"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - home-health-network
-    restart: unless-stopped
 
   # 后端API服务
   backend:
@@ -30,81 +23,18 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: home-health-backend
-    env_file:
-      - .env.production
-      - .env
     environment:
-      # 应用配置
-      APP_NAME: 鑫琳医生 API
-      APP_VERSION: 2.0.0
-      DEBUG: ${DEBUG:-false}
-      SEED_DATA: ${SEED_DATA:-false}
-
-      # CORS 配置
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
-
-      # 数据库配置
-      DATABASE_URL: postgresql+psycopg://xinlin_prod:${POSTGRES_PASSWORD:-changeme123}@postgres:5432/xinlin_prod
-
-      # JWT配置
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-your-secret-key-change-in-production}
-      JWT_ALGORITHM: HS256
-      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: 480
-      JWT_REFRESH_TOKEN_EXPIRE_DAYS: 7
-
-      # Admin JWT配置
-      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-admin-secret-key-change-in-production}
-      ADMIN_JWT_EXPIRE_HOURS: 24
-
-      # 测试模式
-      TEST_MODE: ${TEST_MODE:-false}
-      ENABLE_SMS_VERIFICATION: ${ENABLE_SMS_VERIFICATION:-false}
-
-      # LLM配置
-      LLM_PROVIDER: qwen
-      LLM_MODEL: qwen-plus
-      LLM_BASE_URL: https://dashscope.aliyuncs.com/compatible-mode/v1
-      LLM_API_KEY: ${LLM_API_KEY}
-      LLM_TEMPERATURE: 0.7
-      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-2000}
-
-      # Qwen-VL多模态配置
-      QWEN_VL_MODEL: qwen3-vl-plus
-
-      # 短信服务配置
-      SMS_PROVIDER: ${SMS_PROVIDER:-aliyun}
-      SMS_ACCESS_KEY_ID: ${SMS_ACCESS_KEY_ID}
-      SMS_ACCESS_KEY_SECRET: ${SMS_ACCESS_KEY_SECRET}
-      SMS_SIGN_NAME: ${SMS_SIGN_NAME:-鑫琳医生}
-      SMS_TEMPLATE_CODE: ${SMS_TEMPLATE_CODE}
-
-      # 日志级别
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/home_health
     ports:
       - "8100:8100"
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - home-health-network
-    restart: unless-stopped
-    volumes:
-      - ./backend/uploads:/app/uploads
-      - ./backend/logs:/app/logs
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   # Redis 缓存服务
   redis:
     image: redis:7-alpine
-    container_name: home-health-redis
-    networks:
-      - home-health-network
-    restart: unless-stopped
+    container_name: home_health_redis
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -116,19 +46,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: home-health-frontend
     ports:
       - "80:80"
     depends_on:
       - backend
-    networks:
-      - home-health-network
-    restart: unless-stopped
-
-volumes:
-  postgres_data:
-    driver: local
-
-networks:
-  home-health-network:
-    driver: bridge

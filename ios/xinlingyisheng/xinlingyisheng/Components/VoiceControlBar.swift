@@ -11,7 +11,7 @@ struct VoiceControlBar: View {
     var body: some View {
         VStack(spacing: 0) {
             // 实时识别文字显示区域
-            if !viewModel.currentRecognition.isEmpty {
+            if !viewModel.recognizedText.isEmpty {
                 recognitionTextView
             }
             
@@ -49,7 +49,7 @@ struct VoiceControlBar: View {
             // 波形动画指示器
             WaveformIndicator()
             
-            Text(viewModel.currentRecognition)
+            Text(viewModel.recognizedText)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(MedicalColors.textPrimary)
                 .lineLimit(2)
@@ -64,14 +64,14 @@ struct VoiceControlBar: View {
     // MARK: - 状态指示器
     private var statusIndicator: some View {
         HStack(spacing: 8) {
-            if viewModel.isAISpeaking {
+            if viewModel.voiceState == .aiSpeaking {
                 Image(systemName: "speaker.wave.2.fill")
                     .font(.system(size: 14))
                     .foregroundColor(MedicalColors.primaryBlue)
                 Text("AI 正在回复")
                     .font(.system(size: 15, weight: .medium))
                     .foregroundColor(MedicalColors.textSecondary)
-            } else if viewModel.isRecording {
+            } else if viewModel.voiceState == .listening {
                 Circle()
                     .fill(MedicalColors.successGreen)
                     .frame(width: 8, height: 8)
@@ -89,13 +89,20 @@ struct VoiceControlBar: View {
     // MARK: - 中央麦克风按钮
     private var centerMicButton: some View {
         Button(action: {
-            if viewModel.isAISpeaking {
-                viewModel.interruptAISpeech()
+            if viewModel.voiceState == .aiSpeaking {
+                // AI 正在说话 - 打断
+                viewModel.interruptAISpeaking()
+            } else if viewModel.voiceState == .idle {
+                // 待机状态 - 开始录音
+                viewModel.enterVoiceMode()
+            } else if viewModel.voiceState == .listening {
+                // 正在聆听 - 停止录音并发送
+                viewModel.stopRecordingAndSend()
             }
         }) {
             ZStack {
                 // 外圈脉冲动画（录音时显示）
-                if viewModel.isRecording {
+                if viewModel.voiceState == .listening {
                     Circle()
                         .stroke(Color.green.opacity(0.3), lineWidth: 2)
                         .frame(width: 100, height: 100)
@@ -110,17 +117,30 @@ struct VoiceControlBar: View {
                 // 主按钮
                 Circle()
                     .fill(
-                        viewModel.isRecording
+                        viewModel.voiceState == .listening
                             ? LinearGradient(colors: [Color(hex: "#22C55E"), Color(hex: "#16A34A")], startPoint: .top, endPoint: .bottom)
-                            : viewModel.isAISpeaking
+                            : viewModel.voiceState == .aiSpeaking
                                 ? LinearGradient(colors: [MedicalColors.primaryBlue, MedicalColors.primaryBlueDark], startPoint: .top, endPoint: .bottom)
                                 : LinearGradient(colors: [Color(hex: "#E5E7EB"), Color(hex: "#D1D5DB")], startPoint: .top, endPoint: .bottom)
                     )
                     .frame(width: 80, height: 80)
-                    .shadow(color: viewModel.isRecording ? Color.green.opacity(0.4) : Color.black.opacity(0.1), radius: 10, y: 4)
+                    .shadow(color: viewModel.voiceState == .listening ? Color.green.opacity(0.4) : Color.black.opacity(0.1), radius: 10, y: 4)
                 
                 // 图标
-                Image(systemName: viewModel.isAISpeaking ? "speaker.wave.2.fill" : "mic.fill")
+                Image(systemName: {
+                    switch viewModel.voiceState {
+                    case .idle:
+                        return "mic.fill"
+                    case .listening:
+                        return "checkmark.circle.fill"
+                    case .aiSpeaking:
+                        return "speaker.wave.2.fill"
+                    case .processing:
+                        return "hourglass"
+                    case .error:
+                        return "exclamationmark.triangle.fill"
+                    }
+                }())
                     .font(.system(size: 32, weight: .medium))
                     .foregroundColor(.white)
             }
@@ -152,7 +172,7 @@ struct VoiceControlBar: View {
             
             // 关闭按钮
             Button(action: {
-                viewModel.toggleVoiceMode()
+                viewModel.exitVoiceMode()
                 onClose?()
             }) {
                 VStack(spacing: 6) {

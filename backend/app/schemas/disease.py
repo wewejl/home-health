@@ -1,14 +1,44 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Any, Dict
 from datetime import datetime
 
+
+# ==================== MedLive 数据模型 ====================
+
+class DiseaseSectionItem(BaseModel):
+    """疾病内容子项"""
+    id: str
+    title: Optional[str] = None
+    content: str
+    level: int
+
+
+class DiseaseSection(BaseModel):
+    """疾病内容区块"""
+    id: str
+    title: str
+    icon: str
+    content: Optional[str] = None
+    items: Optional[List[DiseaseSectionItem]] = None
+
+
+class MedLiveDiseaseResponse(BaseModel):
+    """MedLive 格式疾病详情响应"""
+    id: int
+    name: str
+    department: Optional[str] = None
+    source: str
+    url: Optional[str] = None
+    sections: List[DiseaseSection]
+
+
+# ==================== DXY 数据模型（兼容保留）====================
 
 class DiseaseBase(BaseModel):
     name: str
     pinyin: Optional[str] = None
     pinyin_abbr: Optional[str] = None
-    aliases: Optional[str] = None
-    department_id: int
+    department_id: Optional[int] = None
     recommended_department: Optional[str] = None
     overview: Optional[str] = None
     symptoms: Optional[str] = None
@@ -34,7 +64,6 @@ class DiseaseUpdate(BaseModel):
     name: Optional[str] = None
     pinyin: Optional[str] = None
     pinyin_abbr: Optional[str] = None
-    aliases: Optional[str] = None
     department_id: Optional[int] = None
     recommended_department: Optional[str] = None
     overview: Optional[str] = None
@@ -57,7 +86,7 @@ class DiseaseListResponse(BaseModel):
     """疾病列表响应（简要信息）"""
     id: int
     name: str
-    department_id: int
+    department_id: Optional[int] = None
     department_name: Optional[str] = None
     recommended_department: Optional[str] = None
     is_hot: bool
@@ -68,12 +97,11 @@ class DiseaseListResponse(BaseModel):
 
 
 class DiseaseDetailResponse(BaseModel):
-    """疾病详情响应（完整信息）"""
+    """疾病详情响应（完整信息，兼容 DXY 格式）"""
     id: int
     name: str
     pinyin: Optional[str] = None
-    aliases: Optional[str] = None
-    department_id: int
+    department_id: Optional[int] = None
     department_name: Optional[str] = None
     recommended_department: Optional[str] = None
     overview: Optional[str] = None
@@ -101,8 +129,7 @@ class DiseaseAdminResponse(BaseModel):
     name: str
     pinyin: Optional[str] = None
     pinyin_abbr: Optional[str] = None
-    aliases: Optional[str] = None
-    department_id: int
+    department_id: Optional[int] = None
     department_name: Optional[str] = None
     recommended_department: Optional[str] = None
     overview: Optional[str] = None

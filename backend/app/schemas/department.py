@@ -8,6 +8,7 @@ class DepartmentResponse(BaseModel):
     description: Optional[str] = None
     icon: Optional[str] = None
     sort_order: int = 0
+    is_primary: bool = False
 
     class Config:
         from_attributes = True

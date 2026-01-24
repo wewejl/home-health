@@ -13,6 +13,10 @@ import Knowledge from './pages/Knowledge';
 import Feedbacks from './pages/Feedbacks';
 import Stats from './pages/Stats';
 import DermaChat from './pages/DermaChat';
+import MedicalOrders from './pages/MedicalOrders';
+import PatientCompliance from './pages/PatientCompliance';
+import Rounding from './pages/Rounding';
+import RoundingDetail from './pages/RoundingDetail';
 import DoctorPersonaChat from './pages/admin/DoctorPersonaChat';
 import DoctorRecordAnalysis from './pages/admin/DoctorRecordAnalysis';
 
@@ -98,6 +102,10 @@ function App() {
               <Route path="feedbacks" element={<Feedbacks />} />
               <Route path="stats" element={<Stats />} />
               <Route path="derma-chat" element={<DermaChat />} />
+              <Route path="medical-orders" element={<MedicalOrders />} />
+              <Route path="patient-compliance" element={<PatientCompliance />} />
+              <Route path="rounding" element={<Rounding />} />
+              <Route path="rounding/:patientId" element={<RoundingDetail />} />
             </Route>
           </Routes>
         </BrowserRouter>

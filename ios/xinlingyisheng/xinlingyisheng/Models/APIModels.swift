@@ -231,7 +231,6 @@ struct DiseaseDetailModel: Codable, Identifiable {
     let id: Int
     let name: String
     let pinyin: String?
-    let aliases: String?
     let department_id: Int
     let department_name: String?
     let recommended_department: String?

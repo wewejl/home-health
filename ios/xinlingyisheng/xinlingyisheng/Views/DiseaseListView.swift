@@ -1,109 +1,130 @@
 import SwiftUI
 
-// MARK: - 查疾病列表
+// MARK: - 查疾病列表（治愈系风格）
 struct DiseaseListView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var departments: [DepartmentWithDiseasesModel] = []
     @State private var selectedDepartmentIndex: Int = 0
     @State private var isLoading = true
-    
+
     @State private var searchText = ""
     @State private var searchResults: [DiseaseListModel] = []
     @State private var isSearching = false
     @State private var hasSearched = false
     @State private var searchTask: Task<Void, Never>?
-    
+
     private var normalizedSearchText: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
-    
+
     var body: some View {
-        ZStack {
-            DXYColors.background
-                .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
-                navigationBar
-                trustBanner
-                searchBar
-                contentArea
+        GeometryReader { geometry in
+            let layout = AdaptiveLayout(screenWidth: geometry.size.width)
+
+            ZStack {
+                // 背景
+                HealingColors.background
+                    .ignoresSafeArea()
+
+                // 装饰光晕
+                Circle()
+                    .fill(HealingColors.softSage.opacity(0.06))
+                    .frame(width: layout.decorativeCircleSize * 0.5, height: layout.decorativeCircleSize * 0.5)
+                    .offset(x: geometry.size.width * 0.4, y: -geometry.size.height * 0.15)
+                    .ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    navigationBar(layout: layout)
+                    trustBanner(layout: layout)
+                    searchBar(layout: layout)
+                    contentArea(layout: layout)
+                }
             }
         }
-        .navigationBarBackgroundHidden()
+        .navigationBarHidden(true)
         .onAppear(perform: loadDepartments)
     }
-    
-    // MARK: - 顶部导航栏
-    private var navigationBar: some View {
+
+    // MARK: - 治愈系导航栏
+    private func navigationBar(layout: AdaptiveLayout) -> some View {
         HStack {
             Button(action: { dismiss() }) {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: AdaptiveFont.title3, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .font(.system(size: layout.bodyFontSize, weight: .medium))
+                    .foregroundColor(HealingColors.textPrimary)
             }
 
             Spacer()
 
             Text("查疾病")
-                .font(.system(size: AdaptiveFont.body, weight: .semibold))
-                .foregroundColor(DXYColors.textPrimary)
+                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                .foregroundColor(HealingColors.textPrimary)
+
+            Spacer()
+
+            // 临时测试按钮 - 查看三尖瓣疾病 MedLive 数据
+            NavigationLink {
+                MedLiveDiseaseDetailView(disease: MedLiveDiseaseModel.sampleTricuspidValveDisease)
+            } label: {
+                Image(systemName: "star.fill")
+                    .font(.system(size: layout.bodyFontSize))
+                    .foregroundColor(HealingColors.terracotta)
+            }
+        }
+        .padding(.horizontal, layout.horizontalPadding)
+        .padding(.vertical, layout.cardInnerPadding)
+        .background(HealingColors.cardBackground)
+    }
+
+    // MARK: - 治愈系信任横幅
+    private func trustBanner(layout: AdaptiveLayout) -> some View {
+        HStack(spacing: layout.cardSpacing / 2) {
+            HStack(spacing: 4) {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: layout.captionFontSize - 1))
+                Text("健康百科")
+                    .font(.system(size: layout.captionFontSize, weight: .medium))
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, layout.cardInnerPadding - 2)
+            .padding(.vertical, layout.cardSpacing / 2)
+            .background(
+                LinearGradient(
+                    colors: [HealingColors.deepSage, HealingColors.forestMist],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .clipShape(Capsule())
+
+            Text("疾病百科放心查 · 鑫琳医生官方出品")
+                .font(.system(size: layout.captionFontSize))
+                .foregroundColor(HealingColors.textSecondary)
 
             Spacer()
         }
-        .padding(.horizontal, LayoutConstants.horizontalPadding)
-        .padding(.vertical, ScaleFactor.padding(12))
-        .background(Color.white)
+        .padding(.horizontal, layout.horizontalPadding)
+        .padding(.vertical, layout.cardInnerPadding)
+        .background(HealingColors.cardBackground.opacity(0.8))
     }
-    
-    // MARK: - 信任横幅
-    private var trustBanner: some View {
-        HStack(spacing: ScaleFactor.spacing(8)) {
-            Text("健康百科")
-                .font(.system(size: AdaptiveFont.caption, weight: .medium))
-                .foregroundColor(.white)
-                .padding(.horizontal, ScaleFactor.padding(8))
-                .padding(.vertical, ScaleFactor.padding(4))
-                .background(DXYColors.primaryPurple)
-                .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(4)))
-            
-            Text("疾病症状全了解 · 鑫琳医生官方出品")
-                .font(.system(size: AdaptiveFont.footnote))
-                .foregroundColor(DXYColors.textSecondary)
-            
-            Spacer()
-            
-            Image(systemName: "chevron.right")
-                .font(.system(size: AdaptiveFont.footnote))
-                .foregroundColor(DXYColors.textTertiary)
-        }
-        .padding(.horizontal, LayoutConstants.horizontalPadding)
-        .padding(.vertical, LayoutConstants.compactSpacing)
-        .background(
-            RoundedRectangle(cornerRadius: LayoutConstants.compactSpacing)
-                .fill(Color.white)
-                .shadow(color: Color.black.opacity(0.05), radius: 6, x: 0, y: 3)
-        )
-        .padding(.horizontal, LayoutConstants.horizontalPadding)
-        .padding(.vertical, LayoutConstants.compactSpacing)
-    }
-    
-    // MARK: - 搜索区
-    private var searchBar: some View {
-        HStack(spacing: ScaleFactor.spacing(12)) {
-            HStack(spacing: ScaleFactor.spacing(8)) {
+
+    // MARK: - 治愈系搜索区
+    private func searchBar(layout: AdaptiveLayout) -> some View {
+        HStack(spacing: layout.cardSpacing / 2) {
+            HStack(spacing: layout.cardSpacing / 2) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: AdaptiveFont.body))
-                    .foregroundColor(DXYColors.textTertiary)
-                
-                TextField("请输入疾病/症状", text: $searchText)
-                    .font(.system(size: AdaptiveFont.subheadline))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .font(.system(size: layout.bodyFontSize - 2))
+                    .foregroundColor(HealingColors.textTertiary)
+
+                TextField("搜索疾病或症状", text: $searchText)
+                    .font(.system(size: layout.bodyFontSize - 2))
+                    .foregroundColor(HealingColors.textPrimary)
                     .onChangeCompat(of: searchText) { newValue in
                         performSearch(query: newValue)
                     }
                     .submitLabel(.search)
-                
+
                 if !searchText.isEmpty {
                     Button {
                         searchText = ""
@@ -113,62 +134,69 @@ struct DiseaseListView: View {
                         searchTask?.cancel()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: AdaptiveFont.body))
-                            .foregroundColor(DXYColors.textTertiary)
+                            .font(.system(size: layout.bodyFontSize - 2))
+                            .foregroundColor(HealingColors.textTertiary)
                     }
                 }
             }
-            .padding(.horizontal, ScaleFactor.padding(12))
-            .padding(.vertical, ScaleFactor.padding(10))
-            .background(DXYColors.searchBackground)
-            .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall))
-            
+            .padding(.horizontal, layout.cardInnerPadding)
+            .padding(.vertical, layout.cardInnerPadding - 2)
+            .background(HealingColors.warmCream.opacity(0.5))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+
             Button {
                 performSearch(query: searchText)
             } label: {
-                Text("搜索")
-                    .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: layout.bodyFontSize - 2, weight: .semibold))
                     .foregroundColor(.white)
-                    .padding(.horizontal, ScaleFactor.padding(18))
-                    .padding(.vertical, ScaleFactor.padding(10))
-                    .background(DXYColors.primaryPurple)
-                    .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall))
+                    .frame(width: layout.cardInnerPadding * 3, height: layout.cardInnerPadding * 3)
+                    .background(
+                        LinearGradient(
+                            colors: [HealingColors.deepSage, HealingColors.forestMist],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .clipShape(Circle())
             }
         }
-        .padding(.horizontal, LayoutConstants.horizontalPadding)
-        .padding(.bottom, LayoutConstants.compactSpacing)
+        .padding(.horizontal, layout.horizontalPadding)
+        .padding(.bottom, layout.cardSpacing / 2)
     }
-    
+
     // MARK: - 内容区域
-    private var contentArea: some View {
+    private func contentArea(layout: AdaptiveLayout) -> some View {
         Group {
             if isLoading {
                 VStack {
                     Spacer()
                     ProgressView("加载中...")
+                        .tint(HealingColors.forestMist)
                     Spacer()
                 }
             } else if !normalizedSearchText.isEmpty {
-                searchResultsView
+                searchResultsView(layout: layout)
             } else if departments.isEmpty {
                 emptyState(
                     icon: "exclamationmark.triangle",
                     message: "暂时没有科室数据"
                 )
             } else {
-                departmentDiseaseList
+                departmentDiseaseList(layout: layout)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
-    // MARK: - 搜索结果视图
-    private var searchResultsView: some View {
+
+    // MARK: - 搜索结果视图（治愈系风格）
+    private func searchResultsView(layout: AdaptiveLayout) -> some View {
         Group {
             if isSearching {
                 VStack {
                     Spacer()
                     ProgressView()
+                        .tint(HealingColors.forestMist)
                     Spacer()
                 }
             } else if hasSearched && searchResults.isEmpty {
@@ -178,98 +206,108 @@ struct DiseaseListView: View {
                 )
             } else {
                 ScrollView(.vertical, showsIndicators: false) {
-                    LazyVStack(spacing: 0) {
+                    LazyVStack(spacing: layout.cardSpacing / 2) {
                         ForEach(searchResults) { disease in
                             NavigationLink {
-                                DiseaseDetailView(diseaseId: disease.id, diseaseName: disease.name)
+                                MedLiveDiseaseDetailView(diseaseId: disease.id)
                             } label: {
-                                DiseaseRowView(disease: disease)
+                                HealingDiseaseRow(disease: disease, layout: layout)
                             }
                             .buttonStyle(.plain)
-                            
-                            Divider()
-                                .padding(.leading, 16)
                         }
                     }
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall))
-                    .padding(.horizontal, ScaleFactor.padding(16))
-                    .padding(.top, ScaleFactor.padding(8))
+                    .padding(.horizontal, layout.horizontalPadding)
+                    .padding(.top, layout.cardSpacing / 2)
                 }
             }
         }
     }
-    
-    // MARK: - 科室/热门疾病列表
-    private var departmentDiseaseList: some View {
+
+    // MARK: - 科室/热门疾病列表（治愈系风格）
+    private func departmentDiseaseList(layout: AdaptiveLayout) -> some View {
         GeometryReader { geometry in
             HStack(spacing: 0) {
+                // 左侧科室列表
                 ScrollView(.vertical, showsIndicators: false) {
                     LazyVStack(spacing: 0) {
                         ForEach(Array(departments.enumerated()), id: \.element.id) { index, department in
                             Button {
-                                selectedDepartmentIndex = index
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    selectedDepartmentIndex = index
+                                }
                             } label: {
-                                DepartmentRowView(
+                                HealingDepartmentRow(
                                     department: department,
-                                    isSelected: selectedDepartmentIndex == index
+                                    isSelected: selectedDepartmentIndex == index,
+                                    layout: layout
                                 )
                             }
                             .buttonStyle(.plain)
                         }
                     }
                 }
-                .frame(width: geometry.size.width * 0.28)
-                .background(Color.white)
-                
+                .frame(width: geometry.size.width * 0.26)
+                .background(HealingColors.cardBackground)
+
+                // 右侧疾病列表
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
+                        // 热门标题
                         HStack {
-                            Text("热门")
-                                .font(.system(size: AdaptiveFont.body, weight: .semibold))
-                                .foregroundColor(DXYColors.textPrimary)
+                            Image(systemName: "flame.fill")
+                                .font(.system(size: layout.captionFontSize + 2))
+                                .foregroundColor(HealingColors.terracotta)
+
+                            Text("热门疾病")
+                                .font(.system(size: layout.bodyFontSize - 1, weight: .semibold))
+                                .foregroundColor(HealingColors.textPrimary)
+
                             Spacer()
                         }
-                        .padding(.horizontal, ScaleFactor.padding(16))
-                        .padding(.vertical, ScaleFactor.padding(12))
-                        
+                        .padding(.horizontal, layout.cardInnerPadding)
+                        .padding(.vertical, layout.cardInnerPadding)
+
                         if let diseases = selectedDepartment?.hot_diseases, !diseases.isEmpty {
                             ForEach(diseases) { disease in
                                 NavigationLink {
-                                    DiseaseDetailView(diseaseId: disease.id, diseaseName: disease.name)
+                                    MedLiveDiseaseDetailView(diseaseId: disease.id)
                                 } label: {
-                                    DiseaseRowView(disease: disease)
+                                    HealingDiseaseRow(disease: disease, layout: layout)
                                 }
                                 .buttonStyle(.plain)
-                                
-                                Divider()
-                                    .padding(.leading, 16)
+
+                                if disease.id != diseases.last?.id {
+                                    Divider()
+                                        .padding(.leading, layout.cardInnerPadding)
+                                        .opacity(0.3)
+                                }
                             }
                         } else {
                             emptyState(
                                 icon: "list.bullet.clipboard",
                                 message: "暂无热门疾病"
                             )
-                            .padding(.horizontal, ScaleFactor.padding(16))
+                            .padding(.horizontal, layout.cardInnerPadding)
                         }
                     }
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadius))
-                    .padding(.horizontal, ScaleFactor.padding(12))
-                    .padding(.vertical, ScaleFactor.padding(8))
+                    .background(HealingColors.cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+                    .padding(.horizontal, layout.cardSpacing / 2)
+                    .padding(.vertical, layout.cardSpacing / 2)
                 }
-                .frame(width: geometry.size.width * 0.72)
-                .background(DXYColors.background)
+                .frame(width: geometry.size.width * 0.74)
+                .background(HealingColors.background)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
-    
+
     private var selectedDepartment: DepartmentWithDiseasesModel? {
         guard departments.indices.contains(selectedDepartmentIndex) else { return nil }
         return departments[selectedDepartmentIndex]
     }
-    
+
     // MARK: - 公共空态
     private func emptyState(icon: String, message: String) -> some View {
         UnifiedEmptyStateView(
@@ -336,52 +374,54 @@ struct DiseaseListView: View {
     }
 }
 
-// MARK: - 科室行
-struct DepartmentRowView: View {
+// MARK: - 治愈系科室行
+struct HealingDepartmentRow: View {
     let department: DepartmentWithDiseasesModel
     let isSelected: Bool
-    
+    let layout: AdaptiveLayout
+
     var body: some View {
         HStack(spacing: 0) {
-            Rectangle()
-                .fill(isSelected ? DXYColors.primaryPurple : Color.clear)
-                .frame(width: ScaleFactor.size(3))
-            
+            // 选中指示器
+            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                .fill(HealingColors.forestMist)
+                .frame(width: 3)
+
             Text(department.name)
-                .font(.system(size: AdaptiveFont.subheadline))
-                .foregroundColor(isSelected ? DXYColors.primaryPurple : DXYColors.textSecondary)
+                .font(.system(size: layout.bodyFontSize - 3, weight: isSelected ? .semibold : .regular))
+                .foregroundColor(isSelected ? HealingColors.forestMist : HealingColors.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, ScaleFactor.padding(16))
+                .padding(.vertical, layout.cardInnerPadding)
         }
-        .background(isSelected ? DXYColors.lightPurple : Color.white)
+        .background(
+            isSelected ?
+            HealingColors.softSage.opacity(0.2) :
+            HealingColors.cardBackground
+        )
     }
 }
 
-// MARK: - 疾病行
-struct DiseaseRowView: View {
+// MARK: - 治愈系疾病行
+struct HealingDiseaseRow: View {
     let disease: DiseaseListModel
-    
+    let layout: AdaptiveLayout
+
     var body: some View {
-        HStack(spacing: ScaleFactor.spacing(8)) {
+        HStack(spacing: layout.cardSpacing / 2) {
             Text(disease.name)
-                .font(.system(size: AdaptiveFont.subheadline))
-                .foregroundColor(DXYColors.textPrimary)
-            
-            if disease.is_hot {
-                Image(systemName: "flame.fill")
-                    .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(.orange)
-            }
-            
+                .font(.system(size: layout.bodyFontSize - 2, weight: .medium))
+                .foregroundColor(HealingColors.textPrimary)
+
             Spacer()
-            
+
             Image(systemName: "chevron.right")
-                .font(.system(size: AdaptiveFont.footnote))
-                .foregroundColor(DXYColors.textTertiary)
+                .font(.system(size: layout.captionFontSize, weight: .semibold))
+                .foregroundColor(HealingColors.textTertiary)
         }
-        .padding(.horizontal, ScaleFactor.padding(16))
-        .frame(height: ScaleFactor.size(56))
-        .background(Color.white)
+        .padding(.horizontal, layout.cardInnerPadding)
+        .padding(.vertical, layout.cardInnerPadding - 2)
+        .background(HealingColors.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 

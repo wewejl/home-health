@@ -1,13 +1,31 @@
 import Foundation
 import Combine
 import UIKit
-import Speech
+import AVFoundation
+
+// MARK: - 图片来源类型
+enum ImageSourceType {
+    case camera
+    case photoLibrary
+}
 
 // MARK: - 统一聊天 ViewModel
 /// 能力驱动的统一聊天视图模型
 /// 根据智能体能力动态渲染功能按钮，支持多科室适配
 @MainActor
 class UnifiedChatViewModel: ObservableObject {
+    // MARK: - Initialization & Cleanup
+
+    init() {
+        // 初始化阿里云语音服务
+        self.voiceService = SimpleVoiceService()
+        setupVoiceBindings()
+    }
+
+    deinit {
+        print("[UnifiedChatVM] deinit")
+    }
+
     // MARK: - 会话状态
     @Published var sessionId: String?
     @Published var agentType: AgentType?
@@ -55,10 +73,15 @@ class UnifiedChatViewModel: ObservableObject {
     
     // MARK: - 语音模式属性
     @Published var isVoiceMode: Bool = false
-    @Published var currentRecognition: String = ""
-    @Published var isRecording: Bool = false
-    @Published var isAISpeaking: Bool = false
+    @Published var voiceState: VoiceState = .idle
+    @Published var recognizedText: String = ""
+    @Published var aiResponseText: String = ""
     @Published var audioLevel: Float = 0
+    @Published var isMicrophoneMuted: Bool = false
+    @Published var showExitConfirmation: Bool = false
+
+    // 语音模式回调
+    var onVoiceImageRequest: ((ImageSourceType) -> Void)?
     
     /// 判断是否可以生成病历
     /// 至少需要5条消息（用户3条 + AI 2条）才能生成有意义的病历
@@ -87,44 +110,38 @@ class UnifiedChatViewModel: ObservableObject {
     private let medicalEventService = MedicalEventAPIService.shared
     private let localImageManager = LocalImageManager.shared
     private let sessionStateManager = SessionStateManager.shared
-    
+
     // MARK: - 语音服务
-    private let speechService = RealtimeSpeechService()
-    private let ttsService = SpeechSynthesisService()
+    private let voiceService: SimpleVoiceService
     private var voiceCancellables = Set<AnyCancellable>()
-    
+
     // MARK: - 初始化会话
     func initializeSession(doctorId: Int?, department: String?) async {
         isLoading = true
         defer { isLoading = false }
-        
+
         // 保存当前医生和科室信息
         currentDoctorId = doctorId
         currentDepartment = department
-        
+
         print("[UnifiedChatVM] initializeSession called - doctorId: \(String(describing: doctorId)), department: \(String(describing: department))")
-        
-        do {
-            // 1. 检查是否有活跃会话
-            if let doctorId = doctorId {
-                let activeSessionId = sessionStateManager.getActiveSession(doctorId: doctorId)
-                print("[UnifiedChatVM] 检查活跃会话 - doctorId: \(doctorId), activeSessionId: \(String(describing: activeSessionId))")
-                
-                if let sessionId = activeSessionId {
-                    // 尝试恢复活跃会话
-                    print("[UnifiedChatVM] 发现活跃会话: \(sessionId)")
-                    await loadExistingSession(sessionId: sessionId)
-                    return
-                }
+
+        // 1. 检查是否有活跃会话
+        if let doctorId = doctorId {
+            let activeSessionId = sessionStateManager.getActiveSession(doctorId: doctorId)
+            print("[UnifiedChatVM] 检查活跃会话 - doctorId: \(doctorId), activeSessionId: \(String(describing: activeSessionId))")
+
+            if let sessionId = activeSessionId {
+                // 尝试恢复活跃会话
+                print("[UnifiedChatVM] 发现活跃会话: \(sessionId)")
+                await loadExistingSession(sessionId: sessionId)
+                return
             }
-            
-            // 2. 创建新会话
-            print("[UnifiedChatVM] 没有活跃会话，创建新会话")
-            await createNewSession(doctorId: doctorId, department: department)
-            
-        } catch {
-            handleError(error)
         }
+
+        // 2. 创建新会话
+        print("[UnifiedChatVM] 没有活跃会话，创建新会话")
+        await createNewSession(doctorId: doctorId, department: department)
     }
     
     // MARK: - 加载现有会话
@@ -665,105 +682,229 @@ class UnifiedChatViewModel: ObservableObject {
     // 当用户发送第一条消息时，后端会根据 agent state 决定是否返回问候语
     
     // MARK: - 语音模式方法
-    
+
     /// 初始化语音服务绑定
     func setupVoiceBindings() {
-        speechService.$audioLevel
-            .receive(on: DispatchQueue.main)
-            .assign(to: &$audioLevel)
-        
-        ttsService.$isSpeaking
-            .receive(on: DispatchQueue.main)
-            .assign(to: &$isAISpeaking)
-    }
-    
-    /// 切换语音模式
-    func toggleVoiceMode() {
-        isVoiceMode.toggle()
-        
-        if isVoiceMode {
-            startVoiceMode()
-        } else {
-            stopVoiceMode()
+        // 设置 SimpleVoiceService 回调
+        voiceService.onPartialResult = { [weak self] text in
+            Task { @MainActor in
+                self?.recognizedText = text
+            }
         }
+
+        voiceService.onFinalResult = { [weak self] text in
+            Task { @MainActor in
+                await self?.handleFinalRecognition(text)
+            }
+        }
+
+        // 打断回调已内置在 ASR partial result 处理中
+        // voiceService.onVoiceInterruption = { [weak self] in ... }
+
+        voiceService.onError = { [weak self] error in
+            Task { @MainActor in
+                self?.handleVoiceError(error)
+            }
+        }
+
+        // 绑定状态变化
+        voiceService.$state
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] newState in
+                guard let self = self else { return }
+                self.voiceState = newState
+            }
+            .store(in: &voiceCancellables)
+
+        // 绑定音频电平（SimpleVoiceService 暂不支持，使用默认值）
+        // voiceService.$audioLevel
+        //     .receive(on: DispatchQueue.main)
+        //     .sink { [weak self] level in
+        //         guard let self = self, !self.isMicrophoneMuted else { return }
+        //         self.audioLevel = level
+        //     }
+        //     .store(in: &voiceCancellables)
     }
-    
-    /// 开始语音模式
-    private func startVoiceMode() {
+
+    /// 处理语音打断
+    private func handleVoiceInterruption() {
+        print("[UnifiedChatVM] 检测到用户打断")
+        // SimpleVoiceService 内部已处理停止 TTS
+        voiceState = .listening
+    }
+
+    // MARK: - 语音模式入口（公开方法）
+
+    /// 进入语音模式
+    func enterVoiceMode() {
+        guard !isVoiceMode else {
+            print("[UnifiedChatVM] ⚠️ 已在语音模式中，忽略重复进入")
+            return
+        }
+        isVoiceMode = true
         Task {
-            let authorized = await speechService.requestAuthorization()
-            guard authorized else {
-                await MainActor.run {
-                    isVoiceMode = false
-                    errorMessage = "需要麦克风和语音识别权限才能使用语音功能"
-                    showError = true
-                }
-                return
-            }
-            
-            do {
-                try speechService.startContinuousRecognition(
-                    onPartialResult: { [weak self] text in
-                        self?.currentRecognition = text
-                        self?.isRecording = true
-                    },
-                    onFinalResult: { [weak self] text in
-                        guard let self = self, !text.isEmpty else { return }
-                        self.isRecording = false
-                        self.currentRecognition = ""
-                        // 发送消息
-                        Task {
-                            await self.sendVoiceMessage(text)
-                        }
-                    }
-                )
-            } catch {
-                await MainActor.run {
-                    isVoiceMode = false
-                    errorMessage = "启动语音识别失败：\(error.localizedDescription)"
-                    showError = true
-                }
-            }
+            await startVoiceMode()
         }
     }
-    
+
+    /// 退出语音模式（统一的退出入口）
+    /// - 确保停止所有语音服务
+    /// - 然后更新状态触发 UI 关闭
+    func exitVoiceMode() {
+        guard isVoiceMode else {
+            print("[UnifiedChatVM] ⚠️ 不在语音模式中，忽略退出")
+            return
+        }
+
+        // 1. 先停止语音服务（防止回调被触发）
+        stopVoiceMode()
+
+        // 2. 再更新状态（触发 fullScreenCover 关闭）
+        isVoiceMode = false
+
+        print("[UnifiedChatVM] 🚪 已退出语音模式")
+    }
+
+    // MARK: - 内部实现（私有方法）
+
+    /// 开始语音模式（内部方法）
+    func startVoiceMode() async {
+        do {
+            try await voiceService.start()
+            print("[UnifiedChatVM] 简化语音模式已启动")
+        } catch {
+            handleVoiceError(error)
+        }
+    }
+
     /// 停止语音模式
-    private func stopVoiceMode() {
-        speechService.stopRecognition()
-        ttsService.stop()
-        isRecording = false
-        currentRecognition = ""
-        isAISpeaking = false
+    func stopVoiceMode() {
+        print("[UnifiedChatVM] 开始停止语音模式...")
+
+        // 停止语音服务
+        voiceService.stop()
+
+        // 清理状态
+        voiceState = .idle
+        recognizedText = ""
+        aiResponseText = ""
+        isMicrophoneMuted = false
+
+        print("[UnifiedChatVM] 语音模式已完全停止")
     }
-    
-    /// 发送语音消息
-    private func sendVoiceMessage(_ text: String) async {
-        // 复用现有的 sendMessage 方法
-        await sendMessage(content: text)
+
+    /// 切换麦克风静音（SimpleVoiceService 暂不支持，使用本地状态）
+    func toggleMicrophone() {
+        isMicrophoneMuted.toggle()
+        audioLevel = isMicrophoneMuted ? 0 : 0.5
+
+        print("[UnifiedChatVM] 麦克风\(isMicrophoneMuted ? "已静音" : "已打开")")
     }
-    
+
     /// 打断 AI 播报
-    func interruptAISpeech() {
-        if isAISpeaking {
-            ttsService.stop()
-            isAISpeaking = false
+    func interruptAISpeaking() {
+        if case .aiSpeaking = voiceState {
+            voiceService.stopTTS()
+            voiceState = .idle
         }
     }
-    
-    /// 播报 AI 回复（在收到 AI 消息后调用）
-    func speakAIResponse(_ text: String) {
-        guard isVoiceMode else { return }
-        
-        ttsService.speak(
-            text: text,
-            rate: 0.5,
-            onStart: { [weak self] in
-                self?.isAISpeaking = true
-            },
-            onFinish: { [weak self] in
-                self?.isAISpeaking = false
+
+    /// 停止录音并发送（用户手动触发）
+    func stopRecordingAndSend() {
+        guard case .listening = voiceState else { return }
+
+        let textToSend = recognizedText.isEmpty ? "（未识别到语音）" : recognizedText
+
+        print("[UnifiedChatVM] 用户手动停止录音，发送: \(textToSend)")
+
+        // 停止语音服务
+        voiceService.stop()
+
+        // 发送消息
+        Task {
+            await sendMessage(content: textToSend)
+
+            // 等待 AI 回复并播报
+            await waitForAIResponseAndSpeak()
+
+            // 重置识别文字
+            recognizedText = ""
+        }
+    }
+
+    /// 请求拍照
+    func requestVoiceCamera() {
+        onVoiceImageRequest?(.camera)
+    }
+
+    /// 请求相册
+    func requestVoicePhotoLibrary() {
+        onVoiceImageRequest?(.photoLibrary)
+    }
+
+    /// 请求退出
+    func requestVoiceExit() {
+        showExitConfirmation = true
+    }
+
+    /// 取消退出
+    func cancelVoiceExit() {
+        showExitConfirmation = false
+    }
+
+    // MARK: - 私有语音方法
+
+    private func handleFinalRecognition(_ text: String) async {
+        print("[UnifiedChatVM] 收到最终识别结果: \(text)")
+        guard !text.isEmpty else {
+            print("[UnifiedChatVM] 识别结果为空，跳过发送")
+            return
+        }
+
+        // 暂停识别，进入处理状态
+        voiceState = .processing
+
+        // 发送消息到后端（复用现有方法）
+        await sendMessage(content: text)
+
+        // 等待 AI 回复并播报
+        await waitForAIResponseAndSpeak()
+
+        recognizedText = ""
+    }
+
+    private func waitForAIResponseAndSpeak() async {
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒
+
+        if let lastMessage = messages.last,
+           !lastMessage.isFromUser {
+
+            let responseText = lastMessage.content
+            print("[UnifiedChatVM] ✅ 收到AI回复，准备播报")
+
+            // 使用 SimpleVoiceService 播报
+            do {
+                try await voiceService.speak(responseText)
+                print("[UnifiedChatVM] TTS 播报完成")
+            } catch {
+                print("[UnifiedChatVM] TTS 播报失败: \(error)")
             }
-        )
+        } else {
+            if !isMicrophoneMuted {
+                await startVoiceMode()
+            } else {
+                voiceState = .idle
+            }
+        }
+    }
+
+    private func handleVoiceError(_ error: Error) {
+        if let voiceError = error as? VoiceError {
+            voiceState = .error(voiceError)
+        } else {
+            voiceState = .error(VoiceError.recognitionFailed(underlying: error))
+        }
+        print("[UnifiedChatVM] 语音错误: \(error.localizedDescription)")
     }
 }
 

@@ -1,12 +1,19 @@
+from dotenv import load_dotenv
+load_dotenv()  # 加载 .env 文件中的环境变量
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base, SessionLocal
 from .routes import (
     auth_router, departments_router, sessions_router, sessions_v2_router, feedbacks_router, diseases_router, drugs_router,
     medical_events_router, ai_router, persona_chat_router, record_analysis_router,  # diagnosis_router, derma_router 已废弃
+    medical_orders_router,  # 医嘱执行监督系统
+    rounding_router,  # 远程查房系统
     admin_auth_router, admin_doctors_router, admin_departments_router,
     admin_knowledge_router, admin_documents_router, admin_feedbacks_router, admin_stats_router,
-    admin_diseases_router, admin_drugs_router, admin_drug_categories_router
+    admin_diseases_router, admin_drugs_router, admin_drug_categories_router,
+    funasr_router,  # FunASR 语音识别
+    voice_router,  # 语音服务转发 (ASR + TTS)
 )
 from .services.admin_auth_service import AdminAuthService
 from .seed import seed_data
@@ -60,6 +67,10 @@ app.include_router(drugs_router)
 # diagnosis_router, derma_router 已废弃，使用 sessions_router 统一接口
 app.include_router(medical_events_router)
 app.include_router(ai_router)
+app.include_router(medical_orders_router)  # 医嘱执行监督系统
+app.include_router(rounding_router)  # 远程查房系统
+app.include_router(funasr_router)  # FunASR 语音识别
+app.include_router(voice_router)  # 语音服务转发 (ASR + TTS)
 
 # 管理后台路由
 app.include_router(admin_auth_router)

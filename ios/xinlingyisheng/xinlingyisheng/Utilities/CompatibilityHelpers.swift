@@ -4,14 +4,24 @@ import SwiftUI
 /// A navigation container that uses NavigationStack on iOS 16+ and NavigationView on iOS 15
 struct CompatibleNavigationStack<Content: View>: View {
     let content: Content
-    
+
+    // iOS 16+ 导航路径绑定
+    @Binding var path: [String]
+
     init(@ViewBuilder content: () -> Content) {
         self.content = content()
+        self._path = .constant([])
     }
-    
+
+    // 支持 path 参数的初始化（用于 TabView 导航重置）
+    init(path: Binding<[String]>, @ViewBuilder content: () -> Content) {
+        self.content = content()
+        self._path = path
+    }
+
     var body: some View {
         if #available(iOS 16.0, *) {
-            NavigationStack {
+            NavigationStack(path: $path) {
                 content
             }
         } else {
@@ -209,12 +219,8 @@ struct ScrollDismissesKeyboardModifier: ViewModifier {
             content
                 .scrollDismissesKeyboard(.interactively)
         } else {
+            // iOS 15 不做任何处理，避免干扰键盘弹出
             content
-                .simultaneousGesture(
-                    DragGesture().onChanged { _ in
-                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                    }
-                )
         }
     }
 }

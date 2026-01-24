@@ -262,22 +262,98 @@ class SpeechTranscriptionService(BaseAIService):
     ) -> Optional[Dict]:
         """
         调用转写 API
-        
-        注意：这里提供了多种实现方案，可根据实际使用的 ASR 服务选择
+
+        注意：这里提供了多种实现方案，根据 ASR_PROVIDER 配置选择
         """
-        # 方案1: 使用阿里云 Paraformer
-        result = await self._transcribe_with_aliyun(audio_data, language)
-        if result:
-            return result
-        
-        # 方案2: 使用 OpenAI Whisper API
-        result = await self._transcribe_with_whisper(audio_data, language)
-        if result:
-            return result
-        
-        # 方案3: 本地模拟（开发测试用）
+        provider = settings.ASR_PROVIDER
+
+        # 方案1: 使用 GLM-ASR（智谱语音识别）
+        if provider == "glm":
+            result = await self._transcribe_with_glm(audio_data, language)
+            if result:
+                return result
+
+        # 方案2: 使用阿里云 Paraformer
+        if provider == "aliyun":
+            result = await self._transcribe_with_aliyun(audio_data, language)
+            if result:
+                return result
+
+        # 方案3: 使用 OpenAI Whisper API
+        if provider == "openai":
+            result = await self._transcribe_with_whisper(audio_data, language)
+            if result:
+                return result
+
+        # 方案4: 本地模拟（开发测试用）
         return self._mock_transcription(audio_data)
-    
+
+    async def _transcribe_with_glm(
+        self,
+        audio_data: bytes,
+        language: str
+    ) -> Optional[Dict]:
+        """
+        GLM-ASR-2512 转写（智谱语音识别）
+
+        需要配置 GLM_API_KEY
+        """
+        api_key = settings.GLM_API_KEY
+        if not api_key:
+            print("GLM_API_KEY 未配置")
+            return None
+
+        try:
+            import io
+
+            # GLM API 使用 Bearer Token 格式
+            headers = {
+                "Authorization": f"Bearer {api_key}"
+            }
+
+            # 准备 multipart/form-data
+            files = {
+                "file": ("audio.m4a", io.BytesIO(audio_data), "audio/m4a"),
+                "model": (None, settings.GLM_ASR_MODEL),
+                "stream": (None, "false")
+            }
+
+            print(f"[GLM-ASR] 正在调用 GLM-ASR API，音频大小: {len(audio_data)} bytes")
+
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                response = await client.post(
+                    settings.GLM_ASR_BASE_URL,
+                    headers=headers,
+                    files=files
+                )
+
+                print(f"[GLM-ASR] API 响应状态码: {response.status_code}")
+
+                if response.status_code == 200:
+                    data = response.json()
+                    text = data.get("text", "")
+
+                    print(f"[GLM-ASR] 转写成功: {text[:50]}...")
+
+                    return {
+                        "text": text,
+                        "duration": data.get("duration", 0),
+                        "confidence": 0.9,  # GLM-ASR 不返回置信度，给个默认值
+                        "language": "zh",  # GLM-ASR 自动识别语言
+                        "segments": []
+                    }
+                else:
+                    error_text = response.text
+                    print(f"[GLM-ASR] API 错误: {error_text}")
+                    return None
+
+        except Exception as e:
+            print(f"[GLM-ASR] 转写失败: {e}")
+            import traceback
+            traceback.print_exc()
+
+        return None
+
     async def _transcribe_with_aliyun(
         self,
         audio_data: bytes,

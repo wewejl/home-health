@@ -1,33 +1,35 @@
 import SwiftUI
 
-// MARK: - 现代化科室智能体问诊界面
+// MARK: - 现代化科室智能体问诊界面（治愈系风格）
 // 连接真实后端API，使用 UnifiedChatViewModel
 
 struct ModernConsultationView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = UnifiedChatViewModel()
-    
+    @StateObject private var authManager = AuthManager.shared
+
     // 医生/科室信息
     let doctorId: Int?
     let doctorName: String
     let department: String
     let doctorTitle: String
     let doctorBio: String
-    
+
     // UI 状态
     @State private var messageText = ""
     @State private var isProfileExpanded = true
     @State private var showActionMenu = false
     @State private var showImagePicker = false
     @State private var showCamera = false
-    
-    // 新增: 图片来源选择
+
+    // 图片来源选择
     @State private var showImageSourcePicker = false
-    
-    // 新增: 会话管理
+
+    // 会话管理
     @State private var showHistoryList = false
     @State private var showNewChatConfirm = false
-    
+    @State private var showLoginPrompt = false
+
     // 简化初始化（兼容旧接口）
     init(doctor: ModernDoctorInfo) {
         self.doctorId = doctor.id
@@ -36,7 +38,7 @@ struct ModernConsultationView: View {
         self.doctorTitle = doctor.title
         self.doctorBio = doctor.bio
     }
-    
+
     // 新的初始化方法
     init(doctorId: Int? = nil, doctorName: String, department: String, doctorTitle: String = "主治医师", doctorBio: String = "") {
         self.doctorId = doctorId
@@ -45,49 +47,81 @@ struct ModernConsultationView: View {
         self.doctorTitle = doctorTitle
         self.doctorBio = doctorBio
     }
-    
+
     var body: some View {
-        ZStack {
-            MedicalColors.bgPrimary
-                .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
-                // 悬浮导航栏
-                ModernNavigationBar(
-                    doctorName: doctorName,
-                    isOnline: true,
-                    onBack: { dismiss() },
-                    onNewChat: { showNewChatConfirm = true },
-                    onHistory: { showHistoryList = true },
-                    onGenerateDossier: { viewModel.requestGenerateDossier() }
-                )
-                
-                if viewModel.isLoading {
-                    Spacer()
-                    ProgressView("初始化会话...")
-                    Spacer()
-                } else {
-                    // 主内容区域
-                    mainContentView
+        GeometryReader { geometry in
+            let layout = AdaptiveLayout(screenWidth: geometry.size.width)
+
+            ZStack {
+                // 治愈系背景
+                HealingConsultationBackground(layout: layout)
+
+                VStack(spacing: 0) {
+                    // 悬浮导航栏
+                    HealingConsultationNavBar(
+                        doctorName: doctorName,
+                        isOnline: true,
+                        onBack: { dismiss() },
+                        onNewChat: { showNewChatConfirm = true },
+                        onHistory: { showHistoryList = true },
+                        onGenerateDossier: { viewModel.requestGenerateDossier() },
+                        layout: layout
+                    )
+
+                    if viewModel.isLoading {
+                        Spacer()
+                        VStack(spacing: layout.cardSpacing) {
+                            ProgressView()
+                                .tint(HealingColors.forestMist)
+                                .scaleEffect(1.2)
+                            Text("初始化会话...")
+                                .font(.system(size: layout.captionFontSize + 1))
+                                .foregroundColor(HealingColors.textSecondary)
+                        }
+                        Spacer()
+                    } else {
+                        // 主内容区域
+                        mainContentView(layout: layout)
+                    }
+
+                    Spacer(minLength: 0)
                 }
-                
-                Spacer(minLength: 0)
-            }
-            
-            // 底部输入区域（固定）
-            if !viewModel.isLoading {
-                bottomInputArea
+
+                // 底部输入区域（固定）
+                if !viewModel.isLoading {
+                    HealingConsultationBottomInput(
+                        messageText: $messageText,
+                        viewModel: viewModel,
+                        showActionMenu: $showActionMenu,
+                        showImageSourcePicker: $showImageSourcePicker,
+                        onSendMessage: sendMessage,
+                        layout: layout
+                    )
+                }
             }
         }
         .navigationBarHidden(true)
         .tabBarHidden(true)
         .task {
+            // 检查登录状态
+            if !authManager.isLoggedIn {
+                showLoginPrompt = true
+                return
+            }
             await viewModel.initializeSession(doctorId: doctorId, department: department)
         }
         .alert("错误", isPresented: $viewModel.showError) {
             Button("确定", role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "发生未知错误")
+        }
+        .alert("需要登录", isPresented: $showLoginPrompt) {
+            Button("去登录") {
+                dismiss()
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("请先登录后再开始问诊")
         }
         .alert("高风险提示", isPresented: $viewModel.showRiskAlert) {
             Button("我知道了", role: .cancel) {}
@@ -104,17 +138,15 @@ struct ModernConsultationView: View {
                 Task { await viewModel.handleSelectedImage(image) }
             }
         }
-        // 图片来源选择对话框
         .confirmationDialog("选择图片来源", isPresented: $showImageSourcePicker, titleVisibility: .visible) {
-            Button("📷 拍照") {
+            Button("拍照") {
                 showCamera = true
             }
-            Button("🖼️ 从相册选择") {
+            Button("从相册选择") {
                 showImagePicker = true
             }
             Button("取消", role: .cancel) {}
         }
-        // 新建对话确认
         .alert("新建对话", isPresented: $showNewChatConfirm) {
             Button("确定") {
                 Task {
@@ -125,7 +157,6 @@ struct ModernConsultationView: View {
         } message: {
             Text("确定要新建对话吗？当前对话将被保存")
         }
-        // 生成病历确认对话框
         .alert("确认生成病历", isPresented: $viewModel.showGenerateConfirmation) {
             Button("取消", role: .cancel) {
                 viewModel.cancelGenerateDossier()
@@ -136,7 +167,6 @@ struct ModernConsultationView: View {
         } message: {
             Text(viewModel.generateConfirmationMessage)
         }
-        // 历史对话列表
         .sheet(isPresented: $showHistoryList) {
             SessionHistoryView(
                 doctorId: doctorId,
@@ -149,68 +179,61 @@ struct ModernConsultationView: View {
                 }
             )
         }
+        .fullScreenCover(isPresented: $viewModel.isVoiceMode) {
+            FullScreenVoiceModeView(
+                viewModel: viewModel,
+                onDismiss: {
+                    viewModel.exitVoiceMode()
+                },
+                onSubtitleTap: {},
+                onCameraTap: { showCamera = true },
+                onPhotoLibraryTap: { showImageSourcePicker = true }
+            )
+        }
     }
-    
+
     // MARK: - 主内容区域
-    private var mainContentView: some View {
+    private func mainContentView(layout: AdaptiveLayout) -> some View {
         ScrollViewReader { proxy in
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: MedicalSpacing.lg) {
+                VStack(spacing: layout.cardSpacing) {
                     // 医生信息卡片（可折叠）
-                    doctorProfileCard
-                        .padding(.horizontal, MedicalSpacing.lg)
-                        .padding(.top, MedicalSpacing.md)
-                    
+                    healingDoctorProfileCard(layout: layout)
+                        .padding(.horizontal, layout.horizontalPadding)
+                        .padding(.top, layout.cardSpacing / 2)
+
                     // 聊天消息列表
-                    LazyVStack(spacing: MedicalSpacing.sm) {
+                    LazyVStack(spacing: layout.cardSpacing / 2) {
                         ForEach(viewModel.messages) { message in
-                            ModernMessageBubbleAdapter(message: message, messageText: $messageText)
-                                .id(message.id)
-                                .transition(.asymmetric(
-                                    insertion: .scale(scale: 0.9).combined(with: .opacity),
-                                    removal: .opacity
-                                ))
+                            HealingMessageBubbleAdapter(
+                                message: message,
+                                messageText: $messageText,
+                                layout: layout
+                            )
+                            .id(message.id)
+                            .transition(.asymmetric(
+                                insertion: .scale(scale: 0.9).combined(with: .opacity),
+                                removal: .opacity
+                            ))
                         }
                     }
-                    .padding(.horizontal, MedicalSpacing.lg)
+                    .padding(.horizontal, layout.horizontalPadding)
                     .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.messages.count)
-                    
-                    // 中间建议卡片 - 已移除，保持与竞品一致的纯消息流交互
-                    // 所有建议现在直接在AI消息中给出
-                    // if !viewModel.adviceHistory.isEmpty {
-                    //     ForEach(viewModel.adviceHistory) { advice in
-                    //         AdviceCardView(advice: advice, onAccept: {
-                    //             print("[DEBUG] 用户确认收到建议: \(advice.title)")
-                    //         })
-                    //             .padding(.horizontal, MedicalSpacing.lg)
-                    //             .transition(.move(edge: .bottom).combined(with: .opacity))
-                    //     }
-                    // }
-                    
-                    // 诊断卡片 - 已移除，初步建议现在直接在AI消息中给出
-                    // 只在用户明确要求生成最终诊断报告时才显示结构化卡片
-                    // if let diagnosisCard = viewModel.diagnosisCard {
-                    //     DiagnosisSummaryCard(
-                    //         card: diagnosisCard,
-                    //         onViewDossier: { viewDossier() }
-                    //     )
-                    //     .padding(.horizontal, MedicalSpacing.lg)
-                    //     .transition(.move(edge: .bottom).combined(with: .opacity))
-                    // }
-                    
+
                     // 病历提示卡片
                     if viewModel.shouldShowDossierPrompt {
-                        ModernDossierPromptCard(
+                        HealingDossierPromptCard(
                             eventId: viewModel.eventId,
                             isNewEvent: viewModel.isNewEvent,
                             onViewDossier: { viewDossier() },
-                            onContinue: { viewModel.continueConversation() }
+                            onContinue: { viewModel.continueConversation() },
+                            layout: layout
                         )
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
-                    
+
                     // 底部间距
-                    Color.clear.frame(height: 160)
+                    Color.clear.frame(height: 180)
                 }
             }
             .onChange(of: viewModel.messages.count) {
@@ -222,89 +245,410 @@ struct ModernConsultationView: View {
             }
         }
     }
-    
+
     // MARK: - 医生信息卡片
-    private var doctorProfileCard: some View {
+    private func healingDoctorProfileCard(layout: AdaptiveLayout) -> some View {
         VStack(spacing: 0) {
             Button(action: {
                 withAnimation(.spring(response: 0.3)) {
                     isProfileExpanded.toggle()
                 }
             }) {
-                HStack(spacing: MedicalSpacing.md) {
+                HStack(spacing: layout.cardSpacing / 2) {
                     ZStack {
                         Circle()
                             .fill(
                                 LinearGradient(
-                                    colors: [MedicalColors.primaryBlue, MedicalColors.secondaryTeal],
+                                    colors: [HealingColors.forestMist, HealingColors.deepSage],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .frame(width: 56, height: 56)
-                        
+                            .frame(width: layout.iconLargeSize + 4, height: layout.iconLargeSize + 4)
+
                         Text(String(doctorName.prefix(1)))
-                            .font(.system(size: 24, weight: .bold))
+                            .font(.system(size: layout.bodyFontSize + 2, weight: .bold))
                             .foregroundColor(.white)
                     }
-                    .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                    .shadow(color: Color.black.opacity(0.1), radius: 4, y: 2)
-                    
+                    .overlay(Circle().stroke(HealingColors.cardBackground, lineWidth: 3))
+                    .shadow(color: HealingColors.forestMist.opacity(0.2), radius: 6, y: 3)
+
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 6) {
                             Text(doctorName)
-                                .font(MedicalTypography.h3)
-                                .foregroundColor(MedicalColors.textPrimary)
-                            
+                                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                                .foregroundColor(HealingColors.textPrimary)
+
                             Text(doctorTitle)
-                                .font(MedicalTypography.caption)
-                                .foregroundColor(MedicalColors.primaryBlue)
+                                .font(.system(size: layout.captionFontSize))
+                                .foregroundColor(HealingColors.forestMist)
                                 .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(MedicalColors.primaryBlue.opacity(0.1))
-                                .cornerRadius(MedicalCornerRadius.sm)
+                                .padding(.vertical, 4)
+                                .background(HealingColors.forestMist.opacity(0.15))
+                                .clipShape(Capsule())
                         }
-                        
-                        Text(department)
-                            .font(MedicalTypography.bodySmall)
-                            .foregroundColor(MedicalColors.textSecondary)
+
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(HealingColors.forestMist)
+                                .frame(width: 6, height: 6)
+                            Text(department)
+                                .font(.system(size: layout.captionFontSize))
+                                .foregroundColor(HealingColors.textSecondary)
+                        }
                     }
-                    
+
                     Spacer()
-                    
+
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(MedicalColors.textMuted)
+                        .font(.system(size: layout.captionFontSize + 1, weight: .semibold))
+                        .foregroundColor(HealingColors.textTertiary)
                         .rotationEffect(.degrees(isProfileExpanded ? 180 : 0))
                 }
-                .padding(MedicalSpacing.lg)
+                .padding(layout.cardInnerPadding)
             }
             .buttonStyle(PlainButtonStyle())
-            
+
             if isProfileExpanded && !doctorBio.isEmpty {
-                VStack(alignment: .leading, spacing: MedicalSpacing.md) {
-                    Divider().padding(.horizontal, MedicalSpacing.lg)
-                    
+                VStack(alignment: .leading, spacing: layout.cardSpacing / 2) {
+                    Rectangle()
+                        .fill(HealingColors.softSage.opacity(0.2))
+                        .frame(height: 1)
+
                     Text(doctorBio)
-                        .font(MedicalTypography.bodySmall)
-                        .foregroundColor(MedicalColors.textSecondary)
+                        .font(.system(size: layout.captionFontSize + 1))
+                        .foregroundColor(HealingColors.textSecondary)
                         .lineLimit(3)
-                        .padding(.horizontal, MedicalSpacing.lg)
-                        .padding(.bottom, MedicalSpacing.md)
+                        .padding(.horizontal, layout.cardInnerPadding)
+                        .padding(.bottom, layout.cardInnerPadding)
                 }
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .background(MedicalColors.bgCard)
-        .cornerRadius(MedicalCornerRadius.lg)
-        .shadow(color: Color.black.opacity(0.06), radius: 12, y: 4)
+        .background(HealingColors.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: Color.black.opacity(0.04), radius: 10, y: 4)
     }
-    
-    // MARK: - 底部输入区域
-    private var bottomInputArea: some View {
+
+    // MARK: - Actions
+    private func sendMessage() {
+        let text = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+
+        messageText = ""
+
+        Task {
+            await viewModel.sendMessage(content: text)
+        }
+    }
+
+    private func viewDossier() {
+        print("View dossier: \(viewModel.eventId ?? "")")
+    }
+}
+
+// MARK: - 治愈系问诊背景
+struct HealingConsultationBackground: View {
+    let layout: AdaptiveLayout
+
+    var body: some View {
+        ZStack {
+            // 渐变背景
+            LinearGradient(
+                colors: [
+                    HealingColors.warmCream,
+                    HealingColors.softPeach.opacity(0.4),
+                    HealingColors.warmSand.opacity(0.2)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            GeometryReader { geo in
+                // 右上角装饰
+                Circle()
+                    .fill(HealingColors.softSage.opacity(0.06))
+                    .frame(width: layout.decorativeCircleSize * 0.4, height: layout.decorativeCircleSize * 0.4)
+                    .offset(x: geo.size.width * 0.5, y: -geo.size.height * 0.15)
+                    .ignoresSafeArea()
+            }
+        }
+    }
+}
+
+// MARK: - 治愈系导航栏
+struct HealingConsultationNavBar: View {
+    let doctorName: String
+    let isOnline: Bool
+    let onBack: () -> Void
+    let onNewChat: () -> Void
+    let onHistory: () -> Void
+    let onGenerateDossier: () -> Void
+    let layout: AdaptiveLayout
+
+    var body: some View {
+        HStack(spacing: layout.cardSpacing / 2) {
+            // 返回按钮
+            Button(action: onBack) {
+                ZStack {
+                    Circle()
+                        .fill(HealingColors.cardBackground)
+                        .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
+
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: layout.captionFontSize + 2, weight: .semibold))
+                        .foregroundColor(HealingColors.textPrimary)
+                }
+                .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
+            }
+
+            // 标题区域
+            VStack(alignment: .leading, spacing: 2) {
+                Text(doctorName)
+                    .font(.system(size: layout.bodyFontSize - 1, weight: .semibold))
+                    .foregroundColor(HealingColors.textPrimary)
+
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(isOnline ? HealingColors.forestMist : HealingColors.textTertiary)
+                        .frame(width: 6, height: 6)
+                    Text(isOnline ? "在线服务" : "离线")
+                        .font(.system(size: layout.captionFontSize - 1))
+                        .foregroundColor(HealingColors.textSecondary)
+                }
+            }
+
+            Spacer()
+
+            // 新建对话按钮
+            Button(action: onNewChat) {
+                ZStack {
+                    Circle()
+                        .fill(HealingColors.forestMist.opacity(0.15))
+                        .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
+
+                    Image(systemName: "square.and.pencil")
+                        .font(.system(size: layout.captionFontSize))
+                        .foregroundColor(HealingColors.forestMist)
+                }
+            }
+
+            // 历史记录按钮
+            Button(action: onHistory) {
+                ZStack {
+                    Circle()
+                        .fill(HealingColors.dustyBlue.opacity(0.15))
+                        .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
+
+                    Image(systemName: "clock.arrow.circlepath")
+                        .font(.system(size: layout.captionFontSize))
+                        .foregroundColor(HealingColors.dustyBlue)
+                }
+            }
+
+            // 生成病历按钮
+            Button(action: onGenerateDossier) {
+                ZStack {
+                    Circle()
+                        .fill(HealingColors.warmSand.opacity(0.2))
+                        .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
+
+                    Image(systemName: "doc.text.fill")
+                        .font(.system(size: layout.captionFontSize))
+                        .foregroundColor(HealingColors.warmSand)
+                }
+            }
+        }
+        .padding(.horizontal, layout.horizontalPadding)
+        .padding(.vertical, layout.cardInnerPadding)
+        .background(HealingColors.cardBackground.opacity(0.9))
+        .shadow(color: Color.black.opacity(0.02), radius: 6, y: 2)
+    }
+}
+
+// MARK: - 治愈系消息气泡适配器
+struct HealingMessageBubbleAdapter: View {
+    let message: UnifiedChatMessage
+    @Binding var messageText: String
+    let layout: AdaptiveLayout
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: layout.cardSpacing / 3) {
+            HStack(alignment: .top, spacing: layout.cardSpacing / 2) {
+                if !message.isFromUser {
+                    healingAIAvatar
+                } else {
+                    Spacer(minLength: 50)
+                }
+
+                VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
+                    bubbleContent
+
+                    Text(message.timestamp.formatted(date: .omitted, time: .shortened))
+                        .font(.system(size: layout.captionFontSize - 1))
+                        .foregroundColor(HealingColors.textTertiary)
+                }
+
+                // 用户消息：右侧不留空间（贴边显示）
+                // AI 消息：右侧留空间（平衡布局）
+                if !message.isFromUser {
+                    Spacer(minLength: 50)
+                }
+            }
+
+            // 快捷选项（仅 AI 消息显示）
+            if !message.isFromUser && !message.quickOptions.isEmpty {
+                healingQuickOptionsView
+                    .padding(.leading, layout.iconLargeSize + 12)
+            }
+        }
+    }
+
+    private var healingAIAvatar: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [HealingColors.forestMist, HealingColors.deepSage],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: layout.iconSmallSize + 8, height: layout.iconSmallSize + 8)
+
+            Image(systemName: "heart.fill")
+                .font(.system(size: layout.captionFontSize + 1))
+                .foregroundColor(.white)
+        }
+    }
+
+    @ViewBuilder
+    private var bubbleContent: some View {
+        switch message.messageType {
+        case .text:
+            healingTextBubble
+        case .image(let image):
+            healingImageBubble(image)
+        case .structuredResult:
+            healingTextBubble
+        case .loading:
+            healingLoadingBubble
+        }
+    }
+
+    private var healingTextBubble: some View {
+        Group {
+            if message.isFromUser {
+                Text(message.content)
+                    .font(.system(size: layout.captionFontSize + 1))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, layout.cardInnerPadding)
+                    .padding(.vertical, layout.cardInnerPadding - 2)
+                    .background(
+                        LinearGradient(
+                            colors: [HealingColors.forestMist, HealingColors.deepSage],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .shadow(
+                        color: HealingColors.forestMist.opacity(0.15),
+                        radius: 6,
+                        y: 2
+                    )
+            } else {
+                MarkdownTextView(
+                    message.content,
+                    fontSize: layout.captionFontSize + 1,
+                    textColor: HealingColors.textPrimary
+                )
+                .padding(.horizontal, layout.cardInnerPadding)
+                .padding(.vertical, layout.cardInnerPadding - 2)
+                .background(HealingColors.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .shadow(
+                    color: Color.black.opacity(0.03),
+                    radius: 6,
+                    y: 2
+                )
+            }
+        }
+    }
+
+    private func healingImageBubble(_ image: UIImage) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Image(uiImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(maxWidth: 240, maxHeight: 240)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+            if !message.content.isEmpty {
+                Text(message.content)
+                    .font(.system(size: layout.captionFontSize))
+                    .foregroundColor(HealingColors.textSecondary)
+            }
+        }
+        .padding(8)
+        .background(HealingColors.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
+    }
+
+    private var healingLoadingBubble: some View {
+        HStack(spacing: 8) {
+            ProgressView()
+                .tint(HealingColors.forestMist)
+                .scaleEffect(0.8)
+            Text(message.content.isEmpty ? "正在思考中..." : message.content)
+                .font(.system(size: layout.captionFontSize))
+                .foregroundColor(HealingColors.textSecondary)
+        }
+        .padding(.horizontal, layout.cardInnerPadding)
+        .padding(.vertical, layout.cardInnerPadding - 2)
+        .background(HealingColors.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private var healingQuickOptionsView: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: layout.cardSpacing / 2) {
+                ForEach(message.quickOptions) { option in
+                    Button(action: {
+                        if !messageText.isEmpty {
+                            messageText += " "
+                        }
+                        messageText += option.text
+                    }) {
+                        Text(option.text)
+                            .font(.system(size: layout.captionFontSize, weight: .medium))
+                            .foregroundColor(HealingColors.forestMist)
+                            .padding(.horizontal, layout.cardInnerPadding)
+                            .padding(.vertical, layout.cardSpacing / 2)
+                            .background(HealingColors.forestMist.opacity(0.12))
+                            .clipShape(Capsule())
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - 治愈系底部输入区域
+struct HealingConsultationBottomInput: View {
+    @Binding var messageText: String
+    @ObservedObject var viewModel: UnifiedChatViewModel
+    @Binding var showActionMenu: Bool
+    @Binding var showImageSourcePicker: Bool
+    let onSendMessage: () -> Void
+    let layout: AdaptiveLayout
+
+    var body: some View {
         VStack(spacing: 0) {
             Spacer()
-            
+
             if viewModel.isVoiceMode {
                 // 语音模式：显示专业级语音控制栏
                 VoiceControlBar(
@@ -313,491 +657,158 @@ struct ModernConsultationView: View {
                     onClose: nil
                 )
             } else {
-                // 文字模式：显示原有输入栏
+                // 文字模式：显示输入栏
                 VStack(spacing: 0) {
                     // 动态功能按钮
                     if showActionMenu, let capabilities = viewModel.capabilities {
-                        actionButtonsView(capabilities: capabilities)
+                        healingActionButtonsView(capabilities: capabilities, layout: layout)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
-                    
+
                     // 输入栏
-                    ModernInputBarWithVoice(
+                    HealingInputBarWithVoice(
                         messageText: $messageText,
                         isSending: viewModel.isSending,
                         isDisabled: viewModel.isLoading,
-                        onSend: { sendMessage() },
+                        onSend: onSendMessage,
                         onMenuTap: {
                             withAnimation(.spring(response: 0.3)) {
                                 showActionMenu.toggle()
                             }
                         },
                         onVoiceTap: {
-                            viewModel.toggleVoiceMode()
-                        }
+                            viewModel.enterVoiceMode()
+                        },
+                        layout: layout
                     )
                 }
                 .background(
-                    MedicalColors.bgCard
-                        .shadow(color: Color.black.opacity(0.06), radius: 12, y: -4)
+                    HealingColors.cardBackground
+                        .shadow(color: Color.black.opacity(0.04), radius: 10, y: -4)
                         .ignoresSafeArea(edges: .bottom)
                 )
             }
         }
     }
-    
-    // MARK: - 动态功能按钮
-    private func actionButtonsView(capabilities: AgentCapabilities) -> some View {
+
+    private func healingActionButtonsView(capabilities: AgentCapabilities, layout: AdaptiveLayout) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: MedicalSpacing.md) {
+            HStack(spacing: layout.cardSpacing / 2) {
                 ForEach(viewModel.availableActions, id: \.self) { action in
-                    Button(action: { triggerAction(action) }) {
-                        VStack(spacing: 6) {
-                            Image(systemName: action.icon)
-                                .font(.system(size: 24))
-                                .foregroundColor(actionColor(action))
-                                .frame(width: 56, height: 56)
-                                .background(actionColor(action).opacity(0.1))
-                                .clipShape(Circle())
-                            
-                            Text(action.displayName)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(MedicalColors.textPrimary)
-                        }
-                        .frame(width: 80)
-                    }
-                }
-            }
-            .padding(.horizontal, MedicalSpacing.lg)
-            .padding(.vertical, MedicalSpacing.md)
-        }
-        .background(MedicalColors.bgCard)
-    }
-    
-    private func actionColor(_ action: AgentAction) -> Color {
-        switch action {
-        case .analyzeSkin: return MedicalColors.secondaryTeal
-        case .interpretReport: return MedicalColors.statusWarning  // 使用统一的橙色
-        case .interpretECG: return MedicalColors.statusError
-        default: return MedicalColors.primaryBlue
-        }
-    }
-    
-    // MARK: - Actions
-    
-    private func sendMessage() {
-        let text = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
-        
-        messageText = ""
-        
-        Task {
-            await viewModel.sendMessage(content: text)
-        }
-    }
-    
-    private func triggerAction(_ action: AgentAction) {
-        showActionMenu = false
-        viewModel.triggerAction(action)
-        
-        // 需要上传图片时显示选择对话框
-        if action != .conversation {
-            showImageSourcePicker = true
-        }
-    }
-    
-    private func generateDossier() {
-        viewModel.requestGenerateDossier()
-    }
-    
-    private func viewDossier() {
-        // TODO: 跳转到病历详情页
-        print("View dossier: \(viewModel.eventId ?? "")")
-    }
-}
-
-// MARK: - 现代化导航栏
-struct ModernNavigationBar: View {
-    let doctorName: String
-    let isOnline: Bool
-    let onBack: () -> Void
-    let onNewChat: () -> Void
-    let onHistory: () -> Void
-    let onGenerateDossier: () -> Void
-    
-    var body: some View {
-        HStack(spacing: MedicalSpacing.sm) {
-            // 返回按钮
-            Button(action: onBack) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(MedicalColors.textPrimary)
-                    .frame(width: 36, height: 36)
-                    .background(Color.white.opacity(0.9))
-                    .clipShape(Circle())
-                    .shadow(color: Color.black.opacity(0.06), radius: 4, y: 2)
-            }
-            
-            // 标题区域
-            VStack(alignment: .leading, spacing: 2) {
-                Text(doctorName)
-                    .font(MedicalTypography.h4)
-                    .foregroundColor(MedicalColors.textPrimary)
-                
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(isOnline ? MedicalColors.successGreen : MedicalColors.textMuted)
-                        .frame(width: 6, height: 6)
-                    Text(isOnline ? "在线" : "离线")
-                        .font(MedicalTypography.caption)
-                        .foregroundColor(MedicalColors.textSecondary)
-                }
-            }
-            
-            Spacer()
-            
-            // 新建对话按钮
-            Button(action: onNewChat) {
-                Image(systemName: "square.and.pencil")
-                    .font(.system(size: 16))
-                    .foregroundColor(MedicalColors.primaryBlue)
-                    .frame(width: 36, height: 36)
-                    .background(MedicalColors.primaryBlue.opacity(0.1))
-                    .clipShape(Circle())
-            }
-            
-            // 历史记录按钮
-            Button(action: onHistory) {
-                Image(systemName: "clock.arrow.circlepath")
-                    .font(.system(size: 16))
-                    .foregroundColor(MedicalColors.secondaryTeal)
-                    .frame(width: 36, height: 36)
-                    .background(MedicalColors.secondaryTeal.opacity(0.1))
-                    .clipShape(Circle())
-            }
-            
-            // 生成病历按钮
-            Button(action: onGenerateDossier) {
-                Image(systemName: "doc.text.fill")
-                    .font(.system(size: 16))
-                    .foregroundColor(MedicalColors.statusWarning)
-                    .frame(width: 36, height: 36)
-                    .background(MedicalColors.statusWarning.opacity(0.1))
-                    .clipShape(Circle())
-            }
-        }
-        .padding(.horizontal, MedicalSpacing.lg)
-        .padding(.vertical, MedicalSpacing.md)
-        .background(
-            Color.white.opacity(0.95)
-                .background(.ultraThinMaterial)
-        )
-        .shadow(color: Color.black.opacity(0.04), radius: 8, y: 2)
-    }
-}
-
-// MARK: - 消息气泡适配器（适配 UnifiedChatMessage 到现代化 UI）
-struct ModernMessageBubbleAdapter: View {
-    let message: UnifiedChatMessage
-    @Binding var messageText: String
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top, spacing: MedicalSpacing.md) {
-                if !message.isFromUser {
-                    aiAvatar
-                } else {
-                    Spacer(minLength: 60)
-                }
-                
-                VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
-                    bubbleContent
-                    
-                    Text(message.timestamp.formatted(date: .omitted, time: .shortened))
-                        .font(MedicalTypography.caption)
-                        .foregroundColor(MedicalColors.textMuted)
-                }
-                
-                if message.isFromUser {
-                    // 用户没有头像
-                } else {
-                    Spacer(minLength: 60)
-                }
-            }
-            
-            // 快捷选项（仅 AI 消息显示）
-            if !message.isFromUser && !message.quickOptions.isEmpty {
-                quickOptionsView
-                    .padding(.leading, 48) // 与消息对齐
-            }
-        }
-    }
-    
-    private var aiAvatar: some View {
-        ZStack {
-            Circle()
-                .fill(
-                    LinearGradient(
-                        colors: [MedicalColors.primaryBlue, MedicalColors.secondaryTeal],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 36, height: 36)
-            
-            Image(systemName: "brain.head.profile")
-                .font(.system(size: 16))
-                .foregroundColor(.white)
-        }
-    }
-    
-    @ViewBuilder
-    private var bubbleContent: some View {
-        switch message.messageType {
-        case .text:
-            textBubble
-        case .image(let image):
-            imageBubble(image)
-        case .structuredResult:
-            textBubble
-        case .loading:
-            loadingBubble
-        }
-    }
-    
-    private var textBubble: some View {
-        Group {
-            if message.isFromUser {
-                // 用户消息：使用普通 Text
-                Text(message.content)
-                    .font(MedicalTypography.bodyMedium)
-                    .foregroundColor(.white)
-            } else {
-                // AI 消息：使用 Markdown 渲染
-                MarkdownTextView(
-                    message.content,
-                    fontSize: 16,
-                    textColor: MedicalColors.textPrimary
-                )
-            }
-        }
-        .padding(.horizontal, MedicalSpacing.lg)
-        .padding(.vertical, MedicalSpacing.md)
-        .background(
-            message.isFromUser
-                ? MedicalColors.primaryBlue
-                : MedicalColors.aiMessageBg
-        )
-        .cornerRadius(MedicalCornerRadius.lg)
-        .shadow(
-            color: message.isFromUser
-                ? MedicalColors.primaryBlue.opacity(0.2)
-                : Color.black.opacity(0.04),
-            radius: 8,
-            y: 2
-        )
-    }
-    
-    private func imageBubble(_ image: UIImage) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Image(uiImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(maxWidth: 240, maxHeight: 240)
-                .cornerRadius(MedicalCornerRadius.md)
-                .clipped()
-            
-            if !message.content.isEmpty {
-                Text(message.content)
-                    .font(MedicalTypography.bodySmall)
-                    .foregroundColor(MedicalColors.textSecondary)
-            }
-        }
-        .padding(8)
-        .background(MedicalColors.bgCard)
-        .cornerRadius(MedicalCornerRadius.lg)
-        .shadow(color: Color.black.opacity(0.06), radius: 8, y: 2)
-    }
-    
-    private var loadingBubble: some View {
-        HStack(spacing: 8) {
-            ProgressView()
-                .scaleEffect(0.8)
-            Text(message.content.isEmpty ? "正在思考中..." : message.content)
-                .font(MedicalTypography.bodySmall)
-                .foregroundColor(MedicalColors.textSecondary)
-        }
-        .padding(.horizontal, MedicalSpacing.lg)
-        .padding(.vertical, MedicalSpacing.md)
-        .background(MedicalColors.aiMessageBg)
-        .cornerRadius(MedicalCornerRadius.lg)
-    }
-    
-    private var quickOptionsView: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(message.quickOptions) { option in
                     Button(action: {
-                        // 追加到输入框，支持多选
-                        if !messageText.isEmpty {
-                            messageText += " "  // 用空格分隔
+                        showActionMenu = false
+                        viewModel.triggerAction(action)
+                        if action != .conversation {
+                            showImageSourcePicker = true
                         }
-                        messageText += option.text
                     }) {
-                        Text(option.text)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(MedicalColors.primaryBlue)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(MedicalColors.primaryBlue.opacity(0.1))
-                            .cornerRadius(16)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(MedicalColors.primaryBlue.opacity(0.3), lineWidth: 1)
-                            )
+                        VStack(spacing: layout.cardSpacing / 3) {
+                            ZStack {
+                                Circle()
+                                    .fill(healingActionColor(action).opacity(0.15))
+                                    .frame(width: layout.iconLargeSize, height: layout.iconLargeSize)
+
+                                Image(systemName: action.icon)
+                                    .font(.system(size: layout.captionFontSize + 2))
+                                    .foregroundColor(healingActionColor(action))
+                            }
+
+                            Text(action.displayName)
+                                .font(.system(size: layout.captionFontSize))
+                                .foregroundColor(HealingColors.textPrimary)
+                        }
+                        .frame(width: layout.iconLargeSize * 1.5)
                     }
                 }
             }
+            .padding(.horizontal, layout.horizontalPadding)
+            .padding(.vertical, layout.cardSpacing / 2)
+        }
+        .background(HealingColors.cardBackground)
+    }
+
+    private func healingActionColor(_ action: AgentAction) -> Color {
+        switch action {
+        case .analyzeSkin: return HealingColors.dustyBlue
+        case .interpretReport: return HealingColors.warmSand
+        case .interpretECG: return HealingColors.terracotta
+        default: return HealingColors.forestMist
         }
     }
 }
 
-// MARK: - 输入栏
-struct ModernInputBar: View {
-    @Binding var messageText: String
-    let isSending: Bool
-    let isDisabled: Bool
-    let onSend: () -> Void
-    let onMenuTap: () -> Void
-    
-    var body: some View {
-        HStack(alignment: .bottom, spacing: MedicalSpacing.md) {
-            // 功能菜单按钮
-            Button(action: onMenuTap) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundColor(isDisabled ? MedicalColors.textMuted : MedicalColors.primaryBlue)
-            }
-            .disabled(isDisabled)
-            
-            // 文本输入框
-            ZStack(alignment: .leading) {
-                if messageText.isEmpty {
-                    Text("输入消息...")
-                        .font(MedicalTypography.bodyMedium)
-                        .foregroundColor(MedicalColors.textMuted)
-                        .padding(.leading, MedicalSpacing.lg)
-                }
-                
-                TextField("", text: $messageText, axis: .vertical)
-                    .font(MedicalTypography.bodyMedium)
-                    .foregroundColor(MedicalColors.textPrimary)
-                    .lineLimit(1...5)
-                    .padding(.horizontal, MedicalSpacing.md)
-                    .padding(.vertical, MedicalSpacing.sm)
-                    .disabled(isDisabled)
-            }
-            .frame(minHeight: 40)
-            .background(MedicalColors.bgSecondary)
-            .cornerRadius(MedicalCornerRadius.md)
-            
-            // 发送按钮
-            Button(action: onSend) {
-                ZStack {
-                    Circle()
-                        .fill(
-                            messageText.isEmpty || isDisabled
-                                ? MedicalColors.textMuted.opacity(0.3)
-                                : MedicalColors.primaryBlue
-                        )
-                        .frame(width: 36, height: 36)
-                    
-                    if isSending {
-                        ProgressView()
-                            .scaleEffect(0.7)
-                            .tint(.white)
-                    } else {
-                        Image(systemName: "arrow.up")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
-                    }
-                }
-            }
-            .disabled(messageText.isEmpty || isDisabled || isSending)
-        }
-        .padding(.horizontal, MedicalSpacing.lg)
-        .padding(.vertical, MedicalSpacing.md)
-    }
-}
-
-// MARK: - 专业级输入栏（带语音按钮）
-struct ModernInputBarWithVoice: View {
+// MARK: - 治愈系输入栏（带语音按钮）
+struct HealingInputBarWithVoice: View {
     @Binding var messageText: String
     let isSending: Bool
     let isDisabled: Bool
     let onSend: () -> Void
     let onMenuTap: () -> Void
     let onVoiceTap: () -> Void
-    
+    let layout: AdaptiveLayout
+
     var body: some View {
-        HStack(alignment: .bottom, spacing: 12) {
+        HStack(alignment: .bottom, spacing: layout.cardSpacing / 2) {
             // 功能菜单按钮
             Button(action: onMenuTap) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 32))
-                    .foregroundColor(isDisabled ? MedicalColors.textMuted : MedicalColors.primaryBlue)
+                ZStack {
+                    Circle()
+                        .fill(isDisabled ? HealingColors.textTertiary.opacity(0.3) : HealingColors.forestMist.opacity(0.15))
+                        .frame(width: layout.iconSmallSize + 8, height: layout.iconSmallSize + 8)
+
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: layout.captionFontSize + 5))
+                        .foregroundColor(isDisabled ? HealingColors.textTertiary : HealingColors.forestMist)
+                }
             }
             .disabled(isDisabled)
-            
-            // 输入框容器（包含文本框和麦克风/发送按钮）
+
+            // 输入框容器
             HStack(alignment: .bottom, spacing: 0) {
-                // 文本输入框
                 ZStack(alignment: .leading) {
                     if messageText.isEmpty {
                         Text("输入消息...")
-                            .font(.system(size: 16))
-                            .foregroundColor(MedicalColors.textMuted)
-                            .padding(.leading, 16)
+                            .font(.system(size: layout.captionFontSize + 1))
+                            .foregroundColor(HealingColors.textTertiary)
+                            .padding(.leading, layout.cardInnerPadding)
                     }
-                    
+
                     TextField("", text: $messageText, axis: .vertical)
-                        .font(.system(size: 16))
-                        .foregroundColor(MedicalColors.textPrimary)
+                        .font(.system(size: layout.captionFontSize + 1))
+                        .foregroundColor(HealingColors.textPrimary)
                         .lineLimit(1...5)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
+                        .padding(.horizontal, layout.cardInnerPadding - 4)
+                        .padding(.vertical, layout.cardSpacing / 2)
                         .disabled(isDisabled)
                 }
-                
-                // 右侧按钮：无文字时显示麦克风，有文字时显示发送
+
+                // 右侧按钮
                 if messageText.isEmpty {
-                    // 麦克风按钮
                     Button(action: onVoiceTap) {
                         Image(systemName: "mic.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(isDisabled ? MedicalColors.textMuted : MedicalColors.secondaryTeal)
-                            .frame(width: 44, height: 44)
+                            .font(.system(size: layout.captionFontSize + 3))
+                            .foregroundColor(isDisabled ? HealingColors.textTertiary : HealingColors.dustyBlue)
+                            .frame(width: layout.iconSmallSize + 6, height: layout.iconSmallSize + 6)
                     }
                     .disabled(isDisabled)
                 } else {
-                    // 发送按钮
                     Button(action: onSend) {
                         ZStack {
                             Circle()
                                 .fill(
                                     isSending || isDisabled
-                                        ? MedicalColors.textMuted.opacity(0.3)
-                                        : MedicalColors.primaryBlue
+                                        ? HealingColors.textTertiary.opacity(0.3)
+                                        : HealingColors.forestMist
                                 )
-                                .frame(width: 32, height: 32)
-                            
+                                .frame(width: layout.iconSmallSize - 6, height: layout.iconSmallSize - 6)
+
                             if isSending {
                                 ProgressView()
                                     .scaleEffect(0.6)
                                     .tint(.white)
                             } else {
                                 Image(systemName: "arrow.up")
-                                    .font(.system(size: 14, weight: .bold))
+                                    .font(.system(size: layout.captionFontSize + 1, weight: .bold))
                                     .foregroundColor(.white)
                             }
                         }
@@ -807,88 +818,96 @@ struct ModernInputBarWithVoice: View {
                     .disabled(isDisabled || isSending)
                 }
             }
-            .background(MedicalColors.bgSecondary)
-            .cornerRadius(22)
+            .background(HealingColors.warmCream.opacity(0.6))
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 22)
-                    .stroke(Color.gray.opacity(0.15), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(HealingColors.softSage.opacity(0.2), lineWidth: 1)
             )
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, layout.horizontalPadding)
+        .padding(.vertical, layout.cardInnerPadding)
     }
 }
 
-// MARK: - 病历提示卡片
-struct ModernDossierPromptCard: View {
+// MARK: - 治愈系病历提示卡片
+struct HealingDossierPromptCard: View {
     let eventId: String?
     let isNewEvent: Bool
     let onViewDossier: () -> Void
     let onContinue: () -> Void
-    
+    let layout: AdaptiveLayout
+
     var body: some View {
-        VStack(spacing: MedicalSpacing.lg) {
+        VStack(spacing: layout.cardSpacing) {
             // 图标 + 标题
-            HStack(spacing: MedicalSpacing.md) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 32))
-                    .foregroundColor(MedicalColors.successGreen)
-                
+            HStack(spacing: layout.cardSpacing / 2) {
+                ZStack {
+                    Circle()
+                        .fill(HealingColors.forestMist.opacity(0.15))
+                        .frame(width: layout.iconLargeSize + 4, height: layout.iconLargeSize + 4)
+
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: layout.captionFontSize + 4))
+                        .foregroundColor(HealingColors.forestMist)
+                }
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text("对话完成")
-                        .font(MedicalTypography.h4)
-                        .foregroundColor(MedicalColors.textPrimary)
-                    
+                        .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                        .foregroundColor(HealingColors.textPrimary)
+
                     Text(isNewEvent ? "已为您创建新的病历资料夹" : "已更新病历资料夹")
-                        .font(MedicalTypography.bodySmall)
-                        .foregroundColor(MedicalColors.textSecondary)
+                        .font(.system(size: layout.captionFontSize))
+                        .foregroundColor(HealingColors.textSecondary)
                 }
-                
+
                 Spacer()
             }
-            
+
             // 操作按钮
-            HStack(spacing: MedicalSpacing.md) {
-                // 继续对话
+            HStack(spacing: layout.cardSpacing) {
                 Button(action: onContinue) {
                     Text("继续对话")
-                        .font(MedicalTypography.button)
-                        .foregroundColor(MedicalColors.primaryBlue)
+                        .font(.system(size: layout.captionFontSize + 1, weight: .medium))
+                        .foregroundColor(HealingColors.forestMist)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(MedicalColors.primaryBlue.opacity(0.1))
-                        .cornerRadius(MedicalCornerRadius.md)
+                        .padding(.vertical, layout.cardInnerPadding)
+                        .background(HealingColors.forestMist.opacity(0.12))
+                        .clipShape(Capsule())
                 }
-                
-                // 查看病历
+
                 Button(action: onViewDossier) {
-                    Text("查看病历")
-                        .font(MedicalTypography.button)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            LinearGradient(
-                                colors: [MedicalColors.primaryBlue, MedicalColors.primaryBlueDark],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
+                    HStack(spacing: 4) {
+                        Image(systemName: "doc.text.fill")
+                            .font(.system(size: layout.captionFontSize))
+                        Text("查看病历")
+                            .font(.system(size: layout.captionFontSize + 1, weight: .semibold))
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, layout.cardInnerPadding)
+                    .background(
+                        LinearGradient(
+                            colors: [HealingColors.forestMist, HealingColors.deepSage],
+                            startPoint: .leading,
+                            endPoint: .trailing
                         )
-                        .cornerRadius(MedicalCornerRadius.md)
-                        .shadow(color: MedicalColors.primaryBlue.opacity(0.3), radius: 8, y: 4)
+                    )
+                    .clipShape(Capsule())
+                    .shadow(color: HealingColors.forestMist.opacity(0.25), radius: 8, y: 3)
                 }
             }
         }
-        .padding(20)
-        .background(MedicalColors.bgCard)
-        .cornerRadius(MedicalCornerRadius.lg)
-        .shadow(color: Color.black.opacity(0.08), radius: 16, y: 6)
-        .padding(.horizontal, MedicalSpacing.lg)
+        .padding(layout.cardInnerPadding + 4)
+        .background(HealingColors.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: Color.black.opacity(0.04), radius: 10, y: 4)
+        .padding(.horizontal, layout.horizontalPadding)
     }
 }
 
 // MARK: - 数据模型（兼容旧接口）
-
 struct ModernDoctorInfo {
     let id: Int
     let name: String
@@ -899,7 +918,7 @@ struct ModernDoctorInfo {
     let rating: String
     let consultCount: String
     let responseTime: String
-    
+
     static let demo = ModernDoctorInfo(
         id: 1,
         name: "AI 智能体",
@@ -914,7 +933,6 @@ struct ModernDoctorInfo {
 }
 
 // MARK: - Preview
-
 #Preview {
     ModernConsultationView(doctor: .demo)
 }
