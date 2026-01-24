@@ -17,8 +17,8 @@ class UnifiedChatViewModel: ObservableObject {
     // MARK: - Initialization & Cleanup
 
     init() {
-        // 初始化阿里云语音服务
-        self.voiceService = SimpleVoiceService()
+        // 使用单例语音服务
+        // 不需要在这里初始化，因为使用的是单例
         setupVoiceBindings()
     }
 
@@ -112,7 +112,9 @@ class UnifiedChatViewModel: ObservableObject {
     private let sessionStateManager = SessionStateManager.shared
 
     // MARK: - 语音服务
-    private let voiceService: SimpleVoiceService
+    private var voiceService: SimpleVoiceService {
+        return .shared
+    }
     private var voiceCancellables = Set<AnyCancellable>()
 
     // MARK: - 初始化会话
@@ -863,6 +865,9 @@ class UnifiedChatViewModel: ObservableObject {
 
         // 暂停识别，进入处理状态
         voiceState = .processing
+
+        // 立即暂停 ASR 录音，防止在等待 AI 回复期间说话导致混乱
+        voiceService.pauseRecording()
 
         // 发送消息到后端（复用现有方法）
         await sendMessage(content: text)

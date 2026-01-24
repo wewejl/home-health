@@ -3,10 +3,14 @@ import AVFoundation
 import Combine
 import Starscream
 
-// MARK: - Simple Voice Service
-/// 简化版语音服务 - 核心逻辑：ASR 持续监听 + TTS 流式播放 + 有结果就停
+// MARK: - Simple Voice Service (Singleton)
+/// 简化版语音服务 - ASR 持续监听 + TTS 独立播放，互不干扰
+/// 使用单例模式确保全局只有一个实例
 @MainActor
 class SimpleVoiceService: NSObject, ObservableObject {
+
+    // MARK: - Singleton
+    static let shared = SimpleVoiceService()
 
     // MARK: - Published State
     @Published var state: VoiceState = .idle
@@ -34,15 +38,25 @@ class SimpleVoiceService: NSObject, ObservableObject {
     private var ttsAudioEngine: AVAudioEngine?
     private let ttsFormat: AVAudioFormat
 
+    // MARK: - Debug Counters
+    private var audioSendCount = 0
+    private var audioTapCount = 0
+
     // MARK: - State Flags
     private(set) var isASRConnected = false
     private(set) var isTTSConnected = false
     private var isTTSSpeaking = false
+    private var pendingTTSBuffers = 0  // 待播放的 buffer 数量
+    private var isTapInstalled = false  // tap 是否已安装（防止重复安装）
 
-    // MARK: - Init
-    init(baseURL: String? = nil, token: String? = nil) {
-        self.baseURL = baseURL ?? BackendVoiceConfig.baseURL
-        self.token = token ?? BackendVoiceConfig.defaultToken
+    // MARK: - Connection Continuation
+    private var asrContinuation: CheckedContinuation<Void, Error>?
+    private var ttsContinuation: CheckedContinuation<Void, Error>?
+
+    // MARK: - Init (private for singleton)
+    private override init() {
+        self.baseURL = BackendVoiceConfig.baseURL
+        self.token = BackendVoiceConfig.defaultToken
 
         // TTS 音频格式: 24kHz, 单声道, 16-bit PCM
         self.ttsFormat = AVAudioFormat(
@@ -53,7 +67,7 @@ class SimpleVoiceService: NSObject, ObservableObject {
         )!
 
         super.init()
-        print("[SimpleVoiceService] 初始化完成")
+        print("[SimpleVoiceService] 单例初始化完成")
     }
 
     deinit {
@@ -114,6 +128,7 @@ class SimpleVoiceService: NSObject, ObservableObject {
         print("[SimpleVoiceService] 播报: \(text.prefix(50))...")
         isTTSSpeaking = true
         state = .aiSpeaking
+        pendingTTSBuffers = 0  // 重置计数器
 
         // 发送合成请求
         let request: [String: Any] = [
@@ -130,7 +145,32 @@ class SimpleVoiceService: NSObject, ObservableObject {
         ttsWebSocket?.write(string: jsonString)
     }
 
-    /// 停止 TTS 播放（核心逻辑：收到 ASR 结果就调用此方法）
+    /// 暂停 ASR 录音并断开连接（识别完成后调用）
+    func pauseRecording() {
+        inputNode?.removeTap(onBus: 0)
+        isTapInstalled = false
+
+        // 主动断开 ASR 连接（用完就断）
+        asrWebSocket?.disconnect()
+        asrWebSocket = nil
+        isASRConnected = false
+
+        print("[SimpleVoiceService] ASR 已断开（识别完成）")
+    }
+
+    /// 开始新一轮识别（需要时重新连接）
+    func startRecording() async throws {
+        // 如果 ASR 未连接，重新连接
+        if !isASRConnected {
+            print("[SimpleVoiceService] 重新连接 ASR")
+            try await startASR()
+        }
+
+        // 恢复录音 tap
+        resumeASRRecording()
+    }
+
+    /// 停止 TTS 播放
     func stopTTS() {
         guard isTTSSpeaking else { return }
 
@@ -146,6 +186,34 @@ class SimpleVoiceService: NSObject, ObservableObject {
 
     // MARK: - Private Methods - ASR
 
+    /// 恢复 ASR 录音（TTS 播放完成后调用）
+    private func resumeASRRecording() {
+        guard let inputNode = inputNode, let audioEngine = audioEngine, audioEngine.isRunning else {
+            return
+        }
+
+        // 防止重复安装 tap
+        if isTapInstalled {
+            print("[SimpleVoiceService] Tap 已存在，跳过安装")
+            return
+        }
+
+        let inputFormat = inputNode.outputFormat(forBus: 0)
+
+        // 重新安装 tap
+        inputNode.installTap(
+            onBus: 0,
+            bufferSize: asrBufferSize,
+            format: inputFormat
+        ) { [weak self] buffer, _ in
+            guard let self = self else { return }
+            self.processAndSendAudio(buffer)
+        }
+
+        isTapInstalled = true
+        print("[SimpleVoiceService] ASR 录音已恢复")
+    }
+
     private func startASR() async throws {
         var components = URLComponents(string: baseURL)!
         components.path = "/ws/voice/asr"
@@ -157,21 +225,16 @@ class SimpleVoiceService: NSObject, ObservableObject {
 
         print("[SimpleVoiceService] ASR 连接: \(url.absoluteString)")
 
-        var request = URLRequest(url: url)
-        request.timeoutInterval = 30
-
-        asrWebSocket = WebSocket(request: request)
-        asrWebSocket?.delegate = self
-        asrWebSocket?.connect()
-
-        // 等待连接
-        try await Task.sleep(nanoseconds: 5_000_000_000)
-
-        guard isASRConnected else {
-            throw VoiceError.recognitionFailed(underlying: NSError(domain: "SimpleVoice", code: -2))
+        // 使用 continuation 等待连接成功（无超时限制）
+        try await withCheckedThrowingContinuation { continuation in
+            asrContinuation = continuation
+            asrWebSocket = WebSocket(request: URLRequest(url: url))
+            asrWebSocket?.delegate = self
+            asrWebSocket?.connect()
         }
 
         print("[SimpleVoiceService] ASR 连接成功")
+        asrContinuation = nil
     }
 
     private func startAudioEngine() throws {
@@ -192,22 +255,47 @@ class SimpleVoiceService: NSObject, ObservableObject {
             throw VoiceError.microphoneUnavailable
         }
 
+        // 打印输入格式信息
+        let inputFormat = inputNode.outputFormat(forBus: 0)
+        print("[SimpleVoiceService] 输入格式: \(inputFormat.sampleRate)Hz, \(inputFormat.channelCount)ch")
+
         // 安装 tap
         inputNode.installTap(
             onBus: 0,
             bufferSize: asrBufferSize,
-            format: nil
+            format: inputFormat
         ) { [weak self] buffer, _ in
-            self?.processAndSendAudio(buffer)
+            guard let self = self else { return }
+
+            // 调试：确认 tap 被触发
+            self.audioTapCount += 1
+            if self.audioTapCount <= 5 {
+                print("[SimpleVoiceService] Tap 被触发 #\(self.audioTapCount), buffer 大小: \(buffer.frameLength)")
+            }
+
+            self.processAndSendAudio(buffer)
         }
 
+        isTapInstalled = true
+
         try audioEngine?.start()
-        print("[SimpleVoiceService] 音频引擎已启动")
+        print("[SimpleVoiceService] 音频引擎已启动，running: \(audioEngine?.isRunning ?? false)")
     }
 
     private func processAndSendAudio(_ buffer: AVAudioPCMBuffer) {
         guard let pcmData = convertToPCM16(buffer) else { return }
+
+        // 检查 WebSocket 连接状态
+        guard isASRConnected else { return }
+
+        // 使用 Starscream 的 write 方法发送二进制数据
         asrWebSocket?.write(data: pcmData)
+
+        // 调试：定期打印发送状态（每100次打印一次）
+        audioSendCount += 1
+        if audioSendCount % 100 == 0 {
+            print("[SimpleVoiceService] 已发送 \(audioSendCount) 个音频块，大小: \(pcmData.count) bytes")
+        }
     }
 
     private func convertToPCM16(_ buffer: AVAudioPCMBuffer) -> Data? {
@@ -315,18 +403,13 @@ class SimpleVoiceService: NSObject, ObservableObject {
 
         print("[SimpleVoiceService] TTS 连接: \(url.absoluteString)")
 
-        var request = URLRequest(url: url)
-        request.timeoutInterval = 30
-
-        ttsWebSocket = WebSocket(request: request)
-        ttsWebSocket?.delegate = self
-        ttsWebSocket?.connect()
-
-        // 等待连接
-        try await Task.sleep(nanoseconds: 5_000_000_000)
-
-        guard isTTSConnected else {
-            throw VoiceError.recognitionFailed(underlying: NSError(domain: "SimpleVoice", code: -2))
+        // 使用 continuation 等待连接成功（无超时限制）
+        try await withCheckedThrowingContinuation { continuation in
+            ttsContinuation = continuation
+            var request = URLRequest(url: url)
+            ttsWebSocket = WebSocket(request: request)
+            ttsWebSocket?.delegate = self
+            ttsWebSocket?.connect()
         }
 
         // 初始化播放器
@@ -338,10 +421,12 @@ class SimpleVoiceService: NSObject, ObservableObject {
         audioPlayerNode.play()
 
         print("[SimpleVoiceService] TTS 连接成功，播放器已启动")
+        ttsContinuation = nil
     }
 
     private func playTTSAudio(_ data: Data) {
-        guard isTTSSpeaking, ttsAudioEngine != nil else { return }
+        // 只检查播放器是否存在
+        guard ttsAudioEngine != nil else { return }
 
         // 创建音频缓冲区
         let frameCount = data.count / 2  // 16-bit = 2 bytes per sample
@@ -363,8 +448,29 @@ class SimpleVoiceService: NSObject, ObservableObject {
             }
         }
 
-        // 调度播放
-        audioPlayerNode.scheduleBuffer(buffer)
+        // 增加待播放计数
+        pendingTTSBuffers += 1
+
+        // 调度播放，带完成回调
+        audioPlayerNode.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { [weak self] bufferType in
+            guard let self = self else { return }
+
+            self.pendingTTSBuffers -= 1
+
+            // 最后一个 buffer 播放完成
+            if self.pendingTTSBuffers == 0 && self.isTTSSpeaking {
+                print("[SimpleVoiceService] 所有 TTS 音频播放完成")
+
+                self.isTTSSpeaking = false
+                self.state = .listening
+                self.onTTSEnded?()
+
+                // TTS 播放完成，重新连接 ASR 开始下一轮识别
+                Task { @MainActor in
+                    try? await self.startRecording()
+                }
+            }
+        }
     }
 }
 
@@ -378,18 +484,27 @@ extension SimpleVoiceService: WebSocketDelegate {
                     print("[SimpleVoiceService] ASR WebSocket 已连接")
                     isASRConnected = true
                     state = .listening
+                    // 立即恢复 continuation，不再等待
+                    asrContinuation?.resume()
                 } else if client === ttsWebSocket {
                     print("[SimpleVoiceService] TTS WebSocket 已连接")
                     isTTSConnected = true
+                    // 立即恢复 continuation，不再等待
+                    ttsContinuation?.resume()
                 }
 
             case .disconnected(let reason, let code):
                 if client === asrWebSocket {
-                    print("[SimpleVoiceService] ASR 断开: \(reason)")
+                    print("[SimpleVoiceService] ASR 断开: \(reason), code: \(code)")
                     isASRConnected = false
+                    // 如果还在等待连接，抛出错误
+                    asrContinuation?.resume(throwing: VoiceError.recognitionFailed(underlying: NSError(domain: "SimpleVoice", code: -3, userInfo: [NSLocalizedDescriptionKey: "ASR 连接断开: \(reason)"])))
+                    // 已断开，等待下次 startRecording() 时重新连接
                 } else if client === ttsWebSocket {
-                    print("[SimpleVoiceService] TTS 断开: \(reason)")
+                    print("[SimpleVoiceService] TTS 断开: \(reason), code: \(code)")
                     isTTSConnected = false
+                    // 如果还在等待连接，抛出错误
+                    ttsContinuation?.resume(throwing: VoiceError.recognitionFailed(underlying: NSError(domain: "SimpleVoice", code: -3, userInfo: [NSLocalizedDescriptionKey: "TTS 连接断开: \(reason)"])))
                 }
 
             case .text(let text):
@@ -402,7 +517,14 @@ extension SimpleVoiceService: WebSocketDelegate {
                 }
 
             case .error(let error):
-                print("[SimpleVoiceService] WebSocket 错误: \(error?.localizedDescription ?? "未知")")
+                let errorMsg = error?.localizedDescription ?? "未知"
+                print("[SimpleVoiceService] WebSocket 错误: \(errorMsg)")
+                // 如果还在等待连接，抛出错误
+                if client === asrWebSocket {
+                    asrContinuation?.resume(throwing: VoiceError.recognitionFailed(underlying: NSError(domain: "SimpleVoice", code: -4, userInfo: [NSLocalizedDescriptionKey: "ASR 错误: \(errorMsg)"])))
+                } else if client === ttsWebSocket {
+                    ttsContinuation?.resume(throwing: VoiceError.recognitionFailed(underlying: NSError(domain: "SimpleVoice", code: -4, userInfo: [NSLocalizedDescriptionKey: "TTS 错误: \(errorMsg)"])))
+                }
 
             default:
                 break
@@ -427,13 +549,6 @@ extension SimpleVoiceService: WebSocketDelegate {
                 if let text = json["text"] as? String, !text.isEmpty {
                     recognizedText = text
                     onPartialResult?(text)
-
-                    // 核心逻辑：收到任何 ASR 结果就停止 TTS
-                    if isTTSSpeaking {
-                        print("[SimpleVoiceService] 检测到语音，停止 TTS")
-                        stopTTS()
-                        onTTSEnded?()
-                    }
                 }
 
             case "asr_final":
@@ -459,10 +574,9 @@ extension SimpleVoiceService: WebSocketDelegate {
                 print("[SimpleVoiceService] TTS 就绪")
 
             case "tts_finished":
-                print("[SimpleVoiceService] TTS 完成")
-                isTTSSpeaking = false
-                state = .listening
-                onTTSEnded?()
+                print("[SimpleVoiceService] TTS 音频传输完成 (待播放 buffer: \(pendingTTSBuffers))")
+                // 注意：此时音频可能还在播放，不等 pendingTTSBuffers 归零
+                // 真正的播放完成由 AVAudioPlayerNode 完成回调处理
 
             case "error":
                 if let message = json["message"] as? String {
