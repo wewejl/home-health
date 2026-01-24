@@ -1,58 +1,59 @@
 import SwiftUI
 
+// MARK: - 相关病历事件行 - 自适应布局
 struct RelatedEventRow: View {
     let relatedEvent: FindRelatedResponse.RelatedEvent
-    
+
     var body: some View {
         HStack(spacing: ScaleFactor.spacing(12)) {
             Circle()
                 .fill(relationColor)
-                .frame(width: 8, height: 8)
-            
-            VStack(alignment: .leading, spacing: 4) {
+                .frame(width: ScaleFactor.size(8), height: ScaleFactor.size(8))
+
+            VStack(alignment: .leading, spacing: ScaleFactor.spacing(4)) {
                 HStack {
                     Text(relatedEvent.event_id.prefix(8) + "...")
                         .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
                         .foregroundColor(DXYColors.textPrimary)
-                    
+
                     if let relationType = relatedEvent.relation_type {
                         Text(relationDisplayName(relationType))
                             .font(.system(size: AdaptiveFont.caption))
                             .foregroundColor(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
+                            .padding(.horizontal, ScaleFactor.padding(6))
+                            .padding(.vertical, ScaleFactor.padding(2))
                             .background(relationColor)
                             .clipShape(Capsule())
                     }
                 }
-                
+
                 if let reasoning = relatedEvent.reasoning {
                     Text(reasoning)
                         .font(.system(size: AdaptiveFont.footnote))
                         .foregroundColor(DXYColors.textSecondary)
                         .lineLimit(2)
                 }
-                
+
                 if let confidence = relatedEvent.confidence {
-                    HStack(spacing: 4) {
+                    HStack(spacing: ScaleFactor.spacing(4)) {
                         Image(systemName: "chart.bar.fill")
-                            .font(.system(size: 10))
+                            .font(.system(size: AdaptiveFont.caption - 1))
                         Text("置信度: \(Int(confidence * 100))%")
                             .font(.system(size: AdaptiveFont.caption))
                     }
                     .foregroundColor(DXYColors.textTertiary)
                 }
             }
-            
+
             Spacer()
-            
+
             Image(systemName: "chevron.right")
                 .font(.system(size: AdaptiveFont.footnote))
                 .foregroundColor(DXYColors.textTertiary)
         }
         .padding(ScaleFactor.padding(12))
         .background(DXYColors.background)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall))
     }
     
     private var relationColor: Color {

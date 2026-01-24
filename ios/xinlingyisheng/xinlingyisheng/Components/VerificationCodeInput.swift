@@ -92,25 +92,25 @@ struct VerificationCodeInput: View {
     }
 
     private func calculateSpacing(for width: CGFloat) -> CGFloat {
-        if width < 280 { return 4 }
-        else if width < 320 { return 6 }
-        else if width < 360 { return 8 }
-        return 10
+        if width < ScaleFactor.size(280) { return ScaleFactor.spacing(4) }
+        else if width < ScaleFactor.size(320) { return ScaleFactor.spacing(6) }
+        else if width < ScaleFactor.size(360) { return ScaleFactor.spacing(8) }
+        return ScaleFactor.spacing(10)
     }
     
     private func calculateBoxSize(for width: CGFloat, spacing: CGFloat) -> CGSize {
         let totalSpacing = spacing * CGFloat(codeLength - 1)
         let availableForBoxes = width - totalSpacing
-        let boxWidth = max(28, availableForBoxes / CGFloat(codeLength))
-        let boxHeight = min(54, max(44, boxWidth * 1.2))
+        let boxWidth = max(ScaleFactor.size(28), availableForBoxes / CGFloat(codeLength))
+        let boxHeight = min(ScaleFactor.size(54), max(ScaleFactor.size(44), boxWidth * 1.2))
         return CGSize(width: boxWidth, height: boxHeight)
     }
-    
+
     private func calculateFixedHeight() -> CGFloat {
-        if DeviceType.isVeryCompactWidth { return 46 }
-        if DeviceType.isCompactWidth { return 50 }
-        if DeviceType.isStandardWidth { return 52 }
-        return 54
+        if DeviceType.isVeryCompactWidth { return ScaleFactor.size(46) }
+        if DeviceType.isCompactWidth { return ScaleFactor.size(50) }
+        if DeviceType.isStandardWidth { return ScaleFactor.size(52) }
+        return ScaleFactor.size(54)
     }
     
     private func getDigit(at index: Int) -> String {
@@ -130,8 +130,8 @@ struct CodeDigitBox: View {
     let boxWidth: CGFloat
     let boxHeight: CGFloat
     
-    private var cornerRadius: CGFloat { min(12, boxWidth * 0.25) }
-    private var fontSize: CGFloat { min(24, max(16, boxWidth * 0.5)) }
+    private var cornerRadius: CGFloat { min(ScaleFactor.size(12), boxWidth * 0.25) }
+    private var fontSize: CGFloat { min(AdaptiveFont.title2, max(AdaptiveFont.body, boxWidth * 0.5)) }
     
     var body: some View {
         ZStack {

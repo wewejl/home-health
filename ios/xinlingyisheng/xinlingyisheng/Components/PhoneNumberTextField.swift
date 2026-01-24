@@ -11,19 +11,19 @@ struct PhoneNumberTextField: View {
     @FocusState private var textFieldIsFocused: Bool
 
     private var iconSize: CGFloat {
-        DeviceType.isCompactWidth ? 16 : 18
+        DeviceType.isCompactWidth ? AdaptiveSize.iconMedium * 0.9 : AdaptiveSize.iconMedium
     }
 
     private var fontSize: CGFloat {
-        DeviceType.isCompactWidth ? 15 : 16
+        DeviceType.isCompactWidth ? AdaptiveFont.body - 1 : AdaptiveFont.body
     }
 
     private var horizontalPadding: CGFloat {
-        DeviceType.isCompactWidth ? 14 : 18
+        DeviceType.isCompactWidth ? ScaleFactor.padding(14) : ScaleFactor.padding(18)
     }
 
     private var verticalPadding: CGFloat {
-        DeviceType.isCompactWidth ? 12 : 14
+        DeviceType.isCompactWidth ? ScaleFactor.padding(12) : ScaleFactor.padding(14)
     }
 
     var body: some View {
@@ -31,7 +31,7 @@ struct PhoneNumberTextField: View {
             Image(systemName: "phone.fill")
                 .font(.system(size: iconSize, weight: .medium))
                 .foregroundColor(textFieldIsFocused ? PremiumColorTheme.primaryColor : PremiumColorTheme.textSecondary)
-                .frame(width: 24)
+                .frame(width: ScaleFactor.size(24))
 
             TextField("请输入手机号", text: $displayNumber)
                 .font(.system(size: fontSize, weight: .regular, design: .rounded))
@@ -47,16 +47,16 @@ struct PhoneNumberTextField: View {
         .frame(maxWidth: .infinity)
         .frame(minHeight: LayoutConstants.inputHeight)
         .background(
-            RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusSmall, style: .continuous)
+            RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall, style: .continuous)
                 .fill(Color.dynamicColor(
                     light: Color.white.opacity(0.5),
                     dark: Color(red: 0.18, green: 0.18, blue: 0.22).opacity(0.5)
                 ))
                 .overlay(
-                    RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusSmall, style: .continuous)
+                    RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall, style: .continuous)
                         .stroke(
                             textFieldIsFocused ? PremiumColorTheme.primaryColor : Color.clear,
-                            lineWidth: 1.5
+                            lineWidth: ScaleFactor.size(1.5)
                         )
                 )
         )

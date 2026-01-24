@@ -1,13 +1,13 @@
 import SwiftUI
 
-// MARK: - 录音指示器
+// MARK: - 录音指示器 - 自适应布局
 struct RecordingIndicator: View {
     @State private var isAnimating = false
-    
+
     var body: some View {
         Circle()
             .fill(Color.red)
-            .frame(width: 10, height: 10)
+            .frame(width: ScaleFactor.size(10), height: ScaleFactor.size(10))
             .scaleEffect(isAnimating ? 1.0 : 0.8)
             .animation(
                 .easeInOut(duration: 0.75)
@@ -20,11 +20,11 @@ struct RecordingIndicator: View {
     }
 }
 
-// MARK: - 播报指示器
+// MARK: - 播报指示器 - 自适应布局
 struct SpeakingIndicator: View {
     var body: some View {
         Image(systemName: "speaker.wave.2.fill")
-            .font(.system(size: 14))
+            .font(.system(size: AdaptiveFont.subheadline))
             .foregroundColor(.blue)
     }
 }

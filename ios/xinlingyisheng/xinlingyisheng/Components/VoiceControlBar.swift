@@ -1,33 +1,33 @@
 import SwiftUI
 
-// MARK: - 专业级语音控制栏
+// MARK: - 专业级语音控制栏 - 自适应布局
 struct VoiceControlBar: View {
     @ObservedObject var viewModel: UnifiedChatViewModel
     var onImageTap: (() -> Void)? = nil
     var onClose: (() -> Void)? = nil
-    
+
     @State private var pulseAnimation = false
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // 实时识别文字显示区域
             if !viewModel.recognizedText.isEmpty {
                 recognitionTextView
             }
-            
+
             // 主控制区域
-            VStack(spacing: 20) {
+            VStack(spacing: ScaleFactor.spacing(20)) {
                 // 状态提示
                 statusIndicator
-                
+
                 // 中央麦克风按钮
                 centerMicButton
-                
+
                 // 底部操作栏
                 bottomActions
             }
-            .padding(.vertical, 24)
-            .padding(.horizontal, 20)
+            .padding(.vertical, ScaleFactor.padding(24))
+            .padding(.horizontal, ScaleFactor.padding(20))
         }
         .background(
             LinearGradient(
@@ -42,50 +42,50 @@ struct VoiceControlBar: View {
             }
         }
     }
-    
+
     // MARK: - 识别文字显示
     private var recognitionTextView: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: ScaleFactor.spacing(12)) {
             // 波形动画指示器
             WaveformIndicator()
-            
+
             Text(viewModel.recognizedText)
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: AdaptiveFont.body, weight: .medium))
                 .foregroundColor(MedicalColors.textPrimary)
                 .lineLimit(2)
-            
+
             Spacer()
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
+        .padding(.horizontal, ScaleFactor.padding(20))
+        .padding(.vertical, ScaleFactor.padding(16))
         .background(Color.white.opacity(0.9))
     }
-    
+
     // MARK: - 状态指示器
     private var statusIndicator: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: ScaleFactor.spacing(8)) {
             if viewModel.voiceState == .aiSpeaking {
                 Image(systemName: "speaker.wave.2.fill")
-                    .font(.system(size: 14))
+                    .font(.system(size: AdaptiveFont.subheadline))
                     .foregroundColor(MedicalColors.primaryBlue)
                 Text("AI 正在回复")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
                     .foregroundColor(MedicalColors.textSecondary)
             } else if viewModel.voiceState == .listening {
                 Circle()
                     .fill(MedicalColors.successGreen)
-                    .frame(width: 8, height: 8)
+                    .frame(width: ScaleFactor.size(8), height: ScaleFactor.size(8))
                 Text("正在聆听...")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
                     .foregroundColor(MedicalColors.successGreen)
             } else {
                 Text("点击开始语音对话")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
                     .foregroundColor(MedicalColors.textSecondary)
             }
         }
     }
-    
+
     // MARK: - 中央麦克风按钮
     private var centerMicButton: some View {
         Button(action: {
@@ -104,16 +104,16 @@ struct VoiceControlBar: View {
                 // 外圈脉冲动画（录音时显示）
                 if viewModel.voiceState == .listening {
                     Circle()
-                        .stroke(Color.green.opacity(0.3), lineWidth: 2)
-                        .frame(width: 100, height: 100)
+                        .stroke(Color.green.opacity(0.3), lineWidth: ScaleFactor.size(2))
+                        .frame(width: ScaleFactor.size(100), height: ScaleFactor.size(100))
                         .scaleEffect(pulseAnimation ? 1.2 : 1.0)
-                    
+
                     Circle()
-                        .stroke(Color.green.opacity(0.2), lineWidth: 2)
-                        .frame(width: 120, height: 120)
+                        .stroke(Color.green.opacity(0.2), lineWidth: ScaleFactor.size(2))
+                        .frame(width: ScaleFactor.size(120), height: ScaleFactor.size(120))
                         .scaleEffect(pulseAnimation ? 1.3 : 1.0)
                 }
-                
+
                 // 主按钮
                 Circle()
                     .fill(
@@ -123,9 +123,9 @@ struct VoiceControlBar: View {
                                 ? LinearGradient(colors: [MedicalColors.primaryBlue, MedicalColors.primaryBlueDark], startPoint: .top, endPoint: .bottom)
                                 : LinearGradient(colors: [Color(hex: "#E5E7EB"), Color(hex: "#D1D5DB")], startPoint: .top, endPoint: .bottom)
                     )
-                    .frame(width: 80, height: 80)
-                    .shadow(color: viewModel.voiceState == .listening ? Color.green.opacity(0.4) : Color.black.opacity(0.1), radius: 10, y: 4)
-                
+                    .frame(width: ScaleFactor.size(80), height: ScaleFactor.size(80))
+                    .shadow(color: viewModel.voiceState == .listening ? Color.green.opacity(0.4) : Color.black.opacity(0.1), radius: ScaleFactor.size(10), y: ScaleFactor.size(4))
+
                 // 图标
                 Image(systemName: {
                     switch viewModel.voiceState {
@@ -141,53 +141,53 @@ struct VoiceControlBar: View {
                         return "exclamationmark.triangle.fill"
                     }
                 }())
-                    .font(.system(size: 32, weight: .medium))
+                    .font(.system(size: AdaptiveFont.title1, weight: .medium))
                     .foregroundColor(.white)
             }
         }
         .buttonStyle(PlainButtonStyle())
     }
-    
+
     // MARK: - 底部操作栏
     private var bottomActions: some View {
-        HStack(spacing: 40) {
+        HStack(spacing: ScaleFactor.spacing(40)) {
             // 图片按钮
             Button(action: { onImageTap?() }) {
-                VStack(spacing: 6) {
+                VStack(spacing: ScaleFactor.spacing(6)) {
                     ZStack {
                         Circle()
                             .fill(Color.white)
-                            .frame(width: 48, height: 48)
-                            .shadow(color: Color.black.opacity(0.06), radius: 4, y: 2)
-                        
+                            .frame(width: ScaleFactor.size(48), height: ScaleFactor.size(48))
+                            .shadow(color: Color.black.opacity(0.06), radius: ScaleFactor.size(4), y: ScaleFactor.size(2))
+
                         Image(systemName: "photo.on.rectangle")
-                            .font(.system(size: 20))
+                            .font(.system(size: AdaptiveFont.title3))
                             .foregroundColor(MedicalColors.textSecondary)
                     }
                     Text("图片")
-                        .font(.system(size: 12))
+                        .font(.system(size: AdaptiveFont.caption))
                         .foregroundColor(MedicalColors.textMuted)
                 }
             }
-            
+
             // 关闭按钮
             Button(action: {
                 viewModel.exitVoiceMode()
                 onClose?()
             }) {
-                VStack(spacing: 6) {
+                VStack(spacing: ScaleFactor.spacing(6)) {
                     ZStack {
                         Circle()
                             .fill(Color.white)
-                            .frame(width: 48, height: 48)
-                            .shadow(color: Color.black.opacity(0.06), radius: 4, y: 2)
-                        
+                            .frame(width: ScaleFactor.size(48), height: ScaleFactor.size(48))
+                            .shadow(color: Color.black.opacity(0.06), radius: ScaleFactor.size(4), y: ScaleFactor.size(2))
+
                         Image(systemName: "keyboard")
-                            .font(.system(size: 20))
+                            .font(.system(size: AdaptiveFont.title3))
                             .foregroundColor(MedicalColors.textSecondary)
                     }
                     Text("键盘")
-                        .font(.system(size: 12))
+                        .font(.system(size: AdaptiveFont.caption))
                         .foregroundColor(MedicalColors.textMuted)
                 }
             }
@@ -198,13 +198,13 @@ struct VoiceControlBar: View {
 // MARK: - 波形动画指示器
 struct WaveformIndicator: View {
     @State private var animating = false
-    
+
     var body: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: ScaleFactor.spacing(3)) {
             ForEach(0..<4) { index in
-                RoundedRectangle(cornerRadius: 2)
+                RoundedRectangle(cornerRadius: ScaleFactor.size(2))
                     .fill(Color.green)
-                    .frame(width: 3, height: animating ? CGFloat.random(in: 8...20) : 8)
+                    .frame(width: ScaleFactor.size(3), height: animating ? CGFloat.random(in: ScaleFactor.size(8)...ScaleFactor.size(20)) : ScaleFactor.size(8))
                     .animation(
                         .easeInOut(duration: 0.4)
                         .repeatForever()
@@ -213,7 +213,7 @@ struct WaveformIndicator: View {
                     )
             }
         }
-        .frame(width: 20, height: 20)
+        .frame(width: ScaleFactor.size(20), height: ScaleFactor.size(20))
         .onAppear { animating = true }
     }
 }

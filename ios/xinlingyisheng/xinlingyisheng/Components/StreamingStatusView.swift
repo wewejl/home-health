@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - 流式响应状态视图 (阶段 3)
+// MARK: - 流式响应状态视图 (阶段 3) - 自适应布局
 /// 显示 AI 思考状态和工具调用进度的视觉反馈
 
 struct StreamingStatusView: View {
@@ -11,67 +11,67 @@ struct StreamingStatusView: View {
     let getToolDisplayName: (String) -> String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: ScaleFactor.spacing(12)) {
             // 思考状态
             if isThinking || !activeToolCalls.isEmpty {
-                HStack(spacing: 8) {
+                HStack(spacing: ScaleFactor.spacing(8)) {
                     // 思考动画
                     thinkingIndicator
 
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: ScaleFactor.spacing(2)) {
                         if !thinkingMessage.isEmpty {
                             Text(thinkingMessage)
-                                .font(Font.system(size: 13, weight: .medium))
+                                .font(Font.system(size: AdaptiveFont.footnote, weight: .medium))
                                 .foregroundColor(DXYColors.textPrimary)
                         }
 
                         // 工具调用进度
                         if !activeToolCalls.isEmpty {
                             Text(formatToolProgress())
-                                .font(Font.system(size: 12, weight: .regular))
+                                .font(Font.system(size: AdaptiveFont.caption))
                                 .foregroundColor(DXYColors.textSecondary)
                         }
                     }
 
                     Spacer()
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, ScaleFactor.padding(16))
+                .padding(.vertical, ScaleFactor.padding(12))
                 .background(DXYColors.lightPurple.opacity(0.5))
-                .cornerRadius(12)
+                .cornerRadius(AdaptiveSize.cornerRadiusSmall)
             }
 
             // 工具调用历史（显示最近完成的工具）
             if !completedTools.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: ScaleFactor.spacing(6)) {
                     ForEach(completedTools, id: \.self) { tool in
-                        HStack(spacing: 6) {
+                        HStack(spacing: ScaleFactor.spacing(6)) {
                             Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(Color(red: 0.30, green: 0.72, blue: 0.52))
+                                .font(.system(size: AdaptiveFont.subheadline))
+                                .foregroundColor(DossierColors.riskLow)
 
                             Text(getToolDisplayName(tool))
-                                .font(Font.system(size: 12, weight: .regular))
+                                .font(Font.system(size: AdaptiveFont.caption))
                                 .foregroundColor(DXYColors.textSecondary)
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
+                        .padding(.horizontal, ScaleFactor.padding(12))
+                        .padding(.vertical, ScaleFactor.padding(6))
                         .background(Color.green.opacity(0.1))
-                        .cornerRadius(8)
+                        .cornerRadius(AdaptiveSize.cornerRadiusSmall / 2)
                     }
                 }
-                .padding(.leading, 16)
+                .padding(.leading, ScaleFactor.padding(16))
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, ScaleFactor.padding(8))
     }
 
     private var thinkingIndicator: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: ScaleFactor.spacing(4)) {
             ForEach(0..<3) { index in
                 Circle()
                     .fill(DXYColors.primaryPurple)
-                    .frame(width: 8, height: 8)
+                    .frame(width: ScaleFactor.size(8), height: ScaleFactor.size(8))
                     .scaleEffect(thinkingScale(for: index))
                     .animation(
                         Animation.easeInOut(duration: 0.6)
@@ -99,7 +99,7 @@ struct StreamingStatusView: View {
     }
 }
 
-// MARK: - 紧凑型状态指示器
+// MARK: - 紧凑型状态指示器 - 自适应布局
 /// 用于消息气泡内联显示的小型状态指示器
 
 struct StreamingStatusIndicator: View {
@@ -107,13 +107,13 @@ struct StreamingStatusIndicator: View {
     let activeToolCalls: [String]
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: ScaleFactor.spacing(6)) {
             if isThinking {
-                HStack(spacing: 3) {
+                HStack(spacing: ScaleFactor.spacing(3)) {
                     ForEach(0..<3) { index in
                         Circle()
                             .fill(DXYColors.primaryPurple)
-                            .frame(width: 6, height: 6)
+                            .frame(width: ScaleFactor.size(6), height: ScaleFactor.size(6))
                             .scaleEffect(thinkingScale(for: index))
                             .animation(
                                 Animation.easeInOut(duration: 0.6)
@@ -126,9 +126,9 @@ struct StreamingStatusIndicator: View {
             }
 
             if !activeToolCalls.isEmpty {
-                HStack(spacing: 4) {
+                HStack(spacing: ScaleFactor.spacing(4)) {
                     Image(systemName: "gear")
-                        .font(.system(size: 12))
+                        .font(.system(size: AdaptiveFont.caption))
                         .foregroundColor(DXYColors.primaryPurple)
                         .rotationEffect(.degrees(rotationAngle))
                         .animation(
@@ -138,15 +138,15 @@ struct StreamingStatusIndicator: View {
                         )
 
                     Text(activeToolCalls.first ?? "")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: AdaptiveFont.caption, weight: .medium))
                         .foregroundColor(DXYColors.textSecondary)
                 }
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
+        .padding(.horizontal, ScaleFactor.padding(10))
+        .padding(.vertical, ScaleFactor.padding(6))
         .background(DXYColors.lightPurple.opacity(0.3))
-        .cornerRadius(12)
+        .cornerRadius(AdaptiveSize.cornerRadiusSmall)
     }
 
     private func thinkingScale(for index: Int) -> CGFloat {
@@ -162,7 +162,7 @@ struct StreamingStatusIndicator: View {
     }
 }
 
-// MARK: - 工具调用状态卡片
+// MARK: - 工具调用状态卡片 - 自适应布局
 /// 显示单个工具的详细执行状态
 
 struct ToolCallStatusCard: View {
@@ -171,35 +171,35 @@ struct ToolCallStatusCard: View {
     let getToolDisplayName: (String) -> String
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: ScaleFactor.spacing(12)) {
             // 状态图标
             ZStack {
                 Circle()
                     .fill(statusBackgroundColor.opacity(0.15))
-                    .frame(width: 40, height: 40)
+                    .frame(width: ScaleFactor.size(40), height: ScaleFactor.size(40))
 
                 Image(systemName: statusIcon)
-                    .font(.system(size: 18))
+                    .font(.system(size: AdaptiveFont.body))
                     .foregroundColor(statusBackgroundColor)
             }
 
             // 工具信息
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: ScaleFactor.spacing(2)) {
                 Text(getToolDisplayName(tool))
-                    .font(Font.system(size: 14, weight: .semibold))
+                    .font(Font.system(size: AdaptiveFont.subheadline, weight: .semibold))
                     .foregroundColor(DXYColors.textPrimary)
 
                 Text(statusText)
-                    .font(Font.system(size: 12, weight: .regular))
+                    .font(Font.system(size: AdaptiveFont.caption))
                     .foregroundColor(DXYColors.textSecondary)
             }
 
             Spacer()
         }
-        .padding(12)
+        .padding(ScaleFactor.padding(12))
         .background(DXYColors.cardBackground)
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.04), radius: 8, y: 2)
+        .cornerRadius(AdaptiveSize.cornerRadiusSmall)
+        .shadow(color: Color.black.opacity(0.04), radius: ScaleFactor.size(8), y: ScaleFactor.size(2))
     }
 
     private var statusIcon: String {
@@ -220,7 +220,7 @@ struct ToolCallStatusCard: View {
         case "calling", "executing":
             return DXYColors.primaryPurple
         case "success":
-            return Color(red: 0.30, green: 0.72, blue: 0.52)
+            return DossierColors.riskLow
         case "error":
             return Color.red
         default:

@@ -2,13 +2,13 @@ import SwiftUI
 
 struct AnyShape: Shape {
     private let pathBuilder: @Sendable (CGRect) -> Path
-    
+
     init<S: Shape & Sendable>(_ shape: S) {
         self.pathBuilder = { rect in
             shape.path(in: rect)
         }
     }
-    
+
     func path(in rect: CGRect) -> Path {
         pathBuilder(rect)
     }
@@ -19,15 +19,16 @@ enum LogoStyle: String, CaseIterable, Identifiable {
     case stethoscope = "听诊守护"
     case crossShield = "十字护盾"
     case aiVine = "智能藤蔓"
-    
+
     var id: String { rawValue }
 }
 
+// MARK: - Logo 视图 - 自适应布局
 struct LogoView: View {
     var style: LogoStyle = .heartPulse
-    var size: CGFloat = 80
+    var size: CGFloat = ScaleFactor.size(80)
     @State private var isAnimating = false
-    
+
     var body: some View {
         ZStack {
             backgroundShape
@@ -42,7 +43,7 @@ struct LogoView: View {
             }
         }
     }
-    
+
     private var shapeForStyle: AnyShape {
         switch style {
         case .heartPulse:
@@ -55,7 +56,7 @@ struct LogoView: View {
             return AnyShape(Circle())
         }
     }
-    
+
     private var backgroundShape: some View {
         let baseShape = shapeForStyle
         return baseShape
@@ -66,7 +67,7 @@ struct LogoView: View {
                 endPoint: .bottomTrailing
             )
         )
-        .shadow(color: PremiumColorTheme.primaryColor.opacity(0.4), radius: 20, x: 0, y: 10)
+        .shadow(color: PremiumColorTheme.primaryColor.opacity(0.4), radius: ScaleFactor.size(20), x: 0, y: ScaleFactor.size(10))
         .overlay(
             baseShape
                 .stroke(
@@ -78,11 +79,11 @@ struct LogoView: View {
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ),
-                lineWidth: 2
+                lineWidth: ScaleFactor.size(2)
             )
         )
     }
-    
+
     @ViewBuilder
     private var logoSymbol: some View {
         switch style {
@@ -101,13 +102,13 @@ struct LogoView: View {
 
 struct HeartPulseIcon: View {
     var size: CGFloat
-    
+
     var body: some View {
         ZStack {
             Image(systemName: "heart.fill")
                 .font(.system(size: size * 0.55, weight: .semibold))
                 .offset(y: -size * 0.08)
-            
+
             HStack(spacing: size * 0.12) {
                 PulseLine(height: size * 0.35, delay: 0.0)
                 PulseLine(height: size * 0.45, delay: 0.12)
@@ -121,14 +122,14 @@ struct HeartPulseIcon: View {
 
 struct StethoscopeBadge: View {
     var size: CGFloat
-    
+
     var body: some View {
         VStack(spacing: size * 0.08) {
             Image(systemName: "stethoscope")
                 .font(.system(size: size * 0.45, weight: .medium))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(Color.white, Color.white.opacity(0.85))
-            
+
             Capsule()
                 .fill(Color.white.opacity(0.9))
                 .frame(width: size * 0.45, height: size * 0.08)
@@ -144,7 +145,7 @@ struct StethoscopeBadge: View {
 struct CrossShieldBadge: View {
     var size: CGFloat
     @State private var breathe = false
-    
+
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: size * 0.18, style: .continuous)
@@ -155,7 +156,7 @@ struct CrossShieldBadge: View {
                     .easeInOut(duration: 1.6).repeatForever(autoreverses: true),
                     value: breathe
                 )
-            
+
             Image(systemName: "cross.case.fill")
                 .font(.system(size: size * 0.45, weight: .semibold))
                 .foregroundStyle(
@@ -165,7 +166,7 @@ struct CrossShieldBadge: View {
                         endPoint: .bottomTrailing
                     )
                 )
-                .shadow(color: PremiumColorTheme.primaryColor.opacity(0.5), radius: 8, x: 0, y: 6)
+                .shadow(color: PremiumColorTheme.primaryColor.opacity(0.5), radius: ScaleFactor.size(8), x: 0, y: ScaleFactor.size(6))
         }
         .onAppear {
             breathe = true
@@ -177,11 +178,11 @@ struct PulseLine: View {
     var height: CGFloat
     var delay: Double
     @State private var animate = false
-    
+
     var body: some View {
-        RoundedRectangle(cornerRadius: 1.5)
+        RoundedRectangle(cornerRadius: ScaleFactor.size(1.5))
             .fill(Color.white.opacity(0.9))
-            .frame(width: 2.5, height: animate ? height : height * 0.3)
+            .frame(width: ScaleFactor.size(2.5), height: animate ? height : height * 0.3)
             .animation(
                 Animation.easeInOut(duration: 0.8)
                     .repeatForever(autoreverses: true)
@@ -225,14 +226,14 @@ struct AIVineBadge: View {
                         path.move(to: CGPoint(x: 0, y: 0))
                         path.addLine(to: CGPoint(x: x, y: y))
                     }
-                    .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                    .stroke(Color.white.opacity(0.25), lineWidth: ScaleFactor.size(1))
                 }
             }
 
             // 中心医疗十字
             PlusSignView(size: size * 0.4)
                 .foregroundColor(.white)
-                .shadow(color: Color.white.opacity(0.5), radius: 8, x: 0, y: 4)
+                .shadow(color: Color.white.opacity(0.5), radius: ScaleFactor.size(8), x: 0, y: ScaleFactor.size(4))
         }
         .frame(width: size, height: size)
         .onAppear {
@@ -264,9 +265,9 @@ struct PlusSignView: View {
 }
 
 struct MinimalistLogoView: View {
-    var size: CGFloat = 80
+    var size: CGFloat = ScaleFactor.size(80)
     var style: LogoStyle = .heartPulse
-    
+
     var body: some View {
         LogoView(style: style, size: size)
     }
