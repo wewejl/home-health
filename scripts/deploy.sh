@@ -100,7 +100,7 @@ backup_database() {
     log_info "备份数据库..."
 
     BACKUP_NAME="backup_$(date +%Y%m%d_%H%M%S).sql"
-    ssh_exec "cd $REMOTE_DIR && sudo docker exec home-health-postgres pg_dump -U xinlin_prod home_health > backups/$BACKUP_NAME"
+    ssh_exec "cd $REMOTE_DIR && sudo docker exec home-health-postgres pg_dump -U xinlin_prod xinlin_prod > backups/$BACKUP_NAME"
 
     log_info "数据库备份完成: $BACKUP_NAME"
 }
