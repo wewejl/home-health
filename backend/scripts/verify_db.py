@@ -115,7 +115,7 @@ def verify_data_counts():
 
 def main():
     print("=" * 50)
-    print("  鑫琳医生 - 数据库验证工具")
+    print("  灵犀医生 - 数据库验证工具")
     print("=" * 50)
     
     results = []

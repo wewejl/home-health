@@ -196,12 +196,16 @@ class VerificationCodeStore:
         """
         with self._lock:
             now = time.time()
-            
-            # 测试模式下允许 000000
+
+            # 测试模式下，仅允许 TEST_PHONES 配置的号码使用 000000
             if settings.TEST_MODE and code == "000000":
-                logger.info(f"[SMS] 测试模式验证通过: phone={phone}")
-                return True, ""
-            
+                test_phones = [p.strip() for p in settings.TEST_PHONES.split(",")]
+                if phone in test_phones:
+                    logger.info(f"[SMS] 测试号码验证通过: phone={phone}")
+                    return True, ""
+                else:
+                    logger.warning(f"[SMS] 非测试号码尝试使用测试验证码: phone={phone}")
+
             if phone not in self._codes:
                 return False, "请先获取验证码"
             

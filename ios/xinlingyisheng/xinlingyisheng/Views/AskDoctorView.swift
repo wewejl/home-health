@@ -368,7 +368,7 @@ struct BrandFooterView: View {
             HStack(spacing: 6) {
                 Image(systemName: "cross.fill")
                     .font(.system(size: layout.bodyFontSize - 2))
-                Text("鑫琳医生")
+                Text("灵犀医生")
                     .font(.system(size: layout.bodyFontSize - 2, weight: .medium))
             }
             .foregroundColor(HealingColors.forestMist.opacity(0.7))

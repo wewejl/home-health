@@ -1,5 +1,5 @@
 #!/bin/bash
-# 鑫琳医生 - 完整部署脚本（包含数据迁移）
+# 灵犀医生 - 完整部署脚本（包含数据迁移）
 # 用法: bash deployment/deploy-with-data.sh
 
 set -e

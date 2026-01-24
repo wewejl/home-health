@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Home-Health** (鑫琳医生) is an AI Doctor Avatar System that provides AI-powered medical consultation services. It consists of three main components:
+**Home-Health** (灵犀医生) is an AI Doctor Avatar System that provides AI-powered medical consultation services. It consists of three main components:
 
 | Component | Technology | Purpose |
 |-----------|------------|---------|
@@ -72,15 +72,15 @@ cd ios/xinlingyisheng
 xcodebuild -project xinlingyisheng.xcodeproj -list
 
 # Build for simulator
-xcodebuild -project xinlingyisheng.xcodeproj -scheme 鑫琳医生 \
+xcodebuild -project xinlingyisheng.xcodeproj -scheme 灵犀医生 \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 
 # Build for device (requires code signing)
-xcodebuild -project xinlingyisheng.xcodeproj -scheme 鑫琳医生 \
+xcodebuild -project xinlingyisheng.xcodeproj -scheme 灵犀医生 \
   -destination 'generic/platform=iOS' build
 
 # Run tests
-xcodebuild test -project xinlingyisheng.xcodeproj -scheme 鑫琳医生 \
+xcodebuild test -project xinlingyisheng.xcodeproj -scheme 灵犀医生 \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
@@ -91,7 +91,7 @@ xcodebuild test -project xinlingyisheng.xcodeproj -scheme 鑫琳医生 \
 ### 1. Compile Check (Required)
 ```bash
 cd ios/xinlingyisheng
-xcodebuild -project xinlingyisheng.xcodeproj -scheme 鑫琳医生 \
+xcodebuild -project xinlingyisheng.xcodeproj -scheme 灵犀医生 \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 - **DO NOT** mark task as complete until `BUILD SUCCEEDED`

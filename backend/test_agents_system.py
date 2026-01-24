@@ -353,7 +353,7 @@ def print_table(results: List[AgentTestResult]):
 
 
 def main():
-    print_header("🏥 鑫琳医生智能体系统测试")
+    print_header("🏥 灵犀医生智能体系统测试")
 
     # 获取所有智能体列表
     print("\n[1/6] 获取智能体列表...")

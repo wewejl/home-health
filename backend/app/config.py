@@ -5,7 +5,7 @@ from pathlib import Path
 
 class Settings(BaseSettings):
     # 应用配置
-    APP_NAME: str = "鑫琳医生 API"
+    APP_NAME: str = "灵犀医生 API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
     SEED_DATA: bool = True
@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     TEST_MODE: bool = True
     # - true 时: 验证码 000000 为万能验证码，其他验证码正常验证（但不发真实短信）
     # - false 时: 所有验证码必须真实验证，发送真实短信（需配置阿里云）
+
+    # 测试账号手机号（仅这些号码可以使用 000000 验证码）
+    TEST_PHONES: str = "18107300888"  # 多个号码用逗号分隔，如 "13800138000,13900139000"
 
     # 短信服务配置（已废弃，由 SMS_PROVIDER 和 TEST_MODE 控制）
     ENABLE_SMS_VERIFICATION: bool = False  # 保留此配置仅为兼容，不再使用

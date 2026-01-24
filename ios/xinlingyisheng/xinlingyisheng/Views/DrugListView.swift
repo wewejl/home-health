@@ -231,7 +231,7 @@ struct HealingDrugListTrustBanner: View {
             )
             .clipShape(Capsule())
 
-            Text("药品说明放心查 · 鑫琳医生官方出品")
+            Text("药品说明放心查 · 灵犀医生官方出品")
                 .font(.system(size: layout.captionFontSize))
                 .foregroundColor(HealingColors.textSecondary)
 

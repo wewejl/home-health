@@ -11,16 +11,16 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		9E28CE032EFEA293000EC906 /* 鑫琳医生.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "鑫琳医生.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9E28CE032EFEA293000EC906 /* 灵犀医生.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "灵犀医生.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		9E28CE112EFEA295000EC906 /* Exceptions for "xinlingyisheng" folder in "鑫琳医生" target */ = {
+		9E28CE112EFEA295000EC906 /* Exceptions for "xinlingyisheng" folder in "灵犀医生" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 9E28CE022EFEA293000EC906 /* 鑫琳医生 */;
+			target = 9E28CE022EFEA293000EC906 /* 灵犀医生 */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -28,7 +28,7 @@
 		9E28CE052EFEA293000EC906 /* xinlingyisheng */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				9E28CE112EFEA295000EC906 /* Exceptions for "xinlingyisheng" folder in "鑫琳医生" target */,
+				9E28CE112EFEA295000EC906 /* Exceptions for "xinlingyisheng" folder in "灵犀医生" target */,
 			);
 			path = xinlingyisheng;
 			sourceTree = "<group>";
@@ -58,7 +58,7 @@
 		9E28CE042EFEA293000EC906 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				9E28CE032EFEA293000EC906 /* 鑫琳医生.app */,
+				9E28CE032EFEA293000EC906 /* 灵犀医生.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -66,9 +66,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		9E28CE022EFEA293000EC906 /* 鑫琳医生 */ = {
+		9E28CE022EFEA293000EC906 /* 灵犀医生 */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9E28CE0E2EFEA294000EC906 /* Build configuration list for PBXNativeTarget "鑫琳医生" */;
+			buildConfigurationList = 9E28CE0E2EFEA294000EC906 /* Build configuration list for PBXNativeTarget "灵犀医生" */;
 			buildPhases = (
 				9E28CDFF2EFEA293000EC906 /* Sources */,
 				9E28CE002EFEA293000EC906 /* Frameworks */,
@@ -81,12 +81,12 @@
 			fileSystemSynchronizedGroups = (
 				9E28CE052EFEA293000EC906 /* xinlingyisheng */,
 			);
-			name = "鑫琳医生";
+			name = "灵犀医生";
 			packageProductDependencies = (
 				9E28CE132EFEA510000EC906 /* Starscream */,
 			);
-			productName = "鑫琳医生";
-			productReference = 9E28CE032EFEA293000EC906 /* 鑫琳医生.app */;
+			productName = "灵犀医生";
+			productReference = 9E28CE032EFEA293000EC906 /* 灵犀医生.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -121,7 +121,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				9E28CE022EFEA293000EC906 /* 鑫琳医生 */,
+				9E28CE022EFEA293000EC906 /* 灵犀医生 */,
 			);
 		};
 /* End PBXProject section */
@@ -282,7 +282,6 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -321,7 +320,6 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -358,7 +356,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9E28CE0E2EFEA294000EC906 /* Build configuration list for PBXNativeTarget "鑫琳医生" */ = {
+		9E28CE0E2EFEA294000EC906 /* Build configuration list for PBXNativeTarget "灵犀医生" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9E28CE0F2EFEA294000EC906 /* Debug */,

@@ -142,7 +142,7 @@ class PDFGenerator {
         context.strokePath()
         
         // Title
-        let title = "鑫琳医生 - AI 辅助病历"
+        let title = "灵犀医生 - AI 辅助病历"
         let titleAttributes: [NSAttributedString.Key: Any] = [
             .font: Fonts.headerTitle(),
             .foregroundColor: Colors.textPrimary

@@ -382,7 +382,7 @@ struct HealingGreetingHeader: View {
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("鑫琳医生")
+                        Text("灵犀医生")
                             .font(.system(size: layout.titleFontSize - 2, weight: .bold))
                             .foregroundColor(HealingColors.textPrimary)
 

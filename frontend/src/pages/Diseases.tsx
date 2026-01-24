@@ -89,7 +89,7 @@ const Diseases: React.FC = () => {
       sort_order: 0,
       is_active: true,
       is_hot: false,
-      reviewer_info: '三甲医生专业编审 · 鑫琳医生官方出品'
+      reviewer_info: '三甲医生专业编审 · 灵犀医生官方出品'
     });
     setModalVisible(true);
   };
@@ -339,7 +339,7 @@ const Diseases: React.FC = () => {
                   <Input placeholder="头像图片链接" />
                 </Form.Item>
                 <Form.Item name="reviewer_info" label="审核信息" style={{ gridColumn: 'span 2' }}>
-                  <Input placeholder="如：三甲医生专业编审 · 鑫琳医生官方出品" />
+                  <Input placeholder="如：三甲医生专业编审 · 灵犀医生官方出品" />
                 </Form.Item>
               </div>
             </TabPane>

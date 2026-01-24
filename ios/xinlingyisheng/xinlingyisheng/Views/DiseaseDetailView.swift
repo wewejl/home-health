@@ -178,7 +178,7 @@ struct DiseaseDetailView: View {
                         .foregroundColor(HealingColors.mutedCoral)
                 }
 
-                Text("三甲医生专业编审 · 鑫琳医生官方出品")
+                Text("三甲医生专业编审 · 灵犀医生官方出品")
                     .font(.system(size: layout.captionFontSize - 1))
                     .foregroundColor(HealingColors.textSecondary)
             }

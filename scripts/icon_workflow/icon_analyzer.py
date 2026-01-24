@@ -18,7 +18,7 @@ class IconInfo:
     icon_type: str         # 图标类型（导航、操作、状态等）
     prompt_en: str         # 英文 prompt
     prompt_zh: str         # 中文描述
-    color_primary: str = "#5C44FF"  # 主色（鑫琳医生紫色）
+    color_primary: str = "#5C44FF"  # 主色（灵犀医生紫色）
     color_secondary: str = "#A5A5B5"  # 次色（灰色）
 
 

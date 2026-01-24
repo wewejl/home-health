@@ -6,9 +6,9 @@
     <key>CFBundleIdentifier</key>
     <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
     <key>CFBundleName</key>
-    <string>鑫琳医生</string>
+    <string>灵犀医生</string>
     <key>CFBundleDisplayName</key>
-    <string>鑫琳医生</string>
+    <string>灵犀医生</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleVersion</key>

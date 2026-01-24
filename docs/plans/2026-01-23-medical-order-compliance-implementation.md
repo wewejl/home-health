@@ -1911,7 +1911,7 @@ git commit -m "feat(medical-order): add medical orders API routes"
 
 ```bash
 cd ios/xinlingyisheng
-xcodebuild -project xinlingyisheng.xcodeproj -scheme 鑫琳医生 \
+xcodebuild -project xinlingyisheng.xcodeproj -scheme 灵犀医生 \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 

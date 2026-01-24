@@ -1,5 +1,5 @@
 # Home-Health 生产环境 Docker Compose 配置
-# 鑫琳医生 - AI 医生分身系统
+# 灵犀医生 - AI 医生分身系统
 # 使用 Docker Hub 镜像（国内访问更快）
 
 version: "3.8"

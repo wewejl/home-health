@@ -98,7 +98,7 @@ struct DiseaseListView: View {
             )
             .clipShape(Capsule())
 
-            Text("疾病百科放心查 · 鑫琳医生官方出品")
+            Text("疾病百科放心查 · 灵犀医生官方出品")
                 .font(.system(size: layout.captionFontSize))
                 .foregroundColor(HealingColors.textSecondary)
 

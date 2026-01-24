@@ -159,7 +159,7 @@ struct HealingVoiceTopNavBar: View {
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("鑫琳医生")
+                    Text("灵犀医生")
                         .font(.system(size: layout.bodyFontSize - 1, weight: .semibold))
                         .foregroundColor(HealingColors.textPrimary)
 

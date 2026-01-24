@@ -15,7 +15,7 @@
 3. **基础架构**: `LangGraphAgentBase` 实现完整，支持图缓存和流式输出
 4. **状态兼容**: 已添加 CrewAI 兼容字段，支持旧数据迁移
 5. **API 接口**: 完全兼容现有 `/sessions/{session_id}/messages` 接口
-6. **iOS 编译**: 通过编译验证（scheme: 鑫琳医生）
+6. **iOS 编译**: 通过编译验证（scheme: 灵犀医生）
 
 ### ⚠️ 需要注意的问题
 

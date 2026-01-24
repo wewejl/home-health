@@ -131,7 +131,7 @@ def create_disease(
         author_name=data.author_name,
         author_title=data.author_title,
         author_avatar=data.author_avatar,
-        reviewer_info=data.reviewer_info or "三甲医生专业编审 · 鑫琳医生官方出品",
+        reviewer_info=data.reviewer_info or "三甲医生专业编审 · 灵犀医生官方出品",
         is_hot=data.is_hot,
         sort_order=data.sort_order,
         is_active=data.is_active

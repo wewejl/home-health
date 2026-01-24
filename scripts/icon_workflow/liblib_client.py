@@ -290,14 +290,16 @@ def test_icon_generation():
 
     client = LiblibAIClient(config)
 
-    # 测试 prompt - 生成一个简单的设置图标
-    # 双色图标风格: 主色 #5C44FF (紫色), 次色灰色
+    # 测试 prompt - 生成灵犀医生 App 图标（犀牛 + 日式治愈系）
+    # 主色 #517A6B (森林雾绿), 背景 #F7F2E8 (奶油白)
     test_prompt = (
-        "minimalist gear settings icon, duotone style, "
-        "flat design, vector style, clean lines, "
-        "primary color #5C44FF purple, secondary color light gray, "
-        "white background, isolated, simple geometric shapes, "
-        "no shading, no gradients, modern app icon style"
+        "cute minimalist rhino icon for medical app, Japanese healing style, "
+        "flat design, vector style, clean smooth lines, "
+        "primary color #517A6B sage green, accent color #B5D1C2 light sage, "
+        "background #F7F2E8 warm cream, "
+        "friendly rhino face, simple geometric shapes, rounded corners, "
+        "professional medical feel, trustworthy, calming, "
+        "no shading, no gradients, modern app icon style, high quality"
     )
 
     test_negative = (

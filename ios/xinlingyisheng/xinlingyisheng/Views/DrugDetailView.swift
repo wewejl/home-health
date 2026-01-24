@@ -212,7 +212,7 @@ struct HealingDrugDetailTrustBadge: View {
             )
             .clipShape(Capsule())
 
-            Text("三甲医生专业编审 · 鑫琳医生官方出品")
+            Text("三甲医生专业编审 · 灵犀医生官方出品")
                 .font(.system(size: layout.captionFontSize))
                 .foregroundColor(HealingColors.textSecondary)
 
@@ -632,7 +632,7 @@ struct HealingDrugDetailBrandFooter: View {
                 }
 
                 // 品牌名称
-                Text("鑫琳医生")
+                Text("灵犀医生")
                     .font(.system(size: layout.bodyFontSize + 2, weight: .semibold))
                     .foregroundColor(HealingColors.forestMist)
 

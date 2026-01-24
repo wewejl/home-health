@@ -603,7 +603,7 @@ struct HealingDiseaseBrandFooter: View {
             HStack(spacing: 6) {
                 Image(systemName: "cross.fill")
                     .font(.system(size: layout.captionFontSize + 1))
-                Text("鑫琳医生")
+                Text("灵犀医生")
                     .font(.system(size: layout.captionFontSize + 1, weight: .medium))
             }
             .foregroundColor(HealingColors.forestMist.opacity(0.7))

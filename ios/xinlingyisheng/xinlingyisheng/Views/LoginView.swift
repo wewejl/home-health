@@ -173,7 +173,7 @@ struct HealingLoginHeaderView: View {
                     .foregroundColor(.white)
             }
 
-            Text("鑫琳医生")
+            Text("灵犀医生")
                 .font(.system(size: layout.titleFontSize, weight: .bold))
                 .foregroundColor(HealingColors.textPrimary)
 

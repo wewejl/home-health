@@ -324,7 +324,7 @@ struct HealingSessionHistoryCard: View {
 #Preview {
     SessionHistoryView(
         doctorId: 1,
-        doctorName: "鑫琳医生",
+        doctorName: "灵犀医生",
         onSelectSession: { _ in }
     )
 }

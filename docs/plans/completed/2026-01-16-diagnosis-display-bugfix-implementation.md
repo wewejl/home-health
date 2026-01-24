@@ -70,7 +70,7 @@ private var quickOptionsView: some View {
 
 ```bash
 cd ios/xinlingyisheng
-xcodebuild -scheme 鑫琳医生 -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+xcodebuild -scheme 灵犀医生 -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
 Expected: Build succeeded
@@ -469,7 +469,7 @@ Expected: 服务启动成功，监听 8100 端口
 
 ```bash
 cd ios/xinlingyisheng
-xcodebuild -scheme 鑫琳医生 -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+xcodebuild -scheme 灵犀医生 -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 # 获取 app 路径
 APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "xinlingyisheng.app" | head -1)
 # 启动模拟器
@@ -587,7 +587,7 @@ Expected: 所有测试通过
 
 ```bash
 cd ios/xinlingyisheng
-xcodebuild -scheme 鑫琳医生 -sdk iphonesimulator clean build
+xcodebuild -scheme 灵犀医生 -sdk iphonesimulator clean build
 ```
 
 Expected: Build succeeded, 无警告或错误

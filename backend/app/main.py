@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="鑫琳医生 API",
+    title="灵犀医生 API",
     description="AI医生分身系统后端API",
     version="2.0.0"
 )
@@ -113,7 +113,7 @@ def startup_event():
 
 @app.get("/")
 def root():
-    return {"message": "鑫琳医生 AI分身系统 API 服务运行中", "version": "2.0.0"}
+    return {"message": "灵犀医生 AI分身系统 API 服务运行中", "version": "2.0.0"}
 
 
 @app.get("/health")

@@ -1,4 +1,4 @@
-# 鑫琳医生系统测试报告
+# 灵犀医生系统测试报告
 
 **测试日期**: 2026-01-23
 **测试环境**: 开发环境 (本地)
@@ -102,7 +102,7 @@
 | PID | 43032 | 应用已运行 |
 
 ### iOS 构建详情
-- **Scheme**: 鑫琳医生
+- **Scheme**: 灵犀医生
 - **Destination**: iPhone 17 Pro (iOS Simulator)
 - **Signing**: Sign to Run Locally
 - **Build Time**: ~2 分钟

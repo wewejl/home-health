@@ -251,7 +251,7 @@ def main():
     """主迁移流程"""
     print("=" * 60)
     print("  SQLite -> PostgreSQL 数据迁移工具")
-    print("  鑫琳医生项目 v1.0")
+    print("  灵犀医生项目 v1.0")
     print("=" * 60)
     print()
     

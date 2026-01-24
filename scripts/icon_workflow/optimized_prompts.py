@@ -53,7 +53,7 @@ class OptimizedPromptBuilder:
     )
 
     # 颜色配置
-    PRIMARY_COLOR = "#5C44FF"  # 鑫琳医生紫色
+    PRIMARY_COLOR = "#5C44FF"  # 灵犀医生紫色
     SECONDARY_COLOR = "#A5A5B5"  # 次要灰色
     ACCENT_COLOR = "#FF6B6B"    # 强调色（红色）
 

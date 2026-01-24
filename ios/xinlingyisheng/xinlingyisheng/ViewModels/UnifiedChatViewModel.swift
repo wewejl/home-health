@@ -791,6 +791,7 @@ class UnifiedChatViewModel: ObservableObject {
         recognizedText = ""
         aiResponseText = ""
         isMicrophoneMuted = false
+        showExitConfirmation = false  // 重置退出确认弹窗状态
 
         print("[UnifiedChatVM] 语音模式已完全停止")
     }
