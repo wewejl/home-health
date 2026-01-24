@@ -62,12 +62,12 @@ struct LogoView: View {
         return baseShape
         .fill(
             LinearGradient(
-                colors: PremiumColorTheme.gradientColors,
+                colors: AppColor.gradientColors,
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         )
-        .shadow(color: PremiumColorTheme.primaryColor.opacity(0.4), radius: ScaleFactor.size(20), x: 0, y: ScaleFactor.size(10))
+        .shadow(color: AppColor.primaryPurple.opacity(0.4), radius: ScaleFactor.size(20), x: 0, y: ScaleFactor.size(10))
         .overlay(
             baseShape
                 .stroke(
@@ -136,7 +136,7 @@ struct StethoscopeBadge: View {
                 .overlay(
                     Text("MD")
                         .font(.system(size: size * 0.18, weight: .semibold, design: .rounded))
-                        .foregroundColor(PremiumColorTheme.primaryColor.opacity(0.9))
+                        .foregroundColor(AppColor.primaryPurple.opacity(0.9))
                 )
         }
     }
@@ -166,7 +166,7 @@ struct CrossShieldBadge: View {
                         endPoint: .bottomTrailing
                     )
                 )
-                .shadow(color: PremiumColorTheme.primaryColor.opacity(0.5), radius: ScaleFactor.size(8), x: 0, y: ScaleFactor.size(6))
+                .shadow(color: AppColor.primaryPurple.opacity(0.5), radius: ScaleFactor.size(8), x: 0, y: ScaleFactor.size(6))
         }
         .onAppear {
             breathe = true

@@ -3,48 +3,42 @@ import SwiftUI
 // MARK: - 现代医疗问诊界面设计系统
 // 基于 Soft UI Evolution + Minimalism 风格
 
-// MARK: - 颜色系统
+// MARK: - 颜色系统（已迁移到统一的 AppColor）
+@available(*, deprecated, message: "使用 AppColor 替代")
 struct MedicalColors {
-    // Primary Colors - 医疗蓝
-    static let primaryBlue = Color(hex: "#3B82F6")
-    static let primaryBlueLight = Color(hex: "#60A5FA")
-    static let primaryBlueDark = Color(hex: "#2563EB")
-    
-    // Secondary Colors - 青色
-    static let secondaryTeal = Color(hex: "#0891B2")
-    static let secondaryTealLight = Color(hex: "#22D3EE")
-    
-    // CTA & Success
-    static let ctaOrange = Color(hex: "#F97316")
-    static let successGreen = Color(hex: "#059669")
-    
-    // Background
-    static let bgPrimary = Color(hex: "#F8FAFC")
-    static let bgSecondary = Color(hex: "#ECFEFF")
-    static let bgCard = Color(hex: "#FFFFFF")
-    
-    // Text
-    static let textPrimary = Color(hex: "#1E293B")
-    static let textSecondary = Color(hex: "#475569")
-    static let textMuted = Color(hex: "#64748B")
-    
-    // Border
-    static let borderLight = Color(hex: "#E2E8F0")
-    static let borderMedium = Color(hex: "#CBD5E1")
-    
-    // Status Colors
-    static let statusInfo = primaryBlue
-    static let statusSuccess = successGreen
-    static let statusWarning = Color(hex: "#F59E0B")
-    static let statusError = Color(hex: "#EF4444")
-    
-    // AI Message Background
-    static let aiMessageBg = Color(hex: "#EFF6FF")
-    static let userMessageBg = primaryBlue
-    
-    // Hover & Active States
-    static let hoverBg = Color(hex: "#F1F5F9")
-    static let activeBg = Color(hex: "#E2E8F0")
+    // 使用统一的治愈系颜色
+    static let primaryBlue = AppColor.blue
+    static let primaryBlueLight = AppColor.blue.opacity(0.8)
+    static let primaryBlueDark = AppColor.blue.opacity(0.8)
+
+    static let secondaryTeal = AppColor.teal
+    static let secondaryTealLight = AppColor.teal.opacity(0.8)
+
+    static let ctaOrange = AppColor.orange
+    static let successGreen = AppColor.successGreen
+
+    // 使用治愈系暖色背景
+    static let bgPrimary = AppColor.background
+    static let bgSecondary = AppColor.searchBackground
+    static let bgCard = AppColor.cardBackground
+
+    static let textPrimary = AppColor.textPrimary
+    static let textSecondary = AppColor.textSecondary
+    static let textMuted = AppColor.textMuted
+
+    static let borderLight = AppColor.borderLight
+    static let borderMedium = AppColor.borderMedium
+
+    static let statusInfo = AppColor.blue
+    static let statusSuccess = AppColor.successGreen
+    static let statusWarning = AppColor.orange
+    static let statusError = AppColor.errorRed
+
+    static let aiMessageBg = AppColor.primaryPurple.opacity(0.08)
+    static let userMessageBg = AppColor.primaryPurple
+
+    static let hoverBg = AppColor.searchBackground
+    static let activeBg = AppColor.borderLight
 }
 
 // MARK: - 字体系统

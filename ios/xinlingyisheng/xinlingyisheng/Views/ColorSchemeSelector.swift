@@ -37,7 +37,7 @@ struct ColorSchemeSelector: View {
                             action: {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                     selectedScheme = scheme
-                                    PremiumColorTheme.current = scheme
+                                    // 颜色主题现在固定为 HealingColors，不再动态切换
                                     showPicker = false
                                 }
                             }

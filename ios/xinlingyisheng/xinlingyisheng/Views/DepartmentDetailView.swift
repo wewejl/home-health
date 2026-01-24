@@ -203,39 +203,27 @@ struct DepartmentDetailView: View {
     }
 }
 
-// MARK: - 治愈系科室背景
+// MARK: - 治愈系科室背景 - 和首页一致
 struct HealingDepartmentBackground: View {
     let layout: AdaptiveLayout
 
     var body: some View {
         ZStack {
-            // 渐变背景
-            LinearGradient(
-                colors: [
-                    HealingColors.warmCream,
-                    HealingColors.softPeach.opacity(0.5),
-                    HealingColors.warmSand.opacity(0.3)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            // 纯色背景 - 和首页完全一致
+            HealingColors.background
+                .ignoresSafeArea()
 
-            GeometryReader { geo in
-                // 右上角光晕
-                Circle()
-                    .fill(HealingColors.softSage.opacity(0.08))
-                    .frame(width: layout.decorativeCircleSize * 0.5, height: layout.decorativeCircleSize * 0.5)
-                    .offset(x: geo.size.width * 0.4, y: -geo.size.height * 0.15)
-                    .ignoresSafeArea()
+            // 右上角光晕
+            Circle()
+                .fill(HealingColors.softSage.opacity(0.08))
+                .frame(width: layout.decorativeCircleSize * 0.5, height: layout.decorativeCircleSize * 0.5)
+                .offset(x: layout.decorativeCircleSize * 0.25, y: -layout.decorativeCircleSize * 0.08)
 
-                // 左下角光晕
-                Circle()
-                    .fill(HealingColors.mutedCoral.opacity(0.04))
-                    .frame(width: layout.decorativeCircleSize * 0.35, height: layout.decorativeCircleSize * 0.35)
-                    .offset(x: -geo.size.width * 0.25, y: geo.size.height * 0.35)
-                    .ignoresSafeArea()
-            }
+            // 左下角光晕
+            Circle()
+                .fill(HealingColors.mutedCoral.opacity(0.04))
+                .frame(width: layout.decorativeCircleSize * 0.35, height: layout.decorativeCircleSize * 0.35)
+                .offset(x: -layout.decorativeCircleSize * 0.12, y: layout.decorativeCircleSize * 0.18)
         }
     }
 }
@@ -491,7 +479,7 @@ struct HealingDoctorCardView: View {
 
                         if doctor.canPrescribe {
                             HStack(spacing: 2) {
-                                Image(systemName: "prescription")
+                                Image(systemName: "pills.fill")
                                     .font(.system(size: layout.captionFontSize - 2))
                                 Text("处方")
                                     .font(.system(size: layout.captionFontSize - 2, weight: .medium))

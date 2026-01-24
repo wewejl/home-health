@@ -65,33 +65,35 @@ enum ColorScheme: String, CaseIterable {
     }
 }
 
+@available(*, deprecated, message: "使用 AppColor 替代 - 已统一使用治愈系颜色")
 struct PremiumColorTheme {
+    // 固定为治愈系颜色，不再切换主题
     static var current: ColorScheme = .elegantPurple
-    
-    static let backgroundLight = Color(red: 0.98, green: 0.98, blue: 0.99)
-    static let backgroundDark = Color(red: 0.06, green: 0.08, blue: 0.12)
-    
-    static let cardLight = Color.white.opacity(0.75)
-    static let cardDark = Color(red: 0.14, green: 0.16, blue: 0.20).opacity(0.75)
-    
-    static let textPrimary = Color.primary
-    static let textSecondary = Color.secondary
-    static let textTertiary = Color.gray.opacity(0.55)
-    static let successColor = Color(red: 0.30, green: 0.72, blue: 0.52)
-    
+
+    static let backgroundLight = AppColor.background
+    static let backgroundDark = AppColor.background.opacity(0.9)
+
+    static let cardLight = AppColor.cardBackground.opacity(0.75)
+    static let cardDark = AppColor.cardBackground.opacity(0.75)
+
+    static let textPrimary = AppColor.textPrimary
+    static let textSecondary = AppColor.textSecondary
+    static let textTertiary = AppColor.textTertiary
+    static let successColor = AppColor.successGreen
+
     static var primaryColor: Color {
-        current.primaryColor
+        AppColor.primaryPurple
     }
-    
+
     static var secondaryColor: Color {
-        current.secondaryColor
+        AppColor.teal
     }
-    
+
     static var accentColor: Color {
-        current.accentColor
+        AppColor.orange
     }
-    
+
     static var gradientColors: [Color] {
-        current.gradientColors
+        AppColor.gradientColors
     }
 }

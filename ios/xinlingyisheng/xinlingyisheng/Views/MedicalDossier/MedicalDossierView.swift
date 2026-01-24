@@ -170,39 +170,27 @@ struct MedicalDossierView: View {
     }
 }
 
-// MARK: - 治愈系病历夹背景
+// MARK: - 治愈系病历夹背景 - 和首页一致
 struct HealingDossierBackground: View {
     let layout: AdaptiveLayout
 
     var body: some View {
         ZStack {
-            // 渐变背景
-            LinearGradient(
-                colors: [
-                    HealingColors.warmCream,
-                    HealingColors.softPeach.opacity(0.4),
-                    HealingColors.softSage.opacity(0.2)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            // 纯色背景 - 和首页一致
+            HealingColors.background
+                .ignoresSafeArea()
 
-            GeometryReader { geo in
-                // 顶部装饰光晕
-                Circle()
-                    .fill(HealingColors.softSage.opacity(0.08))
-                    .frame(width: layout.decorativeCircleSize * 0.5, height: layout.decorativeCircleSize * 0.5)
-                    .offset(x: geo.size.width * 0.3, y: -geo.size.height * 0.15)
-                    .ignoresSafeArea()
+            // 顶部装饰光晕
+            Circle()
+                .fill(HealingColors.softSage.opacity(0.08))
+                .frame(width: layout.decorativeCircleSize * 0.5, height: layout.decorativeCircleSize * 0.5)
+                .offset(x: layout.decorativeCircleSize * 0.3, y: -layout.decorativeCircleSize * 0.15)
 
-                // 底部装饰光晕
-                Circle()
-                    .fill(HealingColors.mutedCoral.opacity(0.04))
-                    .frame(width: layout.decorativeCircleSize * 0.4, height: layout.decorativeCircleSize * 0.4)
-                    .offset(x: -geo.size.width * 0.4, y: geo.size.height * 0.2)
-                    .ignoresSafeArea()
-            }
+            // 底部装饰光晕
+            Circle()
+                .fill(HealingColors.mutedCoral.opacity(0.04))
+                .frame(width: layout.decorativeCircleSize * 0.4, height: layout.decorativeCircleSize * 0.4)
+                .offset(x: -layout.decorativeCircleSize * 0.4, y: layout.decorativeCircleSize * 0.2)
         }
     }
 }

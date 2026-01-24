@@ -20,11 +20,11 @@ struct AskDoctorView: View {
                 HealingColors.background
                     .ignoresSafeArea()
 
-                // 右上角装饰光晕
+                // 右上角装饰光晕 - 使用统一的相对偏移
                 Circle()
                     .fill(HealingColors.softSage.opacity(0.08))
                     .frame(width: layout.decorativeCircleSize * 0.4, height: layout.decorativeCircleSize * 0.4)
-                    .offset(x: geometry.size.width * 0.6, y: -geometry.size.height * 0.1)
+                    .offset(x: layout.decorativeCircleSize * 0.3, y: -layout.decorativeCircleSize * 0.05)
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {

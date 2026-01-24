@@ -26,13 +26,13 @@ struct PrimaryButton: View {
                 .padding(.vertical, 15)
                 .background(
                     LinearGradient(
-                        colors: PremiumColorTheme.gradientColors,
+                        colors: AppColor.gradientColors,
                         startPoint: .leading,
                         endPoint: .trailing
                     )
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .shadow(color: PremiumColorTheme.primaryColor.opacity(0.35), radius: 12, x: 0, y: 6)
+                .shadow(color: AppColor.primaryPurple.opacity(0.35), radius: 12, x: 0, y: 6)
                 .scaleEffect(isPressed ? 0.96 : 1.0)
         }
     }

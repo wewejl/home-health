@@ -40,8 +40,14 @@ struct AdaptiveLayout {
     var iconLargeSize: CGFloat { (isCompact ? 42 : 48) * iconScale }
     var iconSmallSize: CGFloat { (isCompact ? 32 : 38) * iconScale }
 
-    // 装饰光晕尺寸 - 相对屏幕宽度
+    // 装饰光晕尺寸 - 相对屏幕宽度（确保所有设备一致）
     var decorativeCircleSize: CGFloat { screenWidth * 0.5 }
+
+    // 装饰光晕偏移量 - 基于屏幕尺寸的百分比
+    var topRightOffsetX: CGFloat { screenWidth * 0.25 }
+    var topRightOffsetY: CGFloat { -screenWidth * 0.125 }
+    var bottomLeftOffsetX: CGFloat { -screenWidth * 0.15 }
+    var bottomLeftOffsetY: CGFloat { screenWidth * 0.25 }
 
     // 内边距
     var horizontalPadding: CGFloat { isCompact ? 16 : 20 }
@@ -159,36 +165,6 @@ struct HomeView: View {
     // 上次选中的 tab，用于检测切换并重置导航路径
     @State private var previousTab: Int? = nil
 
-    init() {
-        let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(HealingColors.warmCream)
-        appearance.shadowColor = UIColor.black.withAlphaComponent(0.05)
-
-        // 选中的 Tab
-        appearance.stackedLayoutAppearance.selected.iconColor = UIColor(HealingColors.forestMist)
-        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
-            .foregroundColor: UIColor(HealingColors.forestMist),
-            .font: UIFont.systemFont(ofSize: 11, weight: .medium)
-        ]
-
-        // 未选中的 Tab
-        appearance.stackedLayoutAppearance.normal.iconColor = UIColor(HealingColors.textTertiary).withAlphaComponent(0.8)
-        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
-            .foregroundColor: UIColor(HealingColors.textTertiary).withAlphaComponent(0.8),
-            .font: UIFont.systemFont(ofSize: 11, weight: .regular)
-        ]
-
-        // Inline layout (iPad)
-        appearance.inlineLayoutAppearance.selected.iconColor = UIColor(HealingColors.forestMist)
-        appearance.inlineLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(HealingColors.forestMist)]
-        appearance.inlineLayoutAppearance.normal.iconColor = UIColor(HealingColors.textTertiary)
-        appearance.inlineLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor(HealingColors.textTertiary)]
-
-        UITabBar.appearance().standardAppearance = appearance
-        UITabBar.appearance().scrollEdgeAppearance = appearance
-    }
-
     var body: some View {
         TabView(selection: $selectedTab) {
             // 首页 - 使用 path 管理导航栈
@@ -233,7 +209,7 @@ struct HomeView: View {
                 MedicalDossierView()
             }
             .tabItem {
-                Image(systemName: selectedTab == 3 ? "folder.badge.fill" : "folder.badge")
+                Image(systemName: selectedTab == 3 ? "folder.fill" : "folder")
                 Text("病历")
             }
             .tag(3)
@@ -289,62 +265,62 @@ struct HealingHomeContentView: View {
     @State private var scrollOffset: CGFloat = 0
 
     var body: some View {
-        GeometryReader { geometry in
-            let layout = AdaptiveLayout(screenWidth: geometry.size.width)
+        ZStack(alignment: .topLeading) {
+            // 背景色 - 确保覆盖整个屏幕
+            HealingColors.background
+                .ignoresSafeArea()
 
-            ZStack(alignment: .topLeading) {
-                // 背景装饰 - 柔和的光晕
-                HealingColors.background
-                    .ignoresSafeArea()
+            GeometryReader { geometry in
+                let layout = AdaptiveLayout(screenWidth: geometry.size.width)
 
-                // 右上角装饰光晕 - 使用相对尺寸
-                Circle()
-                    .fill(HealingColors.softSage.opacity(0.12))
-                    .frame(width: layout.decorativeCircleSize, height: layout.decorativeCircleSize)
-                    .offset(x: layout.decorativeCircleSize * 0.5, y: -layout.decorativeCircleSize * 0.25)
-                    .ignoresSafeArea()
+                ZStack(alignment: .topLeading) {
+                    // 右上角装饰光晕 - 使用统一的相对偏移
+                    Circle()
+                        .fill(HealingColors.softSage.opacity(0.12))
+                        .frame(width: layout.decorativeCircleSize, height: layout.decorativeCircleSize)
+                        .offset(x: layout.topRightOffsetX, y: layout.topRightOffsetY)
 
-                // 左下角装饰光晕 - 使用相对尺寸
-                Circle()
-                    .fill(HealingColors.mutedCoral.opacity(0.08))
-                    .frame(width: layout.decorativeCircleSize * 0.9, height: layout.decorativeCircleSize * 0.9)
-                    .offset(x: -layout.decorativeCircleSize * 0.3, y: geometry.size.height * 0.5)
-                    .ignoresSafeArea()
+                    // 左下角装饰光晕 - 使用统一的相对偏移
+                    Circle()
+                        .fill(HealingColors.mutedCoral.opacity(0.08))
+                        .frame(width: layout.decorativeCircleSize * 0.9, height: layout.decorativeCircleSize * 0.9)
+                        .offset(x: layout.bottomLeftOffsetX, y: layout.bottomLeftOffsetY)
 
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        // 顶部间距 - 自适应
-                        Spacer().frame(height: layout.cardSpacing)
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: 0) {
+                            // 顶部间距 - 自适应
+                            Spacer().frame(height: layout.cardSpacing)
 
-                        // 主内容区
-                        VStack(spacing: layout.cardSpacing + 8) {
-                            // 头部问候区
-                            HealingGreetingHeader(searchText: $searchText, layout: layout)
-                                .fluidFadeIn(delay: 0)
+                            // 主内容区
+                            VStack(spacing: layout.cardSpacing + 8) {
+                                // 头部问候区
+                                HealingGreetingHeader(searchText: $searchText, layout: layout)
+                                    .fluidFadeIn(delay: 0)
 
-                            // 今日健康卡片 - 传递布局参数
-                            HealingTodayCard(selectedTab: $selectedTab, layout: layout)
-                                .fluidFadeIn(delay: 0.1)
+                                // 今日健康卡片 - 传递布局参数
+                                HealingTodayCard(selectedTab: $selectedTab, layout: layout)
+                                    .fluidFadeIn(delay: 0.1)
 
-                            // 快速功能 - 传递布局参数和导航绑定
-                            HealingQuickActions(
-                                selectedTab: $selectedTab,
-                                showDrugList: $showDrugList,
-                                showDiseaseList: $showDiseaseList,
-                                layout: layout
-                            )
-                            .fluidFadeIn(delay: 0.2)
+                                // 快速功能 - 传递布局参数和导航绑定
+                                HealingQuickActions(
+                                    selectedTab: $selectedTab,
+                                    showDrugList: $showDrugList,
+                                    showDiseaseList: $showDiseaseList,
+                                    layout: layout
+                                )
+                                .fluidFadeIn(delay: 0.2)
 
-                            // 科室导航 - 传递布局参数
-                            HealingDepartmentSection(layout: layout)
-                                .fluidFadeIn(delay: 0.3)
+                                // 科室导航 - 传递布局参数
+                                HealingDepartmentSection(layout: layout)
+                                    .fluidFadeIn(delay: 0.3)
 
-                            // 健康资讯
-                            HealingHealthTips(layout: layout)
-                                .fluidFadeIn(delay: 0.4)
+                                // 健康资讯
+                                HealingHealthTips(layout: layout)
+                                    .fluidFadeIn(delay: 0.4)
+                            }
+                            .padding(.horizontal, layout.horizontalPadding)
+                            .padding(.bottom, 140)
                         }
-                        .padding(.horizontal, layout.horizontalPadding)
-                        .padding(.bottom, 140)
                     }
                 }
             }
@@ -964,8 +940,9 @@ struct PlaceholderView: View {
 
     var body: some View {
         ZStack {
+            // 背景色 - 确保覆盖整个屏幕
             HealingColors.background
-                .ignoresSafeArea()
+                .ignoresSafeArea(.all)
 
             VStack(spacing: 24) {
                 ZStack {

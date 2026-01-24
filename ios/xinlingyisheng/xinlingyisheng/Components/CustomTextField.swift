@@ -19,7 +19,7 @@ struct CustomTextField: View {
         HStack(spacing: ScaleFactor.spacing(12)) {
             Image(systemName: icon)
                 .font(.system(size: AdaptiveFont.body, weight: .medium))
-                .foregroundColor(isFocused ? PremiumColorTheme.primaryColor : PremiumColorTheme.textSecondary)
+                .foregroundColor(isFocused ? AppColor.primaryPurple : AppColor.textSecondary)
                 .frame(width: ScaleFactor.size(24))
 
             if isSecure {
@@ -36,14 +36,11 @@ struct CustomTextField: View {
         .padding(.vertical, ScaleFactor.padding(14))
         .background(
             RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadius, style: .continuous)
-                .fill(Color.dynamicColor(
-                    light: Color.white.opacity(0.5),
-                    dark: Color(red: 0.18, green: 0.18, blue: 0.22).opacity(0.5)
-                ))
+                .fill(AppColor.cardBackground.opacity(0.7))
                 .overlay(
                     RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadius, style: .continuous)
                         .stroke(
-                            isFocused ? PremiumColorTheme.primaryColor : Color.clear,
+                            isFocused ? AppColor.primaryPurple : Color.clear,
                             lineWidth: ScaleFactor.size(1.5)
                         )
                 )

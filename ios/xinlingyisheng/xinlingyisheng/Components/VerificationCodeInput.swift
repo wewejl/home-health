@@ -181,10 +181,10 @@ struct VerificationCodeStyle {
             dark: Color(red: 0.18, green: 0.18, blue: 0.22).opacity(0.6)
         ),
         emptyBorder: Color.gray.opacity(0.2),
-        activeBorder: PremiumColorTheme.primaryColor,
-        filledBorder: PremiumColorTheme.primaryColor.opacity(0.5),
-        successBorder: PremiumColorTheme.successColor,
-        textColor: PremiumColorTheme.textPrimary
+        activeBorder: AppColor.primaryPurple,
+        filledBorder: AppColor.primaryPurple.opacity(0.5),
+        successBorder: AppColor.successGreen,
+        textColor: AppColor.textPrimary
     )
 }
 

@@ -9,36 +9,36 @@ struct ExportedConversationRow: View {
             // 图标
             ZStack {
                 RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall)
-                    .fill(PremiumColorTheme.primaryColor.opacity(0.1))
+                    .fill(AppColor.primaryPurple.opacity(0.1))
                     .frame(width: ScaleFactor.size(50), height: ScaleFactor.size(50))
                 
                 Image(systemName: "doc.text.fill")
                     .font(.system(size: AdaptiveFont.title2))
-                    .foregroundColor(PremiumColorTheme.primaryColor)
+                    .foregroundColor(AppColor.primaryPurple)
             }
             
             // 信息
             VStack(alignment: .leading, spacing: ScaleFactor.spacing(4)) {
                 Text(export.title)
                     .font(.system(size: AdaptiveFont.body, weight: .medium))
-                    .foregroundColor(PremiumColorTheme.textPrimary)
+                    .foregroundColor(AppColor.textPrimary)
                 
                 HStack(spacing: ScaleFactor.spacing(8)) {
                     Label(export.department, systemImage: "stethoscope")
                         .font(.system(size: AdaptiveFont.caption))
-                        .foregroundColor(PremiumColorTheme.textSecondary)
+                        .foregroundColor(AppColor.textSecondary)
                     
                     Text("•")
-                        .foregroundColor(PremiumColorTheme.textSecondary)
+                        .foregroundColor(AppColor.textSecondary)
                     
                     Text("\(export.messageCount) 条对话")
                         .font(.system(size: AdaptiveFont.caption))
-                        .foregroundColor(PremiumColorTheme.textSecondary)
+                        .foregroundColor(AppColor.textSecondary)
                 }
                 
                 Text(export.formattedExportDate)
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(PremiumColorTheme.textTertiary)
+                    .foregroundColor(AppColor.textTertiary)
             }
             
             Spacer()
@@ -47,11 +47,11 @@ struct ExportedConversationRow: View {
             VStack(alignment: .trailing, spacing: ScaleFactor.spacing(4)) {
                 Text(export.formattedFileSize)
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(PremiumColorTheme.textSecondary)
+                    .foregroundColor(AppColor.textSecondary)
                 
                 Image(systemName: "chevron.right")
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(PremiumColorTheme.textTertiary)
+                    .foregroundColor(AppColor.textTertiary)
             }
         }
         .padding(.vertical, ScaleFactor.padding(8))

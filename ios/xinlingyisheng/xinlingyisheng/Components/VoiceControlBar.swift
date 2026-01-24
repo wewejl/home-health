@@ -31,7 +31,7 @@ struct VoiceControlBar: View {
         }
         .background(
             LinearGradient(
-                colors: [MedicalColors.bgPrimary, MedicalColors.bgSecondary],
+                colors: [AppColor.background, AppColor.searchBackground],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -51,7 +51,7 @@ struct VoiceControlBar: View {
 
             Text(viewModel.recognizedText)
                 .font(.system(size: AdaptiveFont.body, weight: .medium))
-                .foregroundColor(MedicalColors.textPrimary)
+                .foregroundColor(AppColor.textPrimary)
                 .lineLimit(2)
 
             Spacer()
@@ -67,21 +67,21 @@ struct VoiceControlBar: View {
             if viewModel.voiceState == .aiSpeaking {
                 Image(systemName: "speaker.wave.2.fill")
                     .font(.system(size: AdaptiveFont.subheadline))
-                    .foregroundColor(MedicalColors.primaryBlue)
+                    .foregroundColor(AppColor.blue)
                 Text("AI 正在回复")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(MedicalColors.textSecondary)
+                    .foregroundColor(AppColor.textSecondary)
             } else if viewModel.voiceState == .listening {
                 Circle()
-                    .fill(MedicalColors.successGreen)
+                    .fill(AppColor.successGreen)
                     .frame(width: ScaleFactor.size(8), height: ScaleFactor.size(8))
                 Text("正在聆听...")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(MedicalColors.successGreen)
+                    .foregroundColor(AppColor.successGreen)
             } else {
                 Text("点击开始语音对话")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(MedicalColors.textSecondary)
+                    .foregroundColor(AppColor.textSecondary)
             }
         }
     }
@@ -120,7 +120,7 @@ struct VoiceControlBar: View {
                         viewModel.voiceState == .listening
                             ? LinearGradient(colors: [Color(hex: "#22C55E"), Color(hex: "#16A34A")], startPoint: .top, endPoint: .bottom)
                             : viewModel.voiceState == .aiSpeaking
-                                ? LinearGradient(colors: [MedicalColors.primaryBlue, MedicalColors.primaryBlueDark], startPoint: .top, endPoint: .bottom)
+                                ? LinearGradient(colors: [AppColor.blue, AppColor.blue.opacity(0.8)], startPoint: .top, endPoint: .bottom)
                                 : LinearGradient(colors: [Color(hex: "#E5E7EB"), Color(hex: "#D1D5DB")], startPoint: .top, endPoint: .bottom)
                     )
                     .frame(width: ScaleFactor.size(80), height: ScaleFactor.size(80))
@@ -162,11 +162,11 @@ struct VoiceControlBar: View {
 
                         Image(systemName: "photo.on.rectangle")
                             .font(.system(size: AdaptiveFont.title3))
-                            .foregroundColor(MedicalColors.textSecondary)
+                            .foregroundColor(AppColor.textSecondary)
                     }
                     Text("图片")
                         .font(.system(size: AdaptiveFont.caption))
-                        .foregroundColor(MedicalColors.textMuted)
+                        .foregroundColor(AppColor.textMuted)
                 }
             }
 
@@ -184,11 +184,11 @@ struct VoiceControlBar: View {
 
                         Image(systemName: "keyboard")
                             .font(.system(size: AdaptiveFont.title3))
-                            .foregroundColor(MedicalColors.textSecondary)
+                            .foregroundColor(AppColor.textSecondary)
                     }
                     Text("键盘")
                         .font(.system(size: AdaptiveFont.caption))
-                        .foregroundColor(MedicalColors.textMuted)
+                        .foregroundColor(AppColor.textMuted)
                 }
             }
         }

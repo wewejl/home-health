@@ -11,26 +11,20 @@ struct ProfileView: View {
             let layout = AdaptiveLayout(screenWidth: geometry.size.width)
 
             ZStack {
-                // 渐变背景
-                LinearGradient(
-                    colors: [HealingColors.warmCream, HealingColors.softPeach.opacity(0.4)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                // 纯色背景 - 和首页一致
+                HealingColors.background
+                    .ignoresSafeArea()
 
                 // 顶部装饰光晕
                 Circle()
                     .fill(HealingColors.softSage.opacity(0.08))
                     .frame(width: layout.decorativeCircleSize * 0.6, height: layout.decorativeCircleSize * 0.6)
-                    .offset(x: geometry.size.width * 0.4, y: -geometry.size.height * 0.2)
-                    .ignoresSafeArea()
+                    .offset(x: layout.decorativeCircleSize * 0.3, y: -layout.decorativeCircleSize * 0.1)
 
                 Circle()
                     .fill(HealingColors.mutedCoral.opacity(0.04))
                     .frame(width: layout.decorativeCircleSize * 0.4, height: layout.decorativeCircleSize * 0.4)
-                    .offset(x: -geometry.size.width * 0.3, y: geometry.size.height * 0.3)
-                    .ignoresSafeArea()
+                    .offset(x: -layout.decorativeCircleSize * 0.2, y: layout.decorativeCircleSize * 0.2)
 
                 ScrollView {
                     VStack(spacing: layout.cardSpacing + 4) {
