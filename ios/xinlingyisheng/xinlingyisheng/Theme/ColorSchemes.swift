@@ -1,99 +1,81 @@
 import SwiftUI
 
+// MARK: - 颜色主题枚举（已弃用）
+/// 固定为治愈系紫色主题，不再支持主题切换
+@available(*, deprecated, message: "使用 DXYColors 替代 - 已统一使用治愈系颜色")
 enum ColorScheme: String, CaseIterable {
-    case deepOcean = "深海蓝调"
     case elegantPurple = "优雅紫韵"
+    case deepOcean = "深海蓝调"
     case forestGreen = "森林绿意"
     case sunsetWarm = "日落暖橙"
     case minimalistGray = "极简灰度"
-    
+
     var primaryColor: Color {
         switch self {
+        case .elegantPurple:
+            return DXYColors.primaryPurple
         case .deepOcean:
             return Color(red: 0.15, green: 0.35, blue: 0.65)
-        case .elegantPurple:
-            return Color(red: 0.52, green: 0.37, blue: 0.95)
         case .forestGreen:
-            return Color(red: 0.20, green: 0.55, blue: 0.45)
+            return DXYColors.teal
         case .sunsetWarm:
-            return Color(red: 0.95, green: 0.50, blue: 0.35)
+            return DXYColors.orange
         case .minimalistGray:
             return Color(red: 0.30, green: 0.32, blue: 0.35)
         }
     }
-    
+
     var secondaryColor: Color {
         switch self {
-        case .deepOcean:
-            return Color(red: 0.25, green: 0.60, blue: 0.85)
         case .elegantPurple:
-            return Color(red: 0.75, green: 0.57, blue: 1.00)
+            return DXYColors.lightPurple
+        case .deepOcean:
+            return Color(red: 0.25, green: 0.50, blue: 0.75)
         case .forestGreen:
-            return Color(red: 0.35, green: 0.75, blue: 0.60)
+            return HealingColorTheme.softSage
         case .sunsetWarm:
-            return Color(red: 0.98, green: 0.70, blue: 0.50)
+            return HealingColorTheme.mutedCoral
         case .minimalistGray:
             return Color(red: 0.50, green: 0.52, blue: 0.55)
         }
     }
-    
+
     var accentColor: Color {
         switch self {
-        case .deepOcean:
-            return Color(red: 0.40, green: 0.75, blue: 0.95)
         case .elegantPurple:
-            return Color(red: 0.92, green: 0.75, blue: 1.00)
+            return DXYColors.teal
+        case .deepOcean:
+            return Color(red: 0.40, green: 0.70, blue: 0.90)
         case .forestGreen:
-            return Color(red: 0.50, green: 0.90, blue: 0.70)
+            return HealingColorTheme.successGreen
         case .sunsetWarm:
-            return Color(red: 1.00, green: 0.85, blue: 0.65)
+            return HealingColorTheme.terracotta
         case .minimalistGray:
             return Color(red: 0.70, green: 0.72, blue: 0.75)
         }
     }
-    
+
     var gradientColors: [Color] {
-        [primaryColor, secondaryColor]
-    }
-    
-    var backgroundGlowColor: Color {
-        primaryColor.opacity(0.12)
-    }
-    
-    var secondaryGlowColor: Color {
-        secondaryColor.opacity(0.08)
+        [primaryColor, primaryColor.opacity(0.7)]
     }
 }
 
-@available(*, deprecated, message: "使用 AppColor 替代 - 已统一使用治愈系颜色")
+// MARK: - 主题颜色（已弃用）
+@available(*, deprecated, message: "使用 DXYColors 替代")
 struct PremiumColorTheme {
-    // 固定为治愈系颜色，不再切换主题
     static var current: ColorScheme = .elegantPurple
 
-    static let backgroundLight = AppColor.background
-    static let backgroundDark = AppColor.background.opacity(0.9)
+    static let backgroundLight = DXYColors.background
+    static let backgroundDark = DXYColors.background.opacity(0.9)
+    static let cardLight = DXYColors.cardBackground.opacity(0.75)
+    static let cardDark = DXYColors.cardBackground.opacity(0.75)
+    static let textPrimary = DXYColors.textPrimary
+    static let textSecondary = DXYColors.textSecondary
+    static let textTertiary = DXYColors.textTertiary
+    static let successColor = HealingColorTheme.successGreen
 
-    static let cardLight = AppColor.cardBackground.opacity(0.75)
-    static let cardDark = AppColor.cardBackground.opacity(0.75)
-
-    static let textPrimary = AppColor.textPrimary
-    static let textSecondary = AppColor.textSecondary
-    static let textTertiary = AppColor.textTertiary
-    static let successColor = AppColor.successGreen
-
-    static var primaryColor: Color {
-        AppColor.primaryPurple
-    }
-
-    static var secondaryColor: Color {
-        AppColor.teal
-    }
-
-    static var accentColor: Color {
-        AppColor.orange
-    }
-
-    static var gradientColors: [Color] {
-        AppColor.gradientColors
-    }
+    static var primaryColor: Color { DXYColors.primaryPurple }
+    static var secondaryColor: Color { DXYColors.teal }
+    static var accentColor: Color { DXYColors.orange }
+    static var gradientColors: [Color] { HealingColorTheme.gradientColors }
 }

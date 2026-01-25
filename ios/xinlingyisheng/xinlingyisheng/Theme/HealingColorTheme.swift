@@ -121,27 +121,29 @@ struct HealingColorTheme {
     static let secondaryBackground = softSage.opacity(0.08)
 }
 
-// MARK: - 兼容层：统一使用 AppColor
-/// 全局统一访问点，所有代码应使用 AppColor 而非其他颜色系统
+// MARK: - AppColor 兼容层 - 指向统一的 DXYColors
+/// 全局统一颜色访问点，重定向到 DXYColors
+/// 所有代码应优先使用 DXYColors，AppColor 仅为兼容保留
+@available(*, deprecated, message: "使用 DXYColors 替代")
 struct AppColor {
     // 背景色
-    static let background = HealingColorTheme.background
-    static let cardBackground = HealingColorTheme.cardBackground
-    static let searchBackground = HealingColorTheme.searchBackground
-    static let tagBackground = HealingColorTheme.tagBackground
+    static let background = DXYColors.background
+    static let cardBackground = DXYColors.cardBackground
+    static let searchBackground = DXYColors.searchBackground
+    static let tagBackground = DXYColors.tagBackground
 
     // 文字色
-    static let textPrimary = HealingColorTheme.textPrimary
-    static let textSecondary = HealingColorTheme.textSecondary
-    static let textTertiary = HealingColorTheme.textTertiary
-    static let textMuted = HealingColorTheme.textMuted
+    static let textPrimary = DXYColors.textPrimary
+    static let textSecondary = DXYColors.textSecondary
+    static let textTertiary = DXYColors.textTertiary
+    static let textMuted = DXYColors.textTertiary
 
     // 品牌色
-    static let primaryPurple = HealingColorTheme.primaryPurple
-    static let lightPurple = HealingColorTheme.lightPurple
-    static let teal = HealingColorTheme.teal
-    static let blue = HealingColorTheme.blue
-    static let orange = HealingColorTheme.orange
+    static let primaryPurple = DXYColors.primaryPurple
+    static let lightPurple = DXYColors.lightPurple
+    static let teal = DXYColors.teal
+    static let blue = DXYColors.blue
+    static let orange = DXYColors.orange
 
     // 功能色
     static let successGreen = HealingColorTheme.successGreen
@@ -152,8 +154,8 @@ struct AppColor {
     static let borderMedium = HealingColorTheme.borderMedium
 
     // 其他
-    static let promotionPurple = HealingColorTheme.lightPurple
-    static let promotionOrange = HealingColorTheme.mutedCoral.opacity(0.25)
+    static let promotionPurple = DXYColors.promotionPurple
+    static let promotionOrange = DXYColors.promotionOrange
 
     // 渐变
     static let gradientColors = HealingColorTheme.gradientColors

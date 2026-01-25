@@ -2,21 +2,21 @@ import SwiftUI
 
 struct GlassmorphicCard<Content: View>: View {
     let content: Content
-    
+
     init(@ViewBuilder content: () -> Content) {
         self.content = content()
     }
-    
+
     var body: some View {
         content
             .background(
                 ZStack {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusLarge, style: .continuous)
                         .fill(AppColor.cardBackground.opacity(0.75))
                         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
                         .shadow(color: Color.black.opacity(0.03), radius: 20, x: 0, y: 10)
-                    
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+
+                    RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusLarge, style: .continuous)
                         .stroke(
                             LinearGradient(
                                 colors: [
@@ -30,6 +30,6 @@ struct GlassmorphicCard<Content: View>: View {
                         )
                 }
             )
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusLarge, style: .continuous))
     }
 }

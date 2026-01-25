@@ -6,49 +6,49 @@ struct MarkdownTextView: View {
     let content: String
     let fontSize: CGFloat
     let textColor: Color
-    
-    init(_ content: String, fontSize: CGFloat = 16, textColor: Color = .primary) {
+
+    init(_ content: String, fontSize: CGFloat? = nil, textColor: Color = .primary) {
         self.content = content
-        self.fontSize = fontSize
+        self.fontSize = fontSize ?? AdaptiveFont.body
         self.textColor = textColor
     }
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: ScaleFactor.spacing(8)) {
             ForEach(parseMarkdown(content), id: \.id) { element in
                 renderElement(element)
             }
         }
     }
-    
+
     private func renderElement(_ element: MarkdownElement) -> some View {
         Group {
             switch element.type {
             case .heading1:
                 Text(element.content)
-                    .font(.system(size: fontSize + 8, weight: .bold))
+                    .font(.system(size: fontSize + ScaleFactor.font(8), weight: .bold))
                     .foregroundColor(textColor)
-                    .padding(.top, 4)
-                
+                    .padding(.top, ScaleFactor.padding(4))
+
             case .heading2:
                 Text(element.content)
-                    .font(.system(size: fontSize + 6, weight: .bold))
+                    .font(.system(size: fontSize + ScaleFactor.font(6), weight: .bold))
                     .foregroundColor(textColor)
-                    .padding(.top, 4)
-                
+                    .padding(.top, ScaleFactor.padding(4))
+
             case .heading3:
                 Text(element.content)
-                    .font(.system(size: fontSize + 4, weight: .bold))
+                    .font(.system(size: fontSize + ScaleFactor.font(4), weight: .bold))
                     .foregroundColor(textColor)
-                    .padding(.top, 4)
-                
+                    .padding(.top, ScaleFactor.padding(4))
+
             case .bold:
                 Text(element.content)
                     .font(.system(size: fontSize, weight: .bold))
                     .foregroundColor(textColor)
-                
+
             case .listItem:
-                HStack(alignment: .top, spacing: 6) {
+                HStack(alignment: .top, spacing: ScaleFactor.spacing(6)) {
                     Text("•")
                         .font(.system(size: fontSize))
                         .foregroundColor(textColor)
@@ -56,7 +56,7 @@ struct MarkdownTextView: View {
                         .font(.system(size: fontSize))
                         .foregroundColor(textColor)
                 }
-                
+
             case .paragraph:
                 Text(parseInlineMarkdown(element.content))
                     .font(.system(size: fontSize))

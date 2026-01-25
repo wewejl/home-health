@@ -95,31 +95,31 @@ struct QuickAction: Identifiable, Equatable {
         id: "photo_analysis",
         icon: "camera.fill",
         title: "拍照分析",
-        color: Color(red: 0.23, green: 0.51, blue: 0.96), // 蓝色
+        color: DXYColors.blue,
         actionType: .photoAnalysis
     )
-    
+
     static let medicalDossier = QuickAction(
         id: "medical_dossier",
         icon: "folder.fill",
         title: "病历资料夹",
-        color: Color(red: 0.36, green: 0.27, blue: 1.0), // 紫色 DXYColors.primaryPurple
+        color: DXYColors.primaryPurple,
         actionType: .medicalDossier
     )
-    
+
     static let symptomAssessment = QuickAction(
         id: "symptom_assessment",
         icon: "list.clipboard.fill",
         title: "症状评估",
-        color: Color(red: 0.20, green: 0.77, blue: 0.75), // 青色 DXYColors.teal
+        color: DXYColors.teal,
         actionType: .symptomAssessment
     )
-    
+
     static let appointment = QuickAction(
         id: "appointment",
         icon: "calendar.badge.plus",
         title: "预约转诊",
-        color: Color(red: 1.0, green: 0.60, blue: 0.24), // 橙色 DXYColors.orange
+        color: DXYColors.orange,
         actionType: .appointment
     )
     

@@ -3,84 +3,84 @@ import SwiftUI
 // MARK: - 现代医疗问诊界面设计系统
 // 基于 Soft UI Evolution + Minimalism 风格
 
-// MARK: - 颜色系统（已迁移到统一的 AppColor）
-@available(*, deprecated, message: "使用 AppColor 替代")
+// MARK: - 颜色系统（已迁移到统一的 DXYColors）
+@available(*, deprecated, message: "使用 DXYColors 替代")
 struct MedicalColors {
     // 使用统一的治愈系颜色
-    static let primaryBlue = AppColor.blue
-    static let primaryBlueLight = AppColor.blue.opacity(0.8)
-    static let primaryBlueDark = AppColor.blue.opacity(0.8)
+    static let primaryBlue = DXYColors.blue
+    static let primaryBlueLight = DXYColors.blue.opacity(0.8)
+    static let primaryBlueDark = DXYColors.blue.opacity(0.8)
 
-    static let secondaryTeal = AppColor.teal
-    static let secondaryTealLight = AppColor.teal.opacity(0.8)
+    static let secondaryTeal = DXYColors.teal
+    static let secondaryTealLight = DXYColors.teal.opacity(0.8)
 
-    static let ctaOrange = AppColor.orange
-    static let successGreen = AppColor.successGreen
+    static let ctaOrange = DXYColors.orange
+    static let successGreen = HealingColorTheme.successGreen
 
     // 使用治愈系暖色背景
-    static let bgPrimary = AppColor.background
-    static let bgSecondary = AppColor.searchBackground
-    static let bgCard = AppColor.cardBackground
+    static let bgPrimary = DXYColors.background
+    static let bgSecondary = DXYColors.searchBackground
+    static let bgCard = DXYColors.cardBackground
 
-    static let textPrimary = AppColor.textPrimary
-    static let textSecondary = AppColor.textSecondary
-    static let textMuted = AppColor.textMuted
+    static let textPrimary = DXYColors.textPrimary
+    static let textSecondary = DXYColors.textSecondary
+    static let textMuted = DXYColors.textTertiary
 
-    static let borderLight = AppColor.borderLight
-    static let borderMedium = AppColor.borderMedium
+    static let borderLight = HealingColorTheme.borderLight
+    static let borderMedium = HealingColorTheme.borderMedium
 
-    static let statusInfo = AppColor.blue
-    static let statusSuccess = AppColor.successGreen
-    static let statusWarning = AppColor.orange
-    static let statusError = AppColor.errorRed
+    static let statusInfo = DXYColors.blue
+    static let statusSuccess = HealingColorTheme.successGreen
+    static let statusWarning = DXYColors.orange
+    static let statusError = HealingColorTheme.errorRed
 
-    static let aiMessageBg = AppColor.primaryPurple.opacity(0.08)
-    static let userMessageBg = AppColor.primaryPurple
+    static let aiMessageBg = DXYColors.primaryPurple.opacity(0.08)
+    static let userMessageBg = DXYColors.primaryPurple
 
-    static let hoverBg = AppColor.searchBackground
-    static let activeBg = AppColor.borderLight
+    static let hoverBg = DXYColors.searchBackground
+    static let activeBg = HealingColorTheme.borderLight
 }
 
 // MARK: - 字体系统
 struct MedicalTypography {
     // Headings
-    static let h1 = Font.system(size: 28, weight: .bold)
-    static let h2 = Font.system(size: 24, weight: .semibold)
-    static let h3 = Font.system(size: 20, weight: .semibold)
-    static let h4 = Font.system(size: 18, weight: .medium)
-    
+    static let h1 = Font.system(size: AdaptiveFont.largeTitle, weight: .bold)
+    static let h2 = Font.system(size: AdaptiveFont.title1, weight: .semibold)
+    static let h3 = Font.system(size: AdaptiveFont.title2, weight: .semibold)
+    static let h4 = Font.system(size: AdaptiveFont.title3, weight: .medium)
+
     // Body
     static let bodyLarge = Font.system(size: 17, weight: .regular)
     static let bodyMedium = Font.system(size: 15, weight: .regular)
     static let bodySmall = Font.system(size: 13, weight: .regular)
-    
+
     // Special
-    static let caption = Font.system(size: 12, weight: .regular)
-    static let button = Font.system(size: 16, weight: .semibold)
-    static let badge = Font.system(size: 11, weight: .medium)
+    static let caption = Font.system(size: AdaptiveFont.caption)
+    static let button = Font.system(size: AdaptiveFont.body, weight: .semibold)
+    static let badge = Font.system(size: AdaptiveFont.caption, weight: .medium)
 }
 
 // MARK: - 间距系统
 struct MedicalSpacing {
-    static let xs: CGFloat = 4
-    static let sm: CGFloat = 8
-    static let md: CGFloat = 12
-    static let lg: CGFloat = 16
-    static let xl: CGFloat = 24
-    static let xxl: CGFloat = 32
-    
+    static let xs: CGFloat = ScaleFactor.spacing(4)
+    static let sm: CGFloat = ScaleFactor.spacing(8)
+    static let md: CGFloat = ScaleFactor.spacing(12)
+    static let lg: CGFloat = ScaleFactor.spacing(16)
+    static let xl: CGFloat = ScaleFactor.spacing(24)
+    static let xxl: CGFloat = ScaleFactor.spacing(32)
+
     // Semantic Spacing
-    static let cardPadding: CGFloat = 16
-    static let sectionSpacing: CGFloat = 24
-    static let elementSpacing: CGFloat = 12
+    static let cardPadding: CGFloat = LayoutConstants.cardPadding
+    static let sectionSpacing: CGFloat = LayoutConstants.sectionSpacing
+    static let elementSpacing: CGFloat = ScaleFactor.spacing(12)
 }
 
 // MARK: - 圆角系统
 struct MedicalCornerRadius {
-    static let sm: CGFloat = 8
-    static let md: CGFloat = 12
-    static let lg: CGFloat = 16
-    static let xl: CGFloat = 20
+    static let sm: CGFloat = LayoutConstants.cornerRadiusSmall
+    static let md: CGFloat = ScaleFactor.size(12)
+    static let lg: CGFloat = LayoutConstants.cornerRadius
+    static let xl: CGFloat = ScaleFactor.size(20)
     static let full: CGFloat = 999
 }
 
@@ -89,13 +89,13 @@ struct MedicalShadows {
     static func card() -> some View {
         Color.black.opacity(0.06)
     }
-    
+
     static let cardRadius: CGFloat = 12
     static let cardY: CGFloat = 4
-    
+
     static let elevatedRadius: CGFloat = 20
     static let elevatedY: CGFloat = 8
-    
+
     static let floatingRadius: CGFloat = 24
     static let floatingY: CGFloat = 12
 }

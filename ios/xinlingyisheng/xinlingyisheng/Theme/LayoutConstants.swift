@@ -250,3 +250,14 @@ struct AdaptiveSize {
         ScaleFactor.size(size)
     }
 }
+
+// MARK: - Color 扩展 - 动态颜色支持深色模式
+extension Color {
+    /// 根据系统外观动态选择颜色
+    static func dynamicColor(light: Color, dark: Color) -> Color {
+        return Color(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                UIColor(dark) : UIColor(light)
+        })
+    }
+}

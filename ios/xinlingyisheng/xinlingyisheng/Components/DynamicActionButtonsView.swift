@@ -80,13 +80,13 @@ extension AgentAction {
     var buttonColor: Color {
         switch self {
         case .conversation:
-            return .blue
+            return DXYColors.blue
         case .analyzeSkin:
-            return Color(red: 0.0, green: 0.6, blue: 0.6) // Teal
+            return DXYColors.teal
         case .interpretReport:
-            return Color(red: 0.5, green: 0.3, blue: 0.7) // Purple
+            return DXYColors.primaryPurple
         case .interpretECG:
-            return Color(red: 0.9, green: 0.3, blue: 0.3) // Red
+            return HealingColorTheme.errorRed
         }
     }
 }
@@ -95,25 +95,25 @@ extension AgentAction {
 struct UnifiedQuickOptionsView: View {
     let options: [QuickOption]
     let onOptionTap: (QuickOption) -> Void
-    
+
     var body: some View {
         if !options.isEmpty {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
+                HStack(spacing: ScaleFactor.spacing(8)) {
                     ForEach(options) { option in
                         Button(action: { onOptionTap(option) }) {
                             Text(option.text)
-                                .font(.system(size: 13))
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(Color.blue.opacity(0.1))
-                                .foregroundColor(.blue)
-                                .cornerRadius(16)
+                                .font(.system(size: AdaptiveFont.footnote))
+                                .padding(.horizontal, ScaleFactor.padding(12))
+                                .padding(.vertical, ScaleFactor.padding(8))
+                                .background(DXYColors.blue.opacity(0.1))
+                                .foregroundColor(DXYColors.blue)
+                                .cornerRadius(ScaleFactor.size(16))
                         }
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                .padding(.horizontal, ScaleFactor.padding(16))
+                .padding(.vertical, ScaleFactor.padding(8))
             }
         }
     }
@@ -127,77 +127,77 @@ struct UploadActionButtonsView: View {
     let isAnalyzing: Bool
     let onCameraTap: () -> Void
     let onLibraryTap: () -> Void
-    
+
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: ScaleFactor.spacing(12)) {
             // 提示文本
             Text(action.uploadHint)
-                .font(.system(size: 13))
+                .font(.system(size: AdaptiveFont.footnote))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-            
+
             // 按钮组
-            HStack(spacing: 16) {
+            HStack(spacing: ScaleFactor.spacing(16)) {
                 // 拍照按钮
                 Button(action: onCameraTap) {
-                    HStack(spacing: 6) {
+                    HStack(spacing: ScaleFactor.spacing(6)) {
                         Image(systemName: "camera.fill")
-                            .font(.system(size: 16))
+                            .font(.system(size: AdaptiveFont.subheadline))
                         Text("拍照")
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, ScaleFactor.padding(12))
                     .background(action.buttonColor)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(ScaleFactor.size(12))
                 }
                 .disabled(isUploading || isAnalyzing)
-                
+
                 // 相册按钮
                 Button(action: onLibraryTap) {
-                    HStack(spacing: 6) {
+                    HStack(spacing: ScaleFactor.spacing(6)) {
                         Image(systemName: "photo.fill")
-                            .font(.system(size: 16))
+                            .font(.system(size: AdaptiveFont.subheadline))
                         Text("相册")
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, ScaleFactor.padding(12))
                     .background(Color.gray.opacity(0.1))
                     .foregroundColor(action.buttonColor)
-                    .cornerRadius(12)
+                    .cornerRadius(ScaleFactor.size(12))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: ScaleFactor.size(12))
                             .stroke(action.buttonColor.opacity(0.3), lineWidth: 1)
                     )
                 }
                 .disabled(isUploading || isAnalyzing)
             }
-            
+
             // 状态提示
             if isUploading {
-                HStack(spacing: 8) {
+                HStack(spacing: ScaleFactor.spacing(8)) {
                     ProgressView()
                         .scaleEffect(0.8)
                     Text("正在上传...")
-                        .font(.system(size: 13))
+                        .font(.system(size: AdaptiveFont.footnote))
                         .foregroundColor(.secondary)
                 }
             } else if isAnalyzing {
-                HStack(spacing: 8) {
+                HStack(spacing: ScaleFactor.spacing(8)) {
                     ProgressView()
                         .scaleEffect(0.8)
                     Text("正在分析...")
-                        .font(.system(size: 13))
+                        .font(.system(size: AdaptiveFont.footnote))
                         .foregroundColor(.secondary)
                 }
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, ScaleFactor.padding(16))
+        .padding(.vertical, ScaleFactor.padding(12))
         .background(Color(.systemGray6))
-        .cornerRadius(16)
+        .cornerRadius(ScaleFactor.size(16))
     }
 }
 
