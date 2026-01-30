@@ -84,7 +84,7 @@ class SpeechTranscriptionService(BaseAIService):
         audio_url: Optional[str] = None,
         audio_base64: Optional[str] = None,
         audio_path: Optional[str] = None,
-        language: str = "zh",
+        language: str = "auto",  # 默认自动检测语言
         extract_symptoms: bool = True
     ) -> TranscriptionResult:
         """
@@ -335,11 +335,18 @@ class SpeechTranscriptionService(BaseAIService):
 
                     print(f"[GLM-ASR] 转写成功: {text[:50]}...")
 
+                    # GLM-ASR 支持自动语言检测，返回检测到的语言
+                    detected_lang = language
+                    if language == "auto":
+                        # GLM-ASR 会自动检测语言，这里从响应中获取（如果 API 支持）
+                        # 如果 API 不返回语言信息，则使用输入参数作为回退
+                        detected_lang = data.get("language", "zh")
+
                     return {
                         "text": text,
                         "duration": data.get("duration", 0),
                         "confidence": 0.9,  # GLM-ASR 不返回置信度，给个默认值
-                        "language": "zh",  # GLM-ASR 自动识别语言
+                        "language": detected_lang,  # 返回检测到的语言
                         "segments": []
                     }
                 else:
@@ -361,13 +368,16 @@ class SpeechTranscriptionService(BaseAIService):
     ) -> Optional[Dict]:
         """
         阿里云 Paraformer 转写
-        
+
         需要配置：
         - ALIYUN_ASR_ACCESS_KEY
         - ALIYUN_ASR_ACCESS_SECRET
+
+        参考文档：https://help.aliyun.com/document_detail/324392.html
+        当前未实现，使用 GLM-ASR 作为替代。
         """
-        # TODO: 实现阿里云 ASR 接口
-        # 参考文档：https://help.aliyun.com/document_detail/324392.html
+        # 未实现：阿里云 ASR 接口需要使用阿里云 SDK
+        # 推荐使用已实现的 GLM-ASR (provider="glm")
         return None
     
     async def _transcribe_with_whisper(
@@ -377,42 +387,53 @@ class SpeechTranscriptionService(BaseAIService):
     ) -> Optional[Dict]:
         """
         OpenAI Whisper API 转写
-        
+
         需要配置 OPENAI_API_KEY
+
+        注意：当 language="auto" 时，不传递 language 参数，让 Whisper 自动检测
         """
         openai_key = os.getenv("OPENAI_API_KEY")
         if not openai_key:
             return None
-        
+
         try:
             import io
-            
+
+            # 构建 files 参数
+            # 当 language 为 "auto" 时不传递该参数，让 Whisper 自动检测语言
+            files = {
+                "file": ("audio.wav", io.BytesIO(audio_data), "audio/wav"),
+                "model": (None, "whisper-1"),
+                "response_format": (None, "verbose_json")
+            }
+
+            # 只有当语言不是 "auto" 时才传递 language 参数
+            if language != "auto":
+                files["language"] = (None, language)
+
             async with httpx.AsyncClient(timeout=120.0) as client:
-                files = {
-                    "file": ("audio.wav", io.BytesIO(audio_data), "audio/wav"),
-                    "model": (None, "whisper-1"),
-                    "language": (None, language),
-                    "response_format": (None, "verbose_json")
-                }
-                
                 response = await client.post(
                     "https://api.openai.com/v1/audio/transcriptions",
                     headers={"Authorization": f"Bearer {openai_key}"},
                     files=files
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
+
+                    # 获取检测到的语言（Whisper 在自动模式下会返回）
+                    detected_lang = data.get("language", language)
+
                     return {
                         "text": data.get("text", ""),
                         "duration": data.get("duration", 0),
                         "confidence": 0.9,
-                        "language": data.get("language", language),
+                        "language": detected_lang,
                         "segments": data.get("segments", [])
                     }
         except Exception as e:
             print(f"Whisper 转写失败: {e}")
-        
+
         return None
     
     def _mock_transcription(self, audio_data: bytes) -> Dict:
