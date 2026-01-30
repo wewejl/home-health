@@ -5,23 +5,36 @@ import Combine
 // MARK: - 语音识别服务
 @MainActor
 class SpeechRecognitionService: ObservableObject {
-    
+
     // MARK: - Published 属性
     @Published var isRecording = false
     @Published var isUploading = false
     @Published var recognizedText = ""
     @Published var errorMessage: String?
-    
+    @Published var detectedLanguage: RecognitionLanguage?
+
     // MARK: - 私有属性
     private var audioRecorder: AVAudioRecorder?
     private var recordingURL: URL?
     private let transcriptionService = TranscriptionAPIService.shared
-    
+    private var currentLanguage: RecognitionLanguage = .auto
+
     // MARK: - 单例
     static let shared = SpeechRecognitionService()
-    
+
     // MARK: - 初始化
     private init() {}
+
+    // MARK: - 语言设置
+    /// 设置识别语言
+    func setLanguage(_ language: RecognitionLanguage) {
+        currentLanguage = language
+    }
+
+    /// 获取当前语言
+    func getLanguage() -> RecognitionLanguage {
+        return currentLanguage
+    }
     
     // MARK: - 请求麦克风权限
     func requestAuthorization() async -> Bool {
@@ -121,10 +134,22 @@ class SpeechRecognitionService: ObservableObject {
             isUploading = false
             cleanupRecordingFile()
         }
-        
+
         do {
-            let response = try await transcriptionService.transcribeAudioFile(at: url)
+            let response = try await transcriptionService.transcribeAudioFile(
+                at: url,
+                language: currentLanguage
+            )
             recognizedText = response.text
+
+            // 保存检测到的语言
+            if let recognized = response.recognizedLanguage {
+                detectedLanguage = recognized
+            } else if let detectedCode = response.detectedLanguage,
+                      let lang = RecognitionLanguage(rawValue: detectedCode) {
+                detectedLanguage = lang
+            }
+
             errorMessage = nil
         } catch {
             errorMessage = "语音识别失败: \(error.localizedDescription)"

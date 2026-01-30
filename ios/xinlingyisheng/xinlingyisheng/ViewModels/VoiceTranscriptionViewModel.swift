@@ -13,12 +13,25 @@ class VoiceTranscriptionViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var recordingDuration: TimeInterval = 0
     @Published var audioLevel: Float = 0
+    @Published var detectedLanguage: RecognitionLanguage?
 
     // MARK: - Private Properties
     private var audioRecorder: AVAudioRecorder?
     private var recordingTimer: Timer?
     private var levelTimer: Timer?
     private var recordingURL: URL?
+    private var currentLanguage: RecognitionLanguage = .auto
+
+    // MARK: - Language Settings
+    /// 设置识别语言
+    func setLanguage(_ language: RecognitionLanguage) {
+        currentLanguage = language
+    }
+
+    /// 获取当前语言
+    func getLanguage() -> RecognitionLanguage {
+        return currentLanguage
+    }
 
     // MARK: - Recording Methods
 
@@ -61,11 +74,11 @@ class VoiceTranscriptionViewModel: ObservableObject {
 
             guard let url = recordingURL else { return }
 
-            // 录音设置
+            // 录音设置 - 统一使用 16kHz 采样率（与语音识别服务配置一致）
             let settings: [String: Any] = [
                 AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-                AVSampleRateKey: 44100,
-                AVNumberOfChannelsKey: 1,
+                AVSampleRateKey: VoiceConfig.asrSampleRate,  // 16000 Hz
+                AVNumberOfChannelsKey: VoiceConfig.asrChannels,  // 1
                 AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
             ]
 
@@ -153,17 +166,25 @@ class VoiceTranscriptionViewModel: ObservableObject {
             let fileName = url.lastPathComponent
 
             print("[Voice] 📤 Uploading audio for transcription...")
+            print("[Voice] 🌐 Language: \(currentLanguage.displayName)")
 
             let response = try await AIService.shared.transcribeAudioFile(
                 audioData: audioData,
                 fileName: fileName,
-                language: "zh",
+                language: currentLanguage.rawValue,
                 extractSymptoms: true
             )
 
             transcriptionResult = response
             transcribedText = response.text ?? ""
             extractedSymptoms = response.extracted_symptoms ?? []
+
+            // 解析检测到的语言
+            if let langCode = response.language,
+               let detected = RecognitionLanguage(rawValue: langCode) {
+                detectedLanguage = detected
+                print("[Voice] 🌐 Detected language: \(detected.displayName)")
+            }
 
             print("[Voice] ✅ Transcription completed: \(transcribedText.prefix(50))...")
 
@@ -184,15 +205,23 @@ class VoiceTranscriptionViewModel: ObservableObject {
         errorMessage = nil
 
         do {
+            print("[Voice] 🌐 Language: \(currentLanguage.displayName)")
+
             let response = try await AIService.shared.transcribeAudioBase64(
                 audioBase64: base64String,
-                language: "zh",
+                language: currentLanguage.rawValue,
                 extractSymptoms: true
             )
 
             transcriptionResult = response
             transcribedText = response.text ?? ""
             extractedSymptoms = response.extracted_symptoms ?? []
+
+            // 解析检测到的语言
+            if let langCode = response.language,
+               let detected = RecognitionLanguage(rawValue: langCode) {
+                detectedLanguage = detected
+            }
 
         } catch {
             errorMessage = "转写失败: \(error.localizedDescription)"
@@ -207,15 +236,23 @@ class VoiceTranscriptionViewModel: ObservableObject {
         errorMessage = nil
 
         do {
+            print("[Voice] 🌐 Language: \(currentLanguage.displayName)")
+
             let response = try await AIService.shared.transcribeAudioURL(
                 audioUrl: audioUrl,
-                language: "zh",
+                language: currentLanguage.rawValue,
                 extractSymptoms: true
             )
 
             transcriptionResult = response
             transcribedText = response.text ?? ""
             extractedSymptoms = response.extracted_symptoms ?? []
+
+            // 解析检测到的语言
+            if let langCode = response.language,
+               let detected = RecognitionLanguage(rawValue: langCode) {
+                detectedLanguage = detected
+            }
 
         } catch {
             errorMessage = "转写失败: \(error.localizedDescription)"
@@ -248,6 +285,16 @@ class VoiceTranscriptionViewModel: ObservableObject {
         let minutes = Int(recordingDuration) / 60
         let seconds = Int(recordingDuration) % 60
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    // MARK: - Cleanup
+    deinit {
+        // 确保 Timer 被清理，防止内存泄露
+        recordingTimer?.invalidate()
+        levelTimer?.invalidate()
+        recordingTimer = nil
+        levelTimer = nil
+        print("[VoiceTranscriptionVM] deinit - Timer cleaned up")
     }
 }
 

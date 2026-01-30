@@ -26,22 +26,30 @@ enum TranscriptionError: LocalizedError {
 final class TranscriptionAPIService {
     static let shared = TranscriptionAPIService()
     private init() {}
-    
+
     private let boundary = "Boundary-\(UUID().uuidString)"
-    
-    func transcribeAudioFile(at url: URL) async throws -> TranscriptionResponse {
+
+    /// 转写音频文件
+    /// - Parameters:
+    ///   - url: 音频文件URL
+    ///   - language: 识别语言，默认为自动检测
+    /// - Returns: 转写结果
+    func transcribeAudioFile(
+        at url: URL,
+        language: RecognitionLanguage = .auto
+    ) async throws -> TranscriptionResponse {
         guard let audioData = try? Data(contentsOf: url) else {
             throw TranscriptionError.invalidFile
         }
-        
+
         guard let requestURL = URL(string: SpeechAPIConfig.baseURL + SpeechAPIConfig.Endpoints.transcription) else {
             throw TranscriptionError.invalidURL
         }
-        
+
         var request = URLRequest(url: requestURL)
         request.httpMethod = "POST"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        request.httpBody = buildMultipartBody(fileURL: url, fileData: audioData)
+        request.httpBody = buildMultipartBody(fileURL: url, fileData: audioData, language: language)
         
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -65,8 +73,19 @@ final class TranscriptionAPIService {
         }
     }
     
-    private func buildMultipartBody(fileURL: URL, fileData: Data) -> Data {
+    private func buildMultipartBody(
+        fileURL: URL,
+        fileData: Data,
+        language: RecognitionLanguage
+    ) -> Data {
         var body = Data()
+
+        // 添加语言参数
+        body.append("--\(boundary)\r\n")
+        body.append("Content-Disposition: form-data; name=\"language\"\r\n\r\n")
+        body.append("\(language.rawValue)\r\n")
+
+        // 添加文件数据
         body.append("--\(boundary)\r\n")
         let fileName = fileURL.lastPathComponent
         let mimeType = mimeTypeForFileExtension(fileURL.pathExtension)
@@ -75,6 +94,7 @@ final class TranscriptionAPIService {
         body.append(fileData)
         body.append("\r\n")
         body.append("--\(boundary)--\r\n")
+
         return body
     }
     
