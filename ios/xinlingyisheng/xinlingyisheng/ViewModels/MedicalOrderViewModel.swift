@@ -181,7 +181,7 @@ class MedicalOrderViewModel: ObservableObject {
         do {
             let request = ActivateOrderRequest(confirm: true)
             let _: MedicalOrder = try await APIService.shared.activateOrder(orderId: orderId, request: request)
-            await loadOrders()
+            loadOrders()
             return true
         } catch {
             showErrorMessage("激活失败")

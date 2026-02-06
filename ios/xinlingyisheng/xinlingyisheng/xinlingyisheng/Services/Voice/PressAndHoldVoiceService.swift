@@ -6,8 +6,9 @@
 //  - 按住开始录音识别
 //  - 松开发送识别文字
 //  - 上滑取消
-//  - 按住时自动停止 TTS 播放
-//  - 支持静音模式
+//  - 支持语言切换
+//
+//  注: TTS (Text-to-Speech) 功能已移除
 //
 
 import Foundation
@@ -24,8 +25,6 @@ enum PressAndHoldVoiceState: Equatable {
     case listening
     /// 正在发送/等待 AI 回复
     case processing
-    /// AI 正在播报
-    case speaking
     /// 错误状态
     case error(String)
 
@@ -34,14 +33,13 @@ enum PressAndHoldVoiceState: Equatable {
         case .idle: return "按住说话"
         case .listening: return "松开发送"
         case .processing: return "正在处理..."
-        case .speaking: return "正在回复..."
         case .error(let msg): return msg
         }
     }
 
     static func == (lhs: PressAndHoldVoiceState, rhs: PressAndHoldVoiceState) -> Bool {
         switch (lhs, rhs) {
-        case (.idle, .idle), (.listening, .listening), (.processing, .processing), (.speaking, .speaking):
+        case (.idle, .idle), (.listening, .listening), (.processing, .processing):
             return true
         case (.error(let e1), .error(let e2)):
             return e1 == e2
@@ -62,12 +60,10 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
     // MARK: - Published State
     @Published var state: PressAndHoldVoiceState = .idle
     @Published var recognizedText: String = ""
-    @Published var isMuted: Bool = false  // 静音开关
 
     // MARK: - Callbacks
     var onPartialResult: ((String) -> Void)?
     var onFinalResult: ((String) -> Void)?
-    var onTTSEnded: (() -> Void)?
     var onError: ((String) -> Void)?
 
     // MARK: - Configuration
@@ -84,35 +80,30 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
     private var audioConverter: AVAudioConverter?
     private var converterInputFormat: AVAudioFormat?
 
-    // MARK: - TTS Components
-    private var ttsWebSocket: Starscream.WebSocket?
-    private var ttsWebSocketDelegate: PressAndHoldTTSWebSocketDelegate?
-    private var audioPlayerNode = AVAudioPlayerNode()
-    private var ttsAudioEngine: AVAudioEngine?
-    private var ttsFormat: AVAudioFormat
-    private var isTTSSpeaking = false
-    private var pendingTTSBuffers = 0
+    // MARK: - 状态变量
     private var isTapInstalled = false
     private var isStopping = false
     private var asrConnected = false  // ASR 连接状态
-    private var ttsConnected = false  // TTS 连接状态
+    private var hasReceivedFinalResult = false  // 是否已收到 ASR 最终结果
+    private var currentLanguage: RecognitionLanguage = .auto  // 当前识别语言
+
+    // MARK: - 心跳保活相关
+    private var heartbeatTask: Task<Void, Never>?
+    private let heartbeatInterval: UInt64 = 30_000_000_000  // 30秒
+
+    // MARK: - 空闲超时相关
+    private var idleTimeoutTask: Task<Void, Never>?
+    private let idleTimeoutSeconds: TimeInterval = 300  // 5分钟
+    private var lastActivityTime: Date = Date()
 
     // MARK: - Connection Continuation
     private var asrContinuation: CheckedContinuation<Void, Error>?
-    private var ttsContinuation: CheckedContinuation<Void, Error>?
+    private var finalResultContinuation: CheckedContinuation<String, Never>?
 
     // MARK: - Init (private for singleton)
     private override init() {
         self.baseURL = BackendVoiceConfig.baseURL
         self.token = BackendVoiceConfig.defaultToken
-
-        // TTS 音频格式: 24kHz, 单声道, 16-bit PCM
-        self.ttsFormat = AVAudioFormat(
-            commonFormat: .pcmFormatInt16,
-            sampleRate: VoiceConfig.ttsSampleRate,
-            channels: VoiceConfig.ttsChannels,
-            interleaved: false
-        )!
 
         super.init()
         #if DEBUG
@@ -124,8 +115,6 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
         // deinit 中不能调用 async 方法，直接清理
         asrWebSocket?.delegate = nil
         asrWebSocket?.disconnect()
-        ttsWebSocket?.delegate = nil
-        ttsWebSocket?.disconnect()
     }
 
     // MARK: - Public Methods
@@ -138,12 +127,8 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
 
         isStopping = false
 
-        // 启动 ASR 和 TTS
-        async let asr: Void = connectASR()
-        async let tts: Void = connectTTS()
-
-        try await asr
-        try await tts
+        // 仅启动 ASR（TTS 已移除）
+        try await connectASR()
 
         // 启动音频引擎
         try startAudioEngine()
@@ -162,11 +147,19 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
 
         isStopping = true
 
+        // 停止心跳
+        heartbeatTask?.cancel()
+        heartbeatTask = nil
+
+        // 停止空闲超时任务
+        idleTimeoutTask?.cancel()
+        idleTimeoutTask = nil
+
         // 清理 continuations
         asrContinuation?.resume(throwing: WebSocketVoiceError.disconnected)
         asrContinuation = nil
-        ttsContinuation?.resume(throwing: WebSocketVoiceError.disconnected)
-        ttsContinuation = nil
+        finalResultContinuation?.resume(returning: "")
+        finalResultContinuation = nil
 
         // 断开 WebSocket
         asrWebSocket?.delegate = nil
@@ -175,14 +168,7 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
         asrWebSocketDelegate = nil
         asrConnected = false
 
-        ttsWebSocket?.delegate = nil
-        ttsWebSocket?.disconnect()
-        ttsWebSocket = nil
-        ttsWebSocketDelegate = nil
-        ttsConnected = false
-
         // 停止音频引擎
-        stopTTSAudio()
         inputNode?.removeTap(onBus: 0)
         audioEngine?.stop()
 
@@ -219,13 +205,14 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
             try await connect()
         }
 
-        // 停止 TTS 播放（打断）
-        if isTTSSpeaking {
-            stopTTSAudio()
-        }
+        // 重置空闲计时器（用户活动）
+        resetIdleTimer()
 
         // 安装录音 tap
         installAudioTap()
+
+        // 重置标志
+        hasReceivedFinalResult = false
 
         state = .listening
         recognizedText = ""
@@ -244,7 +231,7 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
             throw WebSocketVoiceError.microphonePermissionDenied
         } else if micStatus == .undetermined {
             // 请求权限
-            await audioSession.requestRecordPermission { granted in
+            audioSession.requestRecordPermission { granted in
                 if !granted {
                     Task { @MainActor [weak self] in
                         self?.state = .error("需要麦克风权限")
@@ -269,28 +256,52 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
         }
 
         #if DEBUG
-        print("[PressAndHoldVoiceService] 停止录音")
+        print("[PressAndHoldVoiceService] 停止录音, hasReceivedFinalResult: \(hasReceivedFinalResult)")
         #endif
 
         state = .processing
 
+        // 重置空闲计时器（用户活动）
+        resetIdleTimer()
+
         // 移除录音 tap
         removeAudioTap()
 
-        // 等待一小段时间让 ASR 完成最后的结果
-        try? await Task.sleep(nanoseconds: VoiceConfig.stopRecordingWaitTime)
-
-        let finalText = recognizedText
-
-        if !finalText.isEmpty {
-            onFinalResult?(finalText)
+        // 如果已经收到 ASR 最终结果，直接返回
+        if hasReceivedFinalResult {
+            let finalText = recognizedText
+            state = .idle
             #if DEBUG
-            print("[PressAndHoldVoiceService] 识别结果: \(finalText)")
+            print("[PressAndHoldVoiceService] 已有最终结果，直接返回: \(finalText)")
             #endif
+            return finalText.isEmpty ? nil : finalText
+        }
+
+        // 使用 Continuation 等待 ASR 最终结果
+        // 移除 3 秒短超时，改用 30 秒保护超时
+        // 正常情况下后端应该在几秒内返回结果
+        let result = await withCheckedContinuation { continuation in
+            self.finalResultContinuation = continuation
+
+            // 设置保护超时任务（30 秒）
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 30_000_000_000)  // 30秒保护超时
+                guard let self = self else { return }
+
+                // 如果还在等待（后端 30 秒都没响应），强制结束
+                if self.finalResultContinuation != nil {
+                    self.finalResultContinuation = nil
+                    self.state = .idle
+                    #if DEBUG
+                    print("[PressAndHoldVoiceService] 等待最终结果超时（30秒）")
+                    #endif
+                    continuation.resume(returning: "")
+                }
+            }
         }
 
         state = .idle
-        return finalText.isEmpty ? nil : finalText
+        return result.isEmpty ? nil : result
     }
 
     /// 取消录音（上滑时调用）
@@ -303,84 +314,26 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
         print("[PressAndHoldVoiceService] 取消录音")
         #endif
 
+        // 清理 continuation（如果正在等待）
+        finalResultContinuation?.resume(returning: "")
+        finalResultContinuation = nil
+
         removeAudioTap()
         recognizedText = ""
         state = .idle
     }
 
-    /// 播报 AI 回复
-    func speak(_ text: String) async throws {
-        guard !isStopping else { return }
-        guard !text.isEmpty else { return }
-        guard !isMuted else {
-            #if DEBUG
-            print("[PressAndHoldVoiceService] 已静音，跳过播报")
-            #endif
-            // 静音状态下直接回调完成
-            onTTSEnded?()
-            return
-        }
-
+    /// 设置识别语言
+    func setLanguage(_ language: RecognitionLanguage) {
+        currentLanguage = language
         #if DEBUG
-        print("[PressAndHoldVoiceService] 播报: \(text.prefix(50))...")
+        print("[PressAndHoldVoiceService] 语言设置为: \(language.displayName)")
         #endif
-
-        // 如果 TTS 未连接，重新连接
-        if !ttsConnected || ttsWebSocket == nil {
-            try await connectTTS()
-            try startTTSEngine()
-        }
-
-        isTTSSpeaking = true
-        state = .speaking
-        pendingTTSBuffers = 0
-
-        // 发送合成请求
-        let request: [String: Any] = [
-            "action": "speak",
-            "text": text,
-            "voice": VoiceConfig.defaultVoice
-        ]
-
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: request),
-              let jsonString = String(data: jsonData, encoding: .utf8) else {
-            throw WebSocketVoiceError.synthesisFailed(underlying: NSError(domain: "PressAndHoldVoice", code: -1))
-        }
-
-        ttsWebSocket?.write(string: jsonString)
     }
 
-    /// 停止 TTS 播放
-    func stopTTSAudio() {
-        guard isTTSSpeaking else { return }
-
-        #if DEBUG
-        print("[PressAndHoldVoiceService] 停止 TTS 播放")
-        #endif
-
-        isTTSSpeaking = false
-        audioPlayerNode.stop()
-
-        if let engine = ttsAudioEngine {
-            engine.detach(audioPlayerNode)
-        }
-
-        ttsAudioEngine?.stop()
-        pendingTTSBuffers = 0
-        state = .idle
-    }
-
-    /// 切换静音状态
-    func toggleMute() {
-        isMuted.toggle()
-        #if DEBUG
-        print("[PressAndHoldVoiceService] 静音\(isMuted ? "开启" : "关闭")")
-        #endif
-
-        // 如果正在播放，停止它
-        if isMuted && isTTSSpeaking {
-            stopTTSAudio()
-        }
+    /// 获取当前语言
+    func getLanguage() -> RecognitionLanguage {
+        return currentLanguage
     }
 
     // MARK: - Private Methods - ASR
@@ -388,7 +341,10 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
     private func connectASR() async throws {
         var components = URLComponents(string: baseURL)!
         components.path = "/ws/voice/asr"
-        components.queryItems = [URLQueryItem(name: "token", value: token)]
+        components.queryItems = [
+            URLQueryItem(name: "token", value: token),
+            URLQueryItem(name: "language", value: currentLanguage.rawValue)
+        ]
 
         guard let url = components.url else {
             throw WebSocketVoiceError.invalidURL
@@ -417,9 +373,75 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
 
         asrConnected = true
         asrContinuation = nil
+
+        // 连接成功后启动心跳
+        startHeartbeat()
+
+        // 连接成功后重置空闲计时器
+        resetIdleTimer()
+
         #if DEBUG
-        print("[PressAndHoldVoiceService] ASR 连接成功")
+        print("[PressAndHoldVoiceService] ASR 连接成功，心跳已启动")
         #endif
+    }
+
+    // MARK: - 心跳保活
+    /// 启动心跳保活机制
+    private func startHeartbeat() {
+        // 停止之前的心跳任务
+        heartbeatTask?.cancel()
+
+        heartbeatTask = Task { @MainActor [weak self] in
+            while !Task.isCancelled && self?.asrConnected == true {
+                try? await Task.sleep(nanoseconds: self?.heartbeatInterval ?? 30_000_000_000)
+
+                guard let self = self, self.asrConnected, !Task.isCancelled else {
+                    break
+                }
+
+                // 发送心跳 ping
+                let pingMessage: [String: Any] = ["action": "ping"]
+                if let jsonData = try? JSONSerialization.data(withJSONObject: pingMessage),
+                   let jsonString = String(data: jsonData, encoding: .utf8) {
+                    self.asrWebSocket?.write(string: jsonString)
+                    #if DEBUG
+                    print("[PressAndHoldVoiceService] 发送心跳 ping")
+                    #endif
+                }
+            }
+        }
+    }
+
+    // MARK: - 空闲超时
+    /// 重置空闲计时器
+    private func resetIdleTimer() {
+        lastActivityTime = Date()
+
+        // 取消之前的超时任务
+        idleTimeoutTask?.cancel()
+
+        // 启动新的超时任务
+        idleTimeoutTask = Task { @MainActor [weak self] in
+            guard let self = self else { return }
+
+            // 等待超时时间
+            try? await Task.sleep(nanoseconds: UInt64(self.idleTimeoutSeconds * 1_000_000_000))
+
+            // 检查是否真的超时了（可能有新活动重置了计时器）
+            let now = Date()
+            let elapsed = now.timeIntervalSince(self.lastActivityTime)
+
+            if elapsed >= self.idleTimeoutSeconds && self.asrConnected {
+                #if DEBUG
+                print("[PressAndHoldVoiceService] 空闲超时（\(Int(elapsed))秒），自动断开连接")
+                #endif
+
+                // 只有在 idle 状态时才断开（避免录音中断开）
+                if case .idle = self.state {
+                    self.disconnect()
+                }
+            }
+        }
     }
 
     private func startAudioEngine() throws {
@@ -480,6 +502,19 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
             return
         }
 
+        // 发送 start 命令到后端（后端协议要求）
+        let startCommand: [String: Any] = [
+            "action": "start",
+            "format": "pcm"
+        ]
+        if let jsonData = try? JSONSerialization.data(withJSONObject: startCommand),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            asrWebSocket?.write(string: jsonString)
+            #if DEBUG
+            print("[PressAndHoldVoiceService] 发送 ASR start 命令")
+            #endif
+        }
+
         let inputFormat = inputNode.outputFormat(forBus: 0)
 
         inputNode.installTap(
@@ -500,6 +535,19 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
     private func removeAudioTap() {
         inputNode?.removeTap(onBus: 0)
         isTapInstalled = false
+
+        // 发送 finish 命令到后端（后端协议要求）
+        let finishCommand: [String: Any] = [
+            "action": "finish"
+        ]
+        if let jsonData = try? JSONSerialization.data(withJSONObject: finishCommand),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            asrWebSocket?.write(string: jsonString)
+            #if DEBUG
+            print("[PressAndHoldVoiceService] 发送 ASR finish 命令")
+            #endif
+        }
+
         #if DEBUG
         print("[PressAndHoldVoiceService] 录音 tap 已移除")
         #endif
@@ -631,113 +679,6 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
 
         return pcmData
     }
-
-    // MARK: - Private Methods - TTS
-
-    private func connectTTS() async throws {
-        var components = URLComponents(string: baseURL)!
-        components.path = "/ws/voice/tts"
-        components.queryItems = [URLQueryItem(name: "token", value: token)]
-
-        guard let url = components.url else {
-            throw WebSocketVoiceError.invalidURL
-        }
-
-        // 转换为 ws:// 协议
-        let wsURLString = url.absoluteString
-            .replacingOccurrences(of: "http://", with: "ws://")
-            .replacingOccurrences(of: "https://", with: "wss://")
-
-        guard let wsURL = URL(string: wsURLString) else {
-            throw WebSocketVoiceError.invalidURL
-        }
-
-        #if DEBUG
-        print("[PressAndHoldVoiceService] TTS 连接: \(wsURL.absoluteString)")
-        #endif
-
-        try await withCheckedThrowingContinuation { continuation in
-            ttsContinuation = continuation
-            ttsWebSocket = Starscream.WebSocket(request: URLRequest(url: wsURL))
-            ttsWebSocketDelegate = PressAndHoldTTSWebSocketDelegate(voiceService: self)
-            ttsWebSocket?.delegate = ttsWebSocketDelegate
-            ttsWebSocket?.connect()
-        }
-
-        ttsConnected = true
-        ttsContinuation = nil
-        #if DEBUG
-        print("[PressAndHoldVoiceService] TTS 连接成功")
-        #endif
-    }
-
-    private func startTTSEngine() throws {
-        if let oldEngine = ttsAudioEngine {
-            oldEngine.detach(audioPlayerNode)
-        }
-
-        ttsAudioEngine = AVAudioEngine()
-        ttsAudioEngine?.attach(audioPlayerNode)
-        ttsAudioEngine?.connect(audioPlayerNode, to: ttsAudioEngine!.mainMixerNode, format: ttsFormat)
-
-        try ttsAudioEngine?.start()
-        audioPlayerNode.play()
-
-        #if DEBUG
-        print("[PressAndHoldVoiceService] TTS 引擎已启动")
-        #endif
-    }
-
-    func playTTSAudio(_ data: Data) {
-        guard ttsAudioEngine != nil, !isStopping else { return }
-
-        guard pendingTTSBuffers < VoiceConfig.maxPendingTTSBuffers else {
-            return
-        }
-
-        let frameCount = data.count / 2
-        guard let buffer = AVAudioPCMBuffer(
-            pcmFormat: ttsFormat,
-            frameCapacity: AVAudioFrameCount(frameCount)
-        ) else {
-            return
-        }
-
-        buffer.frameLength = AVAudioFrameCount(frameCount)
-
-        guard let channelData = buffer.int16ChannelData else { return }
-
-        data.withUnsafeBytes { rawPtr in
-            guard let baseAddr = rawPtr.baseAddress?.assumingMemoryBound(to: Int16.self) else {
-                return
-            }
-            for i in 0..<Int(frameCount) {
-                channelData[0][i] = baseAddr[i]
-            }
-        }
-
-        pendingTTSBuffers += 1
-
-        audioPlayerNode.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { [weak self] _ in
-            guard let self = self else { return }
-
-            Task { @MainActor in
-                guard !self.isStopping else { return }
-
-                self.pendingTTSBuffers -= 1
-
-                if self.pendingTTSBuffers == 0 && self.isTTSSpeaking {
-                    #if DEBUG
-                    print("[PressAndHoldVoiceService] TTS 播放完成")
-                    #endif
-
-                    self.isTTSSpeaking = false
-                    self.state = .idle
-                    self.onTTSEnded?()
-                }
-            }
-        }
-    }
 }
 
 // MARK: - ASR WebSocket Delegate
@@ -758,69 +699,23 @@ class PressAndHoldASRWebSocketDelegate: NSObject, WebSocketDelegate {
                 #if DEBUG
                 print("[ASRDelegate] ASR WebSocket 已连接")
                 #endif
-                await voiceService.handleASRConnected()
+                voiceService.handleASRConnected()
 
             case .disconnected(let reason, let code):
                 #if DEBUG
                 print("[ASRDelegate] ASR 断开: \(reason), code: \(code)")
                 #endif
-                await voiceService.handleASRDisconnected()
+                voiceService.handleASRDisconnected()
 
             case .text(let text):
-                await voiceService.handleASRTextMessage(text)
+                voiceService.handleASRTextMessage(text)
 
             case .error(let error):
                 let errorMsg = error?.localizedDescription ?? "未知"
                 #if DEBUG
                 print("[ASRDelegate] ASR WebSocket 错误: \(errorMsg)")
                 #endif
-                await voiceService.handleASRError(errorMsg)
-
-            default:
-                break
-            }
-        }
-    }
-}
-
-// MARK: - TTS WebSocket Delegate
-class PressAndHoldTTSWebSocketDelegate: NSObject, WebSocketDelegate {
-    private weak var voiceService: PressAndHoldVoiceService?
-
-    init(voiceService: PressAndHoldVoiceService) {
-        self.voiceService = voiceService
-        super.init()
-    }
-
-    func didReceive(event: WebSocketEvent, client: WebSocketClient) {
-        Task { @MainActor in
-            guard let voiceService = self.voiceService else { return }
-
-            switch event {
-            case .connected:
-                #if DEBUG
-                print("[TTSDelegate] TTS WebSocket 已连接")
-                #endif
-                await voiceService.handleTTSConnected()
-
-            case .disconnected(let reason, let code):
-                #if DEBUG
-                print("[TTSDelegate] TTS 断开: \(reason), code: \(code)")
-                #endif
-                await voiceService.handleTTSDisconnected()
-
-            case .text(let text):
-                await voiceService.handleTTSTextMessage(text)
-
-            case .binary(let data):
-                voiceService.playTTSAudio(data)
-
-            case .error(let error):
-                let errorMsg = error?.localizedDescription ?? "未知"
-                #if DEBUG
-                print("[TTSDelegate] TTS WebSocket 错误: \(errorMsg)")
-                #endif
-                await voiceService.handleTTSError(errorMsg)
+                voiceService.handleASRError(errorMsg)
 
             default:
                 break
@@ -837,13 +732,57 @@ extension PressAndHoldVoiceService {
         asrContinuation?.resume()
         asrContinuation = nil  // 立即清空，防止重复 resume
         asrConnected = true
+
+        #if DEBUG
+        print("[PressAndHoldVoiceService] ASR WebSocket 已连接")
+        #endif
     }
 
     // ASR 断开
     func handleASRDisconnected() {
         asrConnected = false
-        asrContinuation?.resume(throwing: WebSocketVoiceError.disconnected)
-        asrContinuation = nil  // 立即清空
+
+        // 停止心跳
+        heartbeatTask?.cancel()
+        heartbeatTask = nil
+
+        // 停止空闲超时任务
+        idleTimeoutTask?.cancel()
+        idleTimeoutTask = nil
+
+        // 只在连接等待时 resume，避免干扰已建立的连接
+        if let continuation = asrContinuation {
+            asrContinuation = nil
+            continuation.resume(throwing: WebSocketVoiceError.disconnected)
+        }
+
+        // 如果不是主动停止，尝试自动重连
+        if !isStopping && state != .idle {
+            #if DEBUG
+            print("[PressAndHoldVoiceService] 连接意外断开，3秒后尝试重连")
+            #endif
+
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                guard let self = self, !self.isStopping else { return }
+
+                do {
+                    try await self.connect()
+                    #if DEBUG
+                    print("[PressAndHoldVoiceService] 自动重连成功")
+                    #endif
+                } catch {
+                    #if DEBUG
+                    print("[PressAndHoldVoiceService] 自动重连失败: \(error)")
+                    #endif
+                    self.state = .error("连接失败")
+                }
+            }
+        }
+
+        #if DEBUG
+        print("[PressAndHoldVoiceService] ASR 断开")
+        #endif
     }
 
     // ASR 文本消息
@@ -869,6 +808,22 @@ extension PressAndHoldVoiceService {
         case VoiceEvent.asrFinal.eventName:
             if let text = json["text"] as? String, !text.isEmpty {
                 recognizedText = text
+                hasReceivedFinalResult = true  // 标记已收到最终结果
+
+                // 如果 stopRecording() 正在等待，恢复 continuation
+                if let continuation = finalResultContinuation {
+                    finalResultContinuation = nil
+                    continuation.resume(returning: text)
+                    #if DEBUG
+                    print("[PressAndHoldVoiceService] 通过 Continuation 返回最终结果: \(text)")
+                    #endif
+                } else {
+                    // 如果没有在等待（已超时或已返回），忽略延迟的结果
+                    // 这样可以防止超时后 ASR 结果到达时触发回调，导致状态混乱
+                    #if DEBUG
+                    print("[PressAndHoldVoiceService] 收到 ASR 最终结果但无等待，已忽略: \(text)")
+                    #endif
+                }
             }
 
         case VoiceEvent.asrRoundComplete.eventName:
@@ -894,61 +849,6 @@ extension PressAndHoldVoiceService {
         asrConnected = false
         asrContinuation?.resume(throwing: WebSocketVoiceError.recognitionFailed(underlying: NSError(domain: "ASR", code: -1, userInfo: [NSLocalizedDescriptionKey: errorMsg])))
         asrContinuation = nil  // 立即清空
-        onError?(errorMsg)
-    }
-
-    // TTS 连接成功
-    func handleTTSConnected() {
-        ttsContinuation?.resume()
-        ttsContinuation = nil  // 立即清空，防止重复 resume
-        ttsConnected = true
-    }
-
-    // TTS 断开
-    func handleTTSDisconnected() {
-        ttsConnected = false
-        ttsContinuation?.resume(throwing: WebSocketVoiceError.disconnected)
-        ttsContinuation = nil  // 立即清空
-    }
-
-    // TTS 文本消息
-    func handleTTSTextMessage(_ text: String) {
-        guard let data = text.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let event = json["event"] as? String else {
-            return
-        }
-
-        switch event {
-        case VoiceEvent.ttsReady.eventName:
-            #if DEBUG
-            print("[PressAndHoldVoiceService] TTS 就绪")
-            #endif
-
-        case VoiceEvent.ttsFinished.eventName:
-            #if DEBUG
-            print("[PressAndHoldVoiceService] TTS 音频传输完成")
-            #endif
-
-        case "error":
-            if let message = json["message"] as? String {
-                #if DEBUG
-                print("[PressAndHoldVoiceService] TTS 错误: \(message)")
-                #endif
-            }
-            isTTSSpeaking = false
-            state = .idle
-
-        default:
-            break
-        }
-    }
-
-    // TTS 错误
-    func handleTTSError(_ errorMsg: String) {
-        ttsConnected = false
-        ttsContinuation?.resume(throwing: WebSocketVoiceError.synthesisFailed(underlying: NSError(domain: "TTS", code: -1, userInfo: [NSLocalizedDescriptionKey: errorMsg])))
-        ttsContinuation = nil  // 立即清空
         onError?(errorMsg)
     }
 }

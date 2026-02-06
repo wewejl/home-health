@@ -9,6 +9,14 @@ enum ImageSourceType {
     case photoLibrary
 }
 
+// MARK: - 输入模式
+/// 输入模式：文字或语音
+/// 这个状态保存在 ViewModel 中，确保在整个会话中保持不变
+enum InputMode {
+    case text   // 文字输入模式
+    case voice  // 按住说话模式
+}
+
 // MARK: - 统一聊天 ViewModel
 /// 能力驱动的统一聊天视图模型
 /// 根据智能体能力动态渲染功能按钮，支持多科室适配
@@ -22,8 +30,45 @@ class UnifiedChatViewModel: ObservableObject {
         setupVoiceBindings()
     }
 
-    deinit {
+    nonisolated deinit {
         print("[UnifiedChatVM] deinit")
+        // 不在这里清理 voiceService 回调，因为 deinit 非 @MainActor 隔离
+        // 应该在视图消失时主动调用 cleanupVoiceBindings()
+    }
+
+    /// 主动清理语音绑定（在视图消失时调用）
+    /// 必须在视图生命周期结束时主动调用，deinit 无法访问 @MainActor 属性
+    @MainActor
+    func cleanupVoiceBindings() {
+        voiceCancellables.removeAll()
+        pressAndHoldVoiceService.onPartialResult = nil
+        pressAndHoldVoiceService.onFinalResult = nil
+        // onTTSEnded 已移除（TTS 功能已废弃）
+        pressAndHoldVoiceService.onError = nil
+        print("[UnifiedChatVM] 语音绑定已清理")
+    }
+
+    /// 完整清理资源（在视图完全消失时调用）
+    @MainActor
+    func cleanup() {
+        // 1. 停止语音服务
+        pressAndHoldVoiceService.disconnect()
+
+        // 2. 清理语音绑定
+        cleanupVoiceBindings()
+
+        // 3. 清理回调
+        onVoiceImageRequest = nil
+
+        // 4. 清理消息（释放图片内存）
+        messages.removeAll()
+
+        // 5. 重置状态
+        inputMode = .text
+        isVoiceMode = false
+        voiceState = .idle
+
+        print("[UnifiedChatVM] 完整资源清理完成")
     }
 
     // MARK: - 会话状态
@@ -32,11 +77,15 @@ class UnifiedChatViewModel: ObservableObject {
     @Published var capabilities: AgentCapabilities?
     @Published var currentDoctorId: Int?
     @Published var currentDepartment: String?
-    
+
     // MARK: - 消息
     @Published var messages: [UnifiedChatMessage] = []
     @Published var isLoading = false
     @Published var isSending = false
+
+    // MARK: - 内存管理：最大消息数量限制（防止内存无限增长）
+    private let maxMessageCount = 200
+    private let maxImageMessagesInMemory = 10  // 内存中最多保留 10 张图片
     
     // MARK: - 流式输出
     @Published var streamingContent = ""
@@ -71,6 +120,9 @@ class UnifiedChatViewModel: ObservableObject {
     @Published var knowledgeRefs: [KnowledgeRef] = []
     @Published var reasoningSteps: [String] = []
     
+    // MARK: - 输入模式
+    @Published var inputMode: InputMode = .text
+
     // MARK: - 语音模式属性
     @Published var isVoiceMode: Bool = false
     @Published var voiceState: VoiceState = .idle
@@ -79,6 +131,8 @@ class UnifiedChatViewModel: ObservableObject {
     @Published var audioLevel: Float = 0
     @Published var isMicrophoneMuted: Bool = false
     @Published var showExitConfirmation: Bool = false
+
+    // MARK: - 语音连接状态（移除，不再需要）
 
     // 语音模式回调
     var onVoiceImageRequest: ((ImageSourceType) -> Void)?
@@ -112,7 +166,7 @@ class UnifiedChatViewModel: ObservableObject {
     private let sessionStateManager = SessionStateManager.shared
 
     // MARK: - 语音服务
-    private var voiceService: SimpleVoiceService {
+    private var pressAndHoldVoiceService: PressAndHoldVoiceService {
         return .shared
     }
     private var voiceCancellables = Set<AnyCancellable>()
@@ -234,9 +288,12 @@ class UnifiedChatViewModel: ObservableObject {
     }
     
     // MARK: - 加载历史消息
+    /// 加载历史消息，限制加载的图片数量以控制内存使用
     private func loadHistoryMessages(_ historyMessages: [MessageModel]) {
         messages.removeAll()
-        
+
+        var loadedImageCount = 0
+
         for msg in historyMessages {
             var message = UnifiedChatMessage(
                 content: msg.content,
@@ -244,9 +301,9 @@ class UnifiedChatViewModel: ObservableObject {
                 timestamp: msg.created_at,
                 serverMessageId: msg.id
             )
-            
-            // 如果消息是图片类型，尝试从本地加载
-            if msg.message_type == "image" {
+
+            // 如果消息是图片类型，尝试从本地加载（限制数量）
+            if msg.message_type == "image" && loadedImageCount < maxImageMessagesInMemory {
                 // 尝试从会话的本地图片中查找
                 if let sessionId = sessionId {
                     let localImages = localImageManager.getImages(forSession: sessionId)
@@ -255,14 +312,15 @@ class UnifiedChatViewModel: ObservableObject {
                        let image = localImageManager.loadImage(byId: matchingImage.id) {
                         message.messageType = .image(image)
                         message.localImageId = matchingImage.id
+                        loadedImageCount += 1
                     }
                 }
             }
-            
+
             messages.append(message)
         }
-        
-        print("[UnifiedChatVM] 加载历史消息: \(messages.count) 条")
+
+        print("[UnifiedChatVM] 加载历史消息: \(messages.count) 条（图片: \(loadedImageCount) 张）")
     }
     
     // MARK: - 发送消息
@@ -273,18 +331,21 @@ class UnifiedChatViewModel: ObservableObject {
     ) async {
         guard let sessionId = sessionId else { return }
         guard !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !attachments.isEmpty else { return }
-        
+
         // 清除之前所有消息的快捷选项
         for index in messages.indices {
             messages[index].quickOptions = []
         }
-        
+
         // 添加用户消息
         let userMessage = UnifiedChatMessage.userMessage(content, attachments: attachments)
         messages.append(userMessage)
-        
+
+        // 内存管理：如果消息数量超过限制，删除最旧的消息（保留最近200条）
+        trimMessagesIfNeeded()
+
         isSending = true
-        
+
         // 创建流式加载消息
         let loadingMessage = UnifiedChatMessage.loadingMessage()
         streamingMessageId = loadingMessage.id
@@ -374,8 +435,8 @@ class UnifiedChatViewModel: ObservableObject {
             )
             messages.append(imageMessage)
             
-            // 4. 将图片转为 base64 (使用更高质量 0.9)
-            guard let imageData = processedImage.jpegData(compressionQuality: 0.9) else {
+            // 4. 将图片转为 base64 (压缩质量 0.7，在质量和内存使用间平衡)
+            guard let imageData = processedImage.jpegData(compressionQuality: 0.7) else {
                 throw APIError.serverError("图片处理失败")
             }
             
@@ -614,7 +675,40 @@ class UnifiedChatViewModel: ObservableObject {
         }
         showError = true
     }
-    
+
+    // MARK: - 内存管理：清理旧消息
+    /// 当消息数量超过限制时，删除最旧的消息以控制内存使用
+    /// 图片消息占用大量内存，需要额外限制
+    private func trimMessagesIfNeeded() {
+        // 1. 首先检查并限制图片消息数量（图片占用大量内存）
+        let imageMessages = messages.filter { isImageMessage($0) }
+        if imageMessages.count > maxImageMessagesInMemory {
+            // 找出并删除最旧的图片消息（保留最新的 maxImageMessagesInMemory 张）
+            let excessImageCount = imageMessages.count - maxImageMessagesInMemory
+            var imagesToRemove = Set<UUID>()
+            for msg in imageMessages.prefix(excessImageCount) {
+                imagesToRemove.insert(msg.id)
+            }
+            messages.removeAll { imagesToRemove.contains($0.id) }
+            print("[UnifiedChatVM] ⚠️ 删除了 \(excessImageCount) 条旧图片消息以释放内存")
+        }
+
+        // 2. 然后检查总消息数量
+        if messages.count > maxMessageCount {
+            let excessCount = messages.count - maxMessageCount
+            messages.removeFirst(excessCount)
+            print("[UnifiedChatVM] ⚠️ 删除了 \(excessCount) 条旧消息（当前: \(messages.count)/\(maxMessageCount)）")
+        }
+    }
+
+    /// 检查消息是否为图片类型
+    private func isImageMessage(_ message: UnifiedChatMessage) -> Bool {
+        if case .image = message.messageType {
+            return true
+        }
+        return false
+    }
+
     // MARK: - 请求生成病历（带确认）
     func requestGenerateDossier() {
         // 检查是否可以生成
@@ -687,172 +781,84 @@ class UnifiedChatViewModel: ObservableObject {
 
     /// 初始化语音服务绑定
     func setupVoiceBindings() {
-        // 设置 SimpleVoiceService 回调
-        voiceService.onPartialResult = { [weak self] text in
+        // 设置 PressAndHoldVoiceService 回调
+        pressAndHoldVoiceService.onPartialResult = { [weak self] text in
             Task { @MainActor in
                 self?.recognizedText = text
             }
         }
 
-        voiceService.onFinalResult = { [weak self] text in
+        pressAndHoldVoiceService.onFinalResult = { [weak self] text in
             Task { @MainActor in
                 await self?.handleFinalRecognition(text)
             }
         }
 
-        // 打断回调已内置在 ASR partial result 处理中
-        // voiceService.onVoiceInterruption = { [weak self] in ... }
-
-        voiceService.onError = { [weak self] error in
+        pressAndHoldVoiceService.onError = { [weak self] error in
             Task { @MainActor in
-                self?.handleVoiceError(error)
+                self?.errorMessage = error
+                self?.showError = true
             }
         }
 
         // 绑定状态变化
-        voiceService.$state
+        pressAndHoldVoiceService.$state
             .receive(on: DispatchQueue.main)
             .sink { [weak self] newState in
                 guard let self = self else { return }
-                self.voiceState = newState
+                // 将 PressAndHoldVoiceState 映射到 VoiceState
+                switch newState {
+                case .idle:
+                    self.voiceState = .idle
+                case .listening:
+                    self.voiceState = .listening
+                case .processing:
+                    self.voiceState = .processing
+                case .error(let msg):
+                    self.voiceState = .error(VoiceError.recognitionFailed(underlying: NSError(domain: "Voice", code: -1, userInfo: [NSLocalizedDescriptionKey: msg])))
+                }
+                // .speaking 状态已移除（TTS 功能已废弃）
             }
             .store(in: &voiceCancellables)
-
-        // 绑定音频电平（SimpleVoiceService 暂不支持，使用默认值）
-        // voiceService.$audioLevel
-        //     .receive(on: DispatchQueue.main)
-        //     .sink { [weak self] level in
-        //         guard let self = self, !self.isMicrophoneMuted else { return }
-        //         self.audioLevel = level
-        //     }
-        //     .store(in: &voiceCancellables)
     }
 
-    /// 处理语音打断
-    private func handleVoiceInterruption() {
-        print("[UnifiedChatVM] 检测到用户打断")
-        // SimpleVoiceService 内部已处理停止 TTS
-        voiceState = .listening
-    }
+    // MARK: - 按住说话方法
 
-    // MARK: - 语音模式入口（公开方法）
-
-    /// 进入语音模式
-    func enterVoiceMode() {
-        guard !isVoiceMode else {
-            print("[UnifiedChatVM] ⚠️ 已在语音模式中，忽略重复进入")
-            return
-        }
-        isVoiceMode = true
-        Task {
-            await startVoiceMode()
-        }
-    }
-
-    /// 退出语音模式（统一的退出入口）
-    /// - 确保停止所有语音服务
-    /// - 然后更新状态触发 UI 关闭
-    func exitVoiceMode() {
-        guard isVoiceMode else {
-            print("[UnifiedChatVM] ⚠️ 不在语音模式中，忽略退出")
-            return
-        }
-
-        // 1. 先停止语音服务（防止回调被触发）
-        stopVoiceMode()
-
-        // 2. 再更新状态（触发 fullScreenCover 关闭）
-        isVoiceMode = false
-
-        print("[UnifiedChatVM] 🚪 已退出语音模式")
-    }
-
-    // MARK: - 内部实现（私有方法）
-
-    /// 开始语音模式（内部方法）
-    func startVoiceMode() async {
+    /// 开始按住说话录音
+    func startPressAndHoldRecording() async {
         do {
-            try await voiceService.start()
-            print("[UnifiedChatVM] 简化语音模式已启动")
+            try await pressAndHoldVoiceService.startRecording()
         } catch {
-            handleVoiceError(error)
+            print("[UnifiedChatVM] 开始录音失败: \(error)")
         }
     }
 
-    /// 停止语音模式
-    func stopVoiceMode() {
-        print("[UnifiedChatVM] 开始停止语音模式...")
-
-        // 停止语音服务
-        voiceService.stop()
-
-        // 清理状态
-        voiceState = .idle
-        recognizedText = ""
-        aiResponseText = ""
-        isMicrophoneMuted = false
-        showExitConfirmation = false  // 重置退出确认弹窗状态
-
-        print("[UnifiedChatVM] 语音模式已完全停止")
-    }
-
-    /// 切换麦克风静音（SimpleVoiceService 暂不支持，使用本地状态）
-    func toggleMicrophone() {
-        isMicrophoneMuted.toggle()
-        audioLevel = isMicrophoneMuted ? 0 : 0.5
-
-        print("[UnifiedChatVM] 麦克风\(isMicrophoneMuted ? "已静音" : "已打开")")
-    }
-
-    /// 打断 AI 播报
-    func interruptAISpeaking() {
-        if case .aiSpeaking = voiceState {
-            voiceService.stopTTS()
-            voiceState = .idle
+    /// 停止按住说话录音并发送
+    func stopPressAndHoldRecording() async {
+        guard let text = await pressAndHoldVoiceService.stopRecording() else {
+            return
         }
-    }
-
-    /// 停止录音并发送（用户手动触发）
-    func stopRecordingAndSend() {
-        guard case .listening = voiceState else { return }
-
-        let textToSend = recognizedText.isEmpty ? "（未识别到语音）" : recognizedText
-
-        print("[UnifiedChatVM] 用户手动停止录音，发送: \(textToSend)")
-
-        // 停止语音服务
-        voiceService.stop()
 
         // 发送消息
-        Task {
-            await sendMessage(content: textToSend)
+        await sendMessage(content: text)
 
-            // 等待 AI 回复并播报
-            await waitForAIResponseAndSpeak()
-
-            // 重置识别文字
-            recognizedText = ""
-        }
+        // TTS 播报功能已移除，不再等待 AI 回复并播报
     }
 
-    /// 请求拍照
-    func requestVoiceCamera() {
-        onVoiceImageRequest?(.camera)
+    /// 取消按住说话录音
+    func cancelPressAndHoldRecording() async {
+        pressAndHoldVoiceService.cancelRecording()
     }
 
-    /// 请求相册
-    func requestVoicePhotoLibrary() {
-        onVoiceImageRequest?(.photoLibrary)
+    /// 切换静音状态（已移除 TTS 功能，此方法已废弃）
+    func toggleVoiceMute(_ muted: Bool) {
+        // TTS 功能已移除，静音功能不再需要
+        print("[UnifiedChatVM] 静音功能已废弃（TTS 已移除）")
     }
 
-    /// 请求退出
-    func requestVoiceExit() {
-        showExitConfirmation = true
-    }
-
-    /// 取消退出
-    func cancelVoiceExit() {
-        showExitConfirmation = false
+    /// 处理语音打断（保留供兼容）
+    private func handleVoiceInterruption() {
+        print("[UnifiedChatVM] 检测到用户打断")
     }
 
     // MARK: - 私有语音方法
@@ -863,46 +869,9 @@ class UnifiedChatViewModel: ObservableObject {
             print("[UnifiedChatVM] 识别结果为空，跳过发送")
             return
         }
-
-        // 暂停识别，进入处理状态
-        voiceState = .processing
-
-        // 立即暂停 ASR 录音，防止在等待 AI 回复期间说话导致混乱
-        voiceService.pauseRecording()
-
-        // 发送消息到后端（复用现有方法）
-        await sendMessage(content: text)
-
-        // 等待 AI 回复并播报
-        await waitForAIResponseAndSpeak()
-
-        recognizedText = ""
     }
 
-    private func waitForAIResponseAndSpeak() async {
-        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒
-
-        if let lastMessage = messages.last,
-           !lastMessage.isFromUser {
-
-            let responseText = lastMessage.content
-            print("[UnifiedChatVM] ✅ 收到AI回复，准备播报")
-
-            // 使用 SimpleVoiceService 播报
-            do {
-                try await voiceService.speak(responseText)
-                print("[UnifiedChatVM] TTS 播报完成")
-            } catch {
-                print("[UnifiedChatVM] TTS 播报失败: \(error)")
-            }
-        } else {
-            if !isMicrophoneMuted {
-                await startVoiceMode()
-            } else {
-                voiceState = .idle
-            }
-        }
-    }
+    // waitForAIResponseAndSpeak() 方法已移除（TTS 功能已废弃）
 
     private func handleVoiceError(_ error: Error) {
         if let voiceError = error as? VoiceError {
