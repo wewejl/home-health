@@ -492,7 +492,7 @@ struct HealingEventAIAnalysisCard: View {
                     }
 
                     Text(urgency)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textPrimary)
                 }
             }
@@ -703,7 +703,7 @@ struct HealingRelatedEventRow: View {
 
                 if let reasoning = relatedEvent.reasoning {
                     Text(reasoning)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption2))
                         .foregroundColor(HealingColors.textSecondary)
                         .lineLimit(2)
                 }
@@ -713,7 +713,7 @@ struct HealingRelatedEventRow: View {
                         Image(systemName: "chart.bar.fill")
                             .font(.system(size: AdaptiveFont.caption1 - 2))
                         Text("置信度: \(Int(confidence * 100))%")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                     }
                     .foregroundColor(HealingColors.textTertiary)
                 }
