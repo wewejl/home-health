@@ -2,6 +2,7 @@ import Foundation
 
 // MARK: - APIService
 
+@MainActor
 class APIService {
     static let shared = APIService()
 
