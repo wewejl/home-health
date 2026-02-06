@@ -55,11 +55,11 @@ struct MedicalTypography {
     static let bodySmall = Font.system(size: UnifiedFont.footnote, weight: .regular)
 
     // Special
-    static let caption = Font.system(size: UnifiedFont.caption)
-    static let caption1 = Font.system(size: UnifiedFont.caption)
-    static let caption2 = Font.system(size: UnifiedFont.caption)
+    static let caption = Font.system(size: UnifiedFont.caption1)  // 已废弃
+    static let caption1 = Font.system(size: UnifiedFont.caption1)
+    static let caption2 = Font.system(size: UnifiedFont.caption2)
     static let button = Font.system(size: UnifiedFont.body, weight: .semibold)
-    static let badge = Font.system(size: UnifiedFont.caption, weight: .medium)
+    static let badge = Font.system(size: UnifiedFont.caption1, weight: .medium)
 }
 
 // MARK: - 间距系统
