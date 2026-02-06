@@ -79,8 +79,8 @@ struct ProfileSetupBackgroundView: View {
         ZStack {
             LinearGradient(
                 colors: [
-                    AppColor.background,
-                    AppColor.background.opacity(0.95)
+                    DXYColors.background,
+                    DXYColors.background.opacity(0.95)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -90,7 +90,7 @@ struct ProfileSetupBackgroundView: View {
                 let size = min(geo.size.width, geo.size.height) * 0.5
                 
                 Circle()
-                    .fill(AppColor.primaryPurple.opacity(0.15))
+                    .fill(DXYColors.primaryPurple.opacity(0.15))
                     .frame(width: size, height: size)
                     .blur(radius: 70)
                     .offset(x: geo.size.width * 0.3, y: -geo.size.height * 0.1)
@@ -115,15 +115,15 @@ struct ProfileSetupHeaderView: View {
         VStack(spacing: AdaptiveSpacing.item) {
             Image(systemName: "person.crop.circle.badge.plus")
                 .font(.system(size: adaptiveIconSize, weight: .light))
-                .foregroundColor(AppColor.primaryPurple)
+                .foregroundColor(DXYColors.primaryPurple)
             
             Text("完善个人资料")
                 .font(.system(size: titleSize, weight: .bold, design: .default))
-                .foregroundColor(AppColor.textPrimary)
+                .foregroundColor(DXYColors.textPrimary)
             
             Text("填写基本信息，获得更好的服务体验")
                 .font(.system(size: subtitleSize, weight: .regular, design: .rounded))
-                .foregroundColor(AppColor.textSecondary)
+                .foregroundColor(DXYColors.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .opacity(showContent ? 1 : 0)
@@ -176,7 +176,7 @@ struct ProfileFormCard: View {
                 }
                 
                 Divider()
-                    .background(AppColor.textTertiary.opacity(0.3))
+                    .background(DXYColors.textTertiary.opacity(0.3))
                 
                 ProfileFormSection(title: "紧急联系人", isRequired: false) {
                     VStack(spacing: AdaptiveSpacing.item) {
@@ -228,12 +228,12 @@ struct ProfileFormSection<Content: View>: View {
             HStack(spacing: ScaleFactor.spacing(4)) {
                 Text(title)
                     .font(.system(size: AdaptiveFont.body, weight: .semibold))
-                    .foregroundColor(AppColor.textPrimary)
+                    .foregroundColor(DXYColors.textPrimary)
                 
                 if isRequired {
                     Text("*")
                         .font(.system(size: AdaptiveFont.subheadline, weight: .bold))
-                        .foregroundColor(AppColor.orange)
+                        .foregroundColor(DXYColors.orange)
                 }
             }
             
@@ -262,7 +262,7 @@ struct ProfileTextField: View {
         HStack(spacing: AdaptiveSpacing.item) {
             Image(systemName: icon)
                 .font(.system(size: iconSize, weight: .medium))
-                .foregroundColor(AppColor.textSecondary)
+                .foregroundColor(DXYColors.textSecondary)
                 .frame(width: ScaleFactor.size(24))
             
             TextField(placeholder, text: $text)
@@ -273,7 +273,7 @@ struct ProfileTextField: View {
         .padding(.vertical, ScaleFactor.padding(12))
         .background(
             RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusSmall, style: .continuous)
-                .fill(AppColor.cardBackground.opacity(0.7))
+                .fill(DXYColors.cardBackground.opacity(0.7))
         )
     }
 }
@@ -286,12 +286,12 @@ struct GenderSelector: View {
         HStack(spacing: ScaleFactor.spacing(10)) {
             Image(systemName: "person.fill.viewfinder")
                 .font(.system(size: adaptiveIconSize, weight: .medium))
-                .foregroundColor(AppColor.textSecondary)
+                .foregroundColor(DXYColors.textSecondary)
                 .frame(width: ScaleFactor.size(24))
             
             Text("性别")
                 .font(.system(size: adaptiveFontSize))
-                .foregroundColor(AppColor.textSecondary)
+                .foregroundColor(DXYColors.textSecondary)
             
             Spacer()
             
@@ -309,7 +309,7 @@ struct GenderSelector: View {
         .padding(.vertical, ScaleFactor.padding(12))
         .background(
             RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall, style: .continuous)
-                .fill(AppColor.cardBackground.opacity(0.7))
+                .fill(DXYColors.cardBackground.opacity(0.7))
         )
     }
     
@@ -336,15 +336,15 @@ struct GenderButton: View {
         Button(action: action) {
             Text(gender.displayName)
                 .font(.system(size: AdaptiveFont.subheadline, weight: isSelected ? .semibold : .regular))
-                .foregroundColor(isSelected ? .white : AppColor.textSecondary)
+                .foregroundColor(isSelected ? .white : DXYColors.textSecondary)
                 .frame(width: buttonSize * 1.8, height: buttonSize)
                 .background(
                     RoundedRectangle(cornerRadius: LayoutConstants.compactSpacing, style: .continuous)
-                        .fill(isSelected ? AppColor.primaryPurple : Color.clear)
+                        .fill(isSelected ? DXYColors.primaryPurple : Color.clear)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall, style: .continuous)
-                        .stroke(isSelected ? Color.clear : AppColor.textTertiary.opacity(0.5), lineWidth: 1)
+                        .stroke(isSelected ? Color.clear : DXYColors.textTertiary.opacity(0.5), lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
@@ -363,28 +363,28 @@ struct BirthdaySelector: View {
                 HStack(spacing: AdaptiveSpacing.item) {
                     Image(systemName: "calendar")
                         .font(.system(size: adaptiveIconSize, weight: .medium))
-                        .foregroundColor(AppColor.textSecondary)
+                        .foregroundColor(DXYColors.textSecondary)
                         .frame(width: 24)
                     
                     Text("生日")
                         .font(.system(size: adaptiveFontSize))
-                        .foregroundColor(AppColor.textSecondary)
+                        .foregroundColor(DXYColors.textSecondary)
                     
                     Spacer()
                     
                     Text(displayText)
                         .font(.system(size: adaptiveFontSize))
-                        .foregroundColor(AppColor.textPrimary)
+                        .foregroundColor(DXYColors.textPrimary)
                     
                     Image(systemName: showPicker ? "chevron.up" : "chevron.down")
                         .font(.system(size: AdaptiveFont.footnote, weight: .medium))
-                        .foregroundColor(AppColor.textTertiary)
+                        .foregroundColor(DXYColors.textTertiary)
                 }
                 .padding(.horizontal, ScaleFactor.padding(16))
                 .padding(.vertical, ScaleFactor.padding(12))
                 .background(
                     RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusSmall, style: .continuous)
-                        .fill(AppColor.cardBackground.opacity(0.7))
+                        .fill(DXYColors.cardBackground.opacity(0.7))
                 )
             }
             .buttonStyle(.plain)
@@ -432,7 +432,7 @@ struct ActionButtonsSection: View {
                 Button(action: viewModel.skipSetup) {
                     Text("稍后完善")
                         .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                        .foregroundColor(AppColor.textSecondary)
+                        .foregroundColor(DXYColors.textSecondary)
                 }
                 .buttonStyle(.plain)
             }
@@ -455,7 +455,6 @@ struct ProfileLoadingOverlay: View {
             
             VStack(spacing: ScaleFactor.spacing(16)) {
                 ProgressView()
-                    .scaleEffect(1.5)
                     .tint(.white)
                 Text("保存中...")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))

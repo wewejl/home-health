@@ -8,7 +8,7 @@ struct DossierEmptyStateView: View {
             Spacer()
             
             Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: ScaleFactor.size(64)))
+                .font(.system(size: ScaleFactor.font(64)))
                 .foregroundColor(DXYColors.textTertiary)
             
             VStack(spacing: ScaleFactor.spacing(8)) {
@@ -52,7 +52,7 @@ struct SearchEmptyStateView: View {
     var body: some View {
         VStack(spacing: ScaleFactor.spacing(16)) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: ScaleFactor.size(48)))
+                .font(.system(size: ScaleFactor.font(48)))
                 .foregroundColor(DXYColors.textTertiary)
             
             Text("未找到相关病历")

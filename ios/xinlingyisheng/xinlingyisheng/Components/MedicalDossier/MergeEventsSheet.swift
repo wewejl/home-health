@@ -66,7 +66,7 @@ struct MergeEventsSheet: View {
                                     Spacer()
                                     VStack(spacing: 8) {
                                         Image(systemName: "doc.on.doc")
-                                            .font(.system(size: 32))
+                                            .font(.system(size: UnifiedFont.largeTitle))
                                             .foregroundColor(DXYColors.textTertiary)
                                         Text("没有找到相关事件")
                                             .font(.system(size: AdaptiveFont.subheadline))
@@ -177,7 +177,7 @@ struct SelectableEventRow: View {
         Button(action: onTap) {
             HStack(spacing: ScaleFactor.spacing(12)) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 22))
+                    .font(.system(size: UnifiedFont.title1))
                     .foregroundColor(isSelected ? DXYColors.primaryPurple : DXYColors.textTertiary)
                 
                 VStack(alignment: .leading, spacing: 4) {

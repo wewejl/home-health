@@ -10,10 +10,16 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var authManager = AuthManager.shared
     @State private var showProfileSetup = false
-    
+    @State private var showSplash = true  // 启动画面状态
+
     var body: some View {
         Group {
-            if authManager.isLoggedIn {
+            if showSplash {
+                // 显示启动画面
+                SplashView(onAnimationComplete: {
+                    showSplash = false
+                })
+            } else if authManager.isLoggedIn {
                 HomeView()
                     .onAppear {
                         // 登录后检查是否需要完善资料

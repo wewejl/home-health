@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语音转写测试 - 灵犀医生</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .status-bar {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .status-dot.connected {
+            background: #4caf50;
+        }
+
+        .status-dot.recording {
+            background: #f44336;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            flex: 1;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .record-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #5C44FF 0%, #7B68EE 100%);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(92, 68, 255, 0.4);
+        }
+
+        .record-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(92, 68, 255, 0.6);
+        }
+
+        .record-button.recording {
+            background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+        }
+
+        .record-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .timer {
+            text-align: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .language-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .lang-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .lang-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .lang-btn.active {
+            background: #5C44FF;
+            color: white;
+            border-color: #5C44FF;
+        }
+
+        .result-box {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 100px;
+        }
+
+        .result-box h3 {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .result-text {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .symptoms-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff3e0;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .symptoms-box.show {
+            display: block;
+        }
+
+        .symptoms-box h4 {
+            font-size: 13px;
+            color: #f57c00;
+            margin-bottom: 8px;
+        }
+
+        .symptoms-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .symptom-tag {
+            background: #fff;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 13px;
+            color: #f57c00;
+        }
+
+        .waveform {
+            height: 60px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            padding: 0 20px;
+        }
+
+        .wave-bar {
+            width: 3px;
+            background: #5C44FF;
+            border-radius: 3px;
+            transition: height 0.1s;
+        }
+
+        .wave-bar.active {
+            background: #f44336;
+        }
+
+        .config-section {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .config-section h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #5C44FF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 录音列表 */
+        .recordings-section {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .recordings-section h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .recording-item {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recording-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .recording-time {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 4px;
+        }
+
+        .recording-text {
+            font-size: 14px;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .recording-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .icon-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+
+        .icon-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .icon-btn.download {
+            color: #5C44FF;
+        }
+
+        .icon-btn.play {
+            color: #4caf50;
+        }
+
+        .icon-btn.delete {
+            color: #f44336;
+        }
+
+        audio {
+            width: 100%;
+            height: 32px;
+            margin-top: 8px;
+        }
+
+        .empty-hint {
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>语音转写测试</h1>
+
+        <!-- 配置区域 -->
+        <div class="config-section">
+            <h3>API 配置</h3>
+            <input type="text" id="apiUrl" class="config-input" value="http://localhost:8100" placeholder="API 地址">
+            <div style="margin-top: 10px; font-size: 12px; color: #999;">
+                测试 Token: test_1
+            </div>
+        </div>
+
+        <!-- 语言选择 -->
+        <div class="language-selector">
+            <button class="lang-btn active" data-lang="auto">自动检测</button>
+            <button class="lang-btn" data-lang="zh">中文</button>
+            <button class="lang-btn" data-lang="en">English</button>
+            <button class="lang-btn" data-lang="yue">粤语</button>
+        </div>
+
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="status-dot" id="statusDot"></div>
+            <span class="status-text" id="statusText">准备就绪</span>
+        </div>
+
+        <!-- 录音按钮 -->
+        <button class="record-button" id="recordBtn">
+            按住说话
+        </button>
+
+        <!-- 计时器 -->
+        <div class="timer" id="timer">00:00</div>
+
+        <!-- 波形 -->
+        <div class="waveform" id="waveform"></div>
+
+        <!-- 结果区域 -->
+        <div class="result-box">
+            <h3>识别结果</h3>
+            <div class="result-text" id="resultText">等待录音...</div>
+            <div class="symptoms-box" id="symptomsBox">
+                <h4>提取的症状</h4>
+                <div class="symptoms-list" id="symptomsList"></div>
+            </div>
+        </div>
+
+        <!-- 录音历史 -->
+        <div class="recordings-section">
+            <h3>录音历史 <span id="recordingCount" style="color: #999;">(0)</span></h3>
+            <div id="recordingsList">
+                <div class="empty-hint">暂无录音记录</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 配置 ====================
+        const CONFIG = {
+            API_BASE: document.getElementById('apiUrl').value,
+            TEST_TOKEN: 'test_1'
+        };
+
+        // ==================== 状态 ====================
+        let isRecording = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordingStartTime = null;
+        let timerInterval = null;
+        let audioContext = null;
+        let analyser = null;
+        let animationId = null;
+        let selectedLanguage = 'auto';
+        let recordings = [];  // 录音历史
+        let currentWavBlob = null;  // 当前录音的 WAV Blob
+
+        // ==================== DOM 元素 ====================
+        const recordBtn = document.getElementById('recordBtn');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const timerDisplay = document.getElementById('timer');
+        const resultText = document.getElementById('resultText');
+        const symptomsBox = document.getElementById('symptomsBox');
+        const symptomsList = document.getElementById('symptomsList');
+        const waveform = document.getElementById('waveform');
+        const apiUrlInput = document.getElementById('apiUrl');
+        const recordingsList = document.getElementById('recordingsList');
+        const recordingCount = document.getElementById('recordingCount');
+
+        // ==================== 初始化波形 ====================
+        function initWaveform() {
+            waveform.innerHTML = '';
+            for (let i = 0; i < 30; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'wave-bar';
+                bar.style.height = '10px';
+                waveform.appendChild(bar);
+            }
+        }
+        initWaveform();
+
+        // ==================== 录音历史管理 ====================
+        function loadRecordings() {
+            const saved = localStorage.getItem('voiceRecordings');
+            if (saved) {
+                try {
+                    recordings = JSON.parse(saved);
+                    // 恢复 Blob 对象（localStorage 只能存字符串，Blob 不能直接存储）
+                    // 实际存储时只存元数据，Blob 需要从 base64 恢复
+                    renderRecordings();
+                } catch (e) {
+                    console.error('加载录音历史失败:', e);
+                }
+            }
+        }
+
+        function saveRecording(audioBlob, text, symptoms) {
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = () => {
+                const recording = {
+                    id: Date.now(),
+                    timestamp: new Date().toISOString(),
+                    audioData: reader.result,  // data URL 格式
+                    text: text || '(未识别到语音)',
+                    symptoms: symptoms || [],
+                    language: selectedLanguage,
+                    duration: timerDisplay.textContent
+                };
+
+                recordings.unshift(recording);
+                // 只保留最近 20 条
+                if (recordings.length > 20) {
+                    recordings = recordings.slice(0, 20);
+                }
+
+                // 保存到 localStorage（注意：音频数据较大，可能超出限制）
+                try {
+                    localStorage.setItem('voiceRecordings', JSON.stringify(recordings));
+                } catch (e) {
+                    console.warn('录音数据过大，无法保存到 localStorage:', e);
+                }
+
+                renderRecordings();
+            };
+        }
+
+        function renderRecordings() {
+            recordingCount.textContent = `(${recordings.length})`;
+
+            if (recordings.length === 0) {
+                recordingsList.innerHTML = '<div class="empty-hint">暂无录音记录</div>';
+                return;
+            }
+
+            recordingsList.innerHTML = recordings.map((rec, index) => {
+                const date = new Date(rec.timestamp);
+                const timeStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+
+                return `
+                    <div class="recording-item" data-id="${rec.id}">
+                        <div class="recording-info">
+                            <div class="recording-time">${timeStr} · ${rec.duration} · ${getLangName(rec.language)}</div>
+                            <div class="recording-text">${escapeHtml(rec.text)}</div>
+                            ${rec.audioData ? `<audio src="${rec.audioData}" controls></audio>` : ''}
+                        </div>
+                        <div class="recording-actions">
+                            <button class="icon-btn download" onclick="downloadRecording(${rec.id})" title="下载">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                            </button>
+                            <button class="icon-btn delete" onclick="deleteRecording(${rec.id})" title="删除">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getLangName(lang) {
+            const names = {
+                'auto': '自动',
+                'zh': '中文',
+                'en': 'English',
+                'yue': '粤语'
+            };
+            return names[lang] || lang;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function downloadRecording(id) {
+            const rec = recordings.find(r => r.id === id);
+            if (rec && rec.audioData) {
+                const a = document.createElement('a');
+                a.href = rec.audioData;
+                a.download = `recording_${new Date(rec.timestamp).getTime()}.wav`;
+                a.click();
+            }
+        }
+
+        function deleteRecording(id) {
+            recordings = recordings.filter(r => r.id !== id);
+            try {
+                localStorage.setItem('voiceRecordings', JSON.stringify(recordings));
+            } catch (e) {
+                console.warn('保存失败:', e);
+            }
+            renderRecordings();
+        }
+
+        // 页面加载时恢复录音历史
+        loadRecordings();
+
+        // ==================== 语言选择 ====================
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedLanguage = btn.dataset.lang;
+            });
+        });
+
+        // ==================== API 配置更新 ====================
+        apiUrlInput.addEventListener('change', () => {
+            CONFIG.API_BASE = apiUrlInput.value;
+        });
+
+        // ==================== 计时器 ====================
+        function updateTimer() {
+            if (!recordingStartTime) return;
+            const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `${minutes}:${seconds}`;
+        }
+
+        // ==================== 波形动画 ====================
+        function updateWaveform(stream) {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            const source = audioContext.createMediaStreamSource(stream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 64;
+            source.connect(analyser);
+
+            const bars = document.querySelectorAll('.wave-bar');
+
+            function draw() {
+                if (!isRecording) return;
+
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                analyser.getByteFrequencyData(dataArray);
+
+                bars.forEach((bar, i) => {
+                    const value = dataArray[i] || 0;
+                    const height = Math.max(10, (value / 255) * 50);
+                    bar.style.height = height + 'px';
+                    bar.classList.toggle('active', value > 128);
+                });
+
+                animationId = requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        // ==================== 开始录音 ====================
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        sampleRate: 16000,
+                        channelCount: 1
+                    }
+                });
+
+                // 创建 MediaRecorder
+                // 优先使用 M4A/AAC 格式（GLM-ASR 更好支持），其次是 MP4，最后是 WebM
+                let mimeType = 'audio/webm';  // 默认
+                const possibleTypes = [
+                    'audio/mp4',  // Safari 支持
+                    'audio/mpeg', // Chrome 某些版本支持
+                    'audio/webm;codecs=opus',
+                    'audio/webm'
+                ];
+
+                for (const type of possibleTypes) {
+                    if (MediaRecorder.isTypeSupported(type)) {
+                        mimeType = type;
+                        break;
+                    }
+                }
+
+                console.log('使用录音格式:', mimeType);
+
+                mediaRecorder = new MediaRecorder(stream, { mimeType });
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    // 对于 m4a/mp4 格式，使用对应的 MIME 类型
+                    let blobType = mimeType;
+                    if (mimeType.includes('mp4')) {
+                        blobType = 'audio/mp4';
+                    } else if (mimeType.includes('mpeg')) {
+                        blobType = 'audio/mpeg';
+                    }
+                    const originalBlob = new Blob(audioChunks, { type: blobType });
+                    console.log('原始音频 Blob 类型:', originalBlob.type, '大小:', originalBlob.size);
+
+                    // 转换为 WAV 格式
+                    statusText.textContent = '正在转换音频格式...';
+                    const wavBlob = await convertToWav(originalBlob);
+                    console.log('转换后 WAV Blob 类型:', wavBlob.type, '大小:', wavBlob.size);
+
+                    // 保存当前录音用于保存到历史
+                    currentWavBlob = wavBlob;
+
+                    await transcribeAudio(wavBlob);
+
+                    // 停止所有轨道
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start(100);
+                updateWaveform(stream);
+
+                // 更新 UI
+                isRecording = true;
+                recordingStartTime = Date.now();
+                timerInterval = setInterval(updateTimer, 1000);
+
+                recordBtn.textContent = '松开结束';
+                recordBtn.classList.add('recording');
+                statusDot.className = 'status-dot recording';
+                statusText.textContent = '正在录音...';
+
+                resultText.textContent = '录音中...';
+                symptomsBox.classList.remove('show');
+
+            } catch (error) {
+                console.error('录音启动失败:', error);
+                statusText.textContent = '错误: ' + error.message;
+            }
+        }
+
+        // ==================== 停止录音 ====================
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+
+            isRecording = false;
+            clearInterval(timerInterval);
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+
+            // 更新 UI
+            recordBtn.textContent = '按住说话';
+            recordBtn.classList.remove('recording');
+            statusDot.className = 'status-dot';
+            statusText.textContent = '正在转写...';
+
+            initWaveform();
+        }
+
+        // ==================== 音频转换为 WAV 格式 ====================
+        async function convertToWav(audioBlob) {
+            const arrayBuffer = await audioBlob.arrayBuffer();
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+            // 创建 WAV 文件
+            const numOfChan = audioBuffer.numberOfChannels;
+            const length = audioBuffer.length * numOfChan * 2 + 44;
+            const buffer = new ArrayBuffer(length);
+            const view = new DataView(buffer);
+            const channels = [];
+            let i;
+            let sample;
+            let offset = 0;
+            let pos = 0;
+
+            // 写入 WAV 头
+            const setUint16 = (data) => {
+                view.setUint16(pos, data, true);
+                pos += 2;
+            };
+            const setUint32 = (data) => {
+                view.setUint32(pos, data, true);
+                pos += 4;
+            };
+
+            setUint32(0x46464952); // "RIFF"
+            setUint32(length - 8); // file length - 8
+            setUint32(0x45564157); // "WAVE"
+
+            setUint32(0x20746d66); // "fmt " chunk
+            setUint32(16); // length = 16
+            setUint16(1); // PCM (uncompressed)
+            setUint16(numOfChan);
+            setUint32(audioBuffer.sampleRate);
+            setUint32(audioBuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
+            setUint16(numOfChan * 2); // block-align
+            setUint16(16); // 16-bit (hardcoded in this demuxer)
+
+            setUint32(0x61746164); // "data" - chunk
+            setUint32(length - pos - 4); // chunk length
+
+            // 写入交错音频数据
+            for (i = 0; i < audioBuffer.numberOfChannels; i++) {
+                channels.push(audioBuffer.getChannelData(i));
+            }
+
+            offset = 0;
+            while (pos < length) {
+                for (i = 0; i < numOfChan; i++) {
+                    sample = Math.max(-1, Math.min(1, channels[i][offset])); // clamp
+                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0; // scale to 16-bit signed int
+                    view.setInt16(pos, sample, true);
+                    pos += 2;
+                }
+                offset++;
+            }
+
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
+
+        // ==================== 转写音频 ====================
+        async function transcribeAudio(audioBlob) {
+            try {
+                // 转换为 base64
+                const reader = new FileReader();
+                reader.readAsDataURL(audioBlob);
+
+                reader.onloadend = async () => {
+                    const base64Audio = reader.result.split(',')[1];
+
+                    statusText.textContent = '正在上传...';
+
+                    const response = await fetch(`${CONFIG.API_BASE}/ai/transcribe`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${CONFIG.TEST_TOKEN}`
+                        },
+                        body: JSON.stringify({
+                            audio_base64: base64Audio,
+                            language: selectedLanguage,
+                            extract_symptoms: true
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API 错误: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    // 显示结果
+                    statusText.textContent = '转写完成';
+                    statusDot.classList.add('connected');
+
+                    if (result.text) {
+                        resultText.textContent = result.text;
+                    } else {
+                        resultText.textContent = '(未识别到语音内容)';
+                    }
+
+                    // 显示症状
+                    if (result.extracted_symptoms && result.extracted_symptoms.length > 0) {
+                        symptomsList.innerHTML = result.extracted_symptoms
+                            .map(s => `<span class="symptom-tag">${s}</span>`)
+                            .join('');
+                        symptomsBox.classList.add('show');
+                    } else {
+                        symptomsBox.classList.remove('show');
+                    }
+
+                    // 保存录音到历史
+                    if (currentWavBlob) {
+                        saveRecording(currentWavBlob, result.text, result.extracted_symptoms || []);
+                        currentWavBlob = null;
+                    }
+
+                    console.log('转写结果:', result);
+                };
+
+            } catch (error) {
+                console.error('转写失败:', error);
+                statusText.textContent = '错误: ' + error.message;
+                resultText.textContent = '转写失败，请检查 API 配置';
+                symptomsBox.classList.remove('show');
+            }
+        }
+
+        // ==================== 事件监听 ====================
+        recordBtn.addEventListener('mousedown', startRecording);
+        recordBtn.addEventListener('mouseup', stopRecording);
+        recordBtn.addEventListener('mouseleave', () => {
+            if (isRecording) stopRecording();
+        });
+
+        // 触摸事件支持
+        recordBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startRecording();
+        });
+        recordBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            stopRecording();
+        });
+
+        // 键盘快捷键 (空格键)
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !e.repeat && !isRecording) {
+                e.preventDefault();
+                startRecording();
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'Space' && isRecording) {
+                e.preventDefault();
+                stopRecording();
+            }
+        });
+    </script>
+</body>
+</html>

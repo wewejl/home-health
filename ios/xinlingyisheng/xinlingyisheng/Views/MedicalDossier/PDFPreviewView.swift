@@ -54,13 +54,12 @@ struct PDFPreviewView: View {
                     }
                 }
             }
-            .navigationTitle("PDF 预览")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarHidden(true)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: { dismiss() }) {
                         Text("返回")
-                            .font(.system(size: layout.bodyFontSize - 1))
+                            .font(.system(size: UnifiedFont.subheadline))
                             .foregroundColor(HealingColors.forestMist)
                     }
                 }
@@ -73,7 +72,7 @@ struct PDFPreviewView: View {
                                 .frame(width: layout.iconSmallSize + 6, height: layout.iconSmallSize + 6)
 
                             Image(systemName: "square.and.arrow.up")
-                                .font(.system(size: 14))
+                                .font(.system(size: AdaptiveFont.footnote))
                                 .foregroundColor(HealingColors.forestMist)
                         }
                     }
@@ -180,7 +179,7 @@ struct HealingPDFPageIndicator: View {
                         .frame(width: layout.iconSmallSize + 14, height: layout.iconSmallSize + 14)
 
                     Image(systemName: "chevron.left")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: AdaptiveFont.footnote, weight: .medium))
                         .foregroundColor(currentPage > 1 ? HealingColors.forestMist : HealingColors.textTertiary)
                 }
             }
@@ -189,15 +188,15 @@ struct HealingPDFPageIndicator: View {
             // 页码显示
             HStack(spacing: layout.cardSpacing / 3) {
                 Text("\(currentPage)")
-                    .font(.system(size: layout.bodyFontSize + 2, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
                     .foregroundColor(HealingColors.forestMist)
 
                 Text("/")
-                    .font(.system(size: layout.bodyFontSize))
+                    .font(.system(size: UnifiedFont.body))
                     .foregroundColor(HealingColors.textTertiary)
 
                 Text("\(totalPages)")
-                    .font(.system(size: layout.bodyFontSize + 2, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
                     .foregroundColor(HealingColors.forestMist)
             }
             .padding(.horizontal, layout.cardInnerPadding)
@@ -215,7 +214,7 @@ struct HealingPDFPageIndicator: View {
                         .frame(width: layout.iconSmallSize + 14, height: layout.iconSmallSize + 14)
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: AdaptiveFont.footnote, weight: .medium))
                         .foregroundColor(currentPage < totalPages ? HealingColors.forestMist : HealingColors.textTertiary)
                 }
             }
@@ -245,13 +244,12 @@ struct HealingPDFActionButtons: View {
                         if isSaving {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle(tint: HealingColors.forestMist))
-                                .scaleEffect(0.8)
                         } else {
                             Image(systemName: "square.and.arrow.down")
-                                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                                .font(.system(size: UnifiedFont.body, weight: .semibold))
                         }
                         Text("保存")
-                            .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                            .font(.system(size: UnifiedFont.body, weight: .semibold))
                     }
                     .foregroundColor(HealingColors.forestMist)
                     .frame(maxWidth: .infinity)
@@ -269,9 +267,9 @@ struct HealingPDFActionButtons: View {
                 Button(action: onShare) {
                     HStack(spacing: layout.cardSpacing / 2) {
                         Image(systemName: "square.and.arrow.up")
-                            .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                            .font(.system(size: UnifiedFont.body, weight: .semibold))
                         Text("分享给医生")
-                            .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                            .font(.system(size: UnifiedFont.body, weight: .semibold))
                     }
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)

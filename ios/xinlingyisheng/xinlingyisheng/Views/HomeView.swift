@@ -1,64 +1,75 @@
 import SwiftUI
 
-// MARK: - 自适应布局助手
-struct AdaptiveLayout {
-    let screenWidth: CGFloat
+// MARK: - 自适应布局助手（使用统一字体系统）
+/// 所有页面共享的自适应布局结构
+/// 为了确保所有设备上的视觉一致性，不进行布局缩放
+public struct AdaptiveLayout {
+    public let screenWidth: CGFloat
+
+    public init(screenWidth: CGFloat) {
+        self.screenWidth = screenWidth
+    }
 
     // 屏幕尺寸分类
-    var isCompact: Bool { screenWidth < 380 }  // iPhone SE
-    var isRegular: Bool { screenWidth >= 380 && screenWidth < 400 }  // iPhone 13/14
-    var isLarge: Bool { screenWidth >= 400 }  // iPhone Pro Max
+    public var isCompact: Bool { screenWidth < 380 }  // iPhone SE
+    public var isRegular: Bool { screenWidth >= 380 && screenWidth < 400 }  // iPhone 13/14
+    public var isLarge: Bool { screenWidth >= 400 }  // iPhone Pro Max
 
-    // 相对尺寸 - 基于屏幕宽度的比例
-    var iconScale: CGFloat {
-        isCompact ? 0.85 : (isLarge ? 1.1 : 1.0)
+    // 相对尺寸 - 固定为 1.0，不进行缩放
+    public var iconScale: CGFloat {
+        1.0  // 不缩放，保持所有设备一致
     }
 
-    var paddingScale: CGFloat {
-        isCompact ? 0.8 : (isLarge ? 1.2 : 1.0)
+    public var paddingScale: CGFloat {
+        1.0  // 不缩放，保持所有设备一致
     }
 
-    var cardSpacing: CGFloat {
-        isCompact ? 12 : 16
+    public var cardSpacing: CGFloat {
+        16  // 固定间距，不缩放
     }
 
-    // 今日健康卡片高度 - 自适应
-    var todayCardHeight: CGFloat {
-        isCompact ? 100 : 120
+    // 今日健康卡片高度 - 固定高度
+    public var todayCardHeight: CGFloat {
+        120  // 固定高度
     }
 
     // 快速卡片高度
-    var quickCardLargeHeight: CGFloat {
-        isCompact ? 130 : 150
+    public var quickCardLargeHeight: CGFloat {
+        150  // 固定高度
     }
 
-    var quickCardSmallHeight: CGFloat {
-        isCompact ? 58 : 66
+    public var quickCardSmallHeight: CGFloat {
+        66  // 固定高度
     }
 
-    // 图标尺寸
-    var iconLargeSize: CGFloat { (isCompact ? 42 : 48) * iconScale }
-    var iconSmallSize: CGFloat { (isCompact ? 32 : 38) * iconScale }
+    // 图标尺寸 - 固定大小，不缩放
+    public var iconLargeSize: CGFloat { 48 }
+    public var iconSmallSize: CGFloat { 38 }
 
-    // 装饰光晕尺寸 - 相对屏幕宽度（确保所有设备一致）
-    var decorativeCircleSize: CGFloat { screenWidth * 0.5 }
+    // 装饰光晕尺寸 - 固定大小，不缩放
+    public var decorativeCircleSize: CGFloat { 200 }
 
-    // 装饰光晕偏移量 - 基于屏幕尺寸的百分比
-    var topRightOffsetX: CGFloat { screenWidth * 0.25 }
-    var topRightOffsetY: CGFloat { -screenWidth * 0.125 }
-    var bottomLeftOffsetX: CGFloat { -screenWidth * 0.15 }
-    var bottomLeftOffsetY: CGFloat { screenWidth * 0.25 }
+    // 装饰光晕偏移量 - 固定偏移
+    public var topRightOffsetX: CGFloat { 100 }
+    public var topRightOffsetY: CGFloat { -50 }
+    public var bottomLeftOffsetX: CGFloat { -60 }
+    public var bottomLeftOffsetY: CGFloat { 100 }
 
-    // 内边距
-    var horizontalPadding: CGFloat { isCompact ? 16 : 20 }
+    // 内边距 - 固定内边距
+    public var horizontalPadding: CGFloat { 16 }
 
-    // 文字尺寸
-    var titleFontSize: CGFloat { isCompact ? 18 : 20 }
-    var bodyFontSize: CGFloat { isCompact ? 15 : 17 }
-    var captionFontSize: CGFloat { isCompact ? 11 : 12 }
+    // MARK: - 统一字体尺寸（使用 UnifiedFont 确保跨页面一致性）
+    /// 标题字体 - 与主页保持一致的紧凑风格
+    public var titleFontSize: CGFloat { UnifiedFont.body }
 
-    // 卡片内边距
-    var cardInnerPadding: CGFloat { isCompact ? 12 : 16 }
+    /// 正文字体 - 使用统一的正文大小
+    public var bodyFontSize: CGFloat { UnifiedFont.body }
+
+    /// 脚注字体 - 使用统一的脚注大小
+    public var captionFontSize: CGFloat { UnifiedFont.caption }
+
+    // 卡片内边距 - 固定内边距
+    public var cardInnerPadding: CGFloat { 16 }
 }
 
 // MARK: - 治愈系日式色彩系统
@@ -85,6 +96,11 @@ struct HealingColors {
     static let textPrimary = Color(red: 0.22, green: 0.22, blue: 0.20)       // #383833
     static let textSecondary = Color(red: 0.42, green: 0.42, blue: 0.40)      // #6B6B66
     static let textTertiary = Color(red: 0.62, green: 0.62, blue: 0.60)      // #9E9E99
+
+    // 状态色
+    static let successGreen = Color(red: 0.30, green: 0.72, blue: 0.52)       // #4DB885
+    static let borderLight = Color(red: 0.85, green: 0.80, blue: 0.75)        // #D9CCBF
+    static let errorRed = Color(red: 0.85, green: 0.35, blue: 0.35)          // #D95959
 }
 
 // MARK: - DXYColors 兼容层
@@ -103,6 +119,8 @@ struct DXYColors {
     static let textTertiary = HealingColors.textTertiary
     static let promotionPurple = HealingColors.softSage.opacity(0.25)
     static let promotionOrange = HealingColors.mutedCoral.opacity(0.25)
+    static let errorRed = HealingColors.errorRed
+    static let successGreen = HealingColors.successGreen
 }
 
 // MARK: - 流畅进入动画
@@ -154,7 +172,7 @@ extension View {
 
 // MARK: - 主 HomeView
 struct HomeView: View {
-    @State private var selectedTab = 0
+    @State private var selectedTab = 3
     // 每个 tab 的导航路径，用于在切换 tab 时重置导航栈
     @State private var tab0Path: [String] = []
     @State private var tab1Path: [String] = []
@@ -206,7 +224,7 @@ struct HomeView: View {
             .tag(2)
 
             CompatibleNavigationStack {
-                MedicalDossierView()
+                MedicalFoldersView()
             }
             .tabItem {
                 Image(systemName: selectedTab == 3 ? "folder.fill" : "folder")
@@ -319,7 +337,7 @@ struct HealingHomeContentView: View {
                                     .fluidFadeIn(delay: 0.4)
                             }
                             .padding(.horizontal, layout.horizontalPadding)
-                            .padding(.bottom, 140)
+                            .padding(.bottom, ScaleFactor.padding(140))
                         }
                     }
                 }
@@ -353,13 +371,13 @@ struct HealingGreetingHeader: View {
                             .frame(width: 32 * layout.iconScale, height: 32 * layout.iconScale)
 
                         Image(systemName: "heart.fill")
-                            .font(.system(size: 13 * layout.iconScale, weight: .medium))
+                            .font(.system(size: AdaptiveFont.footnote, weight: .medium))
                             .foregroundColor(.white)
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("灵犀医生")
-                            .font(.system(size: layout.titleFontSize - 2, weight: .bold))
+                        Text("灵犀健康")
+                            .font(.system(size: UnifiedFont.title2, weight: .bold))
                             .foregroundColor(HealingColors.textPrimary)
 
                         Text("AI 健康管家 · 随时守护")
@@ -371,20 +389,20 @@ struct HealingGreetingHeader: View {
                 // 问候语
                 HStack(spacing: 6) {
                     Text(getGreeting())
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: AdaptiveFont.footnote, weight: .medium))
                         .foregroundColor(HealingColors.textSecondary)
 
                     Text("，" + userName)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: AdaptiveFont.footnote, weight: .medium))
                         .foregroundColor(HealingColors.forestMist)
                 }
-                .padding(.top, 4)
+                .padding(.top, ScaleFactor.padding(4))
             }
 
             Spacer()
 
             // 右侧 - 操作按钮
-            HStack(spacing: 14) {
+            HStack(spacing: ScaleFactor.spacing(14)) {
                 // 搜索按钮
                 Button(action: {}) {
                     ZStack {
@@ -393,7 +411,7 @@ struct HealingGreetingHeader: View {
                             .frame(width: layout.iconSmallSize + 2, height: layout.iconSmallSize + 2)
 
                         Image(systemName: "magnifyingglass")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.system(size: AdaptiveFont.body, weight: .medium))
                             .foregroundColor(HealingColors.forestMist)
                     }
                 }
@@ -407,13 +425,13 @@ struct HealingGreetingHeader: View {
                             .frame(width: layout.iconSmallSize + 2, height: layout.iconSmallSize + 2)
 
                         Image(systemName: "bell")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.system(size: AdaptiveFont.body, weight: .medium))
                             .foregroundColor(HealingColors.forestMist)
 
                         // 通知红点
                         Circle()
                             .fill(HealingColors.terracotta)
-                            .frame(width: layout.captionFontSize - 4, height: layout.captionFontSize - 4)
+                            .frame(width: AdaptiveFont.custom(8), height: AdaptiveFont.custom(8))
                             .offset(x: 12, y: -12)
                     }
                 }
@@ -442,39 +460,48 @@ struct HealingTodayCard: View {
     let layout: AdaptiveLayout
     @State private var currentDate: String = ""
     @State private var weekday: String = ""
+    @State private var isPressed = false
 
     var body: some View {
         Button(action: { selectedTab = 1 }) {
             ZStack(alignment: .topLeading) {
-                // 渐变背景
+                // 增强的渐变背景 - 三色渐变增加深度
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .fill(
                         LinearGradient(
                             colors: [
                                 HealingColors.deepSage,
-                                HealingColors.forestMist
+                                HealingColors.forestMist,
+                                HealingColors.deepSage.opacity(0.9)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
 
-                // 装饰圆圈 - 自适应尺寸
+                // 多层装饰圆圈 - 增加视觉层次
                 Circle()
-                    .fill(Color.white.opacity(0.08))
-                    .frame(width: layout.todayCardHeight * 0.45, height: layout.todayCardHeight * 0.45)
+                    .fill(Color.white.opacity(0.12))
+                    .frame(width: layout.todayCardHeight * 0.5, height: layout.todayCardHeight * 0.5)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .offset(x: -20, y: -10)
+
+                Circle()
+                    .fill(Color.white.opacity(0.06))
+                    .frame(width: layout.todayCardHeight * 0.35, height: layout.todayCardHeight * 0.35)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .offset(x: 15, y: 10)
 
                 VStack(alignment: .leading, spacing: layout.cardSpacing / 2) {
                     // 顶部：日期与状态
                     HStack {
                         VStack(alignment: .leading, spacing: 0) {
                             Text("今日健康")
-                                .font(.system(size: layout.captionFontSize - 1, weight: .medium))
+                                .font(.system(size: UnifiedFont.caption, weight: .medium))
                                 .foregroundColor(Color.white.opacity(0.8))
 
                             Text(currentDate + " · " + weekday)
-                                .font(.system(size: layout.captionFontSize - 3, weight: .regular))
+                                .font(.system(size: AdaptiveFont.custom(9)))
                                 .foregroundColor(Color.white.opacity(0.6))
                         }
 
@@ -488,11 +515,11 @@ struct HealingTodayCard: View {
                                 .pulsing()
 
                             Text("在线")
-                                .font(.system(size: layout.captionFontSize - 3, weight: .medium))
+                                .font(.system(size: AdaptiveFont.custom(9), weight: .medium))
                                 .foregroundColor(Color.white.opacity(0.9))
                         }
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 2)
+                        .padding(.horizontal, ScaleFactor.padding(5))
+                        .padding(.vertical, ScaleFactor.padding(2))
                         .background(Color.white.opacity(0.15))
                         .clipShape(Capsule())
                     }
@@ -500,24 +527,24 @@ struct HealingTodayCard: View {
                     Spacer()
 
                     // 中部：主标题
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: ScaleFactor.spacing(2)) {
                         Text("身体不适?")
-                            .font(.system(size: layout.captionFontSize + 1, weight: .medium))
+                            .font(.system(size: UnifiedFont.footnote, weight: .medium))
                             .foregroundColor(Color.white.opacity(0.85))
 
                         Text("立即咨询 AI 医生")
-                            .font(.system(size: layout.bodyFontSize - 1, weight: .bold))
+                            .font(.system(size: UnifiedFont.subheadline, weight: .bold))
                             .foregroundColor(.white)
                     }
 
                     // 底部：按钮
-                    HStack(spacing: 3) {
+                    HStack(spacing: ScaleFactor.spacing(3)) {
                         Text("开始咨询")
-                            .font(.system(size: layout.captionFontSize, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
                             .foregroundColor(HealingColors.forestMist)
 
                         Image(systemName: "arrow.right")
-                            .font(.system(size: layout.captionFontSize - 3, weight: .semibold))
+                            .font(.system(size: AdaptiveFont.custom(9), weight: .semibold))
                             .foregroundColor(HealingColors.forestMist)
                     }
                     .padding(.horizontal, layout.cardSpacing - 2)
@@ -528,8 +555,20 @@ struct HealingTodayCard: View {
                 .padding(layout.cardInnerPadding - 2)
             }
             .frame(height: layout.todayCardHeight)
+            .scaleEffect(isPressed ? 0.97 : 1.0)
+            .shadow(
+                color: HealingColors.forestMist.opacity(0.25),
+                radius: isPressed ? 8 : 16,
+                x: 0,
+                y: isPressed ? 4 : 8
+            )
         }
         .buttonStyle(ScaleButtonStyle())
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isPressed = pressing
+            }
+        }, perform: {})
         .onAppear {
             updateDate()
         }
@@ -567,9 +606,9 @@ struct HealingQuickActions: View {
                 Button(action: {}) {
                     HStack(spacing: 4) {
                         Text("更多")
-                            .font(.system(size: layout.captionFontSize, weight: .medium))
+                            .font(.system(size: UnifiedFont.caption, weight: .medium))
                         Image(systemName: "chevron.right")
-                            .font(.system(size: layout.captionFontSize - 2, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
                     }
                     .foregroundColor(HealingColors.forestMist)
                 }
@@ -636,26 +675,44 @@ struct QuickActionCard: View {
     let color: Color
     let size: CardSize
     let layout: AdaptiveLayout
+    @State private var isPressed = false
 
     var body: some View {
         GeometryReader { cardGeometry in
             ZStack(alignment: size == .large ? .bottomLeading : .leading) {
-                // 卡片背景
+                // 卡片背景 - 增强玻璃拟态效果
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .fill(HealingColors.cardBackground)
-                    .shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .fill(color.opacity(0.05))
+                            .blur(radius: 0)
+                    )
+                    .shadow(
+                        color: Color.black.opacity(isPressed ? 0.06 : 0.08),
+                        radius: isPressed ? 6 : 12,
+                        x: 0,
+                        y: isPressed ? 2 : 4
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .stroke(
+                                color.opacity(isPressed ? 0.15 : 0.08),
+                                lineWidth: 1
+                            )
+                    )
 
                 // 文字 - 左侧，使用自适应字体和间距
                 HStack(alignment: .center, spacing: 8) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(title)
-                            .font(.system(size: size == .large ? layout.bodyFontSize - 3 : layout.bodyFontSize - 4, weight: .semibold))
+                            .font(.system(size: size == .large ? AdaptiveFont.custom(11) : AdaptiveFont.custom(10), weight: .semibold))
                             .foregroundColor(HealingColors.textPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
 
                         Text(subtitle)
-                            .font(.system(size: layout.captionFontSize - 1, weight: .regular))
+                            .font(.system(size: UnifiedFont.caption, weight: .regular))
                             .foregroundColor(HealingColors.textTertiary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
@@ -663,7 +720,7 @@ struct QuickActionCard: View {
                         if size == .large {
                             HStack(spacing: 2) {
                                 Image(systemName: "chevron.right")
-                                    .font(.system(size: layout.captionFontSize - 4, weight: .semibold))
+                                    .font(.system(size: AdaptiveFont.custom(8), weight: .semibold))
                                     .foregroundColor(color.opacity(0.7))
                             }
                         }
@@ -680,14 +737,20 @@ struct QuickActionCard: View {
                         )
                         .overlay {
                             Image(systemName: icon)
-                                .font(.system(size: size == .large ? 18 : 14, weight: .medium))
+                                .font(.system(size: size == .large ? UnifiedFont.title3 : UnifiedFont.body, weight: .medium))
                                 .foregroundColor(color)
                         }
                 }
                 .padding(layout.cardInnerPadding - 4)
             }
+            .scaleEffect(isPressed ? 0.96 : 1.0)
         }
         .frame(height: size == .large ? layout.quickCardLargeHeight : layout.quickCardSmallHeight)
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            withAnimation(.easeInOut(duration: 0.12)) {
+                isPressed = pressing
+            }
+        }, perform: {})
     }
 }
 
@@ -718,9 +781,9 @@ struct HealingDepartmentSection: View {
                 Button(action: {}) {
                     HStack(spacing: 4) {
                         Text("全部")
-                            .font(.system(size: layout.captionFontSize, weight: .medium))
+                            .font(.system(size: UnifiedFont.caption, weight: .medium))
                         Image(systemName: "chevron.right")
-                            .font(.system(size: layout.captionFontSize - 2, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
                     }
                     .foregroundColor(HealingColors.forestMist)
                 }
@@ -811,24 +874,47 @@ struct DepartmentGridItem: View {
     let name: String
     let icon: String
     let layout: AdaptiveLayout
+    @State private var isPressed = false
 
     var body: some View {
         VStack(spacing: 10) {
-            // 图标背景
+            // 图标背景 - 增强效果
             ZStack {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(HealingColors.softSage.opacity(0.2))
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                HealingColors.softSage.opacity(isPressed ? 0.35 : 0.25),
+                                HealingColors.deepSage.opacity(isPressed ? 0.2 : 0.12)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
                     .frame(width: layout.iconLargeSize + 4, height: layout.iconLargeSize + 4)
+                    .shadow(
+                        color: HealingColors.softSage.opacity(isPressed ? 0.3 : 0.15),
+                        radius: isPressed ? 8 : 4,
+                        x: 0,
+                        y: 2
+                    )
 
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .medium))
+                    .font(.system(size: AdaptiveFont.title3, weight: .medium))
                     .foregroundColor(HealingColors.forestMist)
             }
+            .scaleEffect(isPressed ? 0.95 : 1.0)
 
             Text(name)
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: AdaptiveFont.caption, weight: .medium))
                 .foregroundColor(HealingColors.textPrimary)
+                .opacity(isPressed ? 0.7 : 1.0)
         }
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isPressed = pressing
+            }
+        }, perform: {})
     }
 }
 
@@ -849,9 +935,9 @@ struct HealingHealthTips: View {
                 Button(action: {}) {
                     HStack(spacing: 4) {
                         Text("更多")
-                            .font(.system(size: layout.captionFontSize, weight: .medium))
+                            .font(.system(size: UnifiedFont.caption, weight: .medium))
                         Image(systemName: "chevron.right")
-                            .font(.system(size: layout.captionFontSize - 2, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
                     }
                     .foregroundColor(HealingColors.forestMist)
                 }
@@ -886,24 +972,41 @@ struct HealthTipCard: View {
     let tip: String
     let color: Color
     let layout: AdaptiveLayout
+    @State private var isPressed = false
 
     var body: some View {
         HStack(spacing: layout.cardSpacing - 2) {
-            // 图标 - 自适应尺寸
+            // 图标 - 自适应尺寸，增强效果
             ZStack {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(color.opacity(0.15))
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                color.opacity(isPressed ? 0.25 : 0.18),
+                                color.opacity(isPressed ? 0.12 : 0.08)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
                     .frame(width: 44 * layout.iconScale, height: 44 * layout.iconScale)
+                    .shadow(
+                        color: color.opacity(isPressed ? 0.25 : 0.15),
+                        radius: isPressed ? 6 : 3,
+                        x: 0,
+                        y: 1
+                    )
 
                 Image(systemName: icon)
-                    .font(.system(size: 17 * layout.iconScale, weight: .medium))
+                    .font(.system(size: AdaptiveFont.body, weight: .medium))
                     .foregroundColor(color)
             }
+            .scaleEffect(isPressed ? 0.92 : 1.0)
 
             // 文字 - 自适应字体
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: layout.bodyFontSize - 4, weight: .semibold))
+                    .font(.system(size: AdaptiveFont.custom(10), weight: .semibold))
                     .foregroundColor(HealingColors.textPrimary)
 
                 Text(tip)
@@ -918,8 +1021,23 @@ struct HealthTipCard: View {
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(HealingColors.cardBackground)
-                .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 2)
+                .shadow(
+                    color: Color.black.opacity(isPressed ? 0.06 : 0.05),
+                    radius: isPressed ? 6 : 10,
+                    x: 0,
+                    y: isPressed ? 2 : 3
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(color.opacity(isPressed ? 0.12 : 0.06), lineWidth: 1)
+                )
         )
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            withAnimation(.easeInOut(duration: 0.12)) {
+                isPressed = pressing
+            }
+        }, perform: {})
     }
 }
 
@@ -951,16 +1069,16 @@ struct PlaceholderView: View {
                         .frame(width: layout.iconLargeSize * 1.7, height: layout.iconLargeSize * 1.7)
 
                     Image(systemName: SFSymbolResolver.resolve(icon))
-                        .font(.system(size: 32, weight: .medium))
+                        .font(.system(size: UnifiedFont.title2, weight: .medium))
                         .foregroundColor(HealingColors.forestMist)
                 }
 
                 Text(title)
-                    .font(.system(size: 17, weight: .bold))
+                    .font(.system(size: AdaptiveFont.body, weight: .bold))
                     .foregroundColor(HealingColors.textPrimary)
 
                 Text("功能开发中，敬请期待")
-                    .font(.system(size: 13, weight: .regular))
+                    .font(.system(size: UnifiedFont.footnote, weight: .regular))
                     .foregroundColor(HealingColors.textTertiary)
             }
         }

@@ -54,13 +54,13 @@ struct LoginView: View {
                         Button("下一步") {
                             focusedField = .code
                         }
-                        .font(.system(size: layout.bodyFontSize, weight: .medium))
+                        .font(.system(size: UnifiedFont.body, weight: .medium))
                         .foregroundColor(HealingColors.forestMist)
                     } else if focusedField == .code {
                         Button("完成") {
                             focusedField = nil
                         }
-                        .font(.system(size: layout.bodyFontSize, weight: .medium))
+                        .font(.system(size: UnifiedFont.body, weight: .medium))
                         .foregroundColor(HealingColors.forestMist)
                     }
                 }
@@ -102,15 +102,17 @@ struct LoginView: View {
 
 struct HealingLoginBackgroundView: View {
     let layout: AdaptiveLayout
+    @State private var animateOffset: CGFloat = 0
 
     var body: some View {
         ZStack {
-            // 渐变背景
+            // 渐变背景 - 增强层次
             LinearGradient(
                 colors: [
                     HealingColors.warmCream,
-                    HealingColors.softPeach.opacity(0.6),
-                    HealingColors.softSage.opacity(0.3)
+                    HealingColors.softPeach.opacity(0.7),
+                    HealingColors.softSage.opacity(0.4),
+                    HealingColors.warmCream
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -119,30 +121,52 @@ struct HealingLoginBackgroundView: View {
             GeometryReader { geo in
                 let size = min(geo.size.width, geo.size.height) * 0.7
 
-                // 左上光晕
+                // 左上光晕 - 多层
                 Circle()
-                    .fill(HealingColors.softSage.opacity(0.12))
+                    .fill(HealingColors.softSage.opacity(0.15))
                     .frame(width: size, height: size)
-                    .blur(radius: 60)
-                    .offset(x: -geo.size.width * 0.2, y: -geo.size.height * 0.2)
+                    .blur(radius: 70)
+                    .offset(x: -geo.size.width * 0.2 + animateOffset * 20, y: -geo.size.height * 0.2)
 
-                // 右下光晕
                 Circle()
-                    .fill(HealingColors.mutedCoral.opacity(0.08))
+                    .fill(HealingColors.deepSage.opacity(0.08))
+                    .frame(width: size * 0.6, height: size * 0.6)
+                    .blur(radius: 50)
+                    .offset(x: -geo.size.width * 0.15 - animateOffset * 10, y: -geo.size.height * 0.15)
+
+                // 右下光晕 - 多层
+                Circle()
+                    .fill(HealingColors.mutedCoral.opacity(0.1))
                     .frame(width: size * 1.3, height: size * 1.3)
-                    .blur(radius: 80)
-                    .offset(x: geo.size.width * 0.3, y: geo.size.height * 0.3)
+                    .blur(radius: 90)
+                    .offset(x: geo.size.width * 0.3 - animateOffset * 15, y: geo.size.height * 0.3)
 
-                // 装饰性圆点
                 Circle()
-                    .fill(HealingColors.forestMist.opacity(0.05))
+                    .fill(HealingColors.softPeach.opacity(0.12))
+                    .frame(width: size * 0.8, height: size * 0.8)
+                    .blur(radius: 60)
+                    .offset(x: geo.size.width * 0.35 + animateOffset * 10, y: geo.size.height * 0.35)
+
+                // 装饰性圆点 - 增加数量和层次
+                Circle()
+                    .fill(HealingColors.forestMist.opacity(0.06))
                     .frame(width: layout.decorativeCircleSize * 0.25, height: layout.decorativeCircleSize * 0.25)
                     .offset(x: geo.size.width * 0.7, y: -geo.size.height * 0.3)
 
                 Circle()
-                    .fill(HealingColors.dustyBlue.opacity(0.05))
+                    .fill(HealingColors.dustyBlue.opacity(0.06))
                     .frame(width: layout.decorativeCircleSize * 0.17, height: layout.decorativeCircleSize * 0.17)
                     .offset(x: geo.size.width * 0.2, y: geo.size.height * 0.6)
+
+                Circle()
+                    .fill(HealingColors.softSage.opacity(0.04))
+                    .frame(width: layout.decorativeCircleSize * 0.12, height: layout.decorativeCircleSize * 0.12)
+                    .offset(x: geo.size.width * 0.85, y: geo.size.height * 0.2)
+            }
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 8).repeatForever(autoreverses: true)) {
+                animateOffset = 1
             }
         }
     }
@@ -173,12 +197,12 @@ struct HealingLoginHeaderView: View {
                     .foregroundColor(.white)
             }
 
-            Text("灵犀医生")
-                .font(.system(size: layout.titleFontSize, weight: .bold))
+            Text("灵犀健康")
+                .font(.system(size: UnifiedFont.subheadline, weight: .bold))
                 .foregroundColor(HealingColors.textPrimary)
 
             Text("智能诊疗助手 · 随时获取专业建议")
-                .font(.system(size: layout.captionFontSize + 1))
+                .font(.system(size: UnifiedFont.footnote))
                 .foregroundColor(HealingColors.textSecondary)
                 .multilineTextAlignment(.center)
         }
@@ -210,11 +234,11 @@ struct HealingLoginFormCard: View {
             // 标题
             VStack(alignment: .leading, spacing: 4) {
                 Text("手机号登录")
-                    .font(.system(size: layout.bodyFontSize + 2, weight: .bold))
+                    .font(.system(size: UnifiedFont.subheadline, weight: .bold))
                     .foregroundColor(HealingColors.textPrimary)
 
                 Text("未注册的手机号将自动创建账号")
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption))
                     .foregroundColor(HealingColors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -248,7 +272,7 @@ struct HealingLoginFormCard: View {
                 layout: layout
             )
 
-            // 登录按钮
+            // 登录按钮 - 增强效果
             Button(action: viewModel.login) {
                 HStack(spacing: layout.cardSpacing / 2) {
                     if viewModel.isLoading {
@@ -257,10 +281,10 @@ struct HealingLoginFormCard: View {
                             .progressViewStyle(CircularProgressViewStyle())
                     } else {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: layout.captionFontSize + 2))
+                            .font(.system(size: UnifiedFont.subheadline))
 
                         Text("登录 / 注册")
-                            .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                            .font(.system(size: UnifiedFont.body, weight: .semibold))
                     }
                 }
                 .foregroundColor(.white)
@@ -268,13 +292,21 @@ struct HealingLoginFormCard: View {
                 .padding(.vertical, layout.cardInnerPadding + 2)
                 .background(
                     LinearGradient(
-                        colors: [HealingColors.deepSage, HealingColors.forestMist],
+                        colors: [
+                            HealingColors.deepSage,
+                            HealingColors.forestMist,
+                            HealingColors.deepSage.opacity(0.95)
+                        ],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
                 )
                 .clipShape(Capsule())
-                .shadow(color: HealingColors.forestMist.opacity(0.3), radius: 8, x: 0, y: 4)
+                .shadow(color: HealingColors.forestMist.opacity(0.4), radius: 12, x: 0, y: 6)
+                .overlay(
+                    Capsule()
+                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                )
             }
             .disabled(!viewModel.canLogin && !viewModel.isLoading)
             .opacity(viewModel.canLogin || viewModel.isLoading ? 1.0 : 0.6)
@@ -283,11 +315,21 @@ struct HealingLoginFormCard: View {
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(HealingColors.cardBackground)
-                .shadow(color: Color.black.opacity(0.06), radius: 16, x: 0, y: 6)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(HealingColors.softSage.opacity(0.2), lineWidth: 1)
+                .shadow(color: Color.black.opacity(0.08), radius: 20, x: 0, y: 8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    HealingColors.softSage.opacity(0.25),
+                                    HealingColors.deepSage.opacity(0.15)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1.5
+                        )
+                )
         )
         .opacity(showContent ? 1 : 0)
         .offset(y: showContent ? 0 : 16)
@@ -308,15 +350,9 @@ struct HealingPhoneInputSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Image(systemName: "phone.fill")
-                    .font(.system(size: layout.captionFontSize))
-                    .foregroundColor(HealingColors.textSecondary)
-
-                Text("手机号码")
-                    .font(.system(size: layout.captionFontSize + 1))
-                    .foregroundColor(HealingColors.textSecondary)
-            }
+            Text("手机号码")
+                .font(.system(size: UnifiedFont.footnote))
+                .foregroundColor(HealingColors.textSecondary)
 
             HStack {
                 PhoneNumberTextField(
@@ -354,12 +390,12 @@ struct HealingCodeSentNotice: View {
                     .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
 
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption))
                     .foregroundColor(HealingColors.forestMist)
             }
 
             Text("验证码已发送至 \(phoneText)")
-                .font(.system(size: layout.captionFontSize))
+                .font(.system(size: UnifiedFont.caption))
                 .foregroundColor(HealingColors.textSecondary)
 
             Spacer()
@@ -384,11 +420,11 @@ struct HealingCodeInputSection: View {
         VStack(alignment: .leading, spacing: layout.cardSpacing / 2) {
             HStack {
                 Image(systemName: "key.fill")
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption))
                     .foregroundColor(HealingColors.textSecondary)
 
                 Text("验证码")
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textSecondary)
 
                 Spacer()
@@ -434,7 +470,6 @@ struct HealingSendCodeButton: View {
                 if viewModel.uiState == .sendingCode {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: buttonColor))
-                        .scaleEffect(0.8)
                         .frame(width: layout.iconSmallSize / 2, height: layout.iconSmallSize / 2)
                 } else if viewModel.countdown > 0 {
                     ZStack {
@@ -459,7 +494,7 @@ struct HealingSendCodeButton: View {
                 }
 
                 Text(viewModel.codeButtonText)
-                    .font(.system(size: layout.captionFontSize, weight: .medium))
+                    .font(.system(size: UnifiedFont.caption, weight: .medium))
                     .foregroundColor(buttonColor)
             }
         }
@@ -480,16 +515,16 @@ struct HealingAgreementSection: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .fill(isAgreed ? HealingColors.forestMist : HealingColors.warmSand.opacity(0.5))
-                        .frame(width: layout.captionFontSize + 8, height: layout.captionFontSize + 8)
+                        .frame(width: UnifiedFont.title3, height: UnifiedFont.title3)
 
                     Image(systemName: isAgreed ? "checkmark" : "")
-                        .font(.system(size: 11, weight: .bold))
+                        .font(.system(size: AdaptiveFont.caption - 1, weight: .bold))
                         .foregroundColor(.white)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("同意并遵守以下条款")
-                        .font(.system(size: 12))
+                        .font(.system(size: AdaptiveFont.caption))
                         .foregroundColor(HealingColors.textSecondary)
 
                     HStack(spacing: 4) {
@@ -516,7 +551,7 @@ struct HealingAgreementLink: View {
     var body: some View {
         Link(destination: URL(string: url) ?? URL(string: "https://xinlinyisheng.com")!) {
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: UnifiedFont.caption, weight: .medium))
                 .foregroundColor(HealingColors.forestMist)
                 .underline(true, color: HealingColors.forestMist)
         }
@@ -555,7 +590,7 @@ struct HealingLoadingOverlay: View {
                 }
 
                 Text("登录中...")
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(.white)
             }
             .padding(layout.cardInnerPadding * 4)

@@ -13,7 +13,7 @@ class SenderType(str, enum.Enum):
 class Message(Base):
     __tablename__ = "messages"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     session_id = Column(String(36), ForeignKey("sessions.id"), nullable=False)
     sender = Column(Enum(SenderType), nullable=False)
     content = Column(Text, nullable=False)

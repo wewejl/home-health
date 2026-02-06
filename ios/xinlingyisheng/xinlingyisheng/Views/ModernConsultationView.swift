@@ -1,8 +1,15 @@
+//
+//  ModernConsultationView.swift
+//  灵犀医生
+//
+//  现代化科室智能体问诊界面（治愈系风格）
+//  连接真实后端API，使用 UnifiedChatViewModel
+//  完全重写修复布局问题
+//
+
 import SwiftUI
 
-// MARK: - 现代化科室智能体问诊界面（治愈系风格）
-// 连接真实后端API，使用 UnifiedChatViewModel
-
+// MARK: - 现代化问诊界面
 struct ModernConsultationView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = UnifiedChatViewModel()
@@ -21,16 +28,18 @@ struct ModernConsultationView: View {
     @State private var showActionMenu = false
     @State private var showImagePicker = false
     @State private var showCamera = false
-
-    // 图片来源选择
     @State private var showImageSourcePicker = false
-
-    // 会话管理
     @State private var showHistoryList = false
     @State private var showNewChatConfirm = false
     @State private var showLoginPrompt = false
+    @State private var isMuted = false
 
-    // 简化初始化（兼容旧接口）
+    // 按住说话状态
+    @State private var showPressAndHoldOverlay = false
+    @State private var isPressing = false
+    @State private var isCanceling = false
+
+    // 初始化
     init(doctor: ModernDoctorInfo) {
         self.doctorId = doctor.id
         self.doctorName = doctor.name
@@ -39,7 +48,6 @@ struct ModernConsultationView: View {
         self.doctorBio = doctor.bio
     }
 
-    // 新的初始化方法
     init(doctorId: Int? = nil, doctorName: String, department: String, doctorTitle: String = "主治医师", doctorBio: String = "") {
         self.doctorId = doctorId
         self.doctorName = doctorName
@@ -49,61 +57,73 @@ struct ModernConsultationView: View {
     }
 
     var body: some View {
-        GeometryReader { geometry in
-            let layout = AdaptiveLayout(screenWidth: geometry.size.width)
+        ZStack {
+            // 主内容区域
+            GeometryReader { geometry in
+                let layout = AdaptiveLayout(screenWidth: geometry.size.width)
 
-            ZStack {
-                // 治愈系背景
-                HealingConsultationBackground(layout: layout)
+                ZStack {
+                    // 背景色
+                    HealingColors.background
+                        .ignoresSafeArea()
 
-                VStack(spacing: 0) {
-                    // 悬浮导航栏
-                    HealingConsultationNavBar(
-                        doctorName: doctorName,
-                        isOnline: true,
-                        onBack: { dismiss() },
-                        onNewChat: { showNewChatConfirm = true },
-                        onHistory: { showHistoryList = true },
-                        onGenerateDossier: { viewModel.requestGenerateDossier() },
-                        layout: layout
-                    )
+                    VStack(spacing: 0) {
+                        // 顶部导航栏
+                        navBar(layout: layout)
 
-                    if viewModel.isLoading {
-                        Spacer()
-                        VStack(spacing: layout.cardSpacing) {
-                            ProgressView()
-                                .tint(HealingColors.forestMist)
-                                .scaleEffect(1.2)
-                            Text("初始化会话...")
-                                .font(.system(size: layout.captionFontSize + 1))
-                                .foregroundColor(HealingColors.textSecondary)
+                        // 主内容
+                        if viewModel.isLoading {
+                            loadingView(layout: layout)
+                        } else {
+                            contentView(layout: layout)
                         }
-                        Spacer()
-                    } else {
-                        // 主内容区域
-                        mainContentView(layout: layout)
                     }
 
-                    Spacer(minLength: 0)
+                    // 底部输入栏
+                    if !viewModel.isLoading {
+                        VStack {
+                            Spacer()
+                            WeChatStyleInputBar(
+                                messageText: $messageText,
+                                viewModel: viewModel,
+                                isSending: viewModel.isSending,
+                                isDisabled: viewModel.isLoading,
+                                onSend: sendMessage,
+                                onMenuTap: {
+                                    showImageSourcePicker = true
+                                },
+                                onImagePickerTap: {
+                                    showImageSourcePicker = true
+                                },
+                                layout: layout,
+                                isPressing: $isPressing,
+                                isCanceling: $isCanceling,
+                                showOverlay: $showPressAndHoldOverlay
+                            )
+                        }
+                    }
                 }
+            }
 
-                // 底部输入区域（固定）
-                if !viewModel.isLoading {
-                    HealingConsultationBottomInput(
-                        messageText: $messageText,
+            // 按住说话覆盖层 - 底部卡片式，不覆盖聊天内容
+            if showPressAndHoldOverlay {
+                GeometryReader { overlayGeometry in
+                    let layout = AdaptiveLayout(screenWidth: overlayGeometry.size.width)
+                    PressAndHoldOverlayView(
                         viewModel: viewModel,
-                        showActionMenu: $showActionMenu,
-                        showImageSourcePicker: $showImageSourcePicker,
-                        onSendMessage: sendMessage,
-                        layout: layout
+                        layout: layout,
+                        isPresented: $showPressAndHoldOverlay,
+                        isPressing: isPressing,
+                        isCanceling: isCanceling
                     )
                 }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .zIndex(100)
             }
         }
         .navigationBarHidden(true)
         .tabBarHidden(true)
         .task {
-            // 检查登录状态
             if !authManager.isLoggedIn {
                 showLoginPrompt = true
                 return
@@ -116,9 +136,7 @@ struct ModernConsultationView: View {
             Text(viewModel.errorMessage ?? "发生未知错误")
         }
         .alert("需要登录", isPresented: $showLoginPrompt) {
-            Button("去登录") {
-                dismiss()
-            }
+            Button("去登录") { dismiss() }
             Button("取消", role: .cancel) {}
         } message: {
             Text("请先登录后再开始问诊")
@@ -139,31 +157,21 @@ struct ModernConsultationView: View {
             }
         }
         .confirmationDialog("选择图片来源", isPresented: $showImageSourcePicker, titleVisibility: .visible) {
-            Button("拍照") {
-                showCamera = true
-            }
-            Button("从相册选择") {
-                showImagePicker = true
-            }
+            Button("拍照") { showCamera = true }
+            Button("从相册选择") { showImagePicker = true }
             Button("取消", role: .cancel) {}
         }
         .alert("新建对话", isPresented: $showNewChatConfirm) {
             Button("确定") {
-                Task {
-                    await viewModel.startNewConversation()
-                }
+                Task { await viewModel.startNewConversation() }
             }
             Button("取消", role: .cancel) {}
         } message: {
             Text("确定要新建对话吗？当前对话将被保存")
         }
         .alert("确认生成病历", isPresented: $viewModel.showGenerateConfirmation) {
-            Button("取消", role: .cancel) {
-                viewModel.cancelGenerateDossier()
-            }
-            Button("继续生成") {
-                viewModel.confirmGenerateDossier()
-            }
+            Button("取消", role: .cancel) { viewModel.cancelGenerateDossier() }
+            Button("继续生成") { viewModel.confirmGenerateDossier() }
         } message: {
             Text(viewModel.generateConfirmationMessage)
         }
@@ -173,67 +181,133 @@ struct ModernConsultationView: View {
                 doctorName: doctorName,
                 onSelectSession: { sessionId in
                     showHistoryList = false
-                    Task {
-                        await viewModel.loadExistingSession(sessionId: sessionId)
-                    }
+                    Task { await viewModel.loadExistingSession(sessionId: sessionId) }
                 }
             )
         }
-        .fullScreenCover(isPresented: $viewModel.isVoiceMode) {
-            FullScreenVoiceModeView(
-                viewModel: viewModel,
-                onDismiss: {
-                    viewModel.exitVoiceMode()
-                },
-                onSubtitleTap: {},
-                onCameraTap: { showCamera = true },
-                onPhotoLibraryTap: { showImageSourcePicker = true }
-            )
+        .onDisappear {
+            viewModel.cleanup()
         }
     }
 
-    // MARK: - 主内容区域
-    private func mainContentView(layout: AdaptiveLayout) -> some View {
+    // MARK: - 导航栏
+    private func navBar(layout: AdaptiveLayout) -> some View {
+        HStack(spacing: layout.cardSpacing / 2) {
+            // 返回按钮
+            Button(action: { dismiss() }) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: UnifiedFont.footnote, weight: .semibold))
+                    .foregroundColor(HealingColors.textPrimary)
+                    .frame(width: 44, height: 44)
+                    .background(
+                        Circle()
+                            .fill(HealingColors.cardBackground)
+                            .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
+                    )
+            }
+
+            // 标题
+            VStack(alignment: .leading, spacing: 2) {
+                Text(doctorName)
+                    .font(.system(size: UnifiedFont.footnote, weight: .semibold))
+                    .foregroundColor(HealingColors.textPrimary)
+
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(HealingColors.forestMist)
+                        .frame(width: 6, height: 6)
+                    Text("在线服务")
+                        .font(.system(size: AdaptiveFont.caption - 1))
+                        .foregroundColor(HealingColors.textSecondary)
+                }
+            }
+
+            Spacer()
+
+            // 新建对话
+            navBarButton(icon: "square.and.pencil", color: HealingColors.forestMist) {
+                showNewChatConfirm = true
+            }
+
+            // 历史记录
+            navBarButton(icon: "clock.arrow.circlepath", color: HealingColors.dustyBlue) {
+                showHistoryList = true
+            }
+
+            // 静音按钮
+            navBarButton(icon: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill", color: HealingColors.forestMist) {
+                isMuted.toggle()
+                viewModel.toggleVoiceMute(isMuted)
+                triggerHapticFeedback(.light)
+            }
+
+            // 生成病历
+            navBarButton(icon: "doc.text.fill", color: HealingColors.warmSand) {
+                viewModel.requestGenerateDossier()
+            }
+        }
+        .padding(.horizontal, layout.horizontalPadding)
+        .padding(.vertical, 12)
+        .background(HealingColors.cardBackground.opacity(0.9))
+    }
+
+    private func navBarButton(icon: String, color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: UnifiedFont.caption))
+                .foregroundColor(color)
+                .frame(width: 36, height: 36)
+                .background(
+                    Circle()
+                        .fill(color.opacity(0.15))
+                )
+        }
+    }
+
+    // MARK: - 加载视图
+    private func loadingView(layout: AdaptiveLayout) -> some View {
+        VStack(spacing: layout.cardSpacing) {
+            Spacer()
+            ProgressView()
+                .tint(HealingColors.forestMist)
+            Text("初始化会话...")
+                .font(.system(size: UnifiedFont.caption))
+                .foregroundColor(HealingColors.textSecondary)
+            Spacer()
+        }
+    }
+
+    // MARK: - 内容视图
+    private func contentView(layout: AdaptiveLayout) -> some View {
         ScrollViewReader { proxy in
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: layout.cardSpacing) {
-                    // 医生信息卡片（可折叠）
-                    healingDoctorProfileCard(layout: layout)
+                    // 医生信息卡片
+                    doctorProfileCard(layout: layout)
                         .padding(.horizontal, layout.horizontalPadding)
                         .padding(.top, layout.cardSpacing / 2)
 
-                    // 聊天消息列表
+                    // 消息列表
                     LazyVStack(spacing: layout.cardSpacing / 2) {
                         ForEach(viewModel.messages) { message in
-                            HealingMessageBubbleAdapter(
+                            ChatMessageBubble(
                                 message: message,
                                 messageText: $messageText,
                                 layout: layout
                             )
                             .id(message.id)
-                            .transition(.asymmetric(
-                                insertion: .scale(scale: 0.9).combined(with: .opacity),
-                                removal: .opacity
-                            ))
                         }
                     }
                     .padding(.horizontal, layout.horizontalPadding)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.messages.count)
 
                     // 病历提示卡片
                     if viewModel.shouldShowDossierPrompt {
-                        HealingDossierPromptCard(
-                            eventId: viewModel.eventId,
-                            isNewEvent: viewModel.isNewEvent,
-                            onViewDossier: { viewDossier() },
-                            onContinue: { viewModel.continueConversation() },
-                            layout: layout
-                        )
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        dossierPromptCard(layout: layout)
+                            .padding(.horizontal, layout.horizontalPadding)
                     }
 
                     // 底部间距
-                    Color.clear.frame(height: 180)
+                    Color.clear.frame(height: 100)
                 }
             }
             .onChange(of: viewModel.messages.count) {
@@ -247,7 +321,7 @@ struct ModernConsultationView: View {
     }
 
     // MARK: - 医生信息卡片
-    private func healingDoctorProfileCard(layout: AdaptiveLayout) -> some View {
+    private func doctorProfileCard(layout: AdaptiveLayout) -> some View {
         VStack(spacing: 0) {
             Button(action: {
                 withAnimation(.spring(response: 0.3)) {
@@ -255,6 +329,7 @@ struct ModernConsultationView: View {
                 }
             }) {
                 HStack(spacing: layout.cardSpacing / 2) {
+                    // 头像
                     ZStack {
                         Circle()
                             .fill(
@@ -267,20 +342,21 @@ struct ModernConsultationView: View {
                             .frame(width: layout.iconLargeSize + 4, height: layout.iconLargeSize + 4)
 
                         Text(String(doctorName.prefix(1)))
-                            .font(.system(size: layout.bodyFontSize + 2, weight: .bold))
+                            .font(.system(size: UnifiedFont.title3, weight: .bold))
                             .foregroundColor(.white)
                     }
                     .overlay(Circle().stroke(HealingColors.cardBackground, lineWidth: 3))
                     .shadow(color: HealingColors.forestMist.opacity(0.2), radius: 6, y: 3)
 
+                    // 信息
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 6) {
                             Text(doctorName)
-                                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                                .font(.system(size: UnifiedFont.body, weight: .semibold))
                                 .foregroundColor(HealingColors.textPrimary)
 
                             Text(doctorTitle)
-                                .font(.system(size: layout.captionFontSize))
+                                .font(.system(size: UnifiedFont.caption))
                                 .foregroundColor(HealingColors.forestMist)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
@@ -293,7 +369,7 @@ struct ModernConsultationView: View {
                                 .fill(HealingColors.forestMist)
                                 .frame(width: 6, height: 6)
                             Text(department)
-                                .font(.system(size: layout.captionFontSize))
+                                .font(.system(size: UnifiedFont.caption))
                                 .foregroundColor(HealingColors.textSecondary)
                         }
                     }
@@ -301,7 +377,7 @@ struct ModernConsultationView: View {
                     Spacer()
 
                     Image(systemName: "chevron.down")
-                        .font(.system(size: layout.captionFontSize + 1, weight: .semibold))
+                        .font(.system(size: UnifiedFont.caption, weight: .semibold))
                         .foregroundColor(HealingColors.textTertiary)
                         .rotationEffect(.degrees(isProfileExpanded ? 180 : 0))
                 }
@@ -309,6 +385,7 @@ struct ModernConsultationView: View {
             }
             .buttonStyle(PlainButtonStyle())
 
+            // 展开的简介
             if isProfileExpanded && !doctorBio.isEmpty {
                 VStack(alignment: .leading, spacing: layout.cardSpacing / 2) {
                     Rectangle()
@@ -316,7 +393,7 @@ struct ModernConsultationView: View {
                         .frame(height: 1)
 
                     Text(doctorBio)
-                        .font(.system(size: layout.captionFontSize + 1))
+                        .font(.system(size: UnifiedFont.caption))
                         .foregroundColor(HealingColors.textSecondary)
                         .lineLimit(3)
                         .padding(.horizontal, layout.cardInnerPadding)
@@ -330,13 +407,101 @@ struct ModernConsultationView: View {
         .shadow(color: Color.black.opacity(0.04), radius: 10, y: 4)
     }
 
+    // MARK: - 病历提示卡片
+    private func dossierPromptCard(layout: AdaptiveLayout) -> some View {
+        VStack(spacing: layout.cardSpacing) {
+            HStack(spacing: layout.cardSpacing / 2) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    HealingColors.forestMist.opacity(0.2),
+                                    HealingColors.deepSage.opacity(0.12)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: layout.iconLargeSize + 4, height: layout.iconLargeSize + 4)
+                        .shadow(color: HealingColors.forestMist.opacity(0.2), radius: 6, y: 2)
+
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: UnifiedFont.subheadline))
+                        .foregroundColor(HealingColors.forestMist)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("对话完成")
+                        .font(.system(size: UnifiedFont.body, weight: .semibold))
+                        .foregroundColor(HealingColors.textPrimary)
+
+                    Text(viewModel.isNewEvent ? "已为您创建新的病历资料夹" : "已更新病历资料夹")
+                        .font(.system(size: UnifiedFont.caption))
+                        .foregroundColor(HealingColors.textSecondary)
+                }
+
+                Spacer()
+            }
+
+            // 按钮
+            HStack(spacing: layout.cardSpacing) {
+                Button(action: { viewModel.continueConversation() }) {
+                    Text("继续对话")
+                        .font(.system(size: UnifiedFont.caption, weight: .medium))
+                        .foregroundColor(HealingColors.forestMist)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, layout.cardInnerPadding)
+                        .background(
+                            Capsule()
+                                .fill(HealingColors.forestMist.opacity(0.12))
+                                .overlay(
+                                    Capsule()
+                                        .stroke(HealingColors.forestMist.opacity(0.2), lineWidth: 1)
+                                )
+                        )
+                }
+
+                Button(action: { viewDossier() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "doc.text.fill")
+                            .font(.system(size: UnifiedFont.caption))
+                        Text("查看病历")
+                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, layout.cardInnerPadding)
+                    .background(
+                        LinearGradient(
+                            colors: [
+                                HealingColors.forestMist,
+                                HealingColors.deepSage,
+                                HealingColors.forestMist.opacity(0.95)
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .clipShape(Capsule())
+                    .shadow(color: HealingColors.forestMist.opacity(0.35), radius: 10, y: 4)
+                }
+            }
+        }
+        .padding(layout.cardInnerPadding + 4)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(HealingColors.cardBackground)
+                .shadow(color: Color.black.opacity(0.06), radius: 14, y: 6)
+        )
+    }
+
     // MARK: - Actions
     private func sendMessage() {
         let text = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
 
         messageText = ""
-
         Task {
             await viewModel.sendMessage(content: text)
         }
@@ -345,156 +510,42 @@ struct ModernConsultationView: View {
     private func viewDossier() {
         print("View dossier: \(viewModel.eventId ?? "")")
     }
-}
 
-// MARK: - 治愈系问诊背景
-struct HealingConsultationBackground: View {
-    let layout: AdaptiveLayout
-
-    var body: some View {
-        ZStack {
-            // 纯色背景 - 和首页完全一致
-            HealingColors.background
-                .ignoresSafeArea()
-
-            // 右上角装饰
-            Circle()
-                .fill(HealingColors.softSage.opacity(0.06))
-                .frame(width: layout.decorativeCircleSize * 0.4, height: layout.decorativeCircleSize * 0.4)
-                .offset(x: layout.decorativeCircleSize * 0.2, y: -layout.decorativeCircleSize * 0.08)
-        }
+    // MARK: - 触觉反馈
+    private func triggerHapticFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
+        let generator = UIImpactFeedbackGenerator(style: style)
+        generator.impactOccurred()
     }
 }
 
-// MARK: - 治愈系导航栏
-struct HealingConsultationNavBar: View {
-    let doctorName: String
-    let isOnline: Bool
-    let onBack: () -> Void
-    let onNewChat: () -> Void
-    let onHistory: () -> Void
-    let onGenerateDossier: () -> Void
-    let layout: AdaptiveLayout
-
-    var body: some View {
-        HStack(spacing: layout.cardSpacing / 2) {
-            // 返回按钮
-            Button(action: onBack) {
-                ZStack {
-                    Circle()
-                        .fill(HealingColors.cardBackground)
-                        .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
-
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: layout.captionFontSize + 2, weight: .semibold))
-                        .foregroundColor(HealingColors.textPrimary)
-                }
-                .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
-            }
-
-            // 标题区域
-            VStack(alignment: .leading, spacing: 2) {
-                Text(doctorName)
-                    .font(.system(size: layout.bodyFontSize - 1, weight: .semibold))
-                    .foregroundColor(HealingColors.textPrimary)
-
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(isOnline ? HealingColors.forestMist : HealingColors.textTertiary)
-                        .frame(width: 6, height: 6)
-                    Text(isOnline ? "在线服务" : "离线")
-                        .font(.system(size: layout.captionFontSize - 1))
-                        .foregroundColor(HealingColors.textSecondary)
-                }
-            }
-
-            Spacer()
-
-            // 新建对话按钮
-            Button(action: onNewChat) {
-                ZStack {
-                    Circle()
-                        .fill(HealingColors.forestMist.opacity(0.15))
-                        .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
-
-                    Image(systemName: "square.and.pencil")
-                        .font(.system(size: layout.captionFontSize))
-                        .foregroundColor(HealingColors.forestMist)
-                }
-            }
-
-            // 历史记录按钮
-            Button(action: onHistory) {
-                ZStack {
-                    Circle()
-                        .fill(HealingColors.dustyBlue.opacity(0.15))
-                        .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
-
-                    Image(systemName: "clock.arrow.circlepath")
-                        .font(.system(size: layout.captionFontSize))
-                        .foregroundColor(HealingColors.dustyBlue)
-                }
-            }
-
-            // 生成病历按钮
-            Button(action: onGenerateDossier) {
-                ZStack {
-                    Circle()
-                        .fill(HealingColors.warmSand.opacity(0.2))
-                        .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
-
-                    Image(systemName: "doc.text.fill")
-                        .font(.system(size: layout.captionFontSize))
-                        .foregroundColor(HealingColors.warmSand)
-                }
-            }
-        }
-        .padding(.horizontal, layout.horizontalPadding)
-        .padding(.vertical, layout.cardInnerPadding)
-        .background(HealingColors.cardBackground.opacity(0.9))
-        .shadow(color: Color.black.opacity(0.02), radius: 6, y: 2)
-    }
-}
-
-// MARK: - 治愈系消息气泡适配器
-struct HealingMessageBubbleAdapter: View {
+// MARK: - 消息气泡
+struct ChatMessageBubble: View {
     let message: UnifiedChatMessage
     @Binding var messageText: String
     let layout: AdaptiveLayout
 
     var body: some View {
-        VStack(alignment: .leading, spacing: layout.cardSpacing / 3) {
-            HStack(alignment: .top, spacing: layout.cardSpacing / 2) {
-                if !message.isFromUser {
-                    healingAIAvatar
-                } else {
-                    Spacer(minLength: 50)
-                }
-
-                VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
+        VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
+            if !message.isFromUser {
+                HStack(spacing: 8) {
+                    aiAvatar
                     bubbleContent
-
-                    Text(message.timestamp.formatted(date: .omitted, time: .shortened))
-                        .font(.system(size: layout.captionFontSize - 1))
-                        .foregroundColor(HealingColors.textTertiary)
                 }
-
-                // 用户消息：右侧不留空间（贴边显示）
-                // AI 消息：右侧留空间（平衡布局）
-                if !message.isFromUser {
-                    Spacer(minLength: 50)
+            } else {
+                HStack {
+                    Spacer()
+                    bubbleContent
                 }
             }
 
-            // 快捷选项（仅 AI 消息显示）
-            if !message.isFromUser && !message.quickOptions.isEmpty {
-                healingQuickOptionsView
-                    .padding(.leading, layout.iconLargeSize + 12)
-            }
+            Text(message.timestamp.formatted(date: .omitted, time: .shortened))
+                .font(.system(size: AdaptiveFont.caption - 1))
+                .foregroundColor(HealingColors.textTertiary)
+                .padding(message.isFromUser ? .trailing : .leading, 8)
         }
     }
 
-    private var healingAIAvatar: some View {
+    private var aiAvatar: some View {
         ZStack {
             Circle()
                 .fill(
@@ -504,10 +555,10 @@ struct HealingMessageBubbleAdapter: View {
                         endPoint: .bottomTrailing
                     )
                 )
-                .frame(width: layout.iconSmallSize + 8, height: layout.iconSmallSize + 8)
+                .frame(width: 32, height: 32)
 
             Image(systemName: "heart.fill")
-                .font(.system(size: layout.captionFontSize + 1))
+                .font(.system(size: 12))
                 .foregroundColor(.white)
         }
     }
@@ -515,58 +566,53 @@ struct HealingMessageBubbleAdapter: View {
     @ViewBuilder
     private var bubbleContent: some View {
         switch message.messageType {
-        case .text:
-            healingTextBubble
+        case .text, .structuredResult:
+            textBubble
         case .image(let image):
-            healingImageBubble(image)
-        case .structuredResult:
-            healingTextBubble
+            imageBubble(image)
         case .loading:
-            healingLoadingBubble
+            loadingBubble
         }
     }
 
-    private var healingTextBubble: some View {
-        Group {
-            if message.isFromUser {
-                Text(message.content)
-                    .font(.system(size: layout.captionFontSize + 1))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, layout.cardInnerPadding)
-                    .padding(.vertical, layout.cardInnerPadding - 2)
-                    .background(
-                        LinearGradient(
-                            colors: [HealingColors.forestMist, HealingColors.deepSage],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+    @ViewBuilder
+    private var textBubble: some View {
+        if message.isFromUser {
+            Text(message.content)
+                .font(.system(size: UnifiedFont.caption))
+                .foregroundColor(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    HealingColors.forestMist,
+                                    HealingColors.deepSage,
+                                    HealingColors.forestMist.opacity(0.95)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .shadow(
-                        color: HealingColors.forestMist.opacity(0.15),
-                        radius: 6,
-                        y: 2
-                    )
-            } else {
-                MarkdownTextView(
-                    message.content,
-                    fontSize: layout.captionFontSize + 1,
-                    textColor: HealingColors.textPrimary
+                        .shadow(color: Color.black.opacity(0.06), radius: 10, y: 3)
                 )
-                .padding(.horizontal, layout.cardInnerPadding)
-                .padding(.vertical, layout.cardInnerPadding - 2)
-                .background(HealingColors.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .shadow(
-                    color: Color.black.opacity(0.03),
-                    radius: 6,
-                    y: 2
+        } else {
+            Text(message.content)
+                .font(.system(size: UnifiedFont.caption))
+                .foregroundColor(HealingColors.textPrimary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(HealingColors.cardBackground)
+                        .shadow(color: Color.black.opacity(0.06), radius: 10, y: 3)
                 )
-            }
         }
     }
 
-    private func healingImageBubble(_ image: UIImage) -> some View {
+    private func imageBubble(_ image: UIImage) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Image(uiImage: image)
                 .resizable()
@@ -576,7 +622,7 @@ struct HealingMessageBubbleAdapter: View {
 
             if !message.content.isEmpty {
                 Text(message.content)
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption))
                     .foregroundColor(HealingColors.textSecondary)
             }
         }
@@ -586,317 +632,22 @@ struct HealingMessageBubbleAdapter: View {
         .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
     }
 
-    private var healingLoadingBubble: some View {
+    private var loadingBubble: some View {
         HStack(spacing: 8) {
             ProgressView()
                 .tint(HealingColors.forestMist)
-                .scaleEffect(0.8)
             Text(message.content.isEmpty ? "正在思考中..." : message.content)
-                .font(.system(size: layout.captionFontSize))
+                .font(.system(size: UnifiedFont.caption))
                 .foregroundColor(HealingColors.textSecondary)
         }
-        .padding(.horizontal, layout.cardInnerPadding)
-        .padding(.vertical, layout.cardInnerPadding - 2)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(HealingColors.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
-
-    private var healingQuickOptionsView: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: layout.cardSpacing / 2) {
-                ForEach(message.quickOptions) { option in
-                    Button(action: {
-                        if !messageText.isEmpty {
-                            messageText += " "
-                        }
-                        messageText += option.text
-                    }) {
-                        Text(option.text)
-                            .font(.system(size: layout.captionFontSize, weight: .medium))
-                            .foregroundColor(HealingColors.forestMist)
-                            .padding(.horizontal, layout.cardInnerPadding)
-                            .padding(.vertical, layout.cardSpacing / 2)
-                            .background(HealingColors.forestMist.opacity(0.12))
-                            .clipShape(Capsule())
-                    }
-                }
-            }
-        }
-    }
 }
 
-// MARK: - 治愈系底部输入区域
-struct HealingConsultationBottomInput: View {
-    @Binding var messageText: String
-    @ObservedObject var viewModel: UnifiedChatViewModel
-    @Binding var showActionMenu: Bool
-    @Binding var showImageSourcePicker: Bool
-    let onSendMessage: () -> Void
-    let layout: AdaptiveLayout
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            if viewModel.isVoiceMode {
-                // 语音模式：显示专业级语音控制栏
-                VoiceControlBar(
-                    viewModel: viewModel,
-                    onImageTap: { showImageSourcePicker = true },
-                    onClose: nil
-                )
-            } else {
-                // 文字模式：显示输入栏
-                VStack(spacing: 0) {
-                    // 动态功能按钮
-                    if showActionMenu, let capabilities = viewModel.capabilities {
-                        healingActionButtonsView(capabilities: capabilities, layout: layout)
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                    }
-
-                    // 输入栏
-                    HealingInputBarWithVoice(
-                        messageText: $messageText,
-                        isSending: viewModel.isSending,
-                        isDisabled: viewModel.isLoading,
-                        onSend: onSendMessage,
-                        onMenuTap: {
-                            withAnimation(.spring(response: 0.3)) {
-                                showActionMenu.toggle()
-                            }
-                        },
-                        onVoiceTap: {
-                            viewModel.enterVoiceMode()
-                        },
-                        layout: layout
-                    )
-                }
-                .background(
-                    HealingColors.cardBackground
-                        .shadow(color: Color.black.opacity(0.04), radius: 10, y: -4)
-                        .ignoresSafeArea(edges: .bottom)
-                )
-            }
-        }
-    }
-
-    private func healingActionButtonsView(capabilities: AgentCapabilities, layout: AdaptiveLayout) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: layout.cardSpacing / 2) {
-                ForEach(viewModel.availableActions, id: \.self) { action in
-                    Button(action: {
-                        showActionMenu = false
-                        viewModel.triggerAction(action)
-                        if action != .conversation {
-                            showImageSourcePicker = true
-                        }
-                    }) {
-                        VStack(spacing: layout.cardSpacing / 3) {
-                            ZStack {
-                                Circle()
-                                    .fill(healingActionColor(action).opacity(0.15))
-                                    .frame(width: layout.iconLargeSize, height: layout.iconLargeSize)
-
-                                Image(systemName: action.icon)
-                                    .font(.system(size: layout.captionFontSize + 2))
-                                    .foregroundColor(healingActionColor(action))
-                            }
-
-                            Text(action.displayName)
-                                .font(.system(size: layout.captionFontSize))
-                                .foregroundColor(HealingColors.textPrimary)
-                        }
-                        .frame(width: layout.iconLargeSize * 1.5)
-                    }
-                }
-            }
-            .padding(.horizontal, layout.horizontalPadding)
-            .padding(.vertical, layout.cardSpacing / 2)
-        }
-        .background(HealingColors.cardBackground)
-    }
-
-    private func healingActionColor(_ action: AgentAction) -> Color {
-        switch action {
-        case .analyzeSkin: return HealingColors.dustyBlue
-        case .interpretReport: return HealingColors.warmSand
-        case .interpretECG: return HealingColors.terracotta
-        default: return HealingColors.forestMist
-        }
-    }
-}
-
-// MARK: - 治愈系输入栏（带语音按钮）
-struct HealingInputBarWithVoice: View {
-    @Binding var messageText: String
-    let isSending: Bool
-    let isDisabled: Bool
-    let onSend: () -> Void
-    let onMenuTap: () -> Void
-    let onVoiceTap: () -> Void
-    let layout: AdaptiveLayout
-
-    var body: some View {
-        HStack(alignment: .bottom, spacing: layout.cardSpacing / 2) {
-            // 功能菜单按钮
-            Button(action: onMenuTap) {
-                ZStack {
-                    Circle()
-                        .fill(isDisabled ? HealingColors.textTertiary.opacity(0.3) : HealingColors.forestMist.opacity(0.15))
-                        .frame(width: layout.iconSmallSize + 8, height: layout.iconSmallSize + 8)
-
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: layout.captionFontSize + 5))
-                        .foregroundColor(isDisabled ? HealingColors.textTertiary : HealingColors.forestMist)
-                }
-            }
-            .disabled(isDisabled)
-
-            // 输入框容器
-            HStack(alignment: .bottom, spacing: 0) {
-                ZStack(alignment: .leading) {
-                    if messageText.isEmpty {
-                        Text("输入消息...")
-                            .font(.system(size: layout.captionFontSize + 1))
-                            .foregroundColor(HealingColors.textTertiary)
-                            .padding(.leading, layout.cardInnerPadding)
-                    }
-
-                    TextField("", text: $messageText, axis: .vertical)
-                        .font(.system(size: layout.captionFontSize + 1))
-                        .foregroundColor(HealingColors.textPrimary)
-                        .lineLimit(1...5)
-                        .padding(.horizontal, layout.cardInnerPadding - 4)
-                        .padding(.vertical, layout.cardSpacing / 2)
-                        .disabled(isDisabled)
-                }
-
-                // 右侧按钮
-                if messageText.isEmpty {
-                    Button(action: onVoiceTap) {
-                        Image(systemName: "mic.fill")
-                            .font(.system(size: layout.captionFontSize + 3))
-                            .foregroundColor(isDisabled ? HealingColors.textTertiary : HealingColors.dustyBlue)
-                            .frame(width: layout.iconSmallSize + 6, height: layout.iconSmallSize + 6)
-                    }
-                    .disabled(isDisabled)
-                } else {
-                    Button(action: onSend) {
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    isSending || isDisabled
-                                        ? HealingColors.textTertiary.opacity(0.3)
-                                        : HealingColors.forestMist
-                                )
-                                .frame(width: layout.iconSmallSize - 6, height: layout.iconSmallSize - 6)
-
-                            if isSending {
-                                ProgressView()
-                                    .scaleEffect(0.6)
-                                    .tint(.white)
-                            } else {
-                                Image(systemName: "arrow.up")
-                                    .font(.system(size: layout.captionFontSize + 1, weight: .bold))
-                                    .foregroundColor(.white)
-                            }
-                        }
-                        .padding(.trailing, 6)
-                        .padding(.bottom, 6)
-                    }
-                    .disabled(isDisabled || isSending)
-                }
-            }
-            .background(HealingColors.warmCream.opacity(0.6))
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(HealingColors.softSage.opacity(0.2), lineWidth: 1)
-            )
-        }
-        .padding(.horizontal, layout.horizontalPadding)
-        .padding(.vertical, layout.cardInnerPadding)
-    }
-}
-
-// MARK: - 治愈系病历提示卡片
-struct HealingDossierPromptCard: View {
-    let eventId: String?
-    let isNewEvent: Bool
-    let onViewDossier: () -> Void
-    let onContinue: () -> Void
-    let layout: AdaptiveLayout
-
-    var body: some View {
-        VStack(spacing: layout.cardSpacing) {
-            // 图标 + 标题
-            HStack(spacing: layout.cardSpacing / 2) {
-                ZStack {
-                    Circle()
-                        .fill(HealingColors.forestMist.opacity(0.15))
-                        .frame(width: layout.iconLargeSize + 4, height: layout.iconLargeSize + 4)
-
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: layout.captionFontSize + 4))
-                        .foregroundColor(HealingColors.forestMist)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("对话完成")
-                        .font(.system(size: layout.bodyFontSize, weight: .semibold))
-                        .foregroundColor(HealingColors.textPrimary)
-
-                    Text(isNewEvent ? "已为您创建新的病历资料夹" : "已更新病历资料夹")
-                        .font(.system(size: layout.captionFontSize))
-                        .foregroundColor(HealingColors.textSecondary)
-                }
-
-                Spacer()
-            }
-
-            // 操作按钮
-            HStack(spacing: layout.cardSpacing) {
-                Button(action: onContinue) {
-                    Text("继续对话")
-                        .font(.system(size: layout.captionFontSize + 1, weight: .medium))
-                        .foregroundColor(HealingColors.forestMist)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, layout.cardInnerPadding)
-                        .background(HealingColors.forestMist.opacity(0.12))
-                        .clipShape(Capsule())
-                }
-
-                Button(action: onViewDossier) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "doc.text.fill")
-                            .font(.system(size: layout.captionFontSize))
-                        Text("查看病历")
-                            .font(.system(size: layout.captionFontSize + 1, weight: .semibold))
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, layout.cardInnerPadding)
-                    .background(
-                        LinearGradient(
-                            colors: [HealingColors.forestMist, HealingColors.deepSage],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .clipShape(Capsule())
-                    .shadow(color: HealingColors.forestMist.opacity(0.25), radius: 8, y: 3)
-                }
-            }
-        }
-        .padding(layout.cardInnerPadding + 4)
-        .background(HealingColors.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: Color.black.opacity(0.04), radius: 10, y: 4)
-        .padding(.horizontal, layout.horizontalPadding)
-    }
-}
-
-// MARK: - 数据模型（兼容旧接口）
+// MARK: - 数据模型
 struct ModernDoctorInfo {
     let id: Int
     let name: String

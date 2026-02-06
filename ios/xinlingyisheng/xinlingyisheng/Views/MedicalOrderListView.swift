@@ -18,6 +18,9 @@ struct MedicalOrderListView: View {
 
                 ScrollView(.vertical, showsIndicators: false) {
                     LazyVStack(spacing: 0) {
+                        // 顶部标题栏（替代导航栏）
+                        headerSection(layout: layout)
+
                         // 顶部统计卡片
                         complianceHeader(layout: layout)
 
@@ -31,25 +34,26 @@ struct MedicalOrderListView: View {
                     }
                 }
             }
-            .navigationTitle("医嘱任务")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showAlerts.toggle()
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(HealingColors.terracotta.opacity(0.15))
-                                .frame(width: layout.iconSmallSize + 8, height: layout.iconSmallSize + 8)
+            .navigationBarHidden(true)
+        }
+        .overlay(alignment: .topTrailing) {
+            // 预警按钮（替代 toolbar）
+            Button {
+                showAlerts.toggle()
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(HealingColors.terracotta.opacity(0.15))
+                        .frame(width: 38, height: 38)
+                        .shadow(color: Color.black.opacity(0.06), radius: 4, y: 2)
 
-                            Image(systemName: "bell.badge")
-                                .font(.system(size: layout.captionFontSize + 2))
-                                .foregroundColor(HealingColors.terracotta)
-                        }
-                    }
+                    Image(systemName: "bell.badge")
+                        .font(.system(size: UnifiedFont.subheadline))
+                        .foregroundColor(HealingColors.terracotta)
                 }
             }
+            .padding(.trailing, ScaleFactor.padding(16))
+            .padding(.top, ScaleFactor.padding(70))
         }
         .sheet(isPresented: $showTaskDetail) {
             if let task = selectedTask {
@@ -64,6 +68,19 @@ struct MedicalOrderListView: View {
         }
     }
 
+    // MARK: - 顶部标题栏（响应式）
+    private func headerSection(layout: AdaptiveLayout) -> some View {
+        HStack {
+            Text("医嘱任务")
+                .font(.system(size: UnifiedFont.subheadline, weight: .bold))
+                .foregroundColor(HealingColors.textPrimary)
+            Spacer()
+        }
+        .padding(.horizontal, layout.horizontalPadding)
+        .padding(.top, layout.cardSpacing)
+        .padding(.bottom, layout.cardSpacing / 2)
+    }
+
     // MARK: - 依从性头部卡片（响应式）
 
     private func complianceHeader(layout: AdaptiveLayout) -> some View {
@@ -72,11 +89,11 @@ struct MedicalOrderListView: View {
             HStack(spacing: layout.cardSpacing) {
                 VStack(alignment: .leading, spacing: layout.cardSpacing / 3) {
                     Text("今日完成率")
-                        .font(.system(size: layout.captionFontSize + 1))
+                        .font(.system(size: UnifiedFont.footnote))
                         .foregroundColor(HealingColors.textSecondary)
 
                     Text("\(viewModel.todayRatePercent)%")
-                        .font(.system(size: layout.titleFontSize + 4, weight: .bold))
+                        .font(.system(size: UnifiedFont.subheadline, weight: .bold))
                         .foregroundColor(rateColor)
                 }
 
@@ -86,28 +103,28 @@ struct MedicalOrderListView: View {
                 HStack(spacing: layout.cardSpacing) {
                     VStack(spacing: layout.cardSpacing / 3) {
                         Text("\(viewModel.todayCompletedCount)")
-                            .font(.system(size: layout.bodyFontSize + 2, weight: .bold))
+                            .font(.system(size: UnifiedFont.title3, weight: .bold))
                         Text("已完成")
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption))
                             .foregroundColor(HealingColors.textTertiary)
                     }
 
                     VStack(spacing: layout.cardSpacing / 3) {
                         Text("\(viewModel.todayTasks.pending.count)")
-                            .font(.system(size: layout.bodyFontSize + 2, weight: .bold))
+                            .font(.system(size: UnifiedFont.title3, weight: .bold))
                             .foregroundColor(viewModel.todayTasks.pending.isEmpty ? HealingColors.textTertiary : HealingColors.textPrimary)
                         Text("待完成")
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption))
                             .foregroundColor(HealingColors.textTertiary)
                     }
 
                     if viewModel.hasOverdueTasks {
                         VStack(spacing: layout.cardSpacing / 3) {
                             Text("\(viewModel.todayTasks.overdue.count)")
-                                .font(.system(size: layout.bodyFontSize + 2, weight: .bold))
+                                .font(.system(size: UnifiedFont.title3, weight: .bold))
                                 .foregroundColor(HealingColors.terracotta)
                             Text("已超时")
-                                .font(.system(size: layout.captionFontSize))
+                                .font(.system(size: UnifiedFont.caption))
                                 .foregroundColor(HealingColors.textTertiary)
                         }
                     }
@@ -188,10 +205,10 @@ struct MedicalOrderListView: View {
         VStack(alignment: .leading, spacing: layout.cardSpacing / 2) {
             HStack(spacing: layout.cardSpacing / 2) {
                 Image(systemName: icon)
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(iconColor)
                 Text(title)
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
                     .foregroundColor(HealingColors.textPrimary)
             }
 
@@ -214,16 +231,16 @@ struct MedicalOrderListView: View {
                     .frame(width: layout.iconLargeSize * 2, height: layout.iconLargeSize * 2)
 
                 Image(systemName: "checkmark.circle")
-                    .font(.system(size: layout.bodyFontSize + 8, weight: .light))
+                    .font(.system(size: UnifiedFont.body, weight: .light))
                     .foregroundColor(HealingColors.forestMist)
             }
 
             Text("今日暂无任务")
-                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                .font(.system(size: UnifiedFont.body, weight: .semibold))
                 .foregroundColor(HealingColors.textPrimary)
 
             Text("享受健康生活")
-                .font(.system(size: layout.captionFontSize + 1))
+                .font(.system(size: UnifiedFont.footnote))
                 .foregroundColor(HealingColors.textSecondary)
         }
         .frame(maxWidth: .infinity)
@@ -276,13 +293,13 @@ struct TaskCard: View {
                 HStack {
                     VStack(alignment: .leading, spacing: layout.cardSpacing / 3) {
                         Text(task.order_title ?? "未命名任务")
-                            .font(.system(size: layout.bodyFontSize - 1, weight: .semibold))
+                            .font(.system(size: UnifiedFont.subheadline, weight: .semibold))
                             .foregroundColor(HealingColors.textPrimary)
 
                         if let orderType = task.order_type, let type = OrderType(rawValue: orderType) {
                             HStack(spacing: layout.cardSpacing / 3) {
                                 Label(type.displayName, systemImage: type.iconName)
-                                    .font(.system(size: layout.captionFontSize))
+                                    .font(.system(size: UnifiedFont.caption))
                                     .foregroundColor(HealingColors.textSecondary)
                             }
                         }
@@ -291,14 +308,14 @@ struct TaskCard: View {
                     Spacer()
 
                     Text(task.scheduled_time)
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption))
                         .foregroundColor(HealingColors.textTertiary)
                 }
 
                 // 额外信息
                 if task.isCompleted, let completedAt = task.completed_at {
                     Text(completedAt)
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption))
                         .foregroundColor(HealingColors.textTertiary)
                 }
             }
@@ -340,8 +357,7 @@ struct AlertsListView: View {
                         }
                     }
                 }
-                .navigationTitle("健康预警")
-                .navigationBarTitleDisplayMode(.inline)
+                .navigationBarHidden(true)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("关闭") { dismiss() }
@@ -359,12 +375,12 @@ struct AlertsListView: View {
                     .frame(width: layout.iconLargeSize * 2, height: layout.iconLargeSize * 2)
 
                 Image(systemName: "checkmark.shield")
-                    .font(.system(size: layout.bodyFontSize + 8, weight: .light))
+                    .font(.system(size: UnifiedFont.body, weight: .light))
                     .foregroundColor(HealingColors.forestMist)
             }
 
             Text("暂无预警")
-                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                .font(.system(size: UnifiedFont.body, weight: .semibold))
                 .foregroundColor(HealingColors.textPrimary)
         }
     }
@@ -380,21 +396,21 @@ struct AlertCard: View {
     var body: some View {
         HStack(alignment: .top, spacing: layout.cardSpacing / 2) {
             Image(systemName: alert.iconName)
-                .font(.system(size: layout.bodyFontSize + 4))
+                .font(.system(size: UnifiedFont.title3))
                 .foregroundColor(Color(alert.severityColor))
                 .frame(width: layout.iconLargeSize + 4)
 
             VStack(alignment: .leading, spacing: layout.cardSpacing / 3) {
                 Text(alert.title)
-                    .font(.system(size: layout.bodyFontSize - 1, weight: .semibold))
+                    .font(.system(size: UnifiedFont.subheadline, weight: .semibold))
                     .foregroundColor(HealingColors.textPrimary)
 
                 Text(alert.message)
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textSecondary)
 
                 Text(alert.created_at)
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption))
                     .foregroundColor(HealingColors.textTertiary)
             }
 
@@ -406,7 +422,7 @@ struct AlertCard: View {
                         await viewModel.acknowledgeAlert(alertId: alert.id)
                     }
                 }
-                .font(.system(size: layout.captionFontSize, weight: .medium))
+                .font(.system(size: UnifiedFont.caption, weight: .medium))
                 .foregroundColor(HealingColors.forestMist)
                 .padding(.horizontal, layout.cardInnerPadding)
                 .padding(.vertical, layout.cardSpacing / 2)

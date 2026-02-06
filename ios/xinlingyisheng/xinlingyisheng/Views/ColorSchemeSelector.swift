@@ -13,13 +13,13 @@ struct ColorSchemeSelector: View {
             }) {
                 HStack {
                     Text("配色方案")
-                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .font(.system(size: AdaptiveFont.footnote, weight: .medium, design: .rounded))
                     Spacer()
                     Text(selectedScheme.rawValue)
-                        .font(.system(size: 14, weight: .regular, design: .rounded))
+                        .font(.system(size: AdaptiveFont.footnote, weight: .regular, design: .rounded))
                         .foregroundColor(.secondary)
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: AdaptiveFont.caption, weight: .medium))
                         .rotationEffect(.degrees(showPicker ? 180 : 0))
                 }
                 .padding()
@@ -71,7 +71,7 @@ struct ColorSchemeOption: View {
                 }
                 
                 Text(scheme.rawValue)
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .font(.system(size: AdaptiveFont.subheadline, weight: .medium, design: .rounded))
                 
                 Spacer()
                 

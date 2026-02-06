@@ -3,17 +3,25 @@ load_dotenv()  # 加载 .env 文件中的环境变量
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from .database import engine, Base, SessionLocal
+from .config import get_settings
 from .routes import (
-    auth_router, departments_router, sessions_router, sessions_v2_router, feedbacks_router, diseases_router, drugs_router,
-    medical_events_router, ai_router, persona_chat_router, record_analysis_router,  # diagnosis_router, derma_router 已废弃
+    auth_router, departments_router,
+    sessions_v2_router,  # V2 多智能体架构 (V1 已废弃)
+    feedbacks_router, diseases_router, drugs_router,
+    medical_events_router, ai_router, persona_chat_router, record_analysis_router,
     medical_orders_router,  # 医嘱执行监督系统
     rounding_router,  # 远程查房系统
+    medical_folders_router,  # 病历夹管理
+    medical_records_router,  # 病历记录管理
+    medical_files_router,  # 医疗文件上传
     admin_auth_router, admin_doctors_router, admin_departments_router,
     admin_knowledge_router, admin_documents_router, admin_feedbacks_router, admin_stats_router,
     admin_diseases_router, admin_drugs_router, admin_drug_categories_router,
     funasr_router,  # FunASR 语音识别
-    voice_router,  # 语音服务转发 (ASR + TTS)
+    # voice_router,  # TTS 已移除，状态端点已废弃
+    voice_asr_router,  # GLM-ASR 语音识别
 )
 from .services.admin_auth_service import AdminAuthService
 from .seed import seed_data
@@ -27,31 +35,22 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# 获取配置
+settings = get_settings()
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="灵犀医生 API",
+    title="灵犀健康 API",
     description="AI医生分身系统后端API",
     version="2.0.0"
 )
 
-# CORS 配置 - 根据环境变量动态设置
-def get_cors_origins():
-    """根据环境获取允许的 CORS 源"""
-    allowed_origins_str = os.getenv("CORS_ALLOWED_ORIGINS", "")
-    if allowed_origins_str:
-        return [origin.strip() for origin in allowed_origins_str.split(",")]
-    # 开发环境默认允许所有来源
-    debug_mode = os.getenv("DEBUG", "false").lower() == "true"
-    if debug_mode:
-        return ["*"]
-    # 生产环境默认只允许同源
-    return []
-
+# CORS 配置 - 使用 Settings 类中的配置
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=get_cors_origins(),
-    allow_credentials=True,
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -59,18 +58,22 @@ app.add_middleware(
 # 用户端路由
 app.include_router(auth_router)
 app.include_router(departments_router)
-app.include_router(sessions_router)
+# V1 API 已废弃，统一使用 V2
+# app.include_router(sessions_router)
 app.include_router(sessions_v2_router)  # V2 多智能体架构
 app.include_router(feedbacks_router)
 app.include_router(diseases_router)
 app.include_router(drugs_router)
-# diagnosis_router, derma_router 已废弃，使用 sessions_router 统一接口
 app.include_router(medical_events_router)
 app.include_router(ai_router)
 app.include_router(medical_orders_router)  # 医嘱执行监督系统
+app.include_router(medical_folders_router)  # 病历夹管理
+app.include_router(medical_records_router)  # 病历记录管理
+app.include_router(medical_files_router)  # 医疗文件上传
 app.include_router(rounding_router)  # 远程查房系统
 app.include_router(funasr_router)  # FunASR 语音识别
-app.include_router(voice_router)  # 语音服务转发 (ASR + TTS)
+# app.include_router(voice_router)  # TTS 已移除
+app.include_router(voice_asr_router)  # GLM-ASR 语音识别
 
 # 管理后台路由
 app.include_router(admin_auth_router)
@@ -85,6 +88,18 @@ app.include_router(admin_stats_router)
 app.include_router(admin_diseases_router)
 app.include_router(admin_drugs_router)
 app.include_router(admin_drug_categories_router)
+
+# 静态文件服务
+import os
+static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    logger.info(f"📁 静态文件服务挂载: {static_dir}")
+else:
+    # 尝试创建 static 目录
+    os.makedirs(static_dir, exist_ok=True)
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    logger.info(f"📁 静态文件目录已创建: {static_dir}")
 
 
 @app.on_event("startup")
@@ -113,7 +128,7 @@ def startup_event():
 
 @app.get("/")
 def root():
-    return {"message": "灵犀医生 AI分身系统 API 服务运行中", "version": "2.0.0"}
+    return {"message": "灵犀健康 AI分身系统 API 服务运行中", "version": "2.0.0"}
 
 
 @app.get("/health")
@@ -157,9 +172,11 @@ async def health_detailed():
 
     # 环境信息
     health_info["environment"] = {
-        "debug": os.getenv("DEBUG", "false").lower() == "true",
-        "test_mode": os.getenv("TEST_MODE", "false").lower() == "true",
-        "cors_origins_configured": bool(os.getenv("CORS_ALLOWED_ORIGINS"))
+        "debug": settings.DEBUG,
+        "test_mode": settings.TEST_MODE,
+        "production": settings.is_production,
+        "cors_origins": settings.cors_origins_list,
+        "cors_configured": bool(settings.CORS_ALLOWED_ORIGINS),
     }
 
     # 响应时间

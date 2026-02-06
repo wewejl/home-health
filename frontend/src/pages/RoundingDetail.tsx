@@ -88,11 +88,6 @@ const RoundingDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [patientData, setPatientData] = useState<PatientDetailData | null>(null);
 
-  // 获取 token
-  const getToken = () => {
-    return localStorage.getItem('token') || sessionStorage.getItem('token') || '';
-  };
-
   // 加载患者详情数据
   useEffect(() => {
     const fetchPatientDetail = async () => {
@@ -104,14 +99,9 @@ const RoundingDetail: React.FC = () => {
 
       try {
         setLoading(true);
-        const token = getToken();
+        // 测试模式：无需认证
         const response = await axios.get<PatientDetailData>(
-          `${API_BASE}/rounding/patients/${patientId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          `${API_BASE}/rounding/patients/${patientId}`
         );
         setPatientData(response.data);
       } catch (error) {

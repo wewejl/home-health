@@ -4,21 +4,24 @@ import Foundation
 
 class APIService {
     static let shared = APIService()
-    private init() {
-        // 配置 URLSession 增加超时时间
+
+    // 使用自定义的 URLSession，优化内存管理
+    private var urlSession: URLSession = {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30.0  // 请求超时 30 秒
         config.timeoutIntervalForResource = 60.0  // 资源超时 60 秒
-        URLSession.shared.delegateQueue.maxConcurrentOperationCount = 5
-    }
-
-    // 使用自定义的 URLSession
-    private var urlSession: URLSession = {
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 30.0
-        config.timeoutIntervalForResource = 60.0
+        // 限制并发请求数量，防止内存压力过大
+        config.httpMaximumConnectionsPerHost = 5
+        // 启用缓存以减少重复请求
+        config.urlCache = URLCache(memoryCapacity: 20 * 1024 * 1024, diskCapacity: 100 * 1024 * 1024)
+        // 设置更积极的资源释放策略
+        config.requestCachePolicy = .useProtocolCachePolicy
         return URLSession(configuration: config)
     }()
+
+    private init() {
+        // 空实现，所有配置在 urlSession 闭包中完成
+    }
 
     private func makeRequest<T: Decodable>(
         endpoint: String,
@@ -342,7 +345,7 @@ class APIService {
 
     /// 获取预警列表
     func getAlerts(activeOnly: Bool = true, limit: Int = 50) async throws -> [Alert] {
-        var endpoint = "\(APIConfig.Endpoints.alerts)?active_only=\(activeOnly)&limit=\(limit)"
+        let endpoint = "\(APIConfig.Endpoints.alerts)?active_only=\(activeOnly)&limit=\(limit)"
         return try await makeRequest(endpoint: endpoint, requiresAuth: true)
     }
 

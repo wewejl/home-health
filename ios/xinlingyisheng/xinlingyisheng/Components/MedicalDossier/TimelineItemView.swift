@@ -275,7 +275,7 @@ struct AttachmentFullScreenView: View {
                     Spacer()
                     Button(action: { isPresented = false }) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 20, weight: .medium))
+                            .font(.system(size: UnifiedFont.title2, weight: .medium))
                             .foregroundColor(.white)
                             .padding()
                     }
@@ -284,7 +284,7 @@ struct AttachmentFullScreenView: View {
                 Spacer()
                 
                 Image(systemName: "photo")
-                    .font(.system(size: 64))
+                    .font(.system(size: UnifiedFont.custom(64)))
                     .foregroundColor(.gray)
                 
                 Text(attachment.fileName ?? "附件预览")

@@ -765,9 +765,14 @@ def create_export(
         if request.max_views:
             export_record.max_views = request.max_views
     
-    # TODO: PDF生成逻辑
+    # PDF 生成逻辑
     if request.export_type == "pdf":
-        # 这里应该调用PDF生成服务
+        # 当前实现：占位符 URL
+        # 生产环境需要：
+        # 1. 使用 reportlab、weasyprint 或类似库生成 PDF
+        # 2. 将事件数据格式化为医疗报告格式
+        # 3. 保存到存储服务（OSS/S3）
+        # 4. 更新 export_record.file_url
         export_record.file_url = f"/api/exports/{export_record.id}/download"
     
     db.add(export_record)

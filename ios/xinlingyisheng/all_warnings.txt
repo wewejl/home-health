@@ -1,0 +1,3 @@
+/Users/zhuxinye/Desktop/project/home-health/ios/xinlingyisheng/xinlingyisheng/Assets.xcassets:./AppIcon.appiconset/(null)[2d][iPad-20@2x.png]: warning: The app icon set "AppIcon" has 13 unassigned children.
+/Users/zhuxinye/Desktop/project/home-health/ios/xinlingyisheng/xinlingyisheng/Assets.xcassets:./AppIcon.appiconset/(null)[2d][iPad-20@2x.png]: warning: The app icon set "AppIcon" has 13 unassigned children.
+/Users/zhuxinye/Desktop/project/home-health/ios/xinlingyisheng/xinlingyisheng/Assets.xcassets:./AppIcon.appiconset/(null)[2d][iPad-20@2x.png]: warning: The app icon set "AppIcon" has 13 unassigned children.

@@ -58,3 +58,5 @@ htmlcov/
 *.tmp
 *.bak
 *.retry
+
+.secrets/

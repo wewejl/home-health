@@ -19,6 +19,9 @@ from .medical_order import (
     OrderType, ScheduleType, OrderStatus, TaskStatus,
     CompletionType, NotificationLevel
 )
+from .medical_folder import MedicalFolder
+from .medical_record import MedicalRecord
+from .medical_file import MedicalFile, FileType
 
 __all__ = [
     "User", "Department", "Doctor", "Session", "Message", "SenderType",
@@ -29,5 +32,6 @@ __all__ = [
     "EventStatus", "RiskLevel", "AgentType", "AttachmentType",
     "MedicalOrder", "TaskInstance", "CompletionRecord", "FamilyBond",
     "OrderType", "ScheduleType", "OrderStatus", "TaskStatus",
-    "CompletionType", "NotificationLevel"
+    "CompletionType", "NotificationLevel",
+    "MedicalFolder", "MedicalRecord", "MedicalFile", "FileType"
 ]

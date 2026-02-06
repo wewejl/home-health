@@ -67,7 +67,7 @@ struct ChatNavBarV2: View {
                 
                 HStack(spacing: ScaleFactor.spacing(4)) {
                     Image(systemName: "cpu")
-                        .font(.system(size: ScaleFactor.size(10)))
+                        .font(.system(size: ScaleFactor.font(10)))
                     Text("AI分身")
                         .font(.system(size: AdaptiveFont.caption))
                 }
@@ -175,7 +175,7 @@ struct TransparentNavBar: View {
             // 关闭按钮
             Button(action: { dismiss() }) {
                 Image(systemName: "xmark")
-                    .font(.system(size: ScaleFactor.size(20), weight: .medium))
+                    .font(.system(size: ScaleFactor.font(20), weight: .medium))
                     .foregroundColor(.white)
                     .frame(width: ScaleFactor.size(44), height: ScaleFactor.size(44))
                     .background(Color.black.opacity(0.5))
@@ -209,7 +209,7 @@ struct DossierGenerationAlert: View {
                     .frame(width: ScaleFactor.size(64), height: ScaleFactor.size(64))
                 
                 Image(systemName: "doc.text.fill")
-                    .font(.system(size: ScaleFactor.size(28)))
+                    .font(.system(size: ScaleFactor.font(28)))
                     .foregroundColor(DXYColors.primaryPurple)
             }
             

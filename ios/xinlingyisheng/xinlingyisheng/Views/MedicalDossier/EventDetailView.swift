@@ -65,7 +65,7 @@ struct EventDetailView: View {
                         }
                         .padding(.horizontal, layout.horizontalPadding)
                         .padding(.top, layout.cardInnerPadding)
-                        .padding(.bottom, 100)
+                        .padding(.bottom, ScaleFactor.padding(100))
                     }
 
                     // 导出按钮
@@ -177,12 +177,12 @@ struct HealingEventAISummaryCard: View {
                             .frame(width: layout.iconSmallSize + 6, height: layout.iconSmallSize + 6)
 
                         Image(systemName: "brain.head.profile")
-                            .font(.system(size: 14))
+                            .font(.system(size: AdaptiveFont.footnote))
                             .foregroundColor(HealingColors.forestMist)
                     }
 
                     Text("AI 智能摘要")
-                        .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                        .font(.system(size: UnifiedFont.body, weight: .semibold))
                         .foregroundColor(HealingColors.textPrimary)
                 }
 
@@ -196,13 +196,12 @@ struct HealingEventAISummaryCard: View {
                     HStack(spacing: 4) {
                         if viewModel.isGeneratingSummary {
                             ProgressView()
-                                .scaleEffect(0.7)
                         } else {
                             Image(systemName: "arrow.clockwise")
                         }
                         Text("刷新")
                     }
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.forestMist)
                 }
                 .disabled(viewModel.isGeneratingSummary)
@@ -217,7 +216,7 @@ struct HealingEventAISummaryCard: View {
                             ProgressView()
                                 .tint(HealingColors.forestMist)
                             Text("正在生成摘要...")
-                                .font(.system(size: layout.captionFontSize + 1))
+                                .font(.system(size: UnifiedFont.footnote))
                                 .foregroundColor(HealingColors.textSecondary)
                         }
                         Spacer()
@@ -227,7 +226,7 @@ struct HealingEventAISummaryCard: View {
                     HealingAISummaryContent(summary: summary, layout: layout)
                 } else if let error = viewModel.summaryError {
                     Text(error)
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.terracotta)
                         .padding(.vertical, layout.cardSpacing)
                 } else {
@@ -240,7 +239,7 @@ struct HealingEventAISummaryCard: View {
                             Image(systemName: "sparkles")
                             Text("生成 AI 摘要")
                         }
-                        .font(.system(size: layout.bodyFontSize - 1, weight: .semibold))
+                        .font(.system(size: UnifiedFont.subheadline, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, layout.cardInnerPadding)
@@ -278,7 +277,7 @@ struct HealingAISummaryContent: View {
             // 摘要文本
             if let summaryText = summary.summary {
                 Text(summaryText)
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textPrimary)
                     .lineSpacing(4)
             }
@@ -287,17 +286,17 @@ struct HealingAISummaryContent: View {
             if let keyPoints = summary.key_points, !keyPoints.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("关键点")
-                        .font(.system(size: layout.captionFontSize, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption, weight: .medium))
                         .foregroundColor(HealingColors.textSecondary)
 
                     ForEach(keyPoints, id: \.self) { point in
                         HStack(alignment: .top, spacing: 6) {
                             Circle()
                                 .fill(HealingColors.dustyBlue)
-                                .frame(width: 5, height: 5)
-                                .padding(.top, 5)
+                                .frame(width: ScaleFactor.size(5), height: ScaleFactor.size(5))
+                                .padding(.top, ScaleFactor.padding(5))
                             Text(point)
-                                .font(.system(size: layout.captionFontSize))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.textPrimary)
                         }
                     }
@@ -309,10 +308,10 @@ struct HealingAISummaryContent: View {
                 FlowLayout(spacing: 6) {
                     ForEach(symptoms, id: \.self) { symptom in
                         Text(symptom)
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.dustyBlue)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
+                            .padding(.horizontal, ScaleFactor.padding(10))
+                            .padding(.vertical, ScaleFactor.padding(5))
                             .background(HealingColors.dustyBlue.opacity(0.15))
                             .clipShape(Capsule())
                     }
@@ -328,12 +327,12 @@ struct HealingAISummaryContent: View {
                             .frame(width: layout.iconSmallSize - 2, height: layout.iconSmallSize - 2)
 
                         Image(systemName: riskIcon(for: riskLevel))
-                            .font(.system(size: 10))
+                            .font(.system(size: AdaptiveFont.caption - 2))
                             .foregroundColor(riskColor(for: riskLevel))
                     }
 
                     Text("风险等级: \(riskDisplayName(for: riskLevel))")
-                        .font(.system(size: layout.captionFontSize, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption, weight: .medium))
                         .foregroundColor(riskColor(for: riskLevel))
                 }
             }
@@ -342,16 +341,16 @@ struct HealingAISummaryContent: View {
             if let recommendations = summary.recommendations, !recommendations.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("建议")
-                        .font(.system(size: layout.captionFontSize, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption, weight: .medium))
                         .foregroundColor(HealingColors.textSecondary)
 
                     ForEach(Array(recommendations.enumerated()), id: \.offset) { index, rec in
                         HStack(alignment: .top, spacing: 6) {
                             Text("\(index + 1).")
-                                .font(.system(size: layout.captionFontSize))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.textTertiary)
                             Text(rec)
-                                .font(.system(size: layout.captionFontSize))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.textPrimary)
                         }
                     }
@@ -406,12 +405,12 @@ struct HealingEventAIAnalysisCard: View {
                         .frame(width: layout.iconSmallSize + 6, height: layout.iconSmallSize + 6)
 
                     Image(systemName: "stethoscope")
-                        .font(.system(size: 14))
+                        .font(.system(size: AdaptiveFont.footnote))
                         .foregroundColor(HealingColors.mutedCoral)
                 }
 
                 Text("AI 分析")
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
                     .foregroundColor(HealingColors.textPrimary)
             }
 
@@ -419,11 +418,11 @@ struct HealingEventAIAnalysisCard: View {
             if !analysis.chiefComplaint.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("主诉")
-                        .font(.system(size: layout.captionFontSize, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption, weight: .medium))
                         .foregroundColor(HealingColors.textSecondary)
 
                     Text(analysis.chiefComplaint)
-                        .font(.system(size: layout.captionFontSize + 1))
+                        .font(.system(size: UnifiedFont.footnote))
                         .foregroundColor(HealingColors.textPrimary)
                         .padding(layout.cardInnerPadding - 2)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -436,19 +435,19 @@ struct HealingEventAIAnalysisCard: View {
             if !analysis.possibleDiagnosis.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("可能诊断")
-                        .font(.system(size: layout.captionFontSize, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption, weight: .medium))
                         .foregroundColor(HealingColors.textSecondary)
 
                     ForEach(analysis.possibleDiagnosis, id: \.name) { diagnosis in
                         HStack {
                             Text(diagnosis.name)
-                                .font(.system(size: layout.captionFontSize + 1))
+                                .font(.system(size: UnifiedFont.footnote))
                                 .foregroundColor(HealingColors.textPrimary)
 
                             Spacer()
 
                             Text("\(Int(diagnosis.confidence * 100))%")
-                                .font(.system(size: layout.captionFontSize, weight: .medium))
+                                .font(.system(size: UnifiedFont.caption, weight: .medium))
                                 .foregroundColor(confidenceColor(diagnosis.confidence))
                         }
                         .padding(layout.cardInnerPadding - 2)
@@ -461,20 +460,20 @@ struct HealingEventAIAnalysisCard: View {
             // 风险等级
             HStack(spacing: layout.cardSpacing / 3) {
                 Text("风险等级")
-                    .font(.system(size: layout.captionFontSize, weight: .medium))
+                    .font(.system(size: UnifiedFont.caption, weight: .medium))
                     .foregroundColor(HealingColors.textSecondary)
 
                 Spacer()
 
                 HStack(spacing: 4) {
                     Image(systemName: riskIcon(for: analysis.riskLevel))
-                        .font(.system(size: 12))
+                        .font(.system(size: AdaptiveFont.caption))
                     Text(riskDisplayName(for: analysis.riskLevel))
-                        .font(.system(size: layout.captionFontSize, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption, weight: .medium))
                 }
                 .foregroundColor(riskColor(for: analysis.riskLevel))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
+                .padding(.horizontal, ScaleFactor.padding(10))
+                .padding(.vertical, ScaleFactor.padding(4))
                 .background(riskColor(for: analysis.riskLevel).opacity(0.15))
                 .clipShape(Capsule())
             }
@@ -488,12 +487,12 @@ struct HealingEventAIAnalysisCard: View {
                             .frame(width: layout.iconSmallSize - 2, height: layout.iconSmallSize - 2)
 
                         Image(systemName: "calendar.badge.plus")
-                            .font(.system(size: 10))
+                            .font(.system(size: AdaptiveFont.caption - 2))
                             .foregroundColor(HealingColors.dustyBlue)
                     }
 
                     Text(urgency)
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textPrimary)
                 }
             }
@@ -558,12 +557,12 @@ struct HealingEventNotesCard: View {
                             .frame(width: layout.iconSmallSize + 6, height: layout.iconSmallSize + 6)
 
                         Image(systemName: "note.text")
-                            .font(.system(size: 14))
+                            .font(.system(size: AdaptiveFont.footnote))
                             .foregroundColor(HealingColors.dustyBlue)
                     }
 
                     Text("我的备注")
-                        .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                        .font(.system(size: UnifiedFont.body, weight: .semibold))
                         .foregroundColor(HealingColors.textPrimary)
                 }
 
@@ -574,13 +573,13 @@ struct HealingEventNotesCard: View {
                         Image(systemName: "pencil")
                         Text("编辑")
                     }
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.dustyBlue)
                 }
             }
 
             Text(notes)
-                .font(.system(size: layout.captionFontSize + 1))
+                .font(.system(size: UnifiedFont.footnote))
                 .foregroundColor(HealingColors.textPrimary)
                 .lineSpacing(4)
                 .padding(layout.cardInnerPadding - 2)
@@ -612,7 +611,7 @@ struct HealingEventRelatedSection: View {
                     ProgressView()
                         .tint(HealingColors.forestMist)
                     Text("加载相关病历...")
-                        .font(.system(size: layout.captionFontSize + 1))
+                        .font(.system(size: UnifiedFont.footnote))
                         .foregroundColor(HealingColors.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
@@ -629,12 +628,12 @@ struct HealingEventRelatedSection: View {
                                     .frame(width: layout.iconSmallSize + 6, height: layout.iconSmallSize + 6)
 
                                 Image(systemName: "link")
-                                    .font(.system(size: 14))
+                                    .font(.system(size: AdaptiveFont.footnote))
                                     .foregroundColor(HealingColors.forestMist)
                             }
 
                             Text("相关病历")
-                                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                                .font(.system(size: UnifiedFont.body, weight: .semibold))
                                 .foregroundColor(HealingColors.textPrimary)
                         }
 
@@ -645,7 +644,7 @@ struct HealingEventRelatedSection: View {
                                 Image(systemName: "arrow.triangle.merge")
                                 Text("合并")
                             }
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.forestMist)
                         }
                     }
@@ -688,15 +687,15 @@ struct HealingRelatedEventRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: layout.cardSpacing / 3) {
                     Text(relatedEvent.event_id.prefix(8) + "...")
-                        .font(.system(size: layout.captionFontSize + 1, weight: .medium))
+                        .font(.system(size: UnifiedFont.footnote, weight: .medium))
                         .foregroundColor(HealingColors.textPrimary)
 
                     if let relationType = relatedEvent.relation_type {
                         Text(relationDisplayName(relationType))
-                            .font(.system(size: layout.captionFontSize - 1))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
+                            .padding(.horizontal, ScaleFactor.padding(8))
+                            .padding(.vertical, ScaleFactor.padding(3))
                             .background(relationColor)
                             .clipShape(Capsule())
                     }
@@ -704,7 +703,7 @@ struct HealingRelatedEventRow: View {
 
                 if let reasoning = relatedEvent.reasoning {
                     Text(reasoning)
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textSecondary)
                         .lineLimit(2)
                 }
@@ -712,9 +711,9 @@ struct HealingRelatedEventRow: View {
                 if let confidence = relatedEvent.confidence {
                     HStack(spacing: 4) {
                         Image(systemName: "chart.bar.fill")
-                            .font(.system(size: 10))
+                            .font(.system(size: AdaptiveFont.caption - 2))
                         Text("置信度: \(Int(confidence * 100))%")
-                            .font(.system(size: layout.captionFontSize - 1))
+                            .font(.system(size: UnifiedFont.caption1))
                     }
                     .foregroundColor(HealingColors.textTertiary)
                 }
@@ -723,7 +722,7 @@ struct HealingRelatedEventRow: View {
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: layout.captionFontSize))
+                .font(.system(size: UnifiedFont.caption))
                 .foregroundColor(HealingColors.textTertiary)
         }
         .padding(layout.cardInnerPadding - 2)
@@ -774,18 +773,18 @@ struct HealingEventTimelineSection: View {
                         .frame(width: layout.iconSmallSize + 6, height: layout.iconSmallSize + 6)
 
                     Image(systemName: "clock.arrow.circlepath")
-                        .font(.system(size: 14))
+                        .font(.system(size: AdaptiveFont.footnote))
                         .foregroundColor(HealingColors.deepSage)
                 }
 
                 Text("时间轴")
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
                     .foregroundColor(HealingColors.textPrimary)
 
                 Spacer()
 
                 Text("\(event.sessions.flatMap { $0.messages }.count) 条记录")
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textTertiary)
             }
 
@@ -794,11 +793,11 @@ struct HealingEventTimelineSection: View {
                 if items.isEmpty {
                     VStack(spacing: layout.cardSpacing) {
                         Image(systemName: "bubble.left.and.bubble.right")
-                            .font(.system(size: layout.bodyFontSize + 8, weight: .light))
+                            .font(.system(size: UnifiedFont.body, weight: .light))
                             .foregroundColor(HealingColors.textTertiary)
 
                         Text("暂无对话记录")
-                            .font(.system(size: layout.captionFontSize + 1))
+                            .font(.system(size: UnifiedFont.footnote))
                             .foregroundColor(HealingColors.textTertiary)
                     }
                     .frame(maxWidth: .infinity)
@@ -861,12 +860,12 @@ struct HealingTimelineItemRow: View {
                         .frame(width: 2)
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, ScaleFactor.padding(4))
 
             // 内容
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: ScaleFactor.spacing(4)) {
                 Text(dateText)
-                    .font(.system(size: layout.captionFontSize, weight: .medium))
+                    .font(.system(size: UnifiedFont.caption, weight: .medium))
                     .foregroundColor(HealingColors.textSecondary)
 
                 ForEach(item.contents) { content in
@@ -875,7 +874,7 @@ struct HealingTimelineItemRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, ScaleFactor.padding(8))
     }
 
     @ViewBuilder
@@ -885,10 +884,10 @@ struct HealingTimelineItemRow: View {
             if let message = content.message {
                 HStack(spacing: 4) {
                     Image(systemName: "person.circle.fill")
-                        .font(.system(size: 12))
+                        .font(.system(size: AdaptiveFont.caption))
                         .foregroundColor(HealingColors.textTertiary)
                     Text(message.content)
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textPrimary)
                         .lineLimit(3)
                 }
@@ -897,10 +896,10 @@ struct HealingTimelineItemRow: View {
             if let message = content.message {
                 HStack(spacing: 4) {
                     Image(systemName: "brain.head.profile")
-                        .font(.system(size: 12))
+                        .font(.system(size: AdaptiveFont.caption))
                         .foregroundColor(HealingColors.forestMist)
                     Text(message.content)
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textPrimary)
                         .lineLimit(3)
                 }
@@ -908,30 +907,30 @@ struct HealingTimelineItemRow: View {
         case .attachment:
             HStack(spacing: 4) {
                 Image(systemName: "paperclip")
-                    .font(.system(size: 12))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.dustyBlue)
                 if let attachment = content.attachment {
                     Text(attachment.fileName ?? attachment.type.rawValue)
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textPrimary)
                 }
             }
         case .sessionStart:
             HStack(spacing: 4) {
                 Image(systemName: "play.circle.fill")
-                    .font(.system(size: 12))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.forestMist)
                 Text("对话开始")
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textSecondary)
             }
         case .sessionEnd:
             HStack(spacing: 4) {
                 Image(systemName: "stop.circle.fill")
-                    .font(.system(size: 12))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textTertiary)
                 Text("对话结束")
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textSecondary)
             }
         }
@@ -972,10 +971,10 @@ struct HealingEventExportButton: View {
             Button(action: action) {
                 HStack(spacing: layout.cardSpacing / 2) {
                     Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                        .font(.system(size: UnifiedFont.body, weight: .semibold))
 
                     Text("导出病历给医生")
-                        .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                        .font(.system(size: UnifiedFont.body, weight: .semibold))
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
@@ -1017,21 +1016,25 @@ struct HealingEventMoreMenu: View {
             Divider()
 
             Button(action: {
-                viewModel.archiveEvent(event)
-                dismiss()
+                Task {
+                    await viewModel.archiveEvent(event)
+                    dismiss()
+                }
             }) {
                 Label("归档", systemImage: "archivebox")
             }
 
             Button(role: .destructive, action: {
-                viewModel.deleteEvent(event)
-                dismiss()
+                Task {
+                    await viewModel.deleteEvent(event)
+                    dismiss()
+                }
             }) {
                 Label("删除", systemImage: "trash")
             }
         } label: {
             Image(systemName: "ellipsis.circle")
-                .font(.system(size: layout.bodyFontSize + 2))
+                .font(.system(size: UnifiedFont.body))
                 .foregroundColor(HealingColors.forestMist)
         }
     }

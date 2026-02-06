@@ -69,23 +69,13 @@ const Rounding: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'abnormal' | 'high-risk'>('all');
   const [stats, setStats] = useState({ total: 0, abnormal: 0, high_risk: 0 });
 
-  // 获取 token
-  const getToken = () => {
-    return localStorage.getItem('token') || sessionStorage.getItem('token') || '';
-  };
-
   // 加载数据
   useEffect(() => {
     const fetchPatients = async () => {
       try {
-        const token = getToken();
+        // 测试模式：无需认证
         const response = await axios.get<PatientListResponse>(
-          `${API_BASE}/rounding/patients`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          `${API_BASE}/rounding/patients`
         );
         setPatients(response.data.patients);
         setFilteredPatients(response.data.patients);

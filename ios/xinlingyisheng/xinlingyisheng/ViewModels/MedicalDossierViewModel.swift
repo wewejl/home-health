@@ -113,23 +113,35 @@ class MedicalDossierViewModel: ObservableObject {
             print("[MedicalDossier] Failed to load events: \(error)")
         }
     }
-    
-    func deleteEvent(_ event: MedicalEvent) {
-        withAnimation {
-            events.removeAll { $0.id == event.id }
-            applyFilters(searchText: searchText, filter: selectedFilter)
-        }
-    }
-    
-    func archiveEvent(_ event: MedicalEvent) {
-        if let index = events.firstIndex(where: { $0.id == event.id }) {
+
+    /// 删除事件（异步，同步到后端）
+    func deleteEvent(_ event: MedicalEvent) async {
+        do {
+            try await MedicalEventAPIService.shared.deleteEvent(eventId: event.id)
             withAnimation {
-                events[index].status = .archived
+                events.removeAll { $0.id == event.id }
                 applyFilters(searchText: searchText, filter: selectedFilter)
             }
+        } catch {
+            self.errorMessage = "删除失败: \(error.localizedDescription)"
         }
     }
-    
+
+    /// 归档事件（异步，同步到后端）
+    func archiveEvent(_ event: MedicalEvent) async {
+        do {
+            let updated = try await MedicalEventAPIService.shared.archiveEvent(eventId: event.id)
+            withAnimation {
+                if let index = events.firstIndex(where: { $0.id == event.id }) {
+                    events[index] = updated.toMedicalEvent()
+                }
+                applyFilters(searchText: searchText, filter: selectedFilter)
+            }
+        } catch {
+            self.errorMessage = "归档失败: \(error.localizedDescription)"
+        }
+    }
+
     func markAsExported(_ event: MedicalEvent) {
         if let index = events.firstIndex(where: { $0.id == event.id }) {
             withAnimation {
@@ -358,5 +370,10 @@ class MedicalDossierViewModel: ObservableObject {
             noteError = "删除备注失败: \(error.localizedDescription)"
             return false
         }
+    }
+
+    /// 清除错误信息
+    func clearError() {
+        errorMessage = nil
     }
 }

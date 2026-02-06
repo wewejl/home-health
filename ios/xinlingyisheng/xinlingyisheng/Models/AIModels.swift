@@ -194,3 +194,38 @@ struct TranscribeStatusResponse: Decodable {
     let text: String?
     let error_message: String?
 }
+
+// MARK: - Recognition Language
+/// 语音识别支持的语言
+enum RecognitionLanguage: String, Codable, CaseIterable {
+    /// 自动检测（推荐）
+    case auto = "auto"
+    /// 中文（普通话）
+    case chinese = "zh"
+    /// 英语
+    case english = "en"
+    /// 粤语
+    case cantonese = "yue"
+    /// 四川话
+    case sichuanese = "sichuanese"
+    /// 日语
+    case japanese = "ja"
+    /// 韩语
+    case korean = "ko"
+
+    /// 显示名称
+    var displayName: String {
+        switch self {
+        case .auto: return "自动检测"
+        case .chinese: return "中文"
+        case .english: return "English"
+        case .cantonese: return "粤语"
+        case .sichuanese: return "四川话"
+        case .japanese: return "日本語"
+        case .korean: return "한국어"
+        }
+    }
+
+    /// 默认语言
+    static let `default`: RecognitionLanguage = .chinese
+}

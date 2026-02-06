@@ -25,9 +25,8 @@ struct MyQuestionsView: View {
                         VStack(spacing: layout.cardSpacing) {
                             ProgressView()
                                 .tint(HealingColors.forestMist)
-                                .scaleEffect(1.2)
                             Text("加载提问记录中...")
-                                .font(.system(size: layout.captionFontSize + 1))
+                                .font(.system(size: UnifiedFont.footnote))
                                 .foregroundColor(HealingColors.textSecondary)
                         }
                         Spacer()
@@ -40,20 +39,20 @@ struct MyQuestionsView: View {
                                     .frame(width: layout.iconLargeSize * 1.8, height: layout.iconLargeSize * 1.8)
 
                                 Image(systemName: "exclamationmark.triangle")
-                                    .font(.system(size: layout.titleFontSize, weight: .light))
+                                    .font(.system(size: UnifiedFont.title3, weight: .light))
                                     .foregroundColor(HealingColors.terracotta.opacity(0.6))
                             }
 
                             Text(error)
-                                .font(.system(size: layout.bodyFontSize))
+                                .font(.system(size: UnifiedFont.body))
                                 .foregroundColor(HealingColors.textSecondary)
 
                             Button(action: { loadSessions() }) {
                                 HStack(spacing: layout.cardSpacing / 2) {
                                     Image(systemName: "arrow.clockwise")
-                                        .font(.system(size: layout.captionFontSize))
+                                        .font(.system(size: UnifiedFont.caption))
                                     Text("重试")
-                                        .font(.system(size: layout.captionFontSize + 1, weight: .medium))
+                                        .font(.system(size: UnifiedFont.footnote, weight: .medium))
                                 }
                                 .foregroundColor(.white)
                                 .padding(.horizontal, layout.cardInnerPadding + 4)
@@ -78,16 +77,16 @@ struct MyQuestionsView: View {
                                     .frame(width: layout.iconLargeSize * 2, height: layout.iconLargeSize * 2)
 
                                 Image(systemName: "bubble.left.and.bubble.right")
-                                    .font(.system(size: layout.titleFontSize, weight: .light))
+                                    .font(.system(size: UnifiedFont.title3, weight: .light))
                                     .foregroundColor(HealingColors.forestMist.opacity(0.5))
                             }
 
                             Text("暂无提问记录")
-                                .font(.system(size: layout.bodyFontSize, weight: .medium))
+                                .font(.system(size: UnifiedFont.body, weight: .medium))
                                 .foregroundColor(HealingColors.textPrimary)
 
                             Text("开始您的第一次健康咨询吧")
-                                .font(.system(size: layout.captionFontSize))
+                                .font(.system(size: UnifiedFont.caption))
                                 .foregroundColor(HealingColors.textTertiary)
                         }
                         Spacer()
@@ -189,7 +188,7 @@ struct HealingQuestionsNavBar: View {
                         .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
 
                     Image(systemName: "chevron.left")
-                        .font(.system(size: layout.captionFontSize + 2, weight: .medium))
+                        .font(.system(size: UnifiedFont.subheadline, weight: .medium))
                         .foregroundColor(HealingColors.textPrimary)
                 }
                 .frame(width: layout.iconSmallSize + 8, height: layout.iconSmallSize + 8)
@@ -198,7 +197,7 @@ struct HealingQuestionsNavBar: View {
             Spacer()
 
             Text("我的提问")
-                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                .font(.system(size: UnifiedFont.body, weight: .semibold))
                 .foregroundColor(HealingColors.textPrimary)
 
             Spacer()
@@ -233,32 +232,32 @@ struct HealingSessionCardView: View {
                     .shadow(color: HealingColors.forestMist.opacity(0.2), radius: 6, x: 0, y: 3)
 
                 Image(systemName: "person.fill")
-                    .font(.system(size: layout.bodyFontSize))
+                    .font(.system(size: UnifiedFont.body))
                     .foregroundColor(.white)
             }
 
             VStack(alignment: .leading, spacing: layout.cardSpacing / 3) {
                 HStack {
                     Text(session.doctor_name ?? "AI医生助手")
-                        .font(.system(size: layout.bodyFontSize - 1, weight: .semibold))
+                        .font(.system(size: UnifiedFont.subheadline, weight: .semibold))
                         .foregroundColor(HealingColors.textPrimary)
 
                     Spacer()
 
                     Text(formatDate(session.updated_at))
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption))
                         .foregroundColor(HealingColors.textTertiary)
                 }
 
                 Text(session.last_message ?? "暂无消息")
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textSecondary)
                     .lineLimit(2)
                     .lineSpacing(2)
             }
 
             Image(systemName: "chevron.right")
-                .font(.system(size: layout.captionFontSize + 1))
+                .font(.system(size: UnifiedFont.footnote))
                 .foregroundColor(HealingColors.textTertiary)
         }
         .padding(layout.cardInnerPadding)
@@ -316,9 +315,8 @@ struct HealingChatFromSessionView: View {
                         VStack(spacing: layout.cardSpacing) {
                             ProgressView()
                                 .tint(HealingColors.forestMist)
-                                .scaleEffect(1.2)
                             Text("加载消息中...")
-                                .font(.system(size: layout.captionFontSize))
+                                .font(.system(size: UnifiedFont.caption))
                                 .foregroundColor(HealingColors.textSecondary)
                         }
                         Spacer()
@@ -333,7 +331,7 @@ struct HealingChatFromSessionView: View {
                                 }
                                 .padding(.horizontal, layout.horizontalPadding)
                                 .padding(.vertical, layout.cardSpacing)
-                                .padding(.bottom, 80)
+                                .padding(.bottom, ScaleFactor.padding(80))
                             }
                             .onChangeCompat(of: messages.count) { _ in
                                 if let lastMessage = messages.last {
@@ -421,7 +419,7 @@ struct HealingChatNavBar: View {
                         .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
 
                     Image(systemName: "chevron.left")
-                        .font(.system(size: layout.captionFontSize + 2, weight: .medium))
+                        .font(.system(size: UnifiedFont.subheadline, weight: .medium))
                         .foregroundColor(HealingColors.textPrimary)
                 }
                 .frame(width: layout.iconSmallSize + 8, height: layout.iconSmallSize + 8)
@@ -440,17 +438,17 @@ struct HealingChatNavBar: View {
                     .frame(width: layout.iconSmallSize + 12, height: layout.iconSmallSize + 12)
 
                 Image(systemName: "person.fill")
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(.white)
             }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text((session.doctor_name ?? "AI医生助手") + "医生")
-                    .font(.system(size: layout.bodyFontSize - 1, weight: .medium))
+                    .font(.system(size: UnifiedFont.subheadline, weight: .medium))
                     .foregroundColor(HealingColors.textPrimary)
 
                 Text("在线为您服务")
-                    .font(.system(size: layout.captionFontSize - 1))
+                    .font(.system(size: UnifiedFont.caption))
                     .foregroundColor(HealingColors.forestMist)
             }
 
@@ -476,7 +474,7 @@ struct HealingMessageBubbleView: View {
 
             VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
                 Text(message.content)
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(message.isFromUser ? .white : HealingColors.textPrimary)
                     .padding(.horizontal, layout.cardInnerPadding)
                     .padding(.vertical, layout.cardInnerPadding - 2)
@@ -504,7 +502,7 @@ struct HealingMessageBubbleView: View {
                     )
 
                 Text(formatTime(message.created_at))
-                    .font(.system(size: layout.captionFontSize - 1))
+                    .font(.system(size: UnifiedFont.caption))
                     .foregroundColor(HealingColors.textTertiary)
             }
 
@@ -536,7 +534,7 @@ struct HealingChatInputBar: View {
 
             HStack(spacing: layout.cardSpacing / 2) {
                 TextField("请输入您的问题...", text: $messageText)
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textPrimary)
                     .padding(.horizontal, layout.cardInnerPadding)
                     .padding(.vertical, layout.cardInnerPadding - 4)
@@ -550,7 +548,7 @@ struct HealingChatInputBar: View {
                             .frame(width: layout.iconSmallSize + 6, height: layout.iconSmallSize + 6)
                     } else {
                         Image(systemName: "paperplane.fill")
-                            .font(.system(size: layout.captionFontSize + 3))
+                            .font(.system(size: UnifiedFont.body))
                             .foregroundColor(.white)
                             .frame(width: layout.iconSmallSize + 6, height: layout.iconSmallSize + 6)
                             .background(

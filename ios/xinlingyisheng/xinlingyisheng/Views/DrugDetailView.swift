@@ -146,7 +146,7 @@ struct HealingDrugDetailNavBar: View {
                         .shadow(color: Color.black.opacity(0.06), radius: 4, y: 2)
 
                     Image(systemName: "chevron.left")
-                        .font(.system(size: layout.captionFontSize + 2, weight: .medium))
+                        .font(.system(size: UnifiedFont.subheadline, weight: .medium))
                         .foregroundColor(HealingColors.textPrimary)
                 }
                 .frame(width: layout.iconSmallSize + 8, height: layout.iconSmallSize + 8)
@@ -162,7 +162,7 @@ struct HealingDrugDetailNavBar: View {
                             .shadow(color: Color.black.opacity(0.04), radius: 3, y: 1)
 
                         Image(systemName: "magnifyingglass")
-                            .font(.system(size: layout.captionFontSize + 1))
+                            .font(.system(size: UnifiedFont.footnote))
                             .foregroundColor(HealingColors.textSecondary)
                     }
                     .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
@@ -175,7 +175,7 @@ struct HealingDrugDetailNavBar: View {
                             .shadow(color: Color.black.opacity(0.04), radius: 3, y: 1)
 
                         Image(systemName: "square.and.arrow.up")
-                            .font(.system(size: layout.captionFontSize + 1))
+                            .font(.system(size: UnifiedFont.footnote))
                             .foregroundColor(HealingColors.textSecondary)
                     }
                     .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
@@ -196,9 +196,9 @@ struct HealingDrugDetailTrustBadge: View {
         HStack(spacing: layout.cardSpacing / 2) {
             HStack(spacing: 4) {
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: layout.captionFontSize - 1))
+                    .font(.system(size: UnifiedFont.caption))
                 Text("健康百科")
-                    .font(.system(size: layout.captionFontSize, weight: .medium))
+                    .font(.system(size: UnifiedFont.caption, weight: .medium))
             }
             .foregroundColor(.white)
             .padding(.horizontal, layout.cardInnerPadding - 2)
@@ -212,8 +212,8 @@ struct HealingDrugDetailTrustBadge: View {
             )
             .clipShape(Capsule())
 
-            Text("三甲医生专业编审 · 灵犀医生官方出品")
-                .font(.system(size: layout.captionFontSize))
+            Text("三甲医生专业编审 · 灵犀健康官方出品")
+                .font(.system(size: UnifiedFont.caption))
                 .foregroundColor(HealingColors.textSecondary)
 
             Spacer()
@@ -232,16 +232,16 @@ struct HealingDrugDetailHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: layout.cardSpacing / 2) {
             Text(drug.name)
-                .font(.system(size: layout.titleFontSize, weight: .bold))
+                .font(.system(size: UnifiedFont.subheadline, weight: .bold))
                 .foregroundColor(HealingColors.textPrimary)
 
             if let commonBrands = drug.common_brands, !commonBrands.isEmpty {
                 HStack(spacing: layout.cardSpacing / 2) {
                     Image(systemName: "tag.fill")
-                        .font(.system(size: layout.captionFontSize - 1))
+                        .font(.system(size: UnifiedFont.caption))
                         .foregroundColor(HealingColors.forestMist)
                     Text("常见商品名：\(commonBrands)")
-                        .font(.system(size: layout.captionFontSize + 1))
+                        .font(.system(size: UnifiedFont.footnote))
                         .foregroundColor(HealingColors.textSecondary)
                 }
             }
@@ -260,7 +260,7 @@ struct HealingDrugDetailHeader: View {
                                     .frame(width: layout.iconSmallSize - 6, height: layout.iconSmallSize - 6)
 
                                 Image(systemName: "person.circle.fill")
-                                    .font(.system(size: 16))
+                                    .font(.system(size: AdaptiveFont.body))
                                     .foregroundColor(HealingColors.textTertiary)
                             }
                         }
@@ -269,7 +269,7 @@ struct HealingDrugDetailHeader: View {
                     }
 
                     Text(reviewerInfo)
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption))
                         .foregroundColor(HealingColors.textTertiary)
                 }
             }
@@ -344,16 +344,16 @@ struct HealingSafetyLabelView: View {
                     .frame(width: 40, height: 40)
 
                 Image(systemName: icon)
-                    .font(.system(size: layout.captionFontSize + 3))
+                    .font(.system(size: UnifiedFont.body))
                     .foregroundColor(color)
             }
 
             Text(title)
-                .font(.system(size: layout.captionFontSize, weight: .medium))
+                .font(.system(size: UnifiedFont.caption, weight: .medium))
                 .foregroundColor(HealingColors.textPrimary)
 
             Text(subtitle)
-                .font(.system(size: layout.captionFontSize - 2))
+                .font(.system(size: AdaptiveFont.custom(10)))
                 .foregroundColor(HealingColors.textTertiary)
                 .lineLimit(1)
         }
@@ -396,7 +396,7 @@ struct HealingTabButton: View {
         Button(action: action) {
             VStack(spacing: layout.cardSpacing / 2) {
                 Text(tab)
-                    .font(.system(size: layout.captionFontSize + 1, weight: isSelected ? .semibold : .regular))
+                    .font(.system(size: UnifiedFont.footnote, weight: isSelected ? .semibold : .regular))
                     .foregroundColor(isSelected ? HealingColors.forestMist : HealingColors.textSecondary)
 
                 tabBarIndicator
@@ -461,12 +461,12 @@ struct HealingDrugDetailContentSection: View {
                             .frame(width: layout.iconLargeSize, height: layout.iconLargeSize)
 
                         Image(systemName: "doc.text")
-                            .font(.system(size: layout.bodyFontSize + 4, weight: .light))
+                            .font(.system(size: UnifiedFont.title3, weight: .light))
                             .foregroundColor(HealingColors.textTertiary)
                     }
 
                     Text("暂无\(tabs[selectedTab])内容")
-                        .font(.system(size: layout.captionFontSize + 1))
+                        .font(.system(size: UnifiedFont.footnote))
                         .foregroundColor(HealingColors.textTertiary)
 
                     Spacer()
@@ -490,7 +490,7 @@ struct HealingDrugContentCard: View {
         VStack(alignment: .leading, spacing: layout.cardSpacing) {
             HStack {
                 Text(title)
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
                     .foregroundColor(HealingColors.textPrimary)
 
                 Spacer()
@@ -515,7 +515,7 @@ struct HealingDrugContentCard: View {
                 .clipShape(Capsule())
 
             Text(parseMarkdown(content))
-                .font(.system(size: layout.captionFontSize + 1))
+                .font(.system(size: UnifiedFont.footnote))
                 .foregroundColor(HealingColors.textPrimary)
                 .lineSpacing(4)
         }
@@ -550,7 +550,7 @@ struct HealingDrugDetailLoadingView: View {
                 ProgressView()
                     .tint(HealingColors.forestMist)
                 Text("加载中...")
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textSecondary)
             }
             Spacer()
@@ -573,20 +573,20 @@ struct HealingDrugDetailErrorView: View {
                         .frame(width: layout.iconLargeSize * 1.2, height: layout.iconLargeSize * 1.2)
 
                     Image(systemName: "exclamationmark.triangle")
-                        .font(.system(size: layout.bodyFontSize + 6, weight: .light))
+                        .font(.system(size: UnifiedFont.title3, weight: .light))
                         .foregroundColor(HealingColors.terracotta)
                 }
 
                 Text("加载失败")
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
                     .foregroundColor(HealingColors.textPrimary)
 
                 Button(action: onRetry) {
                     HStack(spacing: layout.cardSpacing / 2) {
                         Image(systemName: "arrow.clockwise")
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption))
                         Text("重试")
-                            .font(.system(size: layout.bodyFontSize - 1, weight: .medium))
+                            .font(.system(size: UnifiedFont.subheadline, weight: .medium))
                     }
                     .foregroundColor(.white)
                     .padding(.horizontal, layout.cardInnerPadding * 2)
@@ -627,18 +627,18 @@ struct HealingDrugDetailBrandFooter: View {
                         .frame(width: 56, height: 56)
 
                     Image(systemName: "cross.fill")
-                        .font(.system(size: layout.bodyFontSize + 4, weight: .medium))
+                        .font(.system(size: UnifiedFont.title3, weight: .medium))
                         .foregroundColor(HealingColors.forestMist)
                 }
 
                 // 品牌名称
-                Text("灵犀医生")
-                    .font(.system(size: layout.bodyFontSize + 2, weight: .semibold))
+                Text("灵犀健康")
+                    .font(.system(size: UnifiedFont.subheadline, weight: .semibold))
                     .foregroundColor(HealingColors.forestMist)
 
                 // Slogan
                 Text("一起发现健康生活")
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textTertiary)
             }
             .frame(maxWidth: .infinity)

@@ -49,14 +49,14 @@ struct PhoneNumberTextField: View {
         .background(
             RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall, style: .continuous)
                 .fill(Color.dynamicColor(
-                    light: Color.white.opacity(0.5),
-                    dark: Color(red: 0.18, green: 0.18, blue: 0.22).opacity(0.5)
+                    light: Color.white,
+                    dark: Color(red: 0.18, green: 0.18, blue: 0.22)
                 ))
                 .overlay(
                     RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall, style: .continuous)
                         .stroke(
-                            textFieldIsFocused ? AppColor.primaryPurple : Color.clear,
-                            lineWidth: ScaleFactor.size(1.5)
+                            textFieldIsFocused ? AppColor.primaryPurple : AppColor.borderLight,
+                            lineWidth: ScaleFactor.size(1)
                         )
                 )
         )

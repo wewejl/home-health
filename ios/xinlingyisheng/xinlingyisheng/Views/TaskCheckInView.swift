@@ -75,14 +75,14 @@ struct TaskCheckInView: View {
                 if let orderType = task.order_type, let type = OrderType(rawValue: orderType) {
                     HStack(spacing: 4) {
                         Image(systemName: type.iconName)
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption))
 
                         Text(type.displayName)
-                            .font(.system(size: layout.captionFontSize, weight: .medium))
+                            .font(.system(size: UnifiedFont.caption, weight: .medium))
                     }
                     .foregroundColor(.white)
                     .padding(.horizontal, layout.cardInnerPadding)
-                    .padding(.vertical, 6)
+                    .padding(.vertical, ScaleFactor.padding(6))
                     .background(
                         Capsule()
                             .fill(HealingColors.forestMist)
@@ -92,27 +92,27 @@ struct TaskCheckInView: View {
                 Spacer()
 
                 // 计划时间
-                HStack(spacing: 4) {
+                HStack(spacing: ScaleFactor.spacing(4)) {
                     Image(systemName: "clock.fill")
-                        .font(.system(size: layout.captionFontSize - 1))
+                        .font(.system(size: UnifiedFont.caption))
                     Text(task.scheduled_time)
-                        .font(.system(size: layout.captionFontSize + 1))
+                        .font(.system(size: UnifiedFont.footnote))
                 }
                 .foregroundColor(HealingColors.textSecondary)
             }
 
             // 任务标题
             Text(task.order_title ?? "未命名任务")
-                .font(.system(size: layout.bodyFontSize + 4, weight: .bold))
+                .font(.system(size: UnifiedFont.subheadline, weight: .bold))
                 .foregroundColor(HealingColors.textPrimary)
                 .lineSpacing(4)
 
             // 鼓励语
             HStack(spacing: 6) {
                 Image(systemName: "heart.fill")
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption))
                 Text("按时完成，守护健康")
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption))
             }
             .foregroundColor(HealingColors.forestMist.opacity(0.8))
         }
@@ -129,7 +129,7 @@ struct TaskCheckInView: View {
     private func healingCompletionTypeSection(layout: AdaptiveLayout) -> some View {
         VStack(alignment: .leading, spacing: layout.cardSpacing / 2) {
             Text("选择打卡方式")
-                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                .font(.system(size: UnifiedFont.body, weight: .semibold))
                 .foregroundColor(HealingColors.textPrimary)
 
             HStack(spacing: layout.cardSpacing / 2) {
@@ -146,7 +146,7 @@ struct TaskCheckInView: View {
                                     .frame(width: layout.iconLargeSize, height: layout.iconLargeSize)
 
                                 Image(systemName: typeIcon(type))
-                                    .font(.system(size: layout.captionFontSize + 2))
+                                    .font(.system(size: UnifiedFont.subheadline))
                                     .foregroundColor(selectedType == type ? HealingColors.forestMist : HealingColors.textSecondary)
                             }
 
@@ -190,15 +190,15 @@ struct TaskCheckInView: View {
             // 标题
             HStack(spacing: 6) {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: layout.captionFontSize + 2))
+                    .font(.system(size: UnifiedFont.subheadline))
                 Text("确认完成")
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
             }
             .foregroundColor(HealingColors.forestMist)
 
             // 鼓励语
             Text("完成打卡后，医生可以看到您的执行情况")
-                .font(.system(size: layout.captionFontSize + 1))
+                .font(.system(size: UnifiedFont.footnote))
                 .foregroundColor(HealingColors.textSecondary)
 
             // 按钮组
@@ -229,9 +229,9 @@ struct TaskCheckInView: View {
         VStack(alignment: .leading, spacing: layout.cardSpacing) {
             HStack(spacing: 6) {
                 Image(systemName: "camera.fill")
-                    .font(.system(size: layout.captionFontSize + 2))
+                    .font(.system(size: UnifiedFont.subheadline))
                 Text("拍照上传")
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
             }
             .foregroundColor(HealingColors.dustyBlue)
 
@@ -248,7 +248,7 @@ struct TaskCheckInView: View {
                         inputImage = nil
                     }) {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: layout.captionFontSize + 4))
+                            .font(.system(size: UnifiedFont.title3))
                             .foregroundColor(.white)
                             .padding(6)
                             .background(Circle().fill(HealingColors.terracotta))
@@ -265,11 +265,11 @@ struct TaskCheckInView: View {
 
                         VStack(spacing: layout.cardSpacing / 2) {
                             Image(systemName: "photo.on.rectangle.angled")
-                                .font(.system(size: layout.titleFontSize))
+                                .font(.system(size: UnifiedFont.title3))
                                 .foregroundColor(HealingColors.dustyBlue.opacity(0.5))
 
                             Text("点击下方按钮选择照片")
-                                .font(.system(size: layout.captionFontSize))
+                                .font(.system(size: UnifiedFont.caption))
                                 .foregroundColor(HealingColors.textSecondary)
                         }
                     }
@@ -302,14 +302,14 @@ struct TaskCheckInView: View {
         VStack(alignment: .leading, spacing: layout.cardSpacing) {
             HStack(spacing: 6) {
                 Image(systemName: "number")
-                    .font(.system(size: layout.captionFontSize + 2))
+                    .font(.system(size: UnifiedFont.subheadline))
                 Text("记录数值")
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
             }
             .foregroundColor(HealingColors.warmSand)
 
             TextField("输入数值，如血糖 7.8", text: $valueInput)
-                .font(.system(size: layout.bodyFontSize))
+                .font(.system(size: UnifiedFont.body))
                 .foregroundColor(HealingColors.textPrimary)
                 .padding(.horizontal, layout.cardInnerPadding)
                 .padding(.vertical, layout.cardInnerPadding - 2)
@@ -335,15 +335,15 @@ struct TaskCheckInView: View {
         VStack(alignment: .leading, spacing: layout.cardSpacing) {
             HStack(spacing: 6) {
                 Image(systemName: "pills.fill")
-                    .font(.system(size: layout.captionFontSize + 2))
+                    .font(.system(size: UnifiedFont.subheadline))
                 Text("用药记录")
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
             }
             .foregroundColor(HealingColors.forestMist)
 
             // 提示
             Text("请根据医嘱按时服药，记录您的服药情况")
-                .font(.system(size: layout.captionFontSize + 1))
+                .font(.system(size: UnifiedFont.footnote))
                 .foregroundColor(HealingColors.textSecondary)
 
             // 按钮组
@@ -375,14 +375,14 @@ struct TaskCheckInView: View {
         VStack(alignment: .leading, spacing: layout.cardSpacing / 2) {
             HStack(spacing: 6) {
                 Image(systemName: "text.bubble")
-                    .font(.system(size: layout.captionFontSize + 2))
+                    .font(.system(size: UnifiedFont.subheadline))
                 Text("备注（可选）")
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
             }
             .foregroundColor(HealingColors.textSecondary)
 
             TextField("输入备注信息...", text: $notes, axis: .vertical)
-                .font(.system(size: layout.captionFontSize + 1))
+                .font(.system(size: UnifiedFont.footnote))
                 .foregroundColor(HealingColors.textPrimary)
                 .padding(.horizontal, layout.cardInnerPadding)
                 .padding(.vertical, layout.cardInnerPadding - 2)
@@ -405,10 +405,10 @@ struct TaskCheckInView: View {
                         .progressViewStyle(CircularProgressViewStyle())
                 } else {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: layout.captionFontSize + 2))
+                        .font(.system(size: UnifiedFont.subheadline))
 
                     Text("提交打卡")
-                        .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                        .font(.system(size: UnifiedFont.body, weight: .semibold))
                 }
             }
             .foregroundColor(.white)
@@ -449,9 +449,9 @@ struct TaskCheckInView: View {
 
         return HStack(spacing: 4) {
             Image(systemName: "info.circle")
-                .font(.system(size: layout.captionFontSize - 1))
+                .font(.system(size: UnifiedFont.caption))
             Text(hint)
-                .font(.system(size: layout.captionFontSize))
+                .font(.system(size: UnifiedFont.caption))
         }
         .foregroundColor(HealingColors.textTertiary)
     }
@@ -497,7 +497,7 @@ struct TaskCheckInView: View {
 extension View {
     func healingPrimaryButton(layout: AdaptiveLayout, color: Color) -> some View {
         self
-            .font(.system(size: layout.captionFontSize + 1, weight: .semibold))
+            .font(.system(size: UnifiedFont.footnote, weight: .semibold))
             .foregroundColor(.white)
             .padding(.horizontal, layout.cardInnerPadding + 4)
             .padding(.vertical, layout.cardInnerPadding)
@@ -514,7 +514,7 @@ extension View {
 
     func healingSecondaryButton(layout: AdaptiveLayout, color: Color) -> some View {
         self
-            .font(.system(size: layout.captionFontSize + 1, weight: .medium))
+            .font(.system(size: UnifiedFont.footnote, weight: .medium))
             .foregroundColor(color)
             .padding(.horizontal, layout.cardInnerPadding + 4)
             .padding(.vertical, layout.cardInnerPadding)

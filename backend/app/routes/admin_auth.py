@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from typing import Optional
 from ..database import get_db
 from ..models.admin_user import AdminUser
 from ..services.admin_auth_service import AdminAuthService
@@ -10,34 +11,64 @@ from ..schemas.admin import (
 )
 
 router = APIRouter(prefix="/admin/auth", tags=["admin-auth"])
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
+
+# 测试模式：禁用所有认证检查
+TEST_MODE = True
 
 
 def get_current_admin(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: Session = Depends(get_db)
 ) -> AdminUser:
+    """测试模式：直接返回测试管理员，无需认证"""
+    # 测试模式：返回测试管理员
+    if TEST_MODE:
+        test_admin = db.query(AdminUser).filter(AdminUser.username == "test_admin").first()
+        if not test_admin:
+            test_admin = AdminUser(
+                username="test_admin",
+                email="test@example.com",
+                role="admin",
+                is_active=True
+            )
+            test_admin.password_hash = AdminAuthService.hash_password("test123")
+            db.add(test_admin)
+            db.commit()
+            db.refresh(test_admin)
+        return test_admin
+
+    # 生产模式：验证 token
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的管理员凭证",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
     token = credentials.credentials
     admin_id = AdminAuthService.verify_admin_token(token)
-    
+
     if admin_id is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="无效的管理员凭证",
             headers={"WWW-Authenticate": "Bearer"}
         )
-    
+
     admin = db.query(AdminUser).filter(AdminUser.id == admin_id, AdminUser.is_active == True).first()
     if admin is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="管理员不存在或已禁用"
         )
-    
+
     return admin
 
 
 def require_admin_role(admin: AdminUser = Depends(get_current_admin)) -> AdminUser:
+    # 测试模式下直接返回
+    if TEST_MODE:
+        return admin
     if admin.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

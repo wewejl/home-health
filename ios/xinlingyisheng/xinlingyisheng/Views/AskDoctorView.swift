@@ -41,7 +41,7 @@ struct AskDoctorView: View {
                         Spacer()
                         VStack(spacing: layout.cardSpacing) {
                             Image(systemName: "building.2.slash")
-                                .font(.system(size: 42, weight: .light))
+                                .font(.system(size: UnifiedFont.body, weight: .light))
                                 .foregroundColor(HealingColors.textTertiary)
                             Text("暂无科室数据")
                                 .font(.system(size: layout.bodyFontSize, weight: .regular))
@@ -54,7 +54,7 @@ struct AskDoctorView: View {
                         Spacer()
                     } else {
                         ScrollView(.vertical, showsIndicators: false) {
-                            VStack(spacing: layout.cardSpacing + 4) {
+                            VStack(spacing: layout.cardSpacing + 8) {
                                 // 搜索区域
                                 AskDoctorSearchView(searchText: $searchText, layout: layout)
 
@@ -189,25 +189,46 @@ struct HealingDepartmentCard: View {
     var body: some View {
         Button(action: onTap) {
             HStack(alignment: .top, spacing: layout.cardSpacing / 2) {
-                // 左侧图标
+                // 左侧图标 - 增强效果
                 ZStack {
                     Circle()
-                        .fill(HealingColors.deepSage.opacity(0.15))
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    HealingColors.deepSage.opacity(isPressed ? 0.25 : 0.18),
+                                    HealingColors.softSage.opacity(isPressed ? 0.2 : 0.12)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            Circle()
+                                .stroke(HealingColors.forestMist.opacity(isPressed ? 0.2 : 0.1), lineWidth: 1)
+                        )
+                        .shadow(
+                            color: HealingColors.forestMist.opacity(isPressed ? 0.2 : 0.12),
+                            radius: isPressed ? 6 : 4,
+                            x: 0,
+                            y: 2
+                        )
+
                     Image(systemName: SFSymbolResolver.resolve(department.icon))
-                        .font(.system(size: 20 * layout.iconScale, weight: .light))
+                        .font(.system(size: AdaptiveFont.title3, weight: .medium))
                         .foregroundColor(HealingColors.forestMist)
                 }
                 .frame(width: 36 * layout.iconScale, height: 36 * layout.iconScale)
+                .scaleEffect(isPressed ? 0.95 : 1.0)
 
                 VStack(alignment: .leading, spacing: layout.cardSpacing / 3) {
                     Text(department.name)
-                        .font(.system(size: layout.bodyFontSize - 3, weight: .semibold))
+                        .font(.system(size: AdaptiveFont.caption, weight: .semibold))
                         .foregroundColor(HealingColors.textPrimary)
                         .lineLimit(1)
 
                     if let desc = department.description {
                         Text(desc)
-                            .font(.system(size: layout.captionFontSize, weight: .regular))
+                            .font(.system(size: AdaptiveFont.custom(7), weight: .regular))
                             .foregroundColor(HealingColors.textTertiary)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
@@ -218,16 +239,27 @@ struct HealingDepartmentCard: View {
             }
             .padding(layout.cardInnerPadding - 2)
             .frame(maxWidth: .infinity, minHeight: layout.cardInnerPadding * 4, alignment: .topLeading)
-            .background(HealingColors.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay(
+            .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(HealingColors.textTertiary.opacity(0.2), lineWidth: 1)
+                    .fill(HealingColors.cardBackground)
+                    .shadow(
+                        color: Color.black.opacity(isPressed ? 0.06 : 0.08),
+                        radius: isPressed ? 6 : 10,
+                        x: 0,
+                        y: isPressed ? 2 : 4
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(
+                                HealingColors.softSage.opacity(isPressed ? 0.25 : 0.15),
+                                lineWidth: 1
+                            )
+                    )
             )
         }
         .buttonStyle(PlainButtonStyle())
         .scaleEffect(isPressed ? 0.98 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isPressed)
+        .animation(.easeInOut(duration: 0.12), value: isPressed)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in isPressed = true }
@@ -244,16 +276,16 @@ struct AskDoctorNavBar: View {
     var body: some View {
         HStack {
             Text("问医生")
-                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                .font(.system(size: UnifiedFont.body, weight: .semibold))
                 .foregroundColor(HealingColors.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .center)
 
             Button(action: { showMyQuestions = true }) {
                 HStack(spacing: 4) {
                     Text("我的提问")
-                        .font(.system(size: layout.captionFontSize, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption, weight: .medium))
                     Image(systemName: "chevron.right")
-                        .font(.system(size: layout.captionFontSize - 2, weight: .semibold))
+                        .font(.system(size: UnifiedFont.caption, weight: .semibold))
                 }
                 .foregroundColor(HealingColors.forestMist)
             }
@@ -277,11 +309,11 @@ struct AskDoctorSearchView: View {
             HStack(spacing: layout.cardSpacing / 2) {
                 HStack(spacing: layout.cardSpacing / 2) {
                     Image(systemName: "magnifyingglass")
-                        .font(.system(size: layout.bodyFontSize - 2))
+                        .font(.system(size: UnifiedFont.footnote))
                         .foregroundColor(HealingColors.textTertiary)
 
                     TextField("疾病 / 症状 / 医院 / 医生名", text: $searchText)
-                        .font(.system(size: layout.bodyFontSize - 2))
+                        .font(.system(size: UnifiedFont.footnote))
                         .foregroundColor(HealingColors.textPrimary)
                 }
                 .padding(.horizontal, layout.cardInnerPadding - 2)
@@ -291,7 +323,7 @@ struct AskDoctorSearchView: View {
 
                 Button(action: {}) {
                     Text("搜索")
-                        .font(.system(size: layout.captionFontSize, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption, weight: .medium))
                         .foregroundColor(.white)
                         .padding(.horizontal, layout.cardInnerPadding)
                         .padding(.vertical, layout.cardInnerPadding - 4)
@@ -311,7 +343,7 @@ struct AskDoctorSearchView: View {
                 HStack(spacing: layout.cardSpacing / 2) {
                     ForEach(hotTags, id: \.self) { tag in
                         Text(tag)
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption))
                             .foregroundColor(HealingColors.textSecondary)
                             .padding(.horizontal, layout.cardInnerPadding - 2)
                             .padding(.vertical, layout.cardSpacing / 2)
@@ -341,11 +373,11 @@ struct TrustBadgesView: View {
                 let (icon, text) = element
                 HStack(spacing: 4) {
                     Image(systemName: icon)
-                        .font(.system(size: layout.captionFontSize - 1))
+                        .font(.system(size: UnifiedFont.caption))
                         .foregroundColor(HealingColors.deepSage)
 
                     Text(text)
-                        .font(.system(size: layout.captionFontSize - 1))
+                        .font(.system(size: UnifiedFont.caption))
                 }
                 .foregroundColor(HealingColors.textTertiary)
 
@@ -354,7 +386,7 @@ struct TrustBadgesView: View {
                 }
             }
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, ScaleFactor.padding(4))
     }
 }
 
@@ -365,16 +397,16 @@ struct BrandFooterView: View {
 
     var body: some View {
         VStack(spacing: layout.cardSpacing / 2) {
-            HStack(spacing: 6) {
+            HStack(spacing: ScaleFactor.spacing(6)) {
                 Image(systemName: "cross.fill")
-                    .font(.system(size: layout.bodyFontSize - 2))
-                Text("灵犀医生")
-                    .font(.system(size: layout.bodyFontSize - 2, weight: .medium))
+                    .font(.system(size: UnifiedFont.footnote))
+                Text("灵犀健康")
+                    .font(.system(size: UnifiedFont.footnote, weight: .medium))
             }
             .foregroundColor(HealingColors.forestMist.opacity(0.7))
 
             Text("一起发现健康生活")
-                .font(.system(size: layout.captionFontSize))
+                .font(.system(size: UnifiedFont.caption))
                 .foregroundColor(HealingColors.textTertiary)
         }
         .padding(.top, layout.cardSpacing)
@@ -387,8 +419,8 @@ struct HealingButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundColor(HealingColors.forestMist)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            .padding(.horizontal, ScaleFactor.padding(16))
+            .padding(.vertical, ScaleFactor.padding(8))
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(HealingColors.softSage.opacity(0.15))

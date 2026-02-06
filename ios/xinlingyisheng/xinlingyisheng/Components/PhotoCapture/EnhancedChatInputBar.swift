@@ -12,7 +12,7 @@ struct EnhancedChatInputBarV2: View {
     var onDossierTap: () -> Void = {}
     var onActionTap: (QuickAction) -> Void = { _ in }
     
-    @StateObject private var speechService = SpeechRecognitionService.shared
+    @StateObject private var speechService = SimpleSpeechInputService.shared
     @State private var showSpeechError = false
     
     var body: some View {
@@ -103,7 +103,7 @@ struct EnhancedChatInputBarV2: View {
                 }
             }) {
                 Image(systemName: speechService.isRecording ? "waveform.circle.fill" : "waveform.circle")
-                    .font(.system(size: ScaleFactor.size(28)))
+                    .font(.system(size: ScaleFactor.font(28)))
                     .foregroundColor(speechService.isRecording ? .red : DXYColors.textTertiary)
             }
             .disabled(isDisabled || isSending)

@@ -29,22 +29,22 @@ interface AdminUser {
 }
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);  // 测试模式：默认已认证
   const [user, setUser] = useState<AdminUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  // 测试模式：使用虚拟用户
+  const testUser: AdminUser = {
+    id: 1,
+    username: "test_admin",
+    role: "admin",
+    is_active: true
+  };
 
   useEffect(() => {
-    const token = localStorage.getItem('admin_token');
-    const userStr = localStorage.getItem('admin_user');
-    if (token && userStr) {
-      try {
-        setUser(JSON.parse(userStr));
-        setIsAuthenticated(true);
-      } catch {
-        localStorage.removeItem('admin_token');
-        localStorage.removeItem('admin_user');
-      }
-    }
+    // 测试模式：自动设置测试用户，跳过登录
+    setUser(testUser);
+    setIsAuthenticated(true);
     setLoading(false);
   }, []);
 

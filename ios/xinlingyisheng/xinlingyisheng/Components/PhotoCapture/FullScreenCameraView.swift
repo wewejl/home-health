@@ -69,7 +69,7 @@ struct FullScreenCameraView: View {
             // 关闭按钮
             Button(action: { dismiss() }) {
                 Image(systemName: "xmark")
-                    .font(.system(size: ScaleFactor.size(20), weight: .medium))
+                    .font(.system(size: ScaleFactor.font(20), weight: .medium))
                     .foregroundColor(.white)
                     .frame(width: ScaleFactor.size(44), height: ScaleFactor.size(44))
                     .background(Color.black.opacity(0.5))
@@ -81,7 +81,7 @@ struct FullScreenCameraView: View {
             // 闪光灯按钮
             Button(action: toggleFlash) {
                 Image(systemName: flashMode == .on ? "bolt.fill" : "bolt.slash.fill")
-                    .font(.system(size: ScaleFactor.size(20), weight: .medium))
+                    .font(.system(size: ScaleFactor.font(20), weight: .medium))
                     .foregroundColor(flashMode == .on ? .yellow : .white)
                     .frame(width: ScaleFactor.size(44), height: ScaleFactor.size(44))
                     .background(Color.black.opacity(0.5))
@@ -129,7 +129,7 @@ struct FullScreenCameraView: View {
             // 切换摄像头按钮
             Button(action: { cameraService.switchCamera() }) {
                 Image(systemName: "arrow.triangle.2.circlepath.camera")
-                    .font(.system(size: ScaleFactor.size(28)))
+                    .font(.system(size: ScaleFactor.font(28)))
                     .foregroundColor(.white)
                     .frame(width: ScaleFactor.size(50), height: ScaleFactor.size(50))
             }
@@ -270,13 +270,19 @@ struct CameraPreviewView: UIViewRepresentable {
 // MARK: - 相机服务
 class CameraService: NSObject, ObservableObject {
     @Published var isSessionRunning = false
-    
+
     let session = AVCaptureSession()
     private var photoOutput = AVCapturePhotoOutput()
     private var currentCameraPosition: AVCaptureDevice.Position = .back
     private var flashMode: AVCaptureDevice.FlashMode = .off
     private var photoCaptureCompletion: ((UIImage?) -> Void)?
-    
+
+    deinit {
+        // 清理会话和资源
+        session.stopRunning()
+        photoCaptureCompletion = nil
+    }
+
     override init() {
         super.init()
         setupSession()

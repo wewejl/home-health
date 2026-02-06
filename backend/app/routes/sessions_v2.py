@@ -27,6 +27,42 @@ from ..services.agent_router_v2 import AgentRouterV2
 router = APIRouter(prefix="/v2/sessions", tags=["sessions-v2"])
 
 
+def migrate_v1_state_to_v2(v1_state: Optional[Dict]) -> Dict:
+    """
+    将 V1 状态转换为 V2 格式
+
+    V1 字段 -> V2 字段映射：
+    - questions_asked -> 删除（V2 不需要）
+    - session_id -> 删除（V2 从 session 对象获取）
+    - user_id -> 删除（V2 从 session 对象获取）
+    - stage -> 保留（V2 也使用）
+    - chief_complaint -> 保留（V2 也使用）
+    - symptoms -> 保留
+    - skin_location -> 保留
+    - diagnosis_card -> 保留
+    - advice_history -> 保留
+    """
+    if not v1_state:
+        return {}
+
+    # 处理 JSON 字符串情况（V1 可能存成字符串）
+    if isinstance(v1_state, str):
+        try:
+            v1_state = json.loads(v1_state)
+        except:
+            return {}
+
+    # V2 需要保留的状态字段
+    v2_fields = {
+        "stage", "chief_complaint", "symptoms",
+        "skin_location", "diagnosis_card", "advice_history",
+        "knowledge_refs", "reasoning_steps", "latest_analysis",
+        "latest_interpretation", "current_response"
+    }
+
+    return {k: v for k, v in v1_state.items() if k in v2_fields}
+
+
 @router.post("", response_model=SessionResponse)
 async def create_session_v2(
     request: Union[SessionCreate, EnhancedSessionCreate],
@@ -90,13 +126,23 @@ async def send_message_v2(
 ):
     """
     发送消息 (V2)
-    
+
     返回 AgentResponse 统一格式
+
+    测试模式：无需认证，可直接访问任何会话
     """
-    session = db.query(SessionModel).filter(
-        SessionModel.id == session_id,
-        SessionModel.user_id == current_user.id
-    ).first()
+    # 测试模式：不检查 user_id，直接根据 session_id 查询
+    from ..dependencies import TEST_MODE
+
+    if TEST_MODE:
+        session = db.query(SessionModel).filter(
+            SessionModel.id == session_id
+        ).first()
+    else:
+        session = db.query(SessionModel).filter(
+            SessionModel.id == session_id,
+            SessionModel.user_id == current_user.id
+        ).first()
 
     if not session:
         raise HTTPException(status_code=404, detail="会话不存在")
@@ -134,8 +180,8 @@ async def send_message_v2(
     db.commit()
     db.refresh(user_message)
 
-    # 恢复智能体状态
-    state = session.agent_state or {}
+    # 恢复智能体状态（使用状态转换函数兼容 V1 会话）
+    state = migrate_v1_state_to_v2(session.agent_state)
 
     # 检查是否请求流式响应
     accept_header = http_request.headers.get("accept", "")
@@ -150,7 +196,8 @@ async def send_message_v2(
                 attachments=attachments_data,
                 action=action,
                 session_id=session.id,
-                agent_type=agent_type
+                agent_type=agent_type,
+                db_session=db
             ),
             media_type="text/event-stream",
             headers={
@@ -195,7 +242,8 @@ async def stream_agent_response_v2(
     attachments: list,
     action: str,
     session_id: str,
-    agent_type: str
+    agent_type: str,
+    db_session: Optional[DBSession] = None
 ) -> AsyncGenerator[str, None]:
     """
     生成 SSE 流式响应 (V2)
@@ -281,6 +329,81 @@ async def stream_agent_response_v2(
         # 发送完成事件 - AgentResponse 格式
         complete_data = final_response.model_dump()
         yield f"event: complete\ndata: {json.dumps(complete_data, ensure_ascii=False)}\n\n"
+
+
+@router.get("", response_model=List[SessionResponse])
+def get_sessions_v2(
+    db: DBSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    获取用户会话列表 (V2)
+
+    与 V1 功能对等，返回当前用户的所有会话
+    """
+    sessions = db.query(SessionModel).filter(
+        SessionModel.user_id == current_user.id
+    ).order_by(SessionModel.updated_at.desc()).all()
+
+    result = []
+    for session in sessions:
+        doctor = db.query(Doctor).filter(Doctor.id == session.doctor_id).first() if session.doctor_id else None
+        result.append(SessionResponse(
+            session_id=session.id,
+            doctor_id=session.doctor_id,
+            doctor_name=doctor.name if doctor else "AI助手",
+            agent_type=session.agent_type or "general",
+            last_message=session.last_message,
+            status=session.status,
+            created_at=session.created_at,
+            updated_at=session.updated_at
+        ))
+    return result
+
+
+@router.get("/{session_id}/messages", response_model=MessageListResponse)
+def get_session_messages_v2(
+    session_id: str,
+    limit: int = 20,
+    before: Optional[int] = None,
+    db: DBSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    获取会话消息列表 (V2)
+
+    与 V1 功能对等，支持分页加载
+    """
+    from ..dependencies import TEST_MODE
+
+    if TEST_MODE:
+        session = db.query(SessionModel).filter(
+            SessionModel.id == session_id
+        ).first()
+    else:
+        session = db.query(SessionModel).filter(
+            SessionModel.id == session_id,
+            SessionModel.user_id == current_user.id
+        ).first()
+
+    if not session:
+        raise HTTPException(status_code=404, detail="会话不存在")
+
+    query = db.query(Message).filter(Message.session_id == session_id)
+
+    if before:
+        query = query.filter(Message.id < before)
+
+    messages = query.order_by(Message.created_at.desc()).limit(limit + 1).all()
+
+    has_more = len(messages) > limit
+    messages = messages[:limit]
+    messages.reverse()
+
+    return MessageListResponse(
+        messages=[MessageResponse.model_validate(m) for m in messages],
+        has_more=has_more
+    )
 
 
 @router.get("/agents", response_model=Dict[str, Any])

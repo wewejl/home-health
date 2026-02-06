@@ -44,9 +44,8 @@ struct DepartmentDetailView: View {
                         VStack(spacing: layout.cardSpacing) {
                             ProgressView()
                                 .tint(HealingColors.forestMist)
-                                .scaleEffect(1.2)
                             Text("加载医生中...")
-                                .font(.system(size: layout.captionFontSize + 1))
+                                .font(.system(size: UnifiedFont.caption))
                                 .foregroundColor(HealingColors.textSecondary)
                         }
                         Spacer()
@@ -59,21 +58,21 @@ struct DepartmentDetailView: View {
                                     .frame(width: layout.iconLargeSize * 2, height: layout.iconLargeSize * 2)
 
                                 Image(systemName: "person.2.slash")
-                                    .font(.system(size: layout.titleFontSize, weight: .light))
+                                    .font(.system(size: UnifiedFont.title3, weight: .light))
                                     .foregroundColor(HealingColors.forestMist.opacity(0.6))
                             }
 
                             Text("暂无医生数据")
-                                .font(.system(size: layout.bodyFontSize))
+                                .font(.system(size: UnifiedFont.footnote))
                                 .foregroundColor(HealingColors.textSecondary)
 
                             if departmentId != nil {
                                 Button(action: { loadDoctors() }) {
                                     HStack(spacing: layout.cardSpacing / 2) {
                                         Image(systemName: "arrow.clockwise")
-                                            .font(.system(size: layout.captionFontSize))
+                                            .font(.system(size: UnifiedFont.caption))
                                         Text("点击重试")
-                                            .font(.system(size: layout.captionFontSize + 1, weight: .medium))
+                                            .font(.system(size: UnifiedFont.footnote, weight: .medium))
                                     }
                                     .foregroundColor(.white)
                                     .padding(.horizontal, layout.cardInnerPadding + 4)
@@ -92,7 +91,7 @@ struct DepartmentDetailView: View {
                         Spacer()
                     } else {
                         ScrollView(.vertical, showsIndicators: false) {
-                            VStack(spacing: layout.cardSpacing) {
+                            VStack(spacing: layout.cardSpacing + 8) {
                                 // 搜索框
                                 HealingDepartmentSearchBar(
                                     searchText: $searchText,
@@ -243,7 +242,7 @@ struct HealingDepartmentNavBar: View {
                         .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
 
                     Image(systemName: "chevron.left")
-                        .font(.system(size: layout.captionFontSize + 2, weight: .medium))
+                        .font(.system(size: UnifiedFont.footnote, weight: .medium))
                         .foregroundColor(HealingColors.textPrimary)
                 }
                 .frame(width: layout.iconSmallSize + 8, height: layout.iconSmallSize + 8)
@@ -252,7 +251,7 @@ struct HealingDepartmentNavBar: View {
             Spacer()
 
             Text(title)
-                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                .font(.system(size: UnifiedFont.body, weight: .semibold))
                 .foregroundColor(HealingColors.textPrimary)
 
             Spacer()
@@ -264,7 +263,7 @@ struct HealingDepartmentNavBar: View {
                         .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
 
                     Image(systemName: "square.and.pencil")
-                        .font(.system(size: layout.captionFontSize + 1))
+                        .font(.system(size: UnifiedFont.footnote))
                         .foregroundColor(HealingColors.textSecondary)
                 }
                 .frame(width: layout.iconSmallSize + 8, height: layout.iconSmallSize + 8)
@@ -289,17 +288,17 @@ struct HealingDepartmentSearchBar: View {
     var body: some View {
         HStack(spacing: layout.cardSpacing / 2) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: layout.bodyFontSize - 2))
+                .font(.system(size: UnifiedFont.caption))
                 .foregroundColor(HealingColors.textTertiary)
 
             TextField("搜索医生 / 医院 / 擅长疾病", text: $searchText)
-                .font(.system(size: layout.bodyFontSize - 2))
+                .font(.system(size: UnifiedFont.caption))
                 .foregroundColor(HealingColors.textPrimary)
 
             if !searchText.isEmpty {
                 Button(action: { searchText = "" }) {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: layout.captionFontSize + 2))
+                        .font(.system(size: UnifiedFont.subheadline))
                         .foregroundColor(HealingColors.textTertiary)
                 }
             }
@@ -332,16 +331,16 @@ struct HealingFilterBarView: View {
                 Button(action: {}) {
                     HStack(spacing: 4) {
                         Text(filter)
-                            .font(.system(size: layout.captionFontSize + 1, weight: .medium))
+                            .font(.system(size: UnifiedFont.footnote, weight: .medium))
                             .foregroundColor(filter == "筛选" ? HealingColors.forestMist : HealingColors.textSecondary)
 
                         if hasDropdown {
                             Image(systemName: "chevron.down")
-                                .font(.system(size: layout.captionFontSize - 2, weight: .semibold))
+                                .font(.system(size: AdaptiveFont.caption - 2, weight: .semibold))
                                 .foregroundColor(HealingColors.textTertiary)
                         } else {
                             Image(systemName: "slider.horizontal.3")
-                                .font(.system(size: layout.captionFontSize + 1))
+                                .font(.system(size: UnifiedFont.caption))
                                 .foregroundColor(HealingColors.forestMist)
                         }
                     }
@@ -376,9 +375,10 @@ struct HealingQuickFilterTagsView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: layout.cardSpacing / 2) {
                 ForEach(tags, id: \.1) { icon, text, color in
+                    let isSelected = selectedTags.contains(text)
                     Button(action: {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            if selectedTags.contains(text) {
+                            if isSelected {
                                 selectedTags.remove(text)
                             } else {
                                 selectedTags.insert(text)
@@ -387,27 +387,41 @@ struct HealingQuickFilterTagsView: View {
                     }) {
                         HStack(spacing: 4) {
                             Image(systemName: icon)
-                                .font(.system(size: layout.captionFontSize))
+                                .font(.system(size: UnifiedFont.caption))
                             Text(text)
-                                .font(.system(size: layout.captionFontSize, weight: .medium))
+                                .font(.system(size: UnifiedFont.caption, weight: .medium))
                         }
-                        .foregroundColor(selectedTags.contains(text) ? .white : color)
+                        .foregroundColor(isSelected ? .white : color)
                         .padding(.horizontal, layout.cardInnerPadding)
                         .padding(.vertical, layout.cardSpacing / 2)
                         .background(
-                            selectedTags.contains(text) ?
+                            isSelected ?
                             LinearGradient(
-                                colors: [color, color.opacity(0.8)],
+                                colors: [color, color.opacity(0.85)],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             ) :
                             LinearGradient(
-                                colors: [color.opacity(0.15), color.opacity(0.1)],
+                                colors: [color.opacity(0.18), color.opacity(0.12)],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
                         .clipShape(Capsule())
+                        .shadow(
+                            color: isSelected ? color.opacity(0.3) : Color.clear,
+                            radius: isSelected ? 6 : 0,
+                            x: 0,
+                            y: isSelected ? 3 : 0
+                        )
+                        .overlay(
+                            Capsule()
+                                .stroke(
+                                    isSelected ? Color.clear : color.opacity(0.15),
+                                    lineWidth: isSelected ? 0 : 1
+                                )
+                        )
+                        .scaleEffect(isSelected ? 1.02 : 1.0)
                     }
                 }
             }
@@ -427,12 +441,16 @@ struct HealingDoctorCardView: View {
         VStack(alignment: .leading, spacing: layout.cardSpacing) {
             // 顶部：头像 + 基本信息
             HStack(alignment: .top, spacing: layout.cardSpacing) {
-                // 头像
+                // 头像 - 增强效果
                 ZStack(alignment: .bottomLeading) {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [doctor.avatarColor, doctor.avatarColor.opacity(0.6)],
+                                colors: [
+                                    doctor.avatarColor,
+                                    doctor.avatarColor.opacity(0.5),
+                                    doctor.avatarColor.opacity(0.8)
+                                ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -440,63 +458,76 @@ struct HealingDoctorCardView: View {
                         .frame(width: layout.iconLargeSize + 8, height: layout.iconLargeSize + 8)
                         .overlay(
                             Circle()
-                                .stroke(HealingColors.cardBackground, lineWidth: 2)
+                                .stroke(HealingColors.cardBackground, lineWidth: 2.5)
                         )
-                        .shadow(color: doctor.avatarColor.opacity(0.3), radius: 8, x: 0, y: 4)
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                .blur(radius: 1)
+                        )
+                        .shadow(
+                            color: doctor.avatarColor.opacity(isPressed ? 0.4 : 0.3),
+                            radius: isPressed ? 10 : 8,
+                            x: 0,
+                            y: isPressed ? 5 : 4
+                        )
 
                     Image(systemName: "person.fill")
-                        .font(.system(size: layout.bodyFontSize + 4))
+                        .font(.system(size: UnifiedFont.body))
                         .foregroundColor(.white)
+                        .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 1)
 
                     if doctor.hasRecommendBadge {
                         HStack(spacing: 2) {
                             Image(systemName: "hand.thumbsup.fill")
-                                .font(.system(size: layout.captionFontSize - 3))
+                                .font(.system(size: AdaptiveFont.caption - 3))
                             Text("力荐")
-                                .font(.system(size: layout.captionFontSize - 3, weight: .semibold))
+                                .font(.system(size: AdaptiveFont.caption - 3, weight: .semibold))
                         }
                         .foregroundColor(.white)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 2)
+                        .padding(.horizontal, ScaleFactor.padding(4))
+                        .padding(.vertical, ScaleFactor.padding(2))
                         .background(
                             Capsule()
                                 .fill(HealingColors.terracotta)
+                                .shadow(color: HealingColors.terracotta.opacity(0.5), radius: 3, x: 0, y: 1)
                         )
                         .offset(x: -4, y: 4)
                     }
                 }
+                .scaleEffect(isPressed ? 0.97 : 1.0)
 
                 VStack(alignment: .leading, spacing: layout.cardSpacing / 3) {
                     // 姓名 + 职称 + 标签
                     HStack(spacing: layout.cardSpacing / 3) {
                         Text(doctor.name)
-                            .font(.system(size: layout.bodyFontSize + 1, weight: .semibold))
+                            .font(.system(size: UnifiedFont.subheadline, weight: .semibold))
                             .foregroundColor(HealingColors.textPrimary)
 
                         Text(doctor.title)
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption))
                             .foregroundColor(HealingColors.textSecondary)
 
                         if doctor.canPrescribe {
                             HStack(spacing: 2) {
                                 Image(systemName: "pills.fill")
-                                    .font(.system(size: layout.captionFontSize - 2))
+                                    .font(.system(size: AdaptiveFont.caption - 2))
                                 Text("处方")
-                                    .font(.system(size: layout.captionFontSize - 2, weight: .medium))
+                                    .font(.system(size: AdaptiveFont.caption - 2, weight: .medium))
                             }
                             .foregroundColor(HealingColors.forestMist)
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 2)
+                            .padding(.horizontal, ScaleFactor.padding(5))
+                            .padding(.vertical, ScaleFactor.padding(2))
                             .background(HealingColors.softSage.opacity(0.25))
                             .clipShape(Capsule())
                         }
 
                         if doctor.isTopHospital {
                             Text("三甲")
-                                .font(.system(size: layout.captionFontSize - 1, weight: .medium))
+                                .font(.system(size: UnifiedFont.caption, weight: .medium))
                                 .foregroundColor(.white)
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 2)
+                                .padding(.horizontal, ScaleFactor.padding(5))
+                                .padding(.vertical, ScaleFactor.padding(2))
                                 .background(
                                     Capsule()
                                         .fill(HealingColors.dustyBlue)
@@ -507,11 +538,11 @@ struct HealingDoctorCardView: View {
                     // 医院 + 科室
                     HStack(spacing: layout.cardSpacing / 2) {
                         Image(systemName: "building.2.fill")
-                            .font(.system(size: layout.captionFontSize - 1))
+                            .font(.system(size: AdaptiveFont.caption - 1))
                             .foregroundColor(HealingColors.textTertiary)
 
                         Text(doctor.hospital)
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption))
                             .foregroundColor(HealingColors.textSecondary)
                             .lineLimit(1)
 
@@ -519,18 +550,18 @@ struct HealingDoctorCardView: View {
                             .foregroundColor(HealingColors.textTertiary)
 
                         Text(doctor.department)
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption))
                             .foregroundColor(HealingColors.textSecondary)
                     }
 
                     // 擅长
                     HStack(spacing: 4) {
                         Image(systemName: "star.fill")
-                            .font(.system(size: layout.captionFontSize - 2))
+                            .font(.system(size: AdaptiveFont.caption - 2))
                             .foregroundColor(HealingColors.warmSand)
 
                         Text("擅长：\(doctor.specialty)")
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption))
                             .foregroundColor(HealingColors.textSecondary)
                             .lineLimit(2)
                     }
@@ -549,16 +580,16 @@ struct HealingDoctorCardView: View {
                             .frame(width: layout.iconSmallSize - 4, height: layout.iconSmallSize - 4)
 
                         Image(systemName: "heart.fill")
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption))
                             .foregroundColor(HealingColors.terracotta)
                     }
 
                     VStack(alignment: .leading, spacing: 1) {
                         Text("评分")
-                            .font(.system(size: layout.captionFontSize - 2))
+                            .font(.system(size: AdaptiveFont.caption - 2))
                             .foregroundColor(HealingColors.textTertiary)
                         Text(String(format: "%.1f", doctor.rating))
-                            .font(.system(size: layout.captionFontSize, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
                             .foregroundColor(HealingColors.terracotta)
                     }
                 }
@@ -571,16 +602,16 @@ struct HealingDoctorCardView: View {
                             .frame(width: layout.iconSmallSize - 4, height: layout.iconSmallSize - 4)
 
                         Image(systemName: "bubble.left.fill")
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption))
                             .foregroundColor(HealingColors.forestMist)
                     }
 
                     VStack(alignment: .leading, spacing: 1) {
                         Text("月回答")
-                            .font(.system(size: layout.captionFontSize - 2))
+                            .font(.system(size: AdaptiveFont.caption - 2))
                             .foregroundColor(HealingColors.textTertiary)
                         Text("\(doctor.monthlyAnswers)")
-                            .font(.system(size: layout.captionFontSize, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
                             .foregroundColor(HealingColors.forestMist)
                     }
                 }
@@ -593,16 +624,16 @@ struct HealingDoctorCardView: View {
                             .frame(width: layout.iconSmallSize - 4, height: layout.iconSmallSize - 4)
 
                         Image(systemName: "clock.fill")
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption))
                             .foregroundColor(HealingColors.dustyBlue)
                     }
 
                     VStack(alignment: .leading, spacing: 1) {
                         Text("响应")
-                            .font(.system(size: layout.captionFontSize - 2))
+                            .font(.system(size: AdaptiveFont.caption - 2))
                             .foregroundColor(HealingColors.textTertiary)
                         Text(doctor.avgResponseTime)
-                            .font(.system(size: layout.captionFontSize, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
                             .foregroundColor(HealingColors.dustyBlue)
                     }
                 }
@@ -610,41 +641,57 @@ struct HealingDoctorCardView: View {
                 Spacer()
             }
 
-            // 底部：问医生按钮
+            // 底部：问医生按钮 - 增强效果
             Button(action: onAskDoctor) {
                 HStack(spacing: layout.cardSpacing / 2) {
                     Image(systemName: "cross.case.fill")
-                        .font(.system(size: layout.captionFontSize + 1))
+                        .font(.system(size: UnifiedFont.footnote))
 
                     Text("咨询医生")
-                        .font(.system(size: layout.bodyFontSize - 1, weight: .semibold))
+                        .font(.system(size: UnifiedFont.footnote, weight: .semibold))
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, layout.cardInnerPadding)
                 .background(
                     LinearGradient(
-                        colors: [HealingColors.deepSage, HealingColors.forestMist],
+                        colors: [
+                            HealingColors.deepSage,
+                            HealingColors.forestMist,
+                            HealingColors.deepSage.opacity(0.9)
+                        ],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
                 )
                 .clipShape(Capsule())
-                .shadow(color: HealingColors.forestMist.opacity(0.25), radius: 8, x: 0, y: 4)
+                .shadow(color: HealingColors.forestMist.opacity(0.35), radius: 10, x: 0, y: 4)
+                .overlay(
+                    Capsule()
+                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                )
             }
         }
         .padding(layout.cardInnerPadding + 2)
         .background(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(HealingColors.cardBackground)
-                .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+                .shadow(
+                    color: Color.black.opacity(isPressed ? 0.08 : 0.06),
+                    radius: isPressed ? 8 : 12,
+                    x: 0,
+                    y: isPressed ? 3 : 5
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .stroke(
+                            HealingColors.softSage.opacity(isPressed ? 0.25 : 0.18),
+                            lineWidth: 1.2
+                        )
+                )
         )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(HealingColors.softSage.opacity(0.15), lineWidth: 1)
-        )
-        .scaleEffect(isPressed ? 0.98 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isPressed)
+        .scaleEffect(isPressed ? 0.99 : 1.0)
+        .animation(.easeInOut(duration: 0.12), value: isPressed)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in isPressed = true }

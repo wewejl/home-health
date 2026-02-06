@@ -37,15 +37,14 @@ struct SessionHistoryView: View {
                         }
                     }
                 }
-                .navigationTitle("历史对话")
-                .navigationBarTitleDisplayMode(.inline)
+                .navigationBarHidden(true)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button("关闭") {
                             dismiss()
                         }
                         .foregroundColor(HealingColors.forestMist)
-                        .font(.system(size: layout.bodyFontSize - 1))
+                        .font(.system(size: UnifiedFont.subheadline))
                     }
                 }
                 .task {
@@ -137,11 +136,10 @@ struct HealingSessionHistoryLoadingView: View {
             Spacer()
 
             ProgressView()
-                .scaleEffect(1.2)
                 .tint(HealingColors.forestMist)
 
             Text("加载中...")
-                .font(.system(size: layout.bodyFontSize))
+                .font(.system(size: UnifiedFont.body))
                 .foregroundColor(HealingColors.textSecondary)
 
             Spacer()
@@ -155,7 +153,7 @@ struct HealingSessionHistoryEmptyView: View {
     let layout: AdaptiveLayout
 
     var body: some View {
-        VStack(spacing: layout.cardSpacing + 4) {
+        VStack(spacing: layout.cardSpacing + 8) {
             Spacer()
 
             ZStack {
@@ -164,16 +162,16 @@ struct HealingSessionHistoryEmptyView: View {
                     .frame(width: layout.iconLargeSize * 1.5, height: layout.iconLargeSize * 1.5)
 
                 Image(systemName: "bubble.left.and.bubble.right")
-                    .font(.system(size: layout.bodyFontSize + 12, weight: .light))
+                    .font(.system(size: UnifiedFont.title3, weight: .light))
                     .foregroundColor(HealingColors.textTertiary)
             }
 
             Text("暂无历史对话")
-                .font(.system(size: layout.bodyFontSize + 2, weight: .semibold))
+                .font(.system(size: UnifiedFont.body, weight: .semibold))
                 .foregroundColor(HealingColors.textPrimary)
 
             Text("与\(doctorName)的对话将显示在这里")
-                .font(.system(size: layout.captionFontSize + 1))
+                .font(.system(size: UnifiedFont.footnote))
                 .foregroundColor(HealingColors.textSecondary)
                 .multilineTextAlignment(.center)
 
@@ -220,7 +218,7 @@ struct HealingSessionHistoryCard: View {
                 HStack(spacing: layout.cardSpacing / 2) {
                     // 智能体类型标签
                     Text(agentTypeDisplayName)
-                        .font(.system(size: layout.captionFontSize, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption, weight: .medium))
                         .foregroundColor(agentTypeColor)
                         .padding(.horizontal, layout.cardInnerPadding - 2)
                         .padding(.vertical, layout.cardSpacing / 3)
@@ -229,7 +227,7 @@ struct HealingSessionHistoryCard: View {
 
                     // 状态标签
                     Text(session.status == "active" ? "进行中" : "已完成")
-                        .font(.system(size: layout.captionFontSize - 1, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption, weight: .medium))
                         .foregroundColor(session.status == "active" ? HealingColors.forestMist : HealingColors.textTertiary)
                         .padding(.horizontal, layout.cardInnerPadding - 2)
                         .padding(.vertical, layout.cardSpacing / 3)
@@ -242,39 +240,39 @@ struct HealingSessionHistoryCard: View {
 
                     // 时间
                     Text(formattedDate)
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption))
                         .foregroundColor(HealingColors.textTertiary)
                 }
 
                 // 最后一条消息预览
                 Text(session.last_message ?? "开始新对话")
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textPrimary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
 
                 // 底部: 消息图标
                 HStack(spacing: layout.cardSpacing / 2) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: ScaleFactor.spacing(4)) {
                         ZStack {
                             Circle()
                                 .fill(HealingColors.textTertiary.opacity(0.15))
-                                .frame(width: 20, height: 20)
+                                .frame(width: ScaleFactor.size(20), height: ScaleFactor.size(20))
 
                             Image(systemName: "bubble.left.fill")
-                                .font(.system(size: 10))
+                                .font(.system(size: AdaptiveFont.caption - 2, weight: .regular))
                                 .foregroundColor(HealingColors.textTertiary)
                         }
 
                         Text("点击继续对话")
-                            .font(.system(size: layout.captionFontSize))
+                            .font(.system(size: UnifiedFont.caption))
                             .foregroundColor(HealingColors.textSecondary)
                     }
 
                     Spacer()
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: layout.captionFontSize, weight: .semibold))
+                        .font(.system(size: UnifiedFont.caption, weight: .semibold))
                         .foregroundColor(HealingColors.textTertiary)
                 }
             }
@@ -324,7 +322,7 @@ struct HealingSessionHistoryCard: View {
 #Preview {
     SessionHistoryView(
         doctorId: 1,
-        doctorName: "灵犀医生",
+        doctorName: "灵犀健康",
         onSelectSession: { _ in }
     )
 }

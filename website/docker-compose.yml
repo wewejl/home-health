@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  website:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lingxi-health-website
+    ports:
+      - "3344:8080"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production

@@ -89,22 +89,25 @@ enum DossierRiskLevel: String, Codable, CaseIterable {
 
 // MARK: - 事件状态
 enum EventStatus: String, Codable, CaseIterable {
+    case active = "active"           // ✅ 新增：匹配后端
     case inProgress = "in_progress"
     case completed = "completed"
     case exported = "exported"
     case archived = "archived"
-    
+
     var displayName: String {
         switch self {
+        case .active: return "活跃"
         case .inProgress: return "进行中"
         case .completed: return "已完成"
         case .exported: return "已导出"
         case .archived: return "已归档"
         }
     }
-    
+
     var color: Color {
         switch self {
+        case .active: return Color.blue
         case .inProgress: return DossierColors.statusInProgress
         case .completed: return DossierColors.statusCompleted
         case .exported: return DossierColors.statusExported

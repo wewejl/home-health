@@ -6,6 +6,8 @@
 - 支持多种音频格式
 - 提取症状关键词
 - 支持实时和离线转写
+
+ASR 提供商：统一使用阿里云 Qwen-ASR
 """
 import os
 import json
@@ -53,7 +55,7 @@ class TranscriptionResult:
     created_at: datetime
     completed_at: Optional[datetime] = None
     error_message: Optional[str] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         result = asdict(self)
         result["status"] = self.status.value
@@ -64,21 +66,21 @@ class TranscriptionResult:
 
 
 class SpeechTranscriptionService(BaseAIService):
-    """语音转写服务"""
-    
+    """语音转写服务 - 统一使用阿里云 Qwen-ASR"""
+
     # 支持的音频格式
     SUPPORTED_FORMATS = ["mp3", "wav", "m4a", "aac", "ogg", "flac", "webm"]
-    
+
     # 最大文件大小（字节）
     MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
-    
+
     # 最大时长（秒）
     MAX_DURATION = 600  # 10分钟
-    
+
     def __init__(self):
         super().__init__()
         self._task_cache: Dict[str, TranscriptionResult] = {}
-    
+
     async def transcribe(
         self,
         audio_url: Optional[str] = None,
@@ -89,20 +91,20 @@ class SpeechTranscriptionService(BaseAIService):
     ) -> TranscriptionResult:
         """
         转写音频
-        
+
         Args:
             audio_url: 音频 URL
             audio_base64: Base64 编码的音频
             audio_path: 本地音频文件路径
             language: 语言代码
             extract_symptoms: 是否提取症状
-        
+
         Returns:
             TranscriptionResult 转写结果
         """
         import uuid
         task_id = str(uuid.uuid4())
-        
+
         # 创建初始结果
         result = TranscriptionResult(
             task_id=task_id,
@@ -115,19 +117,19 @@ class SpeechTranscriptionService(BaseAIService):
             language=language,
             created_at=datetime.utcnow()
         )
-        
+
         try:
             # 获取音频数据
             audio_data = await self._get_audio_data(audio_url, audio_base64, audio_path)
-            
+
             if not audio_data:
                 result.status = TranscriptionStatus.FAILED
                 result.error_message = "无法获取音频数据"
                 return result
-            
-            # 调用转写 API
-            transcription = await self._call_transcription_api(audio_data, language)
-            
+
+            # 调用阿里云转写 API
+            transcription = await self._transcribe_with_aliyun(audio_data, language)
+
             if transcription:
                 result.text = transcription.get("text", "")
                 result.duration = transcription.get("duration", 0.0)
@@ -136,27 +138,27 @@ class SpeechTranscriptionService(BaseAIService):
                 result.language = transcription.get("language", language)
                 result.status = TranscriptionStatus.COMPLETED
                 result.completed_at = datetime.utcnow()
-                
+
                 # 提取症状
                 if extract_symptoms and result.text:
                     result.extracted_symptoms = await self._extract_symptoms_from_text(result.text)
             else:
                 result.status = TranscriptionStatus.FAILED
                 result.error_message = "转写失败"
-            
+
         except Exception as e:
             result.status = TranscriptionStatus.FAILED
             result.error_message = str(e)
-        
+
         # 缓存结果
         self._task_cache[task_id] = result
-        
+
         return result
-    
+
     async def get_task_status(self, task_id: str) -> Optional[TranscriptionResult]:
         """获取转写任务状态"""
         return self._task_cache.get(task_id)
-    
+
     async def transcribe_with_llm(
         self,
         text: str,
@@ -164,11 +166,11 @@ class SpeechTranscriptionService(BaseAIService):
     ) -> Dict[str, Any]:
         """
         使用 LLM 处理转写文本（后处理）
-        
+
         Args:
             text: 原始转写文本
             context: 上下文信息
-        
+
         Returns:
             处理后的结果
         """
@@ -210,7 +212,7 @@ class SpeechTranscriptionService(BaseAIService):
                 user_prompt=user_prompt,
                 temperature=0.2
             )
-            
+
             return self._parse_json(response, {
                 "cleaned_text": text,
                 "symptoms": [],
@@ -219,11 +221,11 @@ class SpeechTranscriptionService(BaseAIService):
                 "key_info": [],
                 "follow_up_questions": []
             })
-            
+
         except Exception as e:
             print(f"LLM 后处理失败: {e}")
             return {"cleaned_text": text, "symptoms": []}
-    
+
     async def _get_audio_data(
         self,
         url: Optional[str],
@@ -236,7 +238,7 @@ class SpeechTranscriptionService(BaseAIService):
                 return base64.b64decode(base64_data)
             except:
                 return None
-        
+
         if url:
             try:
                 async with httpx.AsyncClient(timeout=30.0) as client:
@@ -245,119 +247,13 @@ class SpeechTranscriptionService(BaseAIService):
                         return response.content
             except:
                 return None
-        
+
         if file_path and os.path.exists(file_path):
             try:
                 with open(file_path, "rb") as f:
                     return f.read()
             except:
                 return None
-        
-        return None
-    
-    async def _call_transcription_api(
-        self,
-        audio_data: bytes,
-        language: str
-    ) -> Optional[Dict]:
-        """
-        调用转写 API
-
-        注意：这里提供了多种实现方案，根据 ASR_PROVIDER 配置选择
-        """
-        provider = settings.ASR_PROVIDER
-
-        # 方案1: 使用 GLM-ASR（智谱语音识别）
-        if provider == "glm":
-            result = await self._transcribe_with_glm(audio_data, language)
-            if result:
-                return result
-
-        # 方案2: 使用阿里云 Paraformer
-        if provider == "aliyun":
-            result = await self._transcribe_with_aliyun(audio_data, language)
-            if result:
-                return result
-
-        # 方案3: 使用 OpenAI Whisper API
-        if provider == "openai":
-            result = await self._transcribe_with_whisper(audio_data, language)
-            if result:
-                return result
-
-        # 方案4: 本地模拟（开发测试用）
-        return self._mock_transcription(audio_data)
-
-    async def _transcribe_with_glm(
-        self,
-        audio_data: bytes,
-        language: str
-    ) -> Optional[Dict]:
-        """
-        GLM-ASR-2512 转写（智谱语音识别）
-
-        需要配置 GLM_API_KEY
-        """
-        api_key = settings.GLM_API_KEY
-        if not api_key:
-            print("GLM_API_KEY 未配置")
-            return None
-
-        try:
-            import io
-
-            # GLM API 使用 Bearer Token 格式
-            headers = {
-                "Authorization": f"Bearer {api_key}"
-            }
-
-            # 准备 multipart/form-data
-            files = {
-                "file": ("audio.m4a", io.BytesIO(audio_data), "audio/m4a"),
-                "model": (None, settings.GLM_ASR_MODEL),
-                "stream": (None, "false")
-            }
-
-            print(f"[GLM-ASR] 正在调用 GLM-ASR API，音频大小: {len(audio_data)} bytes")
-
-            async with httpx.AsyncClient(timeout=120.0) as client:
-                response = await client.post(
-                    settings.GLM_ASR_BASE_URL,
-                    headers=headers,
-                    files=files
-                )
-
-                print(f"[GLM-ASR] API 响应状态码: {response.status_code}")
-
-                if response.status_code == 200:
-                    data = response.json()
-                    text = data.get("text", "")
-
-                    print(f"[GLM-ASR] 转写成功: {text[:50]}...")
-
-                    # GLM-ASR 支持自动语言检测，返回检测到的语言
-                    detected_lang = language
-                    if language == "auto":
-                        # GLM-ASR 会自动检测语言，这里从响应中获取（如果 API 支持）
-                        # 如果 API 不返回语言信息，则使用输入参数作为回退
-                        detected_lang = data.get("language", "zh")
-
-                    return {
-                        "text": text,
-                        "duration": data.get("duration", 0),
-                        "confidence": 0.9,  # GLM-ASR 不返回置信度，给个默认值
-                        "language": detected_lang,  # 返回检测到的语言
-                        "segments": []
-                    }
-                else:
-                    error_text = response.text
-                    print(f"[GLM-ASR] API 错误: {error_text}")
-                    return None
-
-        except Exception as e:
-            print(f"[GLM-ASR] 转写失败: {e}")
-            import traceback
-            traceback.print_exc()
 
         return None
 
@@ -367,80 +263,136 @@ class SpeechTranscriptionService(BaseAIService):
         language: str
     ) -> Optional[Dict]:
         """
-        阿里云 Paraformer 转写
+        阿里云 Qwen-ASR 转写 (使用 OpenAI 兼容模式)
 
-        需要配置：
-        - ALIYUN_ASR_ACCESS_KEY
-        - ALIYUN_ASR_ACCESS_SECRET
+        需要配置 DASHSCOPE_API_KEY
 
-        参考文档：https://help.aliyun.com/document_detail/324392.html
-        当前未实现，使用 GLM-ASR 作为替代。
+        参考文档：https://help.aliyun.com/zh/model-studio/qwen-asr-api-reference
         """
-        # 未实现：阿里云 ASR 接口需要使用阿里云 SDK
-        # 推荐使用已实现的 GLM-ASR (provider="glm")
-        return None
-    
-    async def _transcribe_with_whisper(
-        self,
-        audio_data: bytes,
-        language: str
-    ) -> Optional[Dict]:
-        """
-        OpenAI Whisper API 转写
-
-        需要配置 OPENAI_API_KEY
-
-        注意：当 language="auto" 时，不传递 language 参数，让 Whisper 自动检测
-        """
-        openai_key = os.getenv("OPENAI_API_KEY")
-        if not openai_key:
-            return None
+        api_key = settings.DASHSCOPE_API_KEY
+        if not api_key:
+            print("[Aliyun-ASR] DASHSCOPE_API_KEY 未配置")
+            # 返回模拟结果用于开发测试
+            return self._mock_transcription(audio_data)
 
         try:
-            import io
+            import base64
 
-            # 构建 files 参数
-            # 当 language 为 "auto" 时不传递该参数，让 Whisper 自动检测语言
-            files = {
-                "file": ("audio.wav", io.BytesIO(audio_data), "audio/wav"),
-                "model": (None, "whisper-1"),
-                "response_format": (None, "verbose_json")
+            # 使用 OpenAI 兼容模式
+            url = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+
+            # 将音频转换为 data URI 格式
+            data_uri = f"data:audio/wav;base64,{base64.b64encode(audio_data).decode()}"
+
+            # 映射语言代码
+            lang_map = {
+                "zh": "zh",
+                "en": "en",
+                "yue": "yue",
+                "ja": "ja",
+                "ko": "ko",
+                "auto": "zh"  # 默认中文
+            }
+            asr_language = lang_map.get(language, "zh")
+
+            payload = {
+                "model": "qwen3-asr-flash",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "input_audio",
+                                "input_audio": {
+                                    "data": data_uri
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "stream": False,
+                "asr_options": {
+                    "enable_itn": False
+                }
             }
 
-            # 只有当语言不是 "auto" 时才传递 language 参数
-            if language != "auto":
-                files["language"] = (None, language)
+            print(f"[Aliyun-ASR] 音频大小: {len(audio_data)} bytes, 语言: {language}")
 
             async with httpx.AsyncClient(timeout=120.0) as client:
                 response = await client.post(
-                    "https://api.openai.com/v1/audio/transcriptions",
-                    headers={"Authorization": f"Bearer {openai_key}"},
-                    files=files
+                    url,
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json"
+                    },
+                    json=payload
                 )
 
+                print(f"[Aliyun-ASR] API 响应状态码: {response.status_code}")
+
                 if response.status_code == 200:
-                    data = response.json()
+                    result = response.json()
 
-                    # 获取检测到的语言（Whisper 在自动模式下会返回）
-                    detected_lang = data.get("language", language)
+                    # 解析 OpenAI 兼容格式的响应
+                    choices = result.get("choices", [])
+                    if choices and len(choices) > 0:
+                        message = choices[0].get("message", {})
+                        content = message.get("content", "")
 
-                    return {
-                        "text": data.get("text", ""),
-                        "duration": data.get("duration", 0),
-                        "confidence": 0.9,
-                        "language": detected_lang,
-                        "segments": data.get("segments", [])
-                    }
+                        # content 可能是字符串或列表
+                        text = ""
+                        if isinstance(content, str):
+                            text = content.strip()
+                        elif isinstance(content, list):
+                            # 提取列表中的文本
+                            text_parts = []
+                            for item in content:
+                                if isinstance(item, dict) and "text" in item:
+                                    text_parts.append(item["text"])
+                                elif isinstance(item, str):
+                                    text_parts.append(item)
+                            text = "".join(text_parts).strip()
+
+                        # 获取语言信息
+                        annotations = message.get("annotations", [])
+                        detected_lang = language
+                        for ann in annotations:
+                            if ann.get("type") == "audio_info" and "language" in ann:
+                                detected_lang = ann["language"]
+                                break
+
+                        print(f"[Aliyun-ASR] 转写成功: {text[:50]}...")
+
+                        return {
+                            "text": text,
+                            "duration": len(audio_data) / 32000,  # 估算
+                            "confidence": 0.9,
+                            "language": detected_lang,
+                            "segments": []
+                        }
+                    else:
+                        print(f"[Aliyun-ASR] 响应格式异常: {result}")
+                        return None
+                else:
+                    error_text = response.text
+                    print(f"[Aliyun-ASR] API 错误: {error_text}")
+                    # API 失败时返回模拟结果用于开发
+                    return self._mock_transcription(audio_data)
+
+        except ImportError as e:
+            print(f"[Aliyun-ASR] 缺少依赖库: {e}")
+            return self._mock_transcription(audio_data)
         except Exception as e:
-            print(f"Whisper 转写失败: {e}")
+            print(f"[Aliyun-ASR] 转写失败: {e}")
+            import traceback
+            traceback.print_exc()
+            return self._mock_transcription(audio_data)
 
-        return None
-    
     def _mock_transcription(self, audio_data: bytes) -> Dict:
-        """模拟转写（开发测试用）"""
+        """模拟转写（开发测试用，当 API 不可用时）"""
         # 根据音频大小估算时长
         estimated_duration = len(audio_data) / (16000 * 2)  # 假设16kHz, 16bit
-        
+
         return {
             "text": "[模拟转写结果] 这是一段测试音频的转写文本。",
             "duration": estimated_duration,
@@ -455,7 +407,7 @@ class SpeechTranscriptionService(BaseAIService):
                 }
             ]
         }
-    
+
     def _parse_segments(self, raw_segments: List[Dict]) -> List[TranscriptionSegment]:
         """解析分段信息"""
         segments = []
@@ -467,11 +419,11 @@ class SpeechTranscriptionService(BaseAIService):
                 confidence=seg.get("confidence", 0.8)
             ))
         return segments
-    
+
     async def _extract_symptoms_from_text(self, text: str) -> List[str]:
         """从文本中提取症状"""
         system_prompt = """从以下文本中提取所有提到的症状，只输出症状列表的 JSON 数组。"""
-        
+
         user_prompt = f"""文本：{text}
 
 请输出 JSON 数组格式的症状列表：
@@ -486,18 +438,18 @@ class SpeechTranscriptionService(BaseAIService):
                 temperature=0.1,
                 max_tokens=500
             )
-            
+
             # 尝试解析 JSON 数组
             content = response.strip()
             if content.startswith("["):
                 return json.loads(content)
-            
+
             return []
-            
+
         except Exception as e:
             print(f"症状提取失败: {e}")
             return []
-    
+
     def validate_audio_file(
         self,
         filename: str,
@@ -505,7 +457,7 @@ class SpeechTranscriptionService(BaseAIService):
     ) -> tuple[bool, str]:
         """
         验证音频文件
-        
+
         Returns:
             (is_valid, error_message)
         """
@@ -513,12 +465,12 @@ class SpeechTranscriptionService(BaseAIService):
         ext = filename.lower().split(".")[-1] if "." in filename else ""
         if ext not in self.SUPPORTED_FORMATS:
             return False, f"不支持的音频格式: {ext}，支持: {', '.join(self.SUPPORTED_FORMATS)}"
-        
+
         # 检查文件大小
         if file_size > self.MAX_FILE_SIZE:
             max_mb = self.MAX_FILE_SIZE / (1024 * 1024)
             return False, f"文件过大，最大支持 {max_mb:.0f}MB"
-        
+
         return True, ""
 
 

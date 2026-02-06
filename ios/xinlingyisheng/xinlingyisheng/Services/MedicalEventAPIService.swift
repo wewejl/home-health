@@ -232,6 +232,28 @@ class MedicalEventAPIService {
         )
     }
 
+    // MARK: - Event Management
+
+    /// 删除病历事件
+    func deleteEvent(eventId: String) async throws {
+        let endpoint = APIConfig.Endpoints.medicalEventDetail(eventId: eventId) + "?confirm=true"
+        let _: EmptyResponse = try await makeRequest(
+            endpoint: endpoint,
+            method: "DELETE",
+            requiresAuth: true
+        )
+    }
+
+    /// 归档病历事件
+    func archiveEvent(eventId: String) async throws -> MedicalEventDTO {
+        let endpoint = APIConfig.Endpoints.medicalEventDetail(eventId: eventId) + "/archive"
+        return try await makeRequest(
+            endpoint: endpoint,
+            method: "POST",
+            requiresAuth: true
+        )
+    }
+
     // MARK: - Empty Response for DELETE
     struct EmptyResponse: Decodable {}
 
@@ -294,8 +316,8 @@ extension MedicalEventDTO {
         MedicalEvent(
             id: String(id),
             title: title,
-            department: DepartmentType(rawValue: agent_type) ?? .general,
-            status: EventStatus(rawValue: status) ?? .inProgress,
+            department: DepartmentMapping.fromBackend(agent_type),  // ✅ 使用 mapper
+            status: EventStatusMapping.fromBackend(status),          // ✅ 使用 mapper
             createdAt: created_at,
             updatedAt: updated_at,
             summary: summary ?? "",
@@ -353,8 +375,8 @@ extension MedicalEventDetailDTO {
         return MedicalEvent(
             id: String(id),
             title: title,
-            department: DepartmentType(rawValue: agent_type) ?? .general,
-            status: EventStatus(rawValue: status) ?? .inProgress,
+            department: DepartmentMapping.fromBackend(agent_type),  // ✅ 使用 mapper
+            status: EventStatusMapping.fromBackend(status),          // ✅ 使用 mapper
             createdAt: created_at,
             updatedAt: updated_at,
             summary: summary ?? "",

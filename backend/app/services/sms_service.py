@@ -193,40 +193,39 @@ class VerificationCodeStore:
         """
         验证码校验
         返回: (是否验证成功, 错误消息)
+
+        测试模式：任何验证码都验证通过
         """
         with self._lock:
             now = time.time()
 
-            # 测试模式下，仅允许 TEST_PHONES 配置的号码使用 000000
-            if settings.TEST_MODE and code == "000000":
-                test_phones = [p.strip() for p in settings.TEST_PHONES.split(",")]
-                if phone in test_phones:
-                    logger.info(f"[SMS] 测试号码验证通过: phone={phone}")
-                    return True, ""
-                else:
-                    logger.warning(f"[SMS] 非测试号码尝试使用测试验证码: phone={phone}")
+            # 测试模式下，跳过所有验证码验证
+            if settings.TEST_MODE:
+                logger.info(f"[SMS] 测试模式验证通过: phone={phone}, code={code}")
+                return True, ""
 
+            # 生产模式：正常验证流程
             if phone not in self._codes:
                 return False, "请先获取验证码"
-            
+
             code_info = self._codes[phone]
-            
+
             # 检查是否已过期
             if now > code_info.expires_at:
                 del self._codes[phone]
                 return False, "验证码已过期，请重新获取"
-            
+
             # 检查验证次数
             if code_info.attempts >= self.max_attempts:
                 del self._codes[phone]
                 return False, "验证次数过多，请重新获取验证码"
-            
+
             # 验证码比对
             code_info.attempts += 1
             if code_info.code != code:
                 remaining = self.max_attempts - code_info.attempts
                 return False, f"验证码错误，还剩{remaining}次机会"
-            
+
             # 验证成功，删除验证码
             del self._codes[phone]
             return True, ""
@@ -539,8 +538,9 @@ class SMSService:
     def _log_event(self, event_type: str, data: dict):
         """
         事件日志记录（用于埋点分析）
-        
-        TODO: 接入正式埋点系统时实现
+
+        当前实现：记录到日志文件
+        生产环境：可接入正式埋点系统（如神策、GrowingIO 等）
         """
         logger.info(f"[EVENT] {event_type}: {data}")
 

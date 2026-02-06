@@ -115,9 +115,9 @@ struct SwipeableEventCard: View {
                 Button(action: { onArchive?() }) {
                     VStack(spacing: 4) {
                         Image(systemName: "archivebox")
-                            .font(.system(size: 20))
+                            .font(.system(size: UnifiedFont.title2))
                         Text("归档")
-                            .font(.system(size: 12))
+                            .font(.system(size: UnifiedFont.caption))
                     }
                     .foregroundColor(.white)
                     .frame(width: 70)
@@ -128,9 +128,9 @@ struct SwipeableEventCard: View {
                 Button(action: { onDelete?() }) {
                     VStack(spacing: 4) {
                         Image(systemName: "trash")
-                            .font(.system(size: 20))
+                            .font(.system(size: UnifiedFont.title2))
                         Text("删除")
-                            .font(.system(size: 12))
+                            .font(.system(size: UnifiedFont.caption))
                     }
                     .foregroundColor(.white)
                     .frame(width: 70)

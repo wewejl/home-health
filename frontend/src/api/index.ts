@@ -10,30 +10,9 @@ const api = axios.create({
   },
 });
 
-// 请求拦截器
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('admin_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// 响应拦截器
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('admin_token');
-      localStorage.removeItem('admin_user');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
+// 测试模式：移除所有认证检查
+// 不再添加 Authorization header
+// 不再处理 401 跳转登录
 
 // Auth API
 export const authApi = {

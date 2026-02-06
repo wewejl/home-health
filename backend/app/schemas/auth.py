@@ -61,6 +61,33 @@ class UserResponse(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
+    @field_validator('created_at', 'updated_at', mode='before')
+    @classmethod
+    def parse_datetime(cls, v):
+        """处理 PostgreSQL 返回的日期时间格式"""
+        if v is None:
+            return None
+        if isinstance(v, datetime):
+            return v
+        if isinstance(v, str):
+            # PostgreSQL 格式: "2026-01-29 15:28:34.409482+00"
+            # 转换为 ISO 8601 格式: "2026-01-29T15:28:34.409482+00:00"
+            if '+' in v:
+                parts = v.rsplit('+', 1)
+                base = parts[0].replace(' ', 'T')  # 空格 → T
+                tz = parts[1]
+                # 补全时区格式: "00" → "+00:00"
+                if ':' not in tz:  # 如果时区没有冒号
+                    if len(tz) == 2:
+                        tz = f"{tz}:00"
+                    elif len(tz) == 3 and tz[0] in '+-':
+                        tz = f"{tz[0]}{tz[1:3]}:00"
+                    elif len(tz) == 1 and tz in '+-':
+                        tz = f"{tz}00:00"
+                v = f"{base}+{tz}"
+            return datetime.fromisoformat(v)
+        return v
+
     class Config:
         from_attributes = True
 

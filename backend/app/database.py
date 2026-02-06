@@ -5,8 +5,18 @@ from .config import get_settings
 
 settings = get_settings()
 
-# 主数据库引擎 (PostgreSQL)
-engine = create_engine(settings.DATABASE_URL)
+# 主数据库引擎 - 根据 URL 类型动态选择连接参数
+if settings.DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        settings.DATABASE_URL,
+        connect_args={"check_same_thread": False}
+    )
+else:
+    # PostgreSQL 配置
+    engine = create_engine(
+        settings.DATABASE_URL,
+        connect_args={"options": "-c timezone=UTC"}
+    )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

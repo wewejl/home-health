@@ -24,8 +24,7 @@ struct MedicalDossierView: View {
                 }
             }
         }
-        .navigationTitle("病历资料夹")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
         .refreshable {
             await viewModel.refresh()
         }
@@ -38,15 +37,15 @@ struct MedicalDossierView: View {
         HStack {
             VStack(alignment: .leading, spacing: layout.cardSpacing / 3) {
                 Text("我的病历")
-                    .font(.system(size: layout.titleFontSize + 4, weight: .bold))
+                    .font(.system(size: UnifiedFont.subheadline, weight: .bold))
                     .foregroundColor(HealingColors.textPrimary)
 
                 HStack(spacing: layout.cardSpacing / 2) {
                     Image(systemName: "doc.text.fill")
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption))
                         .foregroundColor(HealingColors.forestMist)
                     Text("AI 智能整理，一键导出")
-                        .font(.system(size: layout.captionFontSize + 1))
+                        .font(.system(size: UnifiedFont.footnote))
                         .foregroundColor(HealingColors.textSecondary)
                 }
             }
@@ -62,11 +61,11 @@ struct MedicalDossierView: View {
         HStack(spacing: layout.cardSpacing) {
             HStack(spacing: layout.cardSpacing / 2) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textTertiary)
 
                 TextField("搜索病历", text: $viewModel.searchText)
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textPrimary)
 
                 if !viewModel.searchText.isEmpty {
@@ -77,7 +76,7 @@ struct MedicalDossierView: View {
                                 .frame(width: layout.iconSmallSize - 18, height: layout.iconSmallSize - 18)
 
                             Image(systemName: "xmark")
-                                .font(.system(size: 8, weight: .bold))
+                                .font(.system(size: AdaptiveFont.caption - 4, weight: .bold))
                                 .foregroundColor(HealingColors.textTertiary)
                         }
                     }
@@ -116,27 +115,43 @@ struct MedicalDossierView: View {
 
     @ViewBuilder
     private func contentSection(layout: AdaptiveLayout) -> some View {
-        if viewModel.isLoading {
-            HealingDossierLoadingView(layout: layout)
-        } else if viewModel.events.isEmpty {
-            HealingDossierEmptyStateView(layout: layout)
-        } else if viewModel.filteredEvents.isEmpty {
-            HealingDossierSearchEmptyView(
-                searchText: viewModel.searchText,
-                layout: layout
-            )
-        } else {
-            eventListView(layout: layout)
+        VStack(spacing: 0) {
+            // 错误横幅（如果存在）
+            if let errorMessage = viewModel.errorMessage {
+                ErrorBannerView(
+                    message: errorMessage,
+                    onDismiss: { viewModel.clearError() },
+                    layout: layout
+                )
+                .padding(.horizontal, layout.horizontalPadding)
+                .padding(.bottom, layout.cardSpacing)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
+            // 主要内容
+            Group {
+                if viewModel.isLoading {
+                    HealingDossierLoadingView(layout: layout)
+                } else if viewModel.events.isEmpty {
+                    HealingDossierEmptyStateView(layout: layout)
+                } else if viewModel.filteredEvents.isEmpty {
+                    HealingDossierSearchEmptyView(
+                        searchText: viewModel.searchText,
+                        layout: layout
+                    )
+                } else {
+                    eventListView(layout: layout)
+                }
+            }
         }
     }
 
     private func loadingView(layout: AdaptiveLayout) -> some View {
         VStack(spacing: layout.cardSpacing) {
             ProgressView()
-                .scaleEffect(1.2)
                 .tint(HealingColors.forestMist)
             Text("加载中...")
-                .font(.system(size: layout.captionFontSize + 1))
+                .font(.system(size: UnifiedFont.footnote))
                 .foregroundColor(HealingColors.textSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -152,10 +167,14 @@ struct MedicalDossierView: View {
                             selectedEvent = event
                         },
                         onArchive: {
-                            viewModel.archiveEvent(event)
+                            Task {
+                                await viewModel.archiveEvent(event)
+                            }
                         },
                         onDelete: {
-                            viewModel.deleteEvent(event)
+                            Task {
+                                await viewModel.deleteEvent(event)
+                            }
                         }
                     )
                     .transition(.asymmetric(
@@ -207,11 +226,11 @@ struct HealingFilterChip: View {
         Button(action: action) {
             HStack(spacing: layout.cardSpacing / 3) {
                 Text(title)
-                    .font(.system(size: layout.captionFontSize + 1, weight: isSelected ? .semibold : .regular))
+                    .font(.system(size: UnifiedFont.footnote, weight: isSelected ? .semibold : .regular))
 
                 if count > 0 {
                     Text("(\(count))")
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption))
                 }
             }
             .foregroundColor(isSelected ? .white : HealingColors.textSecondary)
@@ -251,11 +270,10 @@ struct HealingDossierLoadingView: View {
             Spacer()
 
             ProgressView()
-                .scaleEffect(1.2)
                 .tint(HealingColors.forestMist)
 
             Text("加载中...")
-                .font(.system(size: layout.captionFontSize + 1))
+                .font(.system(size: UnifiedFont.footnote))
                 .foregroundColor(HealingColors.textSecondary)
 
             Spacer()
@@ -268,7 +286,7 @@ struct HealingDossierEmptyStateView: View {
     let layout: AdaptiveLayout
 
     var body: some View {
-        VStack(spacing: layout.cardSpacing + 4) {
+        VStack(spacing: layout.cardSpacing + 8) {
             Spacer()
 
             ZStack {
@@ -277,16 +295,16 @@ struct HealingDossierEmptyStateView: View {
                     .frame(width: layout.iconLargeSize * 1.5, height: layout.iconLargeSize * 1.5)
 
                 Image(systemName: "doc.text.fill")
-                    .font(.system(size: layout.bodyFontSize + 8, weight: .light))
+                    .font(.system(size: UnifiedFont.body, weight: .light))
                     .foregroundColor(HealingColors.textTertiary)
             }
 
             Text("暂无病历记录")
-                .font(.system(size: layout.bodyFontSize + 1, weight: .semibold))
+                .font(.system(size: UnifiedFont.body, weight: .semibold))
                 .foregroundColor(HealingColors.textPrimary)
 
             Text("与医生对话后，病历会自动整理到这里")
-                .font(.system(size: layout.captionFontSize + 1))
+                .font(.system(size: UnifiedFont.footnote))
                 .foregroundColor(HealingColors.textSecondary)
                 .multilineTextAlignment(.center)
 
@@ -311,20 +329,56 @@ struct HealingDossierSearchEmptyView: View {
                     .frame(width: layout.iconLargeSize * 1.2, height: layout.iconLargeSize * 1.2)
 
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: layout.bodyFontSize + 4, weight: .light))
+                    .font(.system(size: UnifiedFont.body, weight: .light))
                     .foregroundColor(HealingColors.textTertiary)
             }
 
             Text("未找到相关病历")
-                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                .font(.system(size: UnifiedFont.body, weight: .semibold))
                 .foregroundColor(HealingColors.textPrimary)
 
             Text("试试搜索其他关键词")
-                .font(.system(size: layout.captionFontSize + 1))
+                .font(.system(size: UnifiedFont.footnote))
                 .foregroundColor(HealingColors.textSecondary)
 
             Spacer()
         }
+    }
+}
+
+// MARK: - 错误横幅视图
+struct ErrorBannerView: View {
+    let message: String
+    let onDismiss: () -> Void
+    let layout: AdaptiveLayout
+
+    var body: some View {
+        HStack(spacing: layout.cardSpacing / 2) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: UnifiedFont.subheadline))
+                .foregroundColor(HealingColors.mutedCoral)
+
+            Text(message)
+                .font(.system(size: UnifiedFont.footnote))
+                .foregroundColor(HealingColors.textPrimary)
+                .lineLimit(2)
+
+            Spacer()
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: UnifiedFont.body))
+                    .foregroundColor(HealingColors.textTertiary)
+            }
+        }
+        .padding(.horizontal, layout.cardInnerPadding)
+        .padding(.vertical, layout.cardInnerPadding - 2)
+        .background(HealingColors.mutedCoral.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(HealingColors.mutedCoral.opacity(0.3), lineWidth: 1)
+        )
     }
 }
 

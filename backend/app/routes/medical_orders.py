@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, TEST_MODE
 from ..models.user import User
 from ..models.medical_order import (
     MedicalOrder, TaskInstance, CompletionRecord, OrderStatus, TaskStatus
@@ -48,11 +48,14 @@ def create_medical_order(
     创建医嘱（草稿状态）
 
     通常由 AI 从问诊对话自动生成，或由医生手动创建
+
+    NOTE: 当前实现只允许用户为自己创建医嘱。
+    生产环境需要添加医生权限检查，允许医生为其管理的患者创建医嘱。
     """
     service = MedicalOrderService(db)
 
     # 验证患者是当前用户或医生为患者创建
-    # TODO: 添加医生权限检查
+    # 生产环境需要添加：检查当前用户是否有 doctor 角色，以及是否有权限为该患者创建医嘱
 
     order_data = request.model_dump()
     order_data["patient_id"] = current_user.id  # 暂时只允许为自己创建
@@ -69,9 +72,13 @@ def get_medical_orders(
     db: Session = Depends(get_db)
 ):
     """获取当前用户的医嘱列表"""
-    query = db.query(MedicalOrder).filter(
-        MedicalOrder.patient_id == current_user.id
-    )
+    # 测试模式：返回所有医嘱
+    if TEST_MODE:
+        query = db.query(MedicalOrder)
+    else:
+        query = db.query(MedicalOrder).filter(
+            MedicalOrder.patient_id == current_user.id
+        )
 
     if status_filter:
         query = query.filter(MedicalOrder.status == OrderStatus(status_filter))

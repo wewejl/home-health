@@ -217,8 +217,9 @@ class AuthService:
     def log_auth_event(event_type: str, user_id: Optional[int] = None, extra: dict = None):
         """
         记录认证事件（用于埋点）
-        
-        TODO: 接入正式埋点系统
+
+        当前实现：记录到日志文件
+        生产环境：可接入正式埋点系统（如神策、GrowingIO 等）
         """
         data = {"event": event_type, "user_id": user_id}
         if extra:

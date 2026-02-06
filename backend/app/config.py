@@ -1,20 +1,34 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 from pathlib import Path
+import secrets
+import warnings
 
 
 class Settings(BaseSettings):
     # 应用配置
-    APP_NAME: str = "灵犀医生 API"
+    APP_NAME: str = "灵犀健康 API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
     SEED_DATA: bool = True
 
     # 服务端口 (固定使用 8100)
     PORT: int = 8100
+
+    # 文件上传配置
+    UPLOAD_DIR: Path = Path("static/uploads/medical_files")
+    MAX_FILE_SIZE: int = 50 * 1024 * 1024  # 50MB
+    ALLOWED_EXTENSIONS: dict = {
+        "image": {".jpg", ".jpeg", ".png", ".gif", ".heic", ".webp"},
+        "pdf": {".pdf"},
+        "video": {".mp4", ".mov", ".avi", ".mkv"},
+        "audio": {".mp3", ".m4a", ".wav", ".aac"},
+        "document": {".doc", ".docx", ".txt", ".xls", ".xlsx"}
+    }
     
     # 数据库
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5433/home_health"
+    # 添加 UTC 时区配置以修复日期格式问题 (PostgreSQL 输出格式与 Pydantic 兼容)
+    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5433/home_health?options=-c%20timezone%3DUTC"
     KNOWLEDGE_DB_URL: str = "sqlite:///./knowledge.db"  # 知识库独立存储
     
     # JWT 配置
@@ -65,25 +79,83 @@ class Settings(BaseSettings):
     AI_AGGREGATION_TIME_WINDOW_DAYS: int = 7
     AI_AGGREGATION_SIMILARITY_THRESHOLD: float = 0.7
     
-    # 语音转写配置
-    ASR_PROVIDER: str = "mock"  # mock/aliyun/openai/glm
+    # 语音转写配置 - 统一使用阿里云 Qwen-ASR
     ASR_SAMPLE_RATE: int = 16000
-    OPENAI_API_KEY: str = ""  # 用于 Whisper API
 
-    # GLM-ASR 配置（智谱语音识别）
-    GLM_API_KEY: str = ""
-    GLM_ASR_MODEL: str = "glm-asr-2512"
-    GLM_ASR_BASE_URL: str = "https://open.bigmodel.cn/api/paas/v4/audio/transcriptions"
+    # 阿里云 DashScope 配置（语音识别）
+    DASHSCOPE_API_KEY: str = ""
     
     # Admin JWT 配置
     ADMIN_JWT_SECRET: str = "admin-secret-key-change-in-production"
     ADMIN_JWT_EXPIRE_HOURS: int = 24
+
+    # CORS 配置
+    CORS_ALLOWED_ORIGINS: str = ""  # 逗号分隔的允许来源列表
+    CORS_ALLOW_CREDENTIALS: bool = True
 
     class Config:
         # 支持多环境文件：.env.local 会覆盖 .env
         env_file = (".env.local", ".env")
         env_file_encoding = "utf-8"
         extra = "ignore"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._validate_security_settings()
+
+    def _validate_security_settings(self):
+        """验证安全配置，在非开发环境发出警告"""
+        if not self.DEBUG:
+            # 生产环境安全检查
+            if self.JWT_SECRET_KEY in [
+                "dev-secret-key-change-in-production",
+                "admin-secret-key-change-in-production",
+                "xinlin-doctor-secret-key-2024",
+            ]:
+                warnings.warn(
+                    "⚠️  SECURITY WARNING: Using default JWT secret key in production! "
+                    "Set a strong JWT_SECRET_KEY and ADMIN_JWT_SECRET in environment.",
+                    RuntimeWarning,
+                    stacklevel=2
+                )
+
+            if not self.CORS_ALLOWED_ORIGINS:
+                warnings.warn(
+                    "⚠️  SECURITY WARNING: CORS_ALLOWED_ORIGINS not set in production. "
+                    "This may allow unauthorized cross-origin requests.",
+                    RuntimeWarning,
+                    stacklevel=2
+                )
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """获取 CORS 允许的来源列表"""
+        if self.CORS_ALLOWED_ORIGINS:
+            return [origin.strip() for origin in self.CORS_ALLOWED_ORIGINS.split(",")]
+        # 开发环境默认允许本地来源
+        if self.DEBUG:
+            return [
+                "http://localhost:8150",  # 前端固定端口
+                "http://127.0.0.1:8150",
+                "http://localhost:5173",  # 兼容其他项目
+                "http://localhost:5174",
+                "http://localhost:3000",
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:5174",
+                "http://127.0.0.1:3000",
+            ]
+        # 生产环境默认不允许跨域
+        return []
+
+    @property
+    def is_production(self) -> bool:
+        """判断是否为生产环境"""
+        return not self.DEBUG
+
+    @property
+    def should_use_secure_cookies(self) -> bool:
+        """生产环境使用安全 cookies"""
+        return self.is_production
 
 
 @lru_cache()

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Date, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Date, Boolean, Sequence
 from sqlalchemy.sql import func
 from ..database import Base
 
@@ -6,7 +6,7 @@ from ..database import Base
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, Sequence('users_id_seq'), primary_key=True, index=True)
     phone = Column(String(20), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=True)  # 密码哈希，可为空（支持仅验证码登录的老用户）
     nickname = Column(String(50), nullable=True)

@@ -145,12 +145,12 @@ class TranscribeResponse(BaseModel):
     """转写响应"""
     task_id: str
     status: str
-    text: str
-    duration: float
-    confidence: float
-    segments: List[TranscriptionSegment]
-    extracted_symptoms: List[str]
-    language: str
+    text: Optional[str] = None          # 转写文本（可能为空）
+    duration: Optional[float] = None    # 音频时长（秒）
+    confidence: Optional[float] = None  # 置信度
+    segments: Optional[List[TranscriptionSegment]] = None  # 分段信息
+    extracted_symptoms: Optional[List[str]] = None        # 提取的症状
+    language: Optional[str] = None      # 识别的语言
     error_message: Optional[str] = None
 
 

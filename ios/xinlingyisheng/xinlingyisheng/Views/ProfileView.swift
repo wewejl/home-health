@@ -27,7 +27,7 @@ struct ProfileView: View {
                     .offset(x: -layout.decorativeCircleSize * 0.2, y: layout.decorativeCircleSize * 0.2)
 
                 ScrollView {
-                    VStack(spacing: layout.cardSpacing + 4) {
+                    VStack(spacing: layout.cardSpacing + 8) {
                         // 用户信息卡片
                         HealingUserInfoCard(user: authManager.currentUser, layout: layout)
 
@@ -46,8 +46,7 @@ struct ProfileView: View {
                 }
             }
         }
-        .navigationTitle("我的")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
         .alert("确认退出", isPresented: $showLogoutConfirm) {
             Button("取消", role: .cancel) {}
             Button("退出", role: .destructive) {
@@ -105,10 +104,10 @@ struct ProfileView: View {
         }) {
             HStack(spacing: layout.cardSpacing / 2) {
                 Image(systemName: "rectangle.portrait.and.arrow.right")
-                    .font(.system(size: layout.captionFontSize + 4))
+                    .font(.system(size: UnifiedFont.subheadline))
 
                 Text("退出登录")
-                    .font(.system(size: layout.bodyFontSize - 1, weight: .medium))
+                    .font(.system(size: UnifiedFont.body, weight: .medium))
             }
             .foregroundColor(HealingColors.terracotta)
             .frame(maxWidth: .infinity)
@@ -130,20 +129,20 @@ struct ProfileView: View {
             // Logo
             HStack(spacing: 6) {
                 Image(systemName: "cross.fill")
-                    .font(.system(size: layout.captionFontSize + 2))
-                Text("灵犀医生")
-                    .font(.system(size: layout.captionFontSize + 1, weight: .medium))
+                    .font(.system(size: UnifiedFont.footnote))
+                Text("灵犀健康")
+                    .font(.system(size: UnifiedFont.caption, weight: .medium))
             }
             .foregroundColor(HealingColors.forestMist.opacity(0.8))
 
             // 版本号
             Text("版本 1.0.0")
-                .font(.system(size: layout.captionFontSize - 1))
+                .font(.system(size: AdaptiveFont.caption - 1))
                 .foregroundColor(HealingColors.textTertiary)
 
             // Slogan
             Text("一起发现健康生活")
-                .font(.system(size: layout.captionFontSize - 2))
+                .font(.system(size: AdaptiveFont.caption - 2))
                 .foregroundColor(HealingColors.textTertiary)
 
             // 装饰点
@@ -151,10 +150,10 @@ struct ProfileView: View {
                 ForEach(0..<3) { _ in
                     Circle()
                         .fill(HealingColors.forestMist.opacity(0.3))
-                        .frame(width: 4, height: 4)
+                        .frame(width: ScaleFactor.size(4), height: ScaleFactor.size(4))
                 }
             }
-            .padding(.top, 2)
+            .padding(.top, ScaleFactor.padding(2))
         }
         .padding(.top, layout.cardSpacing)
     }
@@ -181,27 +180,27 @@ struct HealingUserInfoCard: View {
                     .frame(width: layout.iconLargeSize * 1.8, height: layout.iconLargeSize * 1.8)
 
                 Image(systemName: "person.fill")
-                    .font(.system(size: layout.bodyFontSize + 4))
+                    .font(.system(size: UnifiedFont.title3))
                     .foregroundColor(.white)
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 // 问候语
                 Text(getGreeting())
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption))
                     .foregroundColor(HealingColors.textSecondary)
 
                 // 昵称
                 Text(user?.nickname ?? "用户")
-                    .font(.system(size: layout.bodyFontSize + 2, weight: .semibold))
+                    .font(.system(size: UnifiedFont.subheadline, weight: .semibold))
                     .foregroundColor(HealingColors.textPrimary)
 
                 // 手机号
                 HStack(spacing: 4) {
                     Image(systemName: "phone.fill")
-                        .font(.system(size: layout.captionFontSize - 2))
+                        .font(.system(size: AdaptiveFont.custom(10)))
                     Text(maskedPhone(user?.phone ?? ""))
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption))
                 }
                 .foregroundColor(HealingColors.textSecondary)
             }
@@ -216,7 +215,7 @@ struct HealingUserInfoCard: View {
                         .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
 
                     Image(systemName: "pencil")
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption))
                         .foregroundColor(HealingColors.forestMist)
                 }
             }
@@ -265,7 +264,7 @@ struct HealingMenuCard: View {
                         .frame(width: layout.iconLargeSize + 4, height: layout.iconLargeSize + 4)
 
                     Image(systemName: icon)
-                        .font(.system(size: layout.captionFontSize + 4))
+                        .font(.system(size: UnifiedFont.footnote))
                         .foregroundColor(color)
 
                     if hasBadge {
@@ -277,7 +276,7 @@ struct HealingMenuCard: View {
                 }
 
                 Text(title)
-                    .font(.system(size: layout.captionFontSize + 1, weight: .medium))
+                    .font(.system(size: UnifiedFont.footnote, weight: .medium))
                     .foregroundColor(HealingColors.textPrimary)
             }
             .frame(maxWidth: .infinity)

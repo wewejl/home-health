@@ -123,44 +123,156 @@ struct DeviceType {
     }
 }
 
-// MARK: - 响应式缩放系统（Apple 推荐方法）
-/// 基于屏幕宽度比例的缩放因子，以 iPhone 14 Pro Max (430pt) 为基准
-/// 这是 iOS 官方推荐的响应式设计方法
+// MARK: - 响应式缩放系统（统一字体和布局系统）
+/// 使用固定的字体和布局大小，确保所有页面在所有设备上保持完全一致的视觉效果
 struct ScaleFactor {
-    // 基准宽度：iPhone 14 Pro Max
-    private static let baseWidth: CGFloat = 430.0
-    
-    /// 当前设备相对于基准设备的缩放比例
+    // 基准宽度：iPhone 14/15 (390pt) - 最常见的设备尺寸
+    private static let baseWidth: CGFloat = 390.0
+
+    /// 当前设备相对于基准设备的缩放比例（仅用于参考）
     static var width: CGFloat {
         DeviceType.screenWidth / baseWidth
     }
-    
-    /// 缩放字体大小
-    /// - Parameter size: 基准字体大小（基于 430pt 宽度设计）
-    /// - Returns: 适配当前设备的字体大小
+
+    /// 字体大小 - 不缩放，所有设备保持一致
+    /// - Parameter size: 字体大小
+    /// - Returns: 原始字体大小（不进行任何缩放）
     static func font(_ size: CGFloat) -> CGFloat {
-        size * width
+        size  // 字体不缩放，保持所有设备一致
     }
-    
-    /// 缩放尺寸（宽度、高度、圆角等）
+
+    /// 尺寸（宽度、高度、圆角等）- 不缩放，保持所有设备一致
     /// - Parameter size: 基准尺寸
-    /// - Returns: 适配当前设备的尺寸
+    /// - Returns: 原始尺寸（不进行任何缩放）
     static func size(_ size: CGFloat) -> CGFloat {
-        size * width
+        size  // 不缩放，保持所有设备一致
     }
-    
-    /// 缩放间距
+
+    /// 间距 - 不缩放，保持所有设备一致
     /// - Parameter spacing: 基准间距
-    /// - Returns: 适配当前设备的间距
+    /// - Returns: 原始间距（不进行任何缩放）
     static func spacing(_ spacing: CGFloat) -> CGFloat {
-        size(spacing)
+        spacing  // 不缩放，保持所有设备一致
     }
-    
-    /// 缩放内边距
+
+    /// 内边距 - 不缩放，保持所有设备一致
     /// - Parameter padding: 基准内边距
-    /// - Returns: 适配当前设备的内边距
+    /// - Returns: 原始内边距（不进行任何缩放）
     static func padding(_ padding: CGFloat) -> CGFloat {
-        size(padding)
+        padding  // 不缩放，保持所有设备一致
+    }
+}
+
+// MARK: - 统一字体访问点
+/// 全局统一的字体系统，所有页面应使用此系统
+/// 基于 Apple Human Interface Guidelines 标准，确保跨页面的视觉一致性
+/// 字体大小在所有设备上保持相同，不进行缩放
+struct UnifiedFont {
+    // MARK: - Apple HIG 标准字体大小（所有设备一致）
+    /// 遵循 Apple Human Interface Guidelines 的字体层级系统
+    /// 确保在不同设备上的视觉体验一致且符合 iOS 设计规范
+
+    /// 大标题（34pt）- 页面主标题，每个页面只用一次
+    static var largeTitle: CGFloat { ScaleFactor.font(34) }
+
+    /// 标题1（28pt）- 大标题
+    static var title1: CGFloat { ScaleFactor.font(28) }
+
+    /// 标题2（22pt）- 区块标题
+    static var title2: CGFloat { ScaleFactor.font(22) }
+
+    /// 标题3（20pt）- 卡片/小标题
+    static var title3: CGFloat { ScaleFactor.font(20) }
+
+    /// 强调文字（17pt）- 强调的文字内容
+    static var headline: CGFloat { ScaleFactor.font(17) }
+
+    /// 正文（17pt）- 标准正文，主要文字内容
+    static var body: CGFloat { ScaleFactor.font(17) }
+
+    /// 次要内容（16pt）- 次要文字
+    static var callout: CGFloat { ScaleFactor.font(16) }
+
+    /// 副标题（15pt）- 副标题
+    static var subheadline: CGFloat { ScaleFactor.font(15) }
+
+    /// 说明文字（13pt）- 说明/提示文字
+    static var footnote: CGFloat { ScaleFactor.font(13) }
+
+    /// 脚注1（12pt）- 标签、徽章
+    static var caption1: CGFloat { ScaleFactor.font(12) }
+
+    /// 脚注2（11pt）- 小脚注
+    static var caption2: CGFloat { ScaleFactor.font(11) }
+
+    /// 兼容旧代码：caption 映射到 caption1
+    @available(*, deprecated, message: "使用 caption1 替代")
+    static var caption: CGFloat { caption1 }
+
+    /// 自定义字体大小（不缩放）
+    static func custom(_ size: CGFloat) -> CGFloat {
+        ScaleFactor.font(size)  // 返回原始大小，不进行缩放
+    }
+
+    // MARK: - Font 便捷方法
+
+    /// 创建系统字体
+    static func system(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        Font.system(size: custom(size), weight: weight)
+    }
+
+    /// 创建粗体标题
+    static func boldTitle(_ size: CGFloat? = nil) -> Font {
+        Font.system(size: custom(size ?? 28), weight: .bold)
+    }
+
+    /// 创建半粗体正文
+    static func semiboldBody(_ size: CGFloat? = nil) -> Font {
+        Font.system(size: custom(size ?? 17), weight: .semibold)
+    }
+
+    /// 创建常规体
+    static func regular(_ size: CGFloat? = nil) -> Font {
+        Font.system(size: custom(size ?? 17), weight: .regular)
+    }
+
+    /// 创建中等体说明
+    static func mediumFootnote(_ size: CGFloat? = nil) -> Font {
+        Font.system(size: custom(size ?? 13), weight: .medium)
+    }
+}
+
+// MARK: - View 便捷扩展
+extension View {
+    /// 应用统一的字体
+    func unifiedFont(size: CGFloat, weight: Font.Weight = .regular) -> some View {
+        self.font(Font.system(size: UnifiedFont.custom(size), weight: weight))
+    }
+
+    /// 统一大标题
+    func largeTitle(weight: Font.Weight = .bold) -> some View {
+        self.font(Font.system(size: UnifiedFont.largeTitle, weight: weight))
+    }
+
+    /// 统一标题
+    func title(weight: Font.Weight = .semibold) -> some View {
+        self.font(Font.system(size: UnifiedFont.title2, weight: weight))
+    }
+
+    /// 统一正文
+    func body(weight: Font.Weight = .regular) -> some View {
+        self.font(Font.system(size: UnifiedFont.body, weight: weight))
+    }
+
+    /// 统一脚注1（12pt）
+    func caption1(weight: Font.Weight = .regular) -> some View {
+        self.font(Font.system(size: UnifiedFont.caption1, weight: weight))
+    }
+
+    /// 统一脚注（已弃用，使用 caption1 替代）
+    @available(*, deprecated, message: "使用 caption1(weight:) 替代")
+    func caption(weight: Font.Weight = .regular) -> some View {
+        self.font(Font.system(size: UnifiedFont.caption1, weight: weight))
     }
 }
 
@@ -187,64 +299,80 @@ struct AdaptiveSpacing {
     }
 }
 
-// MARK: - 自适应字体（基于比例缩放）
+// MARK: - 自适应字体（固定大小，与 UnifiedFont 一致）
+/// 使用统一的字体系统，确保跨页面和跨设备的一致性
+/// 基于 Apple HIG 标准，字体大小在所有设备上保持相同
 struct AdaptiveFont {
-    /// 大标题（基准 28pt）
-    static var largeTitle: CGFloat { ScaleFactor.font(28) }
-    
-    /// 标题1（基准 24pt）
-    static var title1: CGFloat { ScaleFactor.font(24) }
-    
-    /// 标题2（基准 20pt）
-    static var title2: CGFloat { ScaleFactor.font(20) }
-    
-    /// 标题3（基准 18pt）
-    static var title3: CGFloat { ScaleFactor.font(18) }
-    
-    /// 正文（基准 16pt）
-    static var body: CGFloat { ScaleFactor.font(16) }
-    
-    /// 副标题（基准 14pt）
-    static var subheadline: CGFloat { ScaleFactor.font(14) }
-    
-    /// 脚注（基准 12pt）
-    static var footnote: CGFloat { ScaleFactor.font(12) }
-    
-    /// 说明文字（基准 11pt）
-    static var caption: CGFloat { ScaleFactor.font(11) }
-    
-    /// 自定义字体大小
+    /// 大标题（34pt）
+    static var largeTitle: CGFloat { ScaleFactor.font(34) }
+
+    /// 标题1（28pt）
+    static var title1: CGFloat { ScaleFactor.font(28) }
+
+    /// 标题2（22pt）
+    static var title2: CGFloat { ScaleFactor.font(22) }
+
+    /// 标题3（20pt）
+    static var title3: CGFloat { ScaleFactor.font(20) }
+
+    /// 强调文字（17pt）
+    static var headline: CGFloat { ScaleFactor.font(17) }
+
+    /// 正文（17pt）
+    static var body: CGFloat { ScaleFactor.font(17) }
+
+    /// 次要内容（16pt）
+    static var callout: CGFloat { ScaleFactor.font(16) }
+
+    /// 副标题（15pt）
+    static var subheadline: CGFloat { ScaleFactor.font(15) }
+
+    /// 脚注（13pt）
+    static var footnote: CGFloat { ScaleFactor.font(13) }
+
+    /// 说明文字1（12pt）
+    static var caption1: CGFloat { ScaleFactor.font(12) }
+
+    /// 说明文字2（11pt）
+    static var caption2: CGFloat { ScaleFactor.font(11) }
+
+    /// 兼容旧代码：caption 映射到 caption1
+    @available(*, deprecated, message: "使用 caption1 替代")
+    static var caption: CGFloat { caption1 }
+
+    /// 自定义字体大小（不缩放）
     static func custom(_ size: CGFloat) -> CGFloat {
         ScaleFactor.font(size)
     }
 }
 
-// MARK: - 自适应尺寸（基于比例缩放）
+// MARK: - 自适应尺寸（固定大小，与 ScaleFactor 一致）
+/// 所有设备上保持一致，不进行缩放
 struct AdaptiveSize {
-    /// 图标尺寸 - 小（基准 16pt）
+    /// 图标尺寸 - 小（16pt）
     static var iconSmall: CGFloat { ScaleFactor.size(16) }
-    
-    /// 图标尺寸 - 中（基准 24pt）
+
+    /// 图标尺寸 - 中（24pt）
     static var iconMedium: CGFloat { ScaleFactor.size(24) }
-    
-    /// 图标尺寸 - 大（基准 32pt）
+
+    /// 图标尺寸 - 大（32pt）
     static var iconLarge: CGFloat { ScaleFactor.size(32) }
-    
-    /// 按钮高度（基准 48pt）
+
+    /// 按钮高度（48pt）
     static var buttonHeight: CGFloat { ScaleFactor.size(48) }
-    
-    /// 小按钮高度（基准 40pt）
+
+    /// 小按钮高度（40pt）
     static var buttonHeightSmall: CGFloat { ScaleFactor.size(40) }
-    
-    /// 圆角 - 小（基准 8pt）
+
+    /// 圆角 - 小（8pt）
     static var cornerRadiusSmall: CGFloat { ScaleFactor.size(8) }
-    
-    /// 圆角 - 中（基准 16pt）
+
+    /// 圆角 - 中（16pt）
     static var cornerRadius: CGFloat { ScaleFactor.size(16) }
-    
-    /// 圆角 - 大（基准 24pt）
+
+    /// 圆角 - 大（24pt）
     static var cornerRadiusLarge: CGFloat { ScaleFactor.size(24) }
-    
+
     /// 自定义尺寸
     static func custom(_ size: CGFloat) -> CGFloat {
         ScaleFactor.size(size)

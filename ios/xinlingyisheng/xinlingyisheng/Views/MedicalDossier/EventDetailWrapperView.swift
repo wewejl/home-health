@@ -78,7 +78,7 @@ struct HealingEventWrapperLoadingView: View {
                 }
 
                 Text("正在加载病历详情...")
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textSecondary)
 
                 Spacer()
@@ -109,24 +109,24 @@ struct HealingEventWrapperErrorView: View {
                         .frame(width: layout.iconLargeSize * 1.6, height: layout.iconLargeSize * 1.6)
 
                     Image(systemName: "exclamationmark.triangle")
-                        .font(.system(size: layout.bodyFontSize + 12, weight: .light))
+                        .font(.system(size: UnifiedFont.body, weight: .light))
                         .foregroundColor(HealingColors.terracotta)
                 }
 
                 // 错误消息
                 Text(errorMessage ?? "加载失败")
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
                     .foregroundColor(HealingColors.textPrimary)
 
                 Text("请检查网络连接后重试")
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textSecondary)
 
                 // 操作按钮
                 HStack(spacing: layout.cardSpacing) {
                     Button(action: onRetry) {
                         Text("重试")
-                            .font(.system(size: layout.bodyFontSize - 1, weight: .semibold))
+                            .font(.system(size: UnifiedFont.subheadline, weight: .semibold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, layout.cardInnerPadding)
@@ -143,7 +143,7 @@ struct HealingEventWrapperErrorView: View {
 
                     Button(action: onDismiss) {
                         Text("返回")
-                            .font(.system(size: layout.bodyFontSize - 1))
+                            .font(.system(size: UnifiedFont.subheadline))
                             .foregroundColor(HealingColors.textSecondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, layout.cardInnerPadding)

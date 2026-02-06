@@ -1,0 +1,204 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 全局样式 */
+@layer base {
+  * {
+    @apply box-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-text-primary font-sans;
+    font-feature-settings: 'liga' 1, 'calt' 1;
+  }
+
+  /* 选中文本样式 */
+  ::selection {
+    @apply bg-primary-500 text-white;
+  }
+
+  /* 自定义滚动条 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-text-muted rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-text-secondary;
+  }
+
+  /* 焦点样式 */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary-500;
+  }
+}
+
+/* 组件样式 */
+@layer components {
+  /* 渐变文字 */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-primary;
+  }
+
+  .text-gradient-teal {
+    @apply bg-clip-text text-transparent from-teal-500 to-primary-500;
+  }
+
+  /* 按钮基础样式 */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-300;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-primary text-white shadow-lg hover:shadow-glow hover:-translate-y-0.5;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-primary-500 border-2 border-primary-500 hover:bg-primary-50;
+  }
+
+  .btn-ghost {
+    @apply text-text-primary hover:bg-primary-50;
+  }
+
+  /* 卡片样式 */
+  .card {
+    @apply bg-white rounded-xl p-6 shadow-card hover:shadow-card-hover transition-all duration-300;
+  }
+
+  .card-gradient {
+    @apply bg-gradient-to-br from-white to-primary-50/30 rounded-xl p-6 shadow-card;
+  }
+
+  /* 容器 */
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* 玻璃态效果 */
+  .glass {
+    @apply bg-white/80 backdrop-blur-lg border border-white/20;
+  }
+
+  /* 装饰性背景 */
+  .bg-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231890FF' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+}
+
+/* 动画延迟类 */
+@layer utilities {
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-300 { animation-delay: 300ms; }
+  .animation-delay-400 { animation-delay: 400ms; }
+  .animation-delay-500 { animation-delay: 500ms; }
+  .animation-delay-600 { animation-delay: 600ms; }
+}
+
+/* 流体波浪动画 */
+.wave-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.wave-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(90deg,
+    rgba(24, 144, 255, 0) 0%,
+    rgba(24, 144, 255, 0.1) 50%,
+    rgba(24, 144, 255, 0) 100%
+  );
+  animation: wave 3s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* 脉冲光晕效果 */
+.pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(24, 144, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(24, 144, 255, 0.6);
+  }
+}
+
+/* 数字计数动画 */
+.counter {
+  display: inline-block;
+}
+
+/* 页面过渡动画 */
+.page-transition {
+  animation: pageIn 0.5s ease-out;
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 导航栏样式 */
+.nav-link {
+  @apply relative text-text-secondary hover:text-primary-500 transition-colors duration-300;
+}
+
+.nav-link::after {
+  content: '';
+  @apply absolute bottom-0 left-0 w-0 h-0.5 bg-primary-500 transition-all duration-300;
+}
+
+.nav-link:hover::after {
+  @apply w-full;
+}
+
+/* 移动端菜单动画 */
+.mobile-menu {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.mobile-menu.closed {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mobile-menu.open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}

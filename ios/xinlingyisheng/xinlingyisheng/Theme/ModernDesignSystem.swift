@@ -41,23 +41,25 @@ struct MedicalColors {
     static let activeBg = HealingColorTheme.borderLight
 }
 
-// MARK: - 字体系统
+// MARK: - 字体系统（使用统一的 UnifiedFont）
 struct MedicalTypography {
     // Headings
-    static let h1 = Font.system(size: AdaptiveFont.largeTitle, weight: .bold)
-    static let h2 = Font.system(size: AdaptiveFont.title1, weight: .semibold)
-    static let h3 = Font.system(size: AdaptiveFont.title2, weight: .semibold)
-    static let h4 = Font.system(size: AdaptiveFont.title3, weight: .medium)
+    static let h1 = Font.system(size: UnifiedFont.largeTitle, weight: .bold)
+    static let h2 = Font.system(size: UnifiedFont.title1, weight: .semibold)
+    static let h3 = Font.system(size: UnifiedFont.title2, weight: .semibold)
+    static let h4 = Font.system(size: UnifiedFont.title3, weight: .medium)
 
     // Body
-    static let bodyLarge = Font.system(size: 17, weight: .regular)
-    static let bodyMedium = Font.system(size: 15, weight: .regular)
-    static let bodySmall = Font.system(size: 13, weight: .regular)
+    static let bodyLarge = Font.system(size: UnifiedFont.body, weight: .regular)
+    static let bodyMedium = Font.system(size: UnifiedFont.subheadline, weight: .regular)
+    static let bodySmall = Font.system(size: UnifiedFont.footnote, weight: .regular)
 
     // Special
-    static let caption = Font.system(size: AdaptiveFont.caption)
-    static let button = Font.system(size: AdaptiveFont.body, weight: .semibold)
-    static let badge = Font.system(size: AdaptiveFont.caption, weight: .medium)
+    static let caption = Font.system(size: UnifiedFont.caption1)
+    static let caption1 = Font.system(size: UnifiedFont.caption1)
+    static let caption2 = Font.system(size: UnifiedFont.caption2)
+    static let button = Font.system(size: UnifiedFont.body, weight: .semibold)
+    static let badge = Font.system(size: UnifiedFont.caption1, weight: .medium)
 }
 
 // MARK: - 间距系统

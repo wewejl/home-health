@@ -38,7 +38,7 @@ struct PDFViewerSheet: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: { dismiss() }) {
                         Text("关闭")
-                            .font(.system(size: layout.bodyFontSize - 1))
+                            .font(.system(size: UnifiedFont.subheadline))
                             .foregroundColor(HealingColors.forestMist)
                     }
                 }
@@ -59,7 +59,7 @@ struct PDFViewerSheet: View {
                                 .frame(width: layout.iconSmallSize + 2, height: layout.iconSmallSize + 2)
 
                             Image(systemName: "ellipsis.circle")
-                                .font(.system(size: 12))
+                                .font(.system(size: AdaptiveFont.caption))
                                 .foregroundColor(HealingColors.forestMist)
                         }
                     }
@@ -124,21 +124,21 @@ struct HealingPDFViewerInfoBar: View {
                 ZStack {
                     Circle()
                         .fill(HealingColors.forestMist.opacity(0.15))
-                        .frame(width: layout.captionFontSize + 6, height: layout.captionFontSize + 6)
+                        .frame(width: UnifiedFont.body * 1.5, height: UnifiedFont.body * 1.5)
 
                     Image(systemName: "stethoscope")
-                        .font(.system(size: 8))
+                        .font(.system(size: AdaptiveFont.caption - 4))
                         .foregroundColor(HealingColors.forestMist)
                 }
 
                 Text(export.department)
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption))
                     .foregroundColor(HealingColors.textPrimary)
             }
 
             // 分隔符
             Text("·")
-                .font(.system(size: layout.captionFontSize))
+                .font(.system(size: UnifiedFont.caption))
                 .foregroundColor(HealingColors.textTertiary)
 
             // 消息数量
@@ -146,26 +146,26 @@ struct HealingPDFViewerInfoBar: View {
                 ZStack {
                     Circle()
                         .fill(HealingColors.dustyBlue.opacity(0.15))
-                        .frame(width: layout.captionFontSize + 6, height: layout.captionFontSize + 6)
+                        .frame(width: UnifiedFont.body * 1.5, height: UnifiedFont.body * 1.5)
 
                     Image(systemName: "bubble.left.and.bubble.right")
-                        .font(.system(size: 8))
+                        .font(.system(size: AdaptiveFont.caption - 4))
                         .foregroundColor(HealingColors.dustyBlue)
                 }
 
                 Text("\(export.messageCount) 条对话")
-                    .font(.system(size: layout.captionFontSize))
+                    .font(.system(size: UnifiedFont.caption))
                     .foregroundColor(HealingColors.textPrimary)
             }
 
             // 分隔符
             Text("·")
-                .font(.system(size: layout.captionFontSize))
+                .font(.system(size: UnifiedFont.caption))
                 .foregroundColor(HealingColors.textTertiary)
 
             // 文件大小
             Text(export.formattedFileSize)
-                .font(.system(size: layout.captionFontSize))
+                .font(.system(size: UnifiedFont.caption))
                 .foregroundColor(HealingColors.textSecondary)
         }
         .padding(.horizontal, layout.cardInnerPadding)

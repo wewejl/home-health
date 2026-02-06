@@ -51,14 +51,14 @@ struct DiseaseListView: View {
         HStack {
             Button(action: { dismiss() }) {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: layout.bodyFontSize, weight: .medium))
+                    .font(.system(size: UnifiedFont.body, weight: .medium))
                     .foregroundColor(HealingColors.textPrimary)
             }
 
             Spacer()
 
             Text("查疾病")
-                .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                .font(.system(size: UnifiedFont.body, weight: .semibold))
                 .foregroundColor(HealingColors.textPrimary)
 
             Spacer()
@@ -68,7 +68,7 @@ struct DiseaseListView: View {
                 MedLiveDiseaseDetailView(disease: MedLiveDiseaseModel.sampleTricuspidValveDisease)
             } label: {
                 Image(systemName: "star.fill")
-                    .font(.system(size: layout.bodyFontSize))
+                    .font(.system(size: UnifiedFont.body))
                     .foregroundColor(HealingColors.terracotta)
             }
         }
@@ -80,11 +80,11 @@ struct DiseaseListView: View {
     // MARK: - 治愈系信任横幅
     private func trustBanner(layout: AdaptiveLayout) -> some View {
         HStack(spacing: layout.cardSpacing / 2) {
-            HStack(spacing: 4) {
+            HStack(spacing: ScaleFactor.spacing(4)) {
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: layout.captionFontSize - 1))
+                    .font(.system(size: UnifiedFont.caption))
                 Text("健康百科")
-                    .font(.system(size: layout.captionFontSize, weight: .medium))
+                    .font(.system(size: UnifiedFont.caption, weight: .medium))
             }
             .foregroundColor(.white)
             .padding(.horizontal, layout.cardInnerPadding - 2)
@@ -99,7 +99,7 @@ struct DiseaseListView: View {
             .clipShape(Capsule())
 
             Text("疾病百科放心查 · 灵犀医生官方出品")
-                .font(.system(size: layout.captionFontSize))
+                .font(.system(size: UnifiedFont.caption))
                 .foregroundColor(HealingColors.textSecondary)
 
             Spacer()
@@ -112,13 +112,13 @@ struct DiseaseListView: View {
     // MARK: - 治愈系搜索区
     private func searchBar(layout: AdaptiveLayout) -> some View {
         HStack(spacing: layout.cardSpacing / 2) {
-            HStack(spacing: layout.cardSpacing / 2) {
+            HStack(spacing: ScaleFactor.spacing(layout.cardSpacing / 2)) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: layout.bodyFontSize - 2))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textTertiary)
 
                 TextField("搜索疾病或症状", text: $searchText)
-                    .font(.system(size: layout.bodyFontSize - 2))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textPrimary)
                     .onChangeCompat(of: searchText) { newValue in
                         performSearch(query: newValue)
@@ -134,7 +134,7 @@ struct DiseaseListView: View {
                         searchTask?.cancel()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: layout.bodyFontSize - 2))
+                            .font(.system(size: UnifiedFont.footnote))
                             .foregroundColor(HealingColors.textTertiary)
                     }
                 }
@@ -148,7 +148,7 @@ struct DiseaseListView: View {
                 performSearch(query: searchText)
             } label: {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: layout.bodyFontSize - 2, weight: .semibold))
+                    .font(.system(size: UnifiedFont.footnote, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(width: layout.cardInnerPadding * 3, height: layout.cardInnerPadding * 3)
                     .background(
@@ -255,11 +255,11 @@ struct DiseaseListView: View {
                         // 热门标题
                         HStack {
                             Image(systemName: "flame.fill")
-                                .font(.system(size: layout.captionFontSize + 2))
+                                .font(.system(size: UnifiedFont.subheadline))
                                 .foregroundColor(HealingColors.terracotta)
 
                             Text("热门疾病")
-                                .font(.system(size: layout.bodyFontSize - 1, weight: .semibold))
+                                .font(.system(size: UnifiedFont.subheadline, weight: .semibold))
                                 .foregroundColor(HealingColors.textPrimary)
 
                             Spacer()
@@ -381,14 +381,14 @@ struct HealingDepartmentRow: View {
     let layout: AdaptiveLayout
 
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: ScaleFactor.spacing(0)) {
             // 选中指示器
-            RoundedRectangle(cornerRadius: 2, style: .continuous)
+            RoundedRectangle(cornerRadius: ScaleFactor.size(2), style: .continuous)
                 .fill(HealingColors.forestMist)
-                .frame(width: 3)
+                .frame(width: ScaleFactor.size(3))
 
             Text(department.name)
-                .font(.system(size: layout.bodyFontSize - 3, weight: isSelected ? .semibold : .regular))
+                .font(.system(size: UnifiedFont.caption, weight: isSelected ? .semibold : .regular))
                 .foregroundColor(isSelected ? HealingColors.forestMist : HealingColors.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, layout.cardInnerPadding)
@@ -409,13 +409,13 @@ struct HealingDiseaseRow: View {
     var body: some View {
         HStack(spacing: layout.cardSpacing / 2) {
             Text(disease.name)
-                .font(.system(size: layout.bodyFontSize - 2, weight: .medium))
+                .font(.system(size: UnifiedFont.footnote, weight: .medium))
                 .foregroundColor(HealingColors.textPrimary)
 
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: layout.captionFontSize, weight: .semibold))
+                .font(.system(size: UnifiedFont.caption, weight: .semibold))
                 .foregroundColor(HealingColors.textTertiary)
         }
         .padding(.horizontal, layout.cardInnerPadding)

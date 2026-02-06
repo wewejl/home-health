@@ -177,14 +177,14 @@ struct VerificationCodeStyle {
     
     static let `default` = VerificationCodeStyle(
         baseFill: Color.dynamicColor(
-            light: Color.white.opacity(0.6),
-            dark: Color(red: 0.18, green: 0.18, blue: 0.22).opacity(0.6)
+            light: Color.white,
+            dark: Color(red: 0.18, green: 0.18, blue: 0.22)
         ),
-        emptyBorder: Color.gray.opacity(0.2),
-        activeBorder: AppColor.primaryPurple,
-        filledBorder: AppColor.primaryPurple.opacity(0.5),
-        successBorder: AppColor.successGreen,
-        textColor: AppColor.textPrimary
+        emptyBorder: AppColor.borderLight,
+        activeBorder: DXYColors.primaryPurple,
+        filledBorder: DXYColors.primaryPurple.opacity(0.5),
+        successBorder: DXYColors.successGreen,
+        textColor: DXYColors.textPrimary
     )
 }
 

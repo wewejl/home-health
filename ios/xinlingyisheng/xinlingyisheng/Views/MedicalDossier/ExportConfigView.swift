@@ -67,13 +67,12 @@ struct ExportConfigView: View {
                 }
             }
         }
-        .navigationTitle("导出病历")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: { dismiss() }) {
                     Text("取消")
-                        .font(.system(size: layout.bodyFontSize - 1))
+                        .font(.system(size: UnifiedFont.subheadline))
                         .foregroundColor(HealingColors.forestMist)
                 }
             }
@@ -186,12 +185,12 @@ struct HealingExportScopeCard: View {
                         .frame(width: layout.iconSmallSize + 2, height: layout.iconSmallSize + 2)
 
                     Image(systemName: "doc.on.doc")
-                        .font(.system(size: 12))
+                        .font(.system(size: AdaptiveFont.caption))
                         .foregroundColor(HealingColors.forestMist)
                 }
 
                 Text("导出范围")
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
                     .foregroundColor(HealingColors.textPrimary)
             }
 
@@ -210,12 +209,12 @@ struct HealingExportScopeCard: View {
                                 if config.exportScope == scope {
                                     Circle()
                                         .fill(HealingColors.forestMist)
-                                        .frame(width: layout.captionFontSize - 4, height: layout.captionFontSize - 4)
+                                        .frame(width: AdaptiveFont.custom(8), height: AdaptiveFont.custom(8))
                                 }
                             }
 
                             Text(scope.displayName)
-                                .font(.system(size: layout.captionFontSize + 1))
+                                .font(.system(size: UnifiedFont.footnote))
                                 .foregroundColor(HealingColors.textPrimary)
 
                             Spacer()
@@ -267,12 +266,12 @@ struct HealingExportDateRangeCard: View {
                         .frame(width: layout.iconSmallSize + 2, height: layout.iconSmallSize + 2)
 
                     Image(systemName: "calendar")
-                        .font(.system(size: 12))
+                        .font(.system(size: AdaptiveFont.caption))
                         .foregroundColor(HealingColors.dustyBlue)
                 }
 
                 Text("时间范围")
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
                     .foregroundColor(HealingColors.textPrimary)
             }
 
@@ -280,7 +279,7 @@ struct HealingExportDateRangeCard: View {
             HStack(spacing: layout.cardSpacing) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("开始日期")
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption))
                         .foregroundColor(HealingColors.textSecondary)
 
                     DatePicker("", selection: $config.startDate, displayedComponents: .date)
@@ -295,7 +294,7 @@ struct HealingExportDateRangeCard: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("结束日期")
-                        .font(.system(size: layout.captionFontSize))
+                        .font(.system(size: UnifiedFont.caption))
                         .foregroundColor(HealingColors.textSecondary)
 
                     DatePicker("", selection: $config.endDate, displayedComponents: .date)
@@ -335,12 +334,12 @@ struct HealingExportContentCard: View {
                         .frame(width: layout.iconSmallSize + 2, height: layout.iconSmallSize + 2)
 
                     Image(systemName: "doc.text")
-                        .font(.system(size: 12))
+                        .font(.system(size: AdaptiveFont.caption))
                         .foregroundColor(HealingColors.mutedCoral)
                 }
 
                 Text("导出内容")
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
                     .foregroundColor(HealingColors.textPrimary)
             }
 
@@ -420,12 +419,12 @@ struct HealingExportPersonalInfoCard: View {
                         .frame(width: layout.iconSmallSize + 2, height: layout.iconSmallSize + 2)
 
                     Image(systemName: "person.text.rectangle")
-                        .font(.system(size: 12))
+                        .font(.system(size: UnifiedFont.caption))
                         .foregroundColor(HealingColors.warmSand)
                 }
 
                 Text("个人信息")
-                    .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                    .font(.system(size: UnifiedFont.body, weight: .semibold))
                     .foregroundColor(HealingColors.textPrimary)
             }
 
@@ -492,12 +491,12 @@ struct HealingExportPrivacyNotice: View {
                     .frame(width: layout.iconSmallSize - 2, height: layout.iconSmallSize - 2)
 
                 Image(systemName: "lock.shield.fill")
-                    .font(.system(size: 10))
+                    .font(.system(size: AdaptiveFont.caption - 2))
                     .foregroundColor(HealingColors.forestMist)
             }
 
             Text("个人信息仅用于病历导出，不会上传至服务器")
-                .font(.system(size: layout.captionFontSize))
+                .font(.system(size: UnifiedFont.caption))
                 .foregroundColor(HealingColors.textSecondary)
         }
         .padding(.horizontal, layout.cardInnerPadding)
@@ -516,7 +515,7 @@ struct HealingExportToggleRow: View {
         Button(action: { isOn.toggle() }) {
             HStack {
                 Text(title)
-                    .font(.system(size: layout.captionFontSize + 1))
+                    .font(.system(size: UnifiedFont.footnote))
                     .foregroundColor(HealingColors.textPrimary)
 
                 Spacer()
@@ -561,13 +560,12 @@ struct HealingExportPreviewButton: View {
                     if isGenerating {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(0.8)
                     } else {
                         Image(systemName: "doc.text.viewfinder")
-                            .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                            .font(.system(size: UnifiedFont.body, weight: .semibold))
                     }
                     Text(isGenerating ? "生成中..." : "预览并导出")
-                        .font(.system(size: layout.bodyFontSize, weight: .semibold))
+                        .font(.system(size: UnifiedFont.body, weight: .semibold))
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)

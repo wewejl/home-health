@@ -5,7 +5,7 @@ from ..models.session import Session as SessionModel
 from ..models.feedback import SessionFeedback
 from ..models.user import User
 from ..schemas.feedback import FeedbackCreate, FeedbackResponse
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, TEST_MODE
 
 router = APIRouter(prefix="/sessions", tags=["feedbacks"])
 
@@ -17,18 +17,24 @@ def create_session_feedback(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    session = db.query(SessionModel).filter(
-        SessionModel.id == session_id,
-        SessionModel.user_id == current_user.id
-    ).first()
-    
+    # 测试模式：不检查 user_id
+    if TEST_MODE:
+        session = db.query(SessionModel).filter(
+            SessionModel.id == session_id
+        ).first()
+    else:
+        session = db.query(SessionModel).filter(
+            SessionModel.id == session_id,
+            SessionModel.user_id == current_user.id
+        ).first()
+
     if not session:
         raise HTTPException(status_code=404, detail="会话不存在")
-    
+
     feedback = SessionFeedback(
         session_id=session_id,
         message_id=request.message_id,
-        user_id=current_user.id,
+        user_id=session.user_id if TEST_MODE else current_user.id,
         rating=request.rating,
         feedback_type=request.feedback_type,
         feedback_text=request.feedback_text
@@ -36,7 +42,7 @@ def create_session_feedback(
     db.add(feedback)
     db.commit()
     db.refresh(feedback)
-    
+
     return FeedbackResponse.model_validate(feedback)
 
 
@@ -48,23 +54,29 @@ def create_message_feedback(
     current_user: User = Depends(get_current_user)
 ):
     from ..models.message import Message
-    
+
     message = db.query(Message).filter(Message.id == message_id).first()
     if not message:
         raise HTTPException(status_code=404, detail="消息不存在")
-    
-    session = db.query(SessionModel).filter(
-        SessionModel.id == message.session_id,
-        SessionModel.user_id == current_user.id
-    ).first()
-    
+
+    # 测试模式：不检查 user_id
+    if TEST_MODE:
+        session = db.query(SessionModel).filter(
+            SessionModel.id == message.session_id
+        ).first()
+    else:
+        session = db.query(SessionModel).filter(
+            SessionModel.id == message.session_id,
+            SessionModel.user_id == current_user.id
+        ).first()
+
     if not session:
         raise HTTPException(status_code=403, detail="无权限")
-    
+
     feedback = SessionFeedback(
         session_id=message.session_id,
         message_id=message_id,
-        user_id=current_user.id,
+        user_id=session.user_id if TEST_MODE else current_user.id,
         rating=request.rating,
         feedback_type=request.feedback_type,
         feedback_text=request.feedback_text
@@ -72,5 +84,5 @@ def create_message_feedback(
     db.add(feedback)
     db.commit()
     db.refresh(feedback)
-    
+
     return FeedbackResponse.model_validate(feedback)

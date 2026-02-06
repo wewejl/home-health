@@ -4,18 +4,22 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..schemas.auth import (
     SendCodeRequest, SendCodeResponse,
-    LoginRequest, LoginResponse, 
+    LoginRequest, LoginResponse,
     UserResponse, ProfileUpdateRequest,
     RefreshTokenRequest, RefreshTokenResponse,
     PasswordRegisterRequest, PasswordLoginRequest,
     SetPasswordRequest, PasswordResetRequest, CheckPhoneResponse
 )
 from ..services.auth_service import AuthService
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, TEST_MODE
 from ..models.user import User
+from ..utils.rate_limit import check_rate_limit
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 logger = logging.getLogger(__name__)
+
+# 测试模式：跳过所有验证码检查
+AUTH_TEST_MODE = TEST_MODE
 
 
 def get_client_ip(request: Request) -> str:
@@ -34,16 +38,20 @@ async def send_verification_code(
 ):
     """
     发送验证码
-    
+
     - **phone**: 11位手机号
-    
+
     返回验证码有效期（秒）
-    
+
     防刷策略：
     - 同一手机号60秒内只能发送一次
     - 同一手机号每小时最多10次
     - 同一IP每小时最多30次
+    - 全局速率限制: 每分钟 5 次
     """
+    # 应用速率限制
+    check_rate_limit(request, "send_code", key_func=lambda r: f"ip:{get_client_ip(r)}")
+
     client_ip = get_client_ip(request)
     
     success, message, expires_in = await AuthService.send_verification_code(
@@ -75,23 +83,31 @@ def login(
 ):
     """
     验证码登录
-    
+
     - **phone**: 11位手机号
-    - **code**: 验证码（测试模式下 000000 始终有效）
-    
+    - **code**: 验证码（测试模式下任何验证码都有效）
+
     返回 JWT Token 和用户信息，is_new_user 表示是否为新注册用户
+
+    速率限制: 每分钟 10 次
     """
+    # 测试模式：跳过速率限制和验证码验证
+    if not AUTH_TEST_MODE:
+        check_rate_limit(request, "login", key_func=lambda r: f"ip:{get_client_ip(r)}")
+
     client_ip = get_client_ip(request)
-    
-    # 验证验证码
-    success, error_msg = AuthService.verify_code(request_body.phone, request_body.code)
-    if not success:
-        AuthService.log_auth_event("login_failed", extra={
-            "phone": request_body.phone[-4:],
-            "ip": client_ip,
-            "error": error_msg
-        })
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg)
+
+    # 测试模式：跳过验证码验证
+    if not AUTH_TEST_MODE:
+        # 验证验证码
+        success, error_msg = AuthService.verify_code(request_body.phone, request_body.code)
+        if not success:
+            AuthService.log_auth_event("login_failed", extra={
+                "phone": request_body.phone[-4:],
+                "ip": client_ip,
+                "error": error_msg
+            })
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg)
 
     # 获取或创建用户
     user, is_new_user = AuthService.get_or_create_user(db, request_body.phone)

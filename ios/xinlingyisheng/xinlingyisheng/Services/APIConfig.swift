@@ -29,8 +29,8 @@ enum APIConfig {
         }
     }
 
-    // 当前环境配置 - 生产环境使用线上服务器
-    static let currentEnvironment: Environment = .production
+    // 当前环境配置 - 开发环境使用本地服务器
+    static let currentEnvironment: Environment = .development
 
     // 基础 URL
     static var baseURL: String {
@@ -45,7 +45,7 @@ enum APIConfig {
 
     // MARK: - Environment Info
     static let environmentName: String = "Production"
-    
+
     enum Endpoints {
         static let login = "/auth/login"
         static let sendCode = "/auth/send-code"
@@ -62,14 +62,15 @@ enum APIConfig {
         static func doctors(departmentId: Int) -> String {
             return "/departments/\(departmentId)/doctors"
         }
-        static let sessions = "/sessions"
+        // V2 Sessions endpoints - 统一使用 V2 API
+        static let sessions = "/v2/sessions"
         static func messages(sessionId: String) -> String {
-            return "/sessions/\(sessionId)/messages"
+            return "/v2/sessions/\(sessionId)/messages"
         }
-        // Unified Agent endpoints
-        static let agents = "/sessions/agents"
+        // Unified Agent endpoints - V2
+        static let agents = "/v2/sessions/agents"
         static func agentCapabilities(agentType: String) -> String {
-            return "/sessions/agents/\(agentType)/capabilities"
+            return "/v2/sessions/agents/\(agentType)/capabilities"
         }
         // Diseases
         static let diseases = "/diseases"
@@ -86,7 +87,7 @@ enum APIConfig {
         static func diseaseByWikiId(wikiId: String) -> String {
             return "/diseases/wiki-id/\(wikiId)"
         }
-        
+
         // Drugs
         static let drugsCategories = "/drugs/categories"
         static let drugsSearch = "/drugs/search"
@@ -94,7 +95,7 @@ enum APIConfig {
         static func drugDetail(drugId: Int) -> String {
             return "/drugs/\(drugId)"
         }
-        
+
         // Medical Events (病历资料夹)
         static let medicalEvents = "/medical-events"
         static func medicalEventDetail(eventId: String) -> String {
@@ -106,7 +107,7 @@ enum APIConfig {
         static func medicalEventNotes(eventId: String) -> String {
             return "/medical-events/\(eventId)/notes"
         }
-        
+
         // AI APIs
         static let aiSummary = "/ai/summary"
         static func aiSummaryGet(eventId: String) -> String {
@@ -131,58 +132,9 @@ enum APIConfig {
     }
 }
 
-enum SpeechAPIConfig {
-    static let baseURL: String = {
-        // 语音识别 API 基础 URL
-        let apiBase = ProcessInfo.processInfo.environment["API_BASE_URL"]
-            ?? "http://123.206.232.231/api"
-        return apiBase + "/v1"
-    }()
-
-    enum Endpoints {
-        static let transcription = "/transcriptions"
-    }
-}
-
-// MARK: - Aliyun Configuration
-/// 阿里云服务配置
-enum AliyunConfig {
-    /// CosyVoice TTS API Key
-    static var cosyVoiceAPIKey: String {
-        return ProcessInfo.processInfo.environment["ALIYUN_API_KEY"]
-            ?? ""  // 从环境变量或配置文件读取
-    }
-
-    /// CosyVoice TTS WebSocket 端点
-    static let cosyVoiceEndpoint = "wss://dashscope.aliyuncs.com/api-ws/v1/inference"
-
-    /// 默认 CosyVoice 模型
-    static let defaultCosyVoiceModel: CosyVoiceModel = .v2
-
-    /// 默认 CosyVoice 音色
-    static let defaultCosyVoiceVoice: CosyVoiceVoice = .longxiaochun
-
-    /// FSMN-VAD 模型路径（在应用包内）
-    static let fsmnVADModelPath = "Models/damo/speech_fsmn_vad_zh-cn-16k-common-onnx/model_quant.onnx"
-
-    /// 是否启用 FSMN-VAD（ONNX 推理）
-    static var enableFSMNVAD: Bool {
-        return ProcessInfo.processInfo.environment["ENABLE_FSMN_VAD"] == "true"
-            || true  // 默认启用
-    }
-
-    /// 是否启用 CosyVoice TTS（需要 API Key）
-    static var enableCosyVoiceTTS: Bool {
-        return !cosyVoiceAPIKey.isEmpty
-    }
-}
-
-// MARK: - CosyVoice Enums (re-exported for convenience)
-typealias CosyVoiceModelType = CosyVoiceModel
-typealias CosyVoiceVoiceType = CosyVoiceVoice
-
 // MARK: - Backend Voice Configuration
 /// 后端语音服务配置 (统一的后端转发服务)
+/// 注: TTS (Text-to-Speech) 功能已移除
 enum BackendVoiceConfig {
     /// 后端 WebSocket 基础地址
     static var baseURL: String {
@@ -199,9 +151,6 @@ enum BackendVoiceConfig {
     /// ASR WebSocket 端点路径
     static let asrPath = "/ws/voice/asr"
 
-    /// TTS WebSocket 端点路径
-    static let ttsPath = "/ws/voice/tts"
-
     /// 完整 ASR WebSocket URL
     static var asrURL: String {
         var components = URLComponents(string: baseURL)!
@@ -212,18 +161,27 @@ enum BackendVoiceConfig {
         return components.url!.absoluteString.replacingOccurrences(of: "http", with: "ws")
     }
 
-    /// 完整 TTS WebSocket URL
-    static var ttsURL: String {
-        var components = URLComponents(string: baseURL)!
-        components.path = ttsPath
-        components.queryItems = [
-            URLQueryItem(name: "token", value: defaultToken)
-        ]
-        return components.url!.absoluteString.replacingOccurrences(of: "http", with: "ws")
-    }
+    // TTS WebSocket 配置已移除 (ttsPath, ttsURL 已废弃)
 }
 
-// MARK: - Backend ASR Configuration (Legacy - 使用 BackendVoiceConfig 替代)
+// MARK: - Aliyun Configuration
+/// 阿里云服务配置
+/// 注: CosyVoice TTS 相关配置已移除
+enum AliyunConfig {
+    /// FSMN-VAD 模型路径（在应用包内）
+    static let fsmnVADModelPath = "Models/damo/speech_fsmn_vad_zh-cn-16k-common-onnx/model_quant.onnx"
+
+    /// 是否启用 FSMN-VAD（ONNX 推理）
+    static var enableFSMNVAD: Bool {
+        return ProcessInfo.processInfo.environment["ENABLE_FSMN_VAD"] == "true"
+            || true  // 默认启用
+    }
+
+    // TTS 相关配置已移除 (cosyVoiceAPIKey, cosyVoiceEndpoint, defaultCosyVoiceModel,
+    // defaultCosyVoiceVoice, enableCosyVoiceTTS 已废弃)
+}
+
+// MARK: - Backend ASR Configuration (Legacy)
 /// 后端 ASR 服务配置 (FunASR) - 已废弃，请使用 BackendVoiceConfig
 enum BackendASRConfig {
     /// 后端 WebSocket 基础地址

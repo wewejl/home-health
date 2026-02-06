@@ -207,16 +207,16 @@ struct ConditionRowView: View {
             // 进度条
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3)
+                    RoundedRectangle(cornerRadius: ScaleFactor.size(3))
                         .fill(Color.gray.opacity(0.15))
-                        .frame(height: 6)
-                    
-                    RoundedRectangle(cornerRadius: 3)
+                        .frame(height: ScaleFactor.size(6))
+
+                    RoundedRectangle(cornerRadius: ScaleFactor.size(3))
                         .fill(barColor)
-                        .frame(width: geometry.size.width * condition.confidence, height: 6)
+                        .frame(width: geometry.size.width * condition.confidence, height: ScaleFactor.size(6))
                 }
             }
-            .frame(height: 6)
+            .frame(height: ScaleFactor.size(6))
             
             // 依据
             if !condition.rationale.isEmpty {
@@ -244,19 +244,19 @@ struct ReasoningTimelineView: View {
     let steps: [String]
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: ScaleFactor.spacing(0)) {
             ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
                 HStack(alignment: .top, spacing: ScaleFactor.spacing(10)) {
                     // 时间线圆点和线
-                    VStack(spacing: 0) {
+                    VStack(spacing: ScaleFactor.spacing(0)) {
                         Circle()
                             .fill(DXYColors.teal)
-                            .frame(width: 8, height: 8)
-                        
+                            .frame(width: ScaleFactor.size(8), height: ScaleFactor.size(8))
+
                         if index < steps.count - 1 {
                             Rectangle()
                                 .fill(DXYColors.teal.opacity(0.3))
-                                .frame(width: 2, height: 24)
+                                .frame(width: ScaleFactor.size(2), height: ScaleFactor.size(24))
                         }
                     }
                     

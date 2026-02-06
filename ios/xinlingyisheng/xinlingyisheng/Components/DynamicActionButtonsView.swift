@@ -50,9 +50,9 @@ struct ActionButton: View {
         Button(action: onTap) {
             HStack(spacing: 6) {
                 Image(systemName: action.icon)
-                    .font(.system(size: 16))
+                    .font(.system(size: UnifiedFont.body))
                 Text(action.displayName)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: UnifiedFont.subheadline, weight: .medium))
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)

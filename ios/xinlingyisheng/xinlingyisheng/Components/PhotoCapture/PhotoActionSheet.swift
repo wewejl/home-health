@@ -23,7 +23,7 @@ struct PhotoActionSheet: View {
                     }
                 }) {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: ScaleFactor.size(24)))
+                        .font(.system(size: ScaleFactor.font(24)))
                         .foregroundColor(DXYColors.textTertiary)
                 }
             }

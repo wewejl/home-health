@@ -108,10 +108,24 @@ class AIService {
         department: String? = nil,
         chiefComplaint: String? = nil
     ) async throws -> SmartAggregateResponse {
+        // department 改为必填，使用后端格式的值
+        let dept: String
+        if let department = department {
+            // 如果传入了前端枚举值，转换为后端值
+            if let deptType = DepartmentType(rawValue: department) {
+                dept = DepartmentMapping.toBackend(deptType)
+            } else {
+                dept = department
+            }
+        } else {
+            // 默认值使用后端格式
+            dept = "general"
+        }
+
         let request = SmartAggregateRequest(
             session_id: sessionId,
             session_type: sessionType,
-            department: department,
+            department: dept,  // ✅ 确保传递后端格式的值
             chief_complaint: chiefComplaint
         )
         let data = try JSONEncoder().encode(request)

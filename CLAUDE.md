@@ -1,672 +1,418 @@
-# CLAUDE.md
+# Claude 配置文件 - 心灵医生项目
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## 第一原则（强制遵循）
+
+**📖 做任何操作之前，必须先阅读 `docs/` 目录下的相关文档**
+
+```
+                    ┌─────────────────┐
+                    │   开始任何任务   │
+                    └────────┬────────┘
+                             ↓
+                    ┌─────────────────┐
+                    │  阅读 docs/ 文档  │
+                    │  - 启动指南.md   │
+                    │  - 架构设计.md   │
+                    │  - API文档.md    │
+                    │  - 配置指南.md   │
+                    │  - 服务器设置.md │
+                    └────────┬────────┘
+                             ↓
+                    ┌─────────────────┐
+                    │   理解后开始操作  │
+                    └─────────────────┘
+```
+
+| ❌ 错误做法 | ✅ 正确做法 |
+|------------|------------|
+| 直接开始操作 | 先读 `docs/` 相关文档 |
+| 猜测端口（如8000） | 查看 `启动指南.md` |
+| 不知道怎么启动 | 查看 `启动指南.md` |
+| 不知道 API 接口 | 查看 `API文档.md` |
 
 ---
 
-## 📝 Documentation Update Rule (文档更新规则)
+## 项目结构说明
 
-### Rule: 发现文档与代码不一致时，必须更新文档
+本项目是一个医疗健康咨询应用，包含以下目录：
 
-```
-查看代码 → 发现文档不正确 → 立即更新文档 → 继续工作
-```
+### 主要开发目录
+- `backend/` - Python FastAPI 后端服务
+- `frontend/` - React + TypeScript Web 前端
+- `ios/` - Swift + SwiftUI iOS 原生应用
 
-**更新流程**:
-1. **发现问题**: 查看代码时发现文档描述与实际实现不符
-2. **分析差异**: 对比文档和代码，找出具体差异
-3. **更新文档**: 修改 CLAUDE.md 或相关文档，确保与代码一致
-4. **记录变更**: 在文档中注明更新日期和原因
+### 部署和工具
+- `deployment/` - 部署相关配置和脚本
+- `scripts/` - 项目脚本工具
 
-**常见不一致场景**:
-- ❌ 文档说使用 GLM-ASR，实际使用 Aliyun ASR → 更新文档
-- ❌ 文档说端口 8000，实际是 8100 → 更新文档
-- ❌ 文档描述的 API 响应格式与实际不符 → 更新文档
-- ❌ 文档中的文件路径不存在 → 更新文档
+### 文档
+- `docs/` - 项目文档（架构、API、配置、开发规范等）
 
-**更新位置优先级**:
-1. **CLAUDE.md** - 首选，快速参考
-2. **docs/API_CONTRACT.md** - API 契约变更
-3. **docs/IOS_DEVELOPMENT_GUIDE.md** - iOS 开发相关
-4. **相关 plan 文档** - 设计和实施计划
+## 技术栈
 
----
+| 模块 | 技术栈 |
+|------|--------|
+| 后端 | Python + FastAPI + SQLAlchemy |
+| 前端 | React + TypeScript + Vite |
+| iOS | Swift + SwiftUI |
+| 数据库 | PostgreSQL (Docker) |
 
-## ⚠️ MUST READ - Engineering Rules (必读工程化规则)
-
-### Rule #1: Understand Before Modify (理解后再修改)
-
-```
-❌ WRONG: 看到 voice_asr.py → 假设是 GLM-ASR → 直接改代码
-✅ RIGHT: 看 config.py → ASR_PROVIDER="aliyun" → 理解调用链 → 修改
-```
-
-### Rule #2: Check Logs First (先看日志)
-
-```
-❌ WRONG: 用户说"不工作" → 猜测问题 → 改代码
-✅ RIGHT: 查看日志 → 找到错误 → 定位问题 → 修复
-```
-
-### Rule #3: Minimal Changes (最小化修改)
-
-```
-❌ WRONG: 重写整个模块
-✅ RIGHT: 只改必要的部分
-```
-
-### Rule #4: Test Before Complete (测试后再完成)
-
-```
-❌ WRONG: 改完代码就标记完成
-✅ RIGHT: 编译通过 + 测试通过 + 用户验证 → 完成
-```
-
-### Documentation References (文档参考)
-
-| Document | Purpose |
-|----------|---------|
-| `docs/ARCHITECTURE.md` | 系统架构和调用链 |
-| `docs/ENGINEERING_STANDARDS.md` | 工程化开发标准 |
-| `docs/CODE_VS_ENGINEERING_EXAMPLE.md` | 写代码 vs 工程化案例对比 |
+**端口信息请查看 `docs/启动指南.md`**
 
 ---
 
-## ⚙️ Server Ports Configuration (服务器端口配置)
+## 可用 MCP 工具
 
-### Development Environment (开发环境)
+### playwright MCP - 用于测试
 
-| Service | Port | URL |
-|---------|------|-----|
-| **Backend API** | **8100** | `http://127.0.0.1:8100` |
-| Backend Health | 8100 | `http://127.0.0.1:8100/health` |
-| WebSocket ASR | 8100 | `ws://127.0.0.1:8100/ws/voice/asr` |
-| WebSocket TTS | 8100 | `ws://127.0.0.1:8100/ws/voice/tts` |
-| API Docs | 8100 | `http://127.0.0.1:8100/docs` |
-| Frontend | 5173 | `http://127.0.0.1:5173` |
-| PostgreSQL | 5433 | `localhost:5433` |
+**用途**：前端 Web 应用自动化测试
 
-### Start Backend Server (启动后端)
+| 工具 | 功能 |
+|------|------|
+| `browser_navigate` | 导航到 URL |
+| `browser_snapshot` | 获取页面快照 |
+| `browser_take_screenshot` | 页面截图 |
+| `browser_click` | 点击元素 |
+| `browser_type` | 输入文本 |
+| `browser_fill_form` | 填写表单 |
+| `browser_console_messages` | 获取控制台日志 |
+| `browser_wait_for` | 等待元素/条件 |
 
-```bash
-cd backend
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8100
-```
-
-**⚠️ IMPORTANT**:
-- **Backend runs on port 8100** (NOT 8000)
-- **iOS development URL**: `http://127.0.0.1:8100`
-- **Production URL**: `http://123.206.232.231/api`
+**使用场景**：
+- 验证前端页面功能
+- 检查控制台错误
+- 截图对比 UI 变更
+- 表单提交测试
 
 ---
 
-## Project Overview
+## 开发流程（强制遵循）
 
-**Home-Health** (灵犀医生) is an AI Doctor Avatar System that provides AI-powered medical consultation services. It consists of three main components:
-
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| `backend/` | FastAPI + LangGraph + SQLAlchemy | Medical consultation API with multi-agent AI |
-| `frontend/` | React 19 + TypeScript + Ant Design | Admin dashboard for doctor/knowledge management |
-| `ios/` | SwiftUI + MVVM | Patient mobile app |
-
-## Common Commands
-
-### Backend (FastAPI)
-
-```bash
-cd backend
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run development server (port 8000/8100)
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
-# Run specific port
-uvicorn app.main:app --reload --port 8100
-
-# Database migration
-python migrations/drop_deprecated_sessions_tables.py
-
-# Docker PostgreSQL (本地开发数据库)
-docker ps -a | grep postgres              # 查看容器状态
-docker start home_health_db               # 启动PostgreSQL容器
-docker stop home_health_db                # 停止容器
-docker exec home_health_db psql -U postgres -d home_health_prod  # 连接数据库
-```
-
-**API Documentation**: http://localhost:8000/docs (auto-generated by FastAPI)
-
-**Docker PostgreSQL 容器**:
-- 容器名: `home_health_db`
-- 端口映射: `5433:5432` (主机5433 → 容器5432)
-- 用户名: `postgres`
-- 密码: `postgres`
-- 数据库: `home_health_prod`
-
-### Frontend (React + Vite)
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Run dev server (port 5173)
-npm run dev
-
-# Build for production
-npm run build
-
-# Lint code
-npm run lint
-
-# Preview build
-npm run preview
-```
-
-### iOS (Xcode)
-
-Open `ios/xinlingyisheng/xinlingyisheng.xcodeproj` in Xcode. Build and run to simulator or device.
-
-**Environment switching**: Edit `ios/xinlingyisheng/xinlingyisheng/Services/APIConfig.swift`:
-- Development: `http://localhost:8100`
-- Production: `http://apixinling.natapp1.cc`
-
-### iOS Build Commands
-
-```bash
-cd ios/xinlingyisheng
-
-# List available schemes
-xcodebuild -project xinlingyisheng.xcodeproj -list
-
-# Build for simulator
-xcodebuild -project xinlingyisheng.xcodeproj -scheme 灵犀医生 \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
-
-# Build for device (requires code signing)
-xcodebuild -project xinlingyisheng.xcodeproj -scheme 灵犀医生 \
-  -destination 'generic/platform=iOS' build
-
-# Run tests
-xcodebuild test -project xinlingyisheng.xcodeproj -scheme 灵犀医生 \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
-```
-
-## iOS Code Modification Workflow
-
-**CRITICAL**: After modifying ANY iOS code, you MUST follow this verification sequence:
-
-### 1. Compile Check (Required)
-```bash
-cd ios/xinlingyisheng
-xcodebuild -project xinlingyisheng.xcodeproj -scheme 灵犀医生 \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
-```
-- **DO NOT** mark task as complete until `BUILD SUCCEEDED`
-- Fix ALL compilation errors before proceeding
-
-### 2. Verify Color/Font Usage
-When modifying UI code:
-- Use `DXYColors.primaryPurple` - NOT hardcoded colors like `#3B82F6`
-- Use `AdaptiveFont.body` - NOT hardcoded sizes like `16`
-- Use `ScaleFactor.padding(16)` - NOT hardcoded spacing
-- Check that referenced colors exist in DXYColors before using them
-
-### 3. Common Compilation Gotchas
-| Error | Fix |
-|-------|-----|
-| `Type 'DXYColors' has no member 'xxx'` | Use existing DXYColors properties or define inline |
-| `Cannot convert value type` | Check color type mismatch (Color vs CGColor) |
-| `Use of unresolved identifier` | Missing import or incorrect type name |
-
-### 4. Team Best Practices
-- **Local verification first** - Never push untested code
-- **Keep replacements consistent** - When refactoring colors, check ALL usages
-- **Test visual appearance** - Colors must match the purple theme (#5C44FF)
-
-## Architecture
-
-### Backend - Multi-Agent AI System
-
-The backend uses **LangGraph** for building medical consultation agents with a unified architecture:
+**重要**: 在编写任何代码之前，必须严格按照以下顺序执行：
 
 ```
-backend/app/services/agents/
-├── base.py           # LangGraphAgent base class - ALL agents inherit this
-├── react_base.py     # ReActAgent base class (Observe → Think → Act)
-├── router.py         # AgentRouter - centralized agent registry
-├── tools/            # Shared agent tools (RAG, image analysis, dossier)
-├── general/          # General medicine agent
-├── dermatology/      # Dermatology agent (with image recognition)
-├── cardiology/       # Cardiology agent
-└── orthopedics/      # Orthopedics agent
+┌─────────────────────────────────────────────────────────┐
+│  1. 分析任务                                            │
+│     ├── 读 .tasks/TASK-XXX/task.md 理解需求             │
+│     └── 明确要实现什么功能                               │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│  2. 阅读文档                                            │
+│     ├── docs/architecture/ - 了解系统整体结构            │
+│     ├── docs/api/ - 查看相关接口定义                     │
+│     ├── docs/config/ - 确认密钥、环境变量                │
+│     └── 现有代码 - 查看类型定义，不要伪造字段            │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│  3. 查看代码                                            │
+│     ├── 找到相关模块的现有实现                           │
+│     ├── 看懂已有的代码风格和模式                         │
+│     └── 确认依赖和导入路径                               │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│  4. 设计方案                                            │
+│     ├── 基于真实代码设计实现方案                         │
+│     ├── 不要凭想象伪造任何内容                           │
+│     └── 确认方案可行后开始编码                           │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│  5. 编写代码                                            │
+│     ├── 基于实际类型定义编写                             │
+│     └── 遵循项目代码风格                                 │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│  6. 验证代码                                            │
+│     ├── 后端：用 curl 测试 API 接口                      │
+│     ├── 前端：启动服务，手动操作功能页面                  │
+│     ├── iOS：在模拟器或真机上测试                        │
+│     ├── 检查边界条件和异常情况                           │
+│     └── 确认修改没有破坏已有功能                         │
+└─────────────────────────────────────────────────────────┘
 ```
 
-**Key Architecture Rules**:
+### 关键原则
 
-1. **All agents MUST extend `LangGraphAgent`** from `base.py`
-2. **Use unified `sessions` table** - DO NOT create specialty-specific session tables
-3. **Use `agent_type` field to distinguish specialties** (dermatology, cardiology, etc.)
-4. **Store specialty-specific data in `agent_state` JSONB column**
+| ❌ 错误做法 | ✅ 正确做法 |
+|------------|------------|
+| 看到任务直接写代码 | 先读文档了解全貌 |
+| 代码里没密钥就自己造 | 去 docs/config/ 找 |
+| 不知道字段就瞎编 | 查看现有代码定义 |
+| 不看现有实现凭空写 | 先看类似功能怎么写的 |
+| 写完不测试 | 写完必须测试验证 |
 
-**Agent Registration** (in `router.py`):
-```python
-AgentRouter.register(
-    agent_type="new_specialty",
-    agent_class=NewSpecialtyAgent,
-    capabilities={...}
-)
+---
+
+## 服务启动和诊断
+
+**详细步骤请查看 `docs/启动指南.md`**
+
+**⚠️ 注意**：必须先阅读文档，不要凭经验猜测端口或命令。
+
+---
+
+## 代码验证详解
+
+**详细验证步骤请查看 `docs/启动指南.md`**
+
+### 基本原则
+- 写完代码必须测试验证
+- 检查边界条件和异常情况
+- 修改 API 后测试调用它的功能
+
+---
+
+## 文档更新规则（重要！）
+
+**原则**: 文档更新应该写到每个任务里面，而不是单独的任务
+
+| 文档 | 更新时机 |
+|------|----------|
+| docs/架构设计.md | 架构变动后同步更新 |
+| docs/API文档.md | API 变动后同步更新 |
+| docs/配置指南.md | 配置变更后同步更新 |
+| docs/启动指南.md | 启动流程变更后同步更新 |
+
+**检查清单**：
+- [ ] 修改代码后，同步更新相关 docs 文档
+- [ ] 验证时确认文档与代码一致
+
+**禁止**：
+- ❌ 创建专门的"更新文档"任务
+- ❌ 代码修改完成后不更新文档
+
+---
+
+## 验证结果记录（重要！）
+
+完成后**必须**在任务文档中记录验证结果：
+
+```markdown
+## 验证结果
+
+（具体命令请查看 docs/启动指南.md）
+
+### 验证结果
+| 测试项 | 结果 | 备注 |
+|--------|------|------|
+| 功能A | ✅ 通过 | 正常工作 |
+| 功能B | ❌ 失败 | 需要修复 |
 ```
 
-**Agent Types**:
-- `general` - General medicine
-- `dermatology` - Dermatology with Qwen-VL image analysis
-- `cardiology` - Cardiovascular with ECG interpretation
-- `orthopedics` - Orthopedics with X-ray analysis
+### 检查清单
+- [ ] 后端 API 用 curl 测试
+- [ ] 前端用浏览器实际操作
+- [ ] iOS 在模拟器/真机测试
+- [ ] 控制台无错误
+- [ ] 验证结果记录到 task.md
 
-### Session Management Architecture
+---
 
-**Critical Rule**: Use the unified `sessions` table for ALL specialties. The `agent_type` field distinguishes between different medical specialties.
+## 任务发布流程
 
-```python
-# Correct: unified sessions table
-session = db.query(Session).filter(
-    Session.agent_type == "dermatology"
-).first()
+当用户提出一个模糊的需求时，按以下流程处理：
 
-# Wrong: NEVER create specialty-specific tables
-# class DermatologySession(Base): ...  # FORBIDDEN
+```
+┌─────────────────────────────────────────────────────────┐
+│  1. 接收需求                                            │
+│     ├── 用户提出模糊需求                                │
+│     └── 例如："加个医生搜索功能"                        │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│  2. 阅读文档                                            │
+│     ├── docs/architecture/ - 了解系统结构               │
+│     ├── docs/api/ - 查看相关接口                        │
+│     └── 现有代码 - 查看数据模型                         │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│  3. 扩展需求                                            │
+│     ├── 将模糊需求具体化                                │
+│     ├── 补充缺失的细节                                  │
+│     └── 输出需求文档到 .tasks/需求/                     │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+                    ⚠️ 等待用户确认需求
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│  4. 需求分析                                            │
+│     ├── 涉及哪些模块（前端/后端/iOS）                    │
+│     ├── 需要修改哪些文件                                │
+│     ├── 是否需要新增 API                                │
+│     └── 技术可行性评估                                  │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│  5. 任务设计                                            │
+│     ├── 拆分成可执行的步骤                              │
+│     ├── 确定实现顺序                                    │
+│     └── 识别依赖关系                                    │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│  6. 创建任务文档                                        │
+│     ├── 手动创建 .tasks/TASK-XXX/ 目录                  │
+│     ├── 在目录中创建 task.md 文件                       │
+│     └── ✅ 只创建文件，不执行任何代码操作                │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+                    ⚠️ 等待用户分配任务
+                          ↓
+                [ 用户分配后才进入开发流程 ]
+                          ↓
+              ┌─────────────────────────┐
+              │   开发流程 (见上方)       │
+              │   1.分析 → 2.读文档 → ...│
+              └─────────────────────────┘
 ```
 
-**Session State Flow**:
-1. `stage`: greeting → collecting → analyzing → diagnosing → completed
-2. `agent_state` (JSONB): stores specialty-specific data (skin_analyses, ecg_data, etc.)
-3. `messages`: conversation history with LangChain Message objects
+### 重要约束
 
-### iOS - MVVM Architecture
+| 步骤 | 允许的操作 | 禁止的操作 |
+|------|-----------|-----------|
+| 创建任务文档 | Write 工具写 task.md 文件 | ❌ TaskCreate |
+| 任务文档创建后 | 等待用户指示 | ❌ 读取代码、❌ 写代码 |
+| 用户分配后 | 按开发流程执行 | - |
+
+### 任务文档模板
+
+```markdown
+# TASK-XXX: 任务标题
+
+## 状态
+- [x] 待确认
+- [ ] 待分配
+- [ ] 进行中
+- [ ] 已完成
+
+## 描述
+[简要描述任务内容]
+
+## 涉及模块
+- 后端：backend/
+- 前端：frontend/
+- iOS：ios/
+
+## 实现步骤
+1. ...
+2. ...
+3. ...
+
+## 验证步骤
+（具体命令请查看 docs/启动指南.md）
+
+## 验收标准
+- [ ] 1. ...
+- [ ] 2. ...
+
+## 验证结果（完成后填写）
+（参考 docs/启动指南.md 的验证步骤）
+
+## 依赖
+- TASK-XXX: ... ✅
+
+## 创建时间
+YYYY-MM-DD
+## 完成时间
+YYYY-MM-DD
+```
+
+---
+
+## 目录结构详情
+
+### backend/ - 后端服务
+
+```
+backend/
+├── app/
+│   ├── models/            # SQLAlchemy 数据模型
+│   ├── routes/            # API 路由端点
+│   ├── schemas/           # Pydantic 数据验证模型
+│   ├── services/          # 业务逻辑服务层
+│   │   ├── ai/           # AI 相关服务
+│   │   └── voice/        # 语音相关服务
+│   ├── utils/            # 工具函数
+│   ├── config.py         # 配置管理
+│   ├── database.py       # 数据库连接
+│   └── main.py           # 应用入口
+├── data/                  # 静态数据文件
+├── migrations/            # 数据库迁移文件
+├── scripts/               # 后端脚本
+├── static/                # 静态资源
+├── test/                  # 测试文件
+└── requirements.txt       # Python 依赖
+```
+
+### frontend/ - Web 前端
+
+```
+frontend/
+├── src/
+│   ├── api/              # API 调用封装
+│   ├── assets/           # 静态资源
+│   ├── layouts/          # 页面布局组件
+│   ├── pages/            # 页面组件
+│   └── store/            # 状态管理
+├── public/               # 公共静态资源
+└── package.json          # 依赖配置
+```
+
+### ios/ - iOS 移动应用
 
 ```
 ios/xinlingyisheng/
-├── Models/               # Swift data models (DTOs matching backend schemas)
-│   └── UnifiedChatModels.swift
-├── Services/             # API communication layer
-│   ├── APIConfig.swift   # Environment configuration
-│   └── APIService.swift
-├── ViewModels/           # Business logic (@MainActor, ObservableObject)
-│   └── UnifiedChatViewModel.swift
-├── Views/                # SwiftUI views
-│   └── ModernConsultationView.swift
-├── Components/           # Reusable UI components
-│   └── PhotoCapture/
-└── Theme/                # Design system (colors, fonts, spacing)
-    └── ColorSchemes.swift
+├── xinlingyisheng/           # 主应用源码
+│   ├── Components/           # 可复用组件
+│   ├── Models/              # 数据模型
+│   ├── Services/            # 服务层
+│   ├── Theme/               # 主题系统
+│   ├── ViewModels/          # 视图模型
+│   └── Views/               # 视图页面
+├── xinlingyisheng.xcodeproj/  # Xcode 项目
+└── xinlingyishengUITests/     # UI 测试
 ```
 
-**iOS Design System Requirements**:
-- Use `DXYColors.primaryPurple` for main color - NO hardcoded colors
-- Use `AdaptiveFont.body`, `AdaptiveFont.title2` - NO hardcoded font sizes
-- Use `ScaleFactor.padding(16)` - NO hardcoded spacing
-
-### Frontend - React with Zustand
+### deployment/ - 部署配置
 
 ```
-frontend/src/
-├── api/          # API service calls (axios)
-├── pages/        # Page components
-├── layouts/      # Layout wrappers
-└── store/        # Zustand state management
+deployment/
+├── migrate-data/           # 数据迁移脚本
+└── ssl/                    # SSL 证书配置
 ```
 
-## Production Server
-
-**连接信息**:
-- IP: `123.206.232.231`
-- 用户名: `ubuntu`
-- SSH密钥: `/Users/zhuxinye/Desktop/project/home-health/xinlingyisheng.pem`
-
-**SSH连接**:
-```bash
-ssh -i /Users/zhuxinye/Desktop/project/home-health/xinlingyisheng.pem \
-    -o StrictHostKeyChecking=no ubuntu@123.206.232.231
-```
-
-**数据库备份位置**: `~/xinlingyisheng/backups/`
-
-**生产API地址**: `http://123.206.232.231/api`
-
-## Environment Variables
-
-Key backend `.env` configuration:
-
-```env
-# Database (PostgreSQL Docker for dev, SQLite for backup)
-DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5433/home_health_prod
-# 备用: DATABASE_URL=sqlite:///./app.db
-
-# JWT Authentication
-JWT_SECRET_KEY=your-secret-key
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=480
-
-# LLM Configuration (Aliyun Qwen)
-LLM_API_KEY=your-qwen-api-key
-LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-LLM_MODEL=qwen-plus
-
-# Multi-modal for dermatology
-QWEN_VL_MODEL=qwen3-vl-plus
-
-# SMS Verification (Aliyun)
-ALIYUN_SMS_ACCESS_KEY_ID=your-key
-ALIYUN_SMS_ACCESS_KEY_SECRET=your-secret
-
-# Test mode
-TEST_MODE=true
-ENABLE_SMS_VERIFICATION=false
-```
-
-## Default Credentials
-
-| Role | Username | Password |
-|------|----------|----------|
-| Admin | admin | admin123 |
-| Test Token | `test_1` | (for API testing, userId=1) |
-
-## API Contract Reference
-
-The single source of truth for API contracts is `docs/API_CONTRACT.md`. Always verify field types against backend schemas in `backend/app/schemas/`.
-
-**Key field types** (common gotchas):
-- `event_id`: String (UUID format), NOT Int
-- `session_id`: String (UUID format)
-- `agent_type`: String ("dermatology", "cardiology", etc.)
-- `created_at`: ISO 8601 datetime string
-
-### ISO 8601 DateTime Format (日期时间格式规范)
-
-**重要**: 本项目统一使用 ISO 8601 格式处理所有日期时间。
-
-**格式定义**:
-```
-2024-01-30T15:30:45.123456+00:00
-│   │ │ │  │ │  │ │  │ │ │ │ │ │ │  │
-│   │ │ │  │ │  │ │  │ │ │ │ │ │ │  └─ 时区偏移 (+00:00 为 UTC)
-│   │ │ │  │ │  │ │  │ │ │ │ │ │ └── 分钟
-│   │ │ │  │ │  │ │  │ │ │ │ │ └──── 小时
-│   │ │ │  │ │  │ │  │ │ │ │ └───── 秒
-│   │ │ │  │ │  │ │  │ │ │ └─────── 毫秒/微秒 (可选)
-│   │ │ │  │ │  │ │  │ │ └───────── 分隔符 'T'
-│   │ │ │  │ │  │ │  │ └─────────── 小时
-│   │ │ │  │ │  │ │ └────────────── 分钟
-│   │ │ │  │ │  │ └──────────────── 秒
-│   │ │ │  │ │ └────────────────── 日期时间分隔符
-│   │ │ │  │ └──────────────────── 日
-│   │ │ │  └────────────────────── 月
-│   │ │ └───────────────────────── 年
-│   │ └────────────────────────── 日期分隔符
-│   └──────────────────────────── 日期部分
-```
-
-**常见格式示例**:
-| 格式 | 示例 | 说明 |
-|------|------|------|
-| 完整格式 | `2024-01-30T15:30:45.123456+00:00` | 带微秒和时区 |
-| 简化格式 | `2024-01-30T15:30:45+00:00` | 无微秒 |
-| UTC 格式 | `2024-01-30T15:30:45Z` | Z 表示 UTC |
-| 本地时间 | `2024-01-30T15:30:45+08:00` | 东八区 (北京时间) |
-
-**PostgreSQL → Python 处理**:
-```python
-# PostgreSQL 返回的 datetime 字符串格式:
-# "2026-01-30 15:18:35.52283+00"  ← 注意: 空格分隔，时区无冒号
-
-# 转换为 ISO 8601 格式:
-if '+' in v:
-    parts = v.rsplit('+', 1)
-    base = parts[0].replace(' ', 'T')  # 空格 → T
-    tz = parts[1]
-    # 补全时区格式: "00" → "+00:00"
-    if len(tz) == 2:
-        tz = f"+{tz}:00"
-    v = f"{base}+{tz}"
-
-from datetime import datetime
-dt = datetime.fromisoformat(v)
-```
-
-**前端 (JavaScript) 处理**:
-```javascript
-// ISO 8601 字符串可直接被 Date 解析
-const date = new Date("2024-01-30T15:30:45+00:00");
-
-// 格式化输出
-const formatted = date.toISOString();  // "2024-01-30T15:30:45.000Z"
-```
-
-**iOS (Swift) 处理**:
-```swift
-let isoString = "2024-01-30T15:30:45+00:00"
-let formatter = ISO8601DateFormatter()
-formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-let date = formatter.date(from: isoString)
-```
-
-## Development Workflow
-
-### MANDATORY Pre-Code Checklist (修改代码前的强制检查)
-
-**CRITICAL**: Before modifying ANY code, you MUST complete these checks in order:
-
-#### 1. Understand the System First (理解系统优先)
-
-```bash
-# Step 1: Read architecture documentation
-cat docs/ARCHITECTURE.md
-
-# Step 2: Check current configuration
-grep -r "ASR_PROVIDER\|LLM_MODEL\|API_KEY" backend/app/config.py
-
-# Step 3: Trace the call chain
-# Example: iOS → WebSocket → voice_asr.py → transcription_service.py → Aliyun
-```
-
-**DO NOT assume based on filenames**:
-- ❌ `voice_asr.py` → Does NOT mean it uses GLM-ASR
-- ✅ Check `config.py` → `ASR_PROVIDER = "aliyun"` means Aliyun ASR
-
-#### 2. Check Logs Before Coding (看日志再写代码)
-
-```bash
-# Backend logs
-tail -100 backend/backend.log | grep -E "ERROR|WARNING|ASR|API"
-
-# iOS logs (Xcode Console output)
-# Look for: [PressAndHoldVoiceService], [API], error messages
-
-# Find the REAL error, don't assume
-```
-
-#### 3. Understand the Call Chain (理解调用链)
+### scripts/ - 项目脚本
 
 ```
-iOS Layer
-  └── Services/ (API calls)
-      └── Backend Routes/ (endpoints)
-          └── Services/ (business logic)
-              └── External APIs/ (Aliyun, etc.)
+scripts/
+└── icon_workflow/          # 图标工作流脚本
 ```
 
-#### 4. Diagnosis Flow (诊断流程)
+### docs/ - 项目文档
 
 ```
-User reports issue
-      ↓
-Check logs → Find error message
-      ↓
-Trace code → Locate problem
-      ↓
-Check config → Verify assumptions
-      ↓
-Design fix → Minimal change
-      ↓
-Test → Verify it works
-      ↓
-Document → Update CLAUDE.md
+docs/
+├── 启动指南.md       # 服务启动步骤（**必读**）
+├── 架构设计.md       # 系统架构设计
+├── API文档.md        # API 接口文档
+├── 配置指南.md       # 环境配置说明
+└── 服务器设置.md     # 服务器连接信息
 ```
 
-#### 5. Common Mistakes to Avoid
+---
 
-| Mistake | Correct Approach |
-|---------|-----------------|
-| 看到文件名就假设 | 先看 config.py 确认配置 |
-| 直接改代码 | 先看日志找真正问题 |
-| 改完就算了 | 必须测试验证 |
-| 不写文档 | 更新相关文档 |
-| 局部修改 | 考虑整体影响 |
+## 根目录配置文件
 
-#### 6. Configuration Reference (配置参考)
-
-```python
-# backend/app/config.py
-ASR_PROVIDER = "aliyun"     # 当前 ASR 提供商
-DASHSCOPE_API_KEY           # 阿里云 API Key
-LLM_MODEL = "qwen-plus"     # 当前 LLM 模型
-```
-
-#### 7. Service Call Chains (调用链参考)
-
-**ASR (语音识别)**:
-```
-iOS: PressAndHoldVoiceService
-  ↓ WebSocket ws://host/ws/voice/asr
-Backend: voice_asr.py
-  ↓
-Backend: transcription_service.py
-  ├── ASR_PROVIDER == "aliyun" → Aliyun Qwen-ASR
-  ├── ASR_PROVIDER == "glm" → GLM-ASR
-  └── ASR_PROVIDER == "openai" → OpenAI Whisper
-```
-
-**LLM (大模型)**:
-```
-iOS: APIService
-  ↓ HTTP /chat/completions
-Backend: ai_service.py
-  ├── LLM_MODEL == "qwen-plus" → Aliyun Qwen
-  ├── LLM_MODEL == "glm-4" → GLM
-  └── LLM_MODEL == "gpt-4" → OpenAI
-```
-
-### Backend API Testing Rule (MANDATORY)
-
-**CRITICAL**: After modifying ANY backend API code, you MUST test the API with curl:
-
-#### 1. Test Immediately After Changes
-```bash
-# Example: After modifying /ai/transcribe endpoint
-curl -X POST "http://localhost:8100/ai/transcribe" \
-  -H "Authorization: Bearer test_1" \
-  -H "Content-Type: application/json" \
-  -d '{"audio_base64":"base64data","language":"zh"}'
-```
-
-#### 2. Check Backend Logs
-```bash
-# View real-time logs
-tail -f /tmp/backend.log
-
-# Or check recent logs
-tail -50 /tmp/backend.log | grep -E "API|ERROR|转写"
-```
-
-#### 3. Verify Response Format
-- Status code should be 200 (or expected code)
-- Response JSON should match schema in `backend/app/schemas/`
-- Check for error messages in logs
-
-#### 4. Fix Issues Before Moving On
-- If API returns error, fix it immediately
-- If response format is wrong, fix the schema or response
-- Do NOT mark task as complete until API works correctly
-
-#### 5. Common Test Patterns
-```bash
-# Health check
-curl http://localhost:8100/health
-
-# POST request with JSON
-curl -X POST "http://localhost:8100/api/endpoint" \
-  -H "Authorization: Bearer test_1" \
-  -H "Content-Type: application/json" \
-  -d '{"key":"value"}'
-
-# File upload
-curl -X POST "http://localhost:8100/api/upload" \
-  -H "Authorization: Bearer test_1" \
-  -F "file=@/path/to/file.jpg"
-
-# Test ASR with audio from test data directory
-AUDIO_BASE64=$(base64 -i backend/test/test_data/test_audio_440hz.wav)
-curl -X POST "http://localhost:8100/ai/transcribe" \
-  -H "Authorization: Bearer test_1" \
-  -H "Content-Type: application/json" \
-  -d '{"audio_base64": "'"$AUDIO_BASE64"'", "language": "zh"}'
-```
-
-### Test Data Directory
-
-**所有测试数据统一放在 `backend/test/test_data/` 目录**
-
-```
-backend/test/test_data/
-├── README.md                 # 测试数据说明
-├── test_audio_440hz.wav      # 440Hz 正弦波测试音频 (2秒)
-└── test_audio_1khz.wav       # 1kHz 正弦波测试音频 (1秒)
-```
-
-使用测试数据：
-```bash
-# 读取测试音频
-AUDIO_BASE64=$(base64 -i backend/test/test_data/test_audio_440hz.wav)
-
-# 测试 API
-curl -X POST "http://localhost:8100/ai/transcribe" \
-  -H "Authorization: Bearer test_1" \
-  -H "Content-Type: application/json" \
-  -d '{"audio_base64": "'"$AUDIO_BASE64"'", "language": "zh"}'
-```
-
-### Adding a New Medical Specialty Agent
-
-1. Create new directory under `backend/app/services/agents/new_specialty/`
-2. Create `agent.py` extending `LangGraphAgent`
-3. Implement `build_graph()` and `get_capabilities()`
-4. Register in `agents/router.py`
-5. iOS: No changes needed - uses unified `/sessions` endpoint
-
-### Debugging Agent Issues
-
-```bash
-# Backend logs show agent flow
-[AgentRouter] Registered: dermatology
-[DermatologyReActAgent] Processing input...
-
-# Test with curl
-curl -X POST "http://localhost:8000/sessions" \
-  -H "Authorization: Bearer test_1" \
-  -H "Content-Type: application/json" \
-  -d '{"agent_type": "dermatology"}'
-```
-
-## Important Files to Know
-
-| File | Purpose |
-|------|---------|
-| `backend/app/services/agents/base.py` | Base class for all agents - read before modifying agents |
-| `backend/app/services/agents/router.py` | Agent registry - add new agents here |
-| `backend/app/routes/sessions.py` | Session/message API endpoints |
-| `ios/xinlingyisheng/Services/APIConfig.swift` | iOS API endpoints and environment config |
-| `docs/DEVELOPMENT_GUIDELINES.md` | Project-wide coding standards |
-| `docs/IOS_DEVELOPMENT_GUIDE.md` | iOS-specific development guide |
+| 文件 | 说明 |
+|------|------|
+| `docker-compose.yml` | Docker Compose 编排配置 |
+| `Makefile` | 项目构建命令 |
+| `.gitignore` | Git 忽略配置 |
+| `.env` | 本地环境变量 |
+| `CLAUDE.md` | 本文件，Claude 配置 |
+| `README.md` | 项目说明文档 |

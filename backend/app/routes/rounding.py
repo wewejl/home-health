@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, TEST_MODE
 from ..models.user import User
 from ..models.session import Session as SessionModel
 from ..models.message import Message, SenderType
@@ -76,10 +76,14 @@ def get_rounding_patients(
     获取远程查房患者列表
 
     返回当前医生管理的所有患者及其今日状态概览
+
+    NOTE: 当前实现返回所有有任务的患者。
+    生产环境应该根据 doctor-patient 关系表过滤，只返回当前医生管理的患者。
     """
-    # TODO: 这里应该根据医生管理关系过滤患者
-    # 暂时返回当前用户作为患者（测试用）
-    # 实际应该有 doctor-patient 关系表
+    # 当前实现：返回所有有活动医嘱的患者（用于测试）
+    # 生产环境需要添加：
+    # 1. doctor_patient_relationships 表（医生-患者关系）
+    # 2. 过滤条件：WHERE doctor_id = current_user.id
 
     # 获取有活动医嘱的患者（有任务实例的患者）
     today = date.today()
@@ -166,7 +170,7 @@ def get_rounding_patients(
             id=patient.id,
             name=patient.nickname or patient.username,
             nickname=patient.nickname,
-            avatar=patient.avatar,
+            avatar=patient.avatar_url,
             last_seen=last_seen,
             last_consultation=last_consultation,
             completion_rate=completion_rate,
@@ -308,8 +312,8 @@ def get_patient_detail(
         id=patient.id,
         name=patient.nickname or patient.username,
         nickname=patient.nickname,
-        avatar=patient.avatar,
-        condition=None,  # TODO: 可以从用户数据中获取患者类型标签
+        avatar=patient.avatar_url,
+        condition=None,  # 可从用户数据中获取患者类型标签（如：慢病、术后、孕妇等）
         last_seen=format_time_ago(recent_session.updated_at) if recent_session else "未知",
         last_consultation=format_time_ago(recent_session.created_at) if recent_session else "未知",
         alerts=alerts_data,
@@ -405,7 +409,7 @@ def get_abnormal_patients(
         patients_data.append(PatientCardResponse(
             id=patient.id,
             name=patient.nickname or patient.username,
-            avatar=patient.avatar,
+            avatar=patient.avatar_url,
             last_seen=format_time_ago(last_session.updated_at) if last_session else "未知",
             last_consultation=format_time_ago(last_session.created_at) if last_session else "未知",
             completion_rate=completion_rate,

@@ -1,0 +1,58 @@
+# SwiftLint 自定义规则 - 内存安全
+# 防止在 deinit 中创建异步任务
+
+custom_rules:
+  # 规则1: 禁止在 deinit 中创建 Task
+  no_task_in_deinit:
+    name: "No Task in deinit"
+    regex: 'deinit\s*\{[\s\S]*?Task\s*\{'
+    match_kinds:
+      - keyword
+    message: "不要在 deinit 中创建异步 Task，使用 nonisolated deinit + cleanup() 方法"
+    severity: error
+
+  # 规则2: 禁止在 deinit 中使用 DispatchQueue.async
+  no_dispatch_async_in_deinit:
+    name: "No DispatchQueue.async in deinit"
+    regex: 'deinit\s*\{[\s\S]*?DispatchQueue\.[\w]+\.(async|sync)'
+    match_kinds:
+      - keyword
+    message: "不要在 deinit 中使用 DispatchQueue.async，使用 nonisolated deinit + cleanup() 方法"
+    severity: error
+
+  # 规则3: @MainActor 类的 deinit 应该标记 nonisolated
+  nonisolated_deinit_for_mainactor:
+    name: "Use nonisolated deinit for @MainActor classes"
+    regex: '@MainActor[\s\S]*?class\s+\w+[\s\S]*?deinit\s*(?!nonisolated)'
+    match_kinds:
+      - attribute
+    message: "@MainActor 类的 deinit 应该标记为 nonisolated"
+    severity: warning
+
+  # 规则4: 检查闭包是否使用 [weak self]
+  weak_self_in_closures:
+    name: "Use [weak self] in closures"
+    regex: '(onCallback|onError|onComplete|onSuccess|handler|completion)\s*:\s*\(.*\)\s*->\s*\w+.*\{'
+    match_kinds:
+      - identifier
+    message: "闭包可能需要使用 [weak self] 避免循环引用"
+    severity: warning
+
+# 排除的文件
+excluded:
+  - .build
+  - Pods
+  - DerivedData
+
+# 行长度限制（可选）
+line_length:
+  warning: 120
+  error: 200
+  ignores_function_declarations: true
+  ignores_comments: true
+  ignores_urls: true
+
+# 文件长度限制
+file_length:
+  warning: 500
+  error: 1000
