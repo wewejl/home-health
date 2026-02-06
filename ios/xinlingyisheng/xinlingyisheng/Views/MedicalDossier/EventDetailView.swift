@@ -692,7 +692,7 @@ struct HealingRelatedEventRow: View {
 
                     if let relationType = relatedEvent.relation_type {
                         Text(relationDisplayName(relationType))
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption2))
                             .foregroundColor(.white)
                             .padding(.horizontal, ScaleFactor.padding(8))
                             .padding(.vertical, ScaleFactor.padding(3))
@@ -784,7 +784,7 @@ struct HealingEventTimelineSection: View {
                 Spacer()
 
                 Text("\(event.sessions.flatMap { $0.messages }.count) 条记录")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textTertiary)
             }
 
@@ -887,7 +887,7 @@ struct HealingTimelineItemRow: View {
                         .font(.system(size: AdaptiveFont.caption1))
                         .foregroundColor(HealingColors.textTertiary)
                     Text(message.content)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textPrimary)
                         .lineLimit(3)
                 }
@@ -899,7 +899,7 @@ struct HealingTimelineItemRow: View {
                         .font(.system(size: AdaptiveFont.caption1))
                         .foregroundColor(HealingColors.forestMist)
                     Text(message.content)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textPrimary)
                         .lineLimit(3)
                 }
@@ -907,30 +907,30 @@ struct HealingTimelineItemRow: View {
         case .attachment:
             HStack(spacing: 4) {
                 Image(systemName: "paperclip")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.dustyBlue)
                 if let attachment = content.attachment {
                     Text(attachment.fileName ?? attachment.type.rawValue)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textPrimary)
                 }
             }
         case .sessionStart:
             HStack(spacing: 4) {
                 Image(systemName: "play.circle.fill")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.forestMist)
                 Text("对话开始")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textSecondary)
             }
         case .sessionEnd:
             HStack(spacing: 4) {
                 Image(systemName: "stop.circle.fill")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textTertiary)
                 Text("对话结束")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textSecondary)
             }
         }
