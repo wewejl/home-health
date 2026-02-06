@@ -151,7 +151,7 @@ struct TaskCheckInView: View {
                             }
 
                             Text(type.displayName)
-                                .font(.system(size: layout.caption1FontSize, weight: selectedType == type ? .semibold : .regular))
+                                .font(.system(size: layout.captionFontSize, weight: selectedType == type ? .semibold : .regular))
                                 .foregroundColor(selectedType == type ? HealingColors.forestMist : HealingColors.textSecondary)
                         }
                         .frame(maxWidth: .infinity)

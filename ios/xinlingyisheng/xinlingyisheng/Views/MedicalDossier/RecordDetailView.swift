@@ -256,7 +256,7 @@ struct FileGridItem: View {
 
                 // 文件名
                 Text(file.filename)
-                    .font(.system(size: UnifiedFont.caption12))
+                    .font(.system(size: UnifiedFont.caption2))
                     .foregroundColor(HealingColors.textPrimary)
                     .lineLimit(2)
                     .frame(height: 32)

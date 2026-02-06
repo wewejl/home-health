@@ -246,7 +246,7 @@ struct FolderCard: View {
 
                 if recordCount > 0 {
                     Text("\(recordCount)")
-                        .font(.system(size: UnifiedFont.caption12))
+                        .font(.system(size: UnifiedFont.caption2))
                         .foregroundColor(HealingColors.textTertiary)
                 }
             }
@@ -351,7 +351,7 @@ struct FileThumbnailGrid: View {
             Spacer()
 
             Text("\(fileCount) 个文件")
-                .font(.system(size: UnifiedFont.caption12))
+                .font(.system(size: UnifiedFont.caption2))
                 .foregroundColor(HealingColors.textTertiary)
         }
     }

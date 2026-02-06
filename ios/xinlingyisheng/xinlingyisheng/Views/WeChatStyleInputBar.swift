@@ -188,7 +188,7 @@ struct WeChatStyleInputBar: View {
                                 .scaleEffect(0.8)
                         } else {
                             Image(systemName: "arrow.up")
-                                .font(.system(size: AdaptiveFont.caption12, weight: .semibold))
+                                .font(.system(size: AdaptiveFont.caption2, weight: .semibold))
                                 .foregroundColor(.white)
                         }
                     }
@@ -465,9 +465,9 @@ struct PressAndHoldOverlayView: View {
 
             HStack(spacing: 4) {
                 Image(systemName: "chevron.up")
-                    .font(.system(size: AdaptiveFont.caption12))
+                    .font(.system(size: AdaptiveFont.caption2))
                 Text(isCanceling ? "下滑继续录音" : "上滑可取消")
-                    .font(.system(size: AdaptiveFont.caption12))
+                    .font(.system(size: AdaptiveFont.caption2))
             }
             .foregroundColor(HealingColors.textSecondary)
         }
@@ -483,7 +483,7 @@ struct PressAndHoldOverlayView: View {
                     .opacity(pulseScale * 0.5 + 0.5)
 
                 Text("正在识别")
-                    .font(.system(size: AdaptiveFont.caption12))
+                    .font(.system(size: AdaptiveFont.caption2))
                     .foregroundColor(HealingColors.forestMist)
             }
 
@@ -516,7 +516,7 @@ struct PressAndHoldOverlayView: View {
     private var placeholderTextView: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("正在录音...")
-                .font(.system(size: AdaptiveFont.caption12))
+                .font(.system(size: AdaptiveFont.caption2))
                 .foregroundColor(HealingColors.textSecondary)
 
             Text("请说话")

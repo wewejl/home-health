@@ -384,7 +384,7 @@ struct FolderSelectionCard: View {
                     .lineLimit(1)
 
                 Text("\(folder.recordCount) 个病历")
-                    .font(.system(size: UnifiedFont.caption12))
+                    .font(.system(size: UnifiedFont.caption2))
                     .foregroundColor(HealingColors.textTertiary)
             }
             .padding()

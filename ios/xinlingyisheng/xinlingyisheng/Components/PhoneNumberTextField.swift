@@ -55,7 +55,7 @@ struct PhoneNumberTextField: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall, style: .continuous)
                         .stroke(
-                            textFieldIsFocused ? DXYColors.primaryPurple : DXYColors.borderLight,
+                            textFieldIsFocused ? DXYColors.primaryPurple : HealingColorTheme.borderLight,
                             lineWidth: ScaleFactor.size(1)
                         )
                 )

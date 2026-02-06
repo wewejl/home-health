@@ -381,7 +381,7 @@ struct HealingGreetingHeader: View {
                             .foregroundColor(HealingColors.textPrimary)
 
                         Text("AI 健康管家 · 随时守护")
-                            .font(.system(size: layout.caption1FontSize, weight: .regular))
+                            .font(.system(size: layout.captionFontSize, weight: .regular))
                             .foregroundColor(HealingColors.textTertiary)
                     }
                 }
@@ -1010,7 +1010,7 @@ struct HealthTipCard: View {
                     .foregroundColor(HealingColors.textPrimary)
 
                 Text(tip)
-                    .font(.system(size: layout.caption1FontSize, weight: .regular))
+                    .font(.system(size: layout.captionFontSize, weight: .regular))
                     .foregroundColor(HealingColors.textSecondary)
                     .lineLimit(2)
             }

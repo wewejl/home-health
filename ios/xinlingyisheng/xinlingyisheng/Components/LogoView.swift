@@ -279,7 +279,7 @@ struct MinimalistLogoView: View {
             VStack(spacing: 8) {
                 LogoView(style: style, size: 96)
                 Text(style.rawValue)
-                    .font(.caption1)
+                    .font(.caption)
             }
         }
     }
