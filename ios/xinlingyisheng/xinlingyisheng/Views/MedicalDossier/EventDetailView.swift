@@ -201,7 +201,7 @@ struct HealingEventAISummaryCard: View {
                         }
                         Text("刷新")
                     }
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.forestMist)
                 }
                 .disabled(viewModel.isGeneratingSummary)
@@ -573,7 +573,7 @@ struct HealingEventNotesCard: View {
                         Image(systemName: "pencil")
                         Text("编辑")
                     }
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.dustyBlue)
                 }
             }
@@ -644,7 +644,7 @@ struct HealingEventRelatedSection: View {
                                 Image(systemName: "arrow.triangle.merge")
                                 Text("合并")
                             }
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.forestMist)
                         }
                     }
