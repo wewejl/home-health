@@ -342,9 +342,6 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/xinlingyisheng/Models/temp/venv/lib/python3.12/site-packages/google/_upb",
-					"$(PROJECT_DIR)/xinlingyisheng/Models/temp/venv/lib/python3.12/site-packages/numpy/_core/lib",
-					"$(PROJECT_DIR)/xinlingyisheng/Models/temp/venv/lib/python3.12/site-packages/numpy/random/lib",
 				);
 				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = xinling.xinlingyisheng;
@@ -380,9 +377,6 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/xinlingyisheng/Models/temp/venv/lib/python3.12/site-packages/google/_upb",
-					"$(PROJECT_DIR)/xinlingyisheng/Models/temp/venv/lib/python3.12/site-packages/numpy/_core/lib",
-					"$(PROJECT_DIR)/xinlingyisheng/Models/temp/venv/lib/python3.12/site-packages/numpy/random/lib",
 				);
 				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = xinling.xinlingyisheng;
