@@ -563,7 +563,7 @@ struct CreateFolderSheet: View {
 
 #Preview {
     CreateRecordSheet(
-        viewModel: MedicalFolderViewModel(),
+        viewModel: MedicalFolderViewModel(apiService: .shared),
         folders: [],
         preselectedFolder: nil
     )

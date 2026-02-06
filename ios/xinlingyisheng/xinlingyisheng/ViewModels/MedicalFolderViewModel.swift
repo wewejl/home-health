@@ -20,7 +20,7 @@ class MedicalFolderViewModel: ObservableObject {
     private let baseURL: String = APIConfig.baseURL
 
     // MARK: - Initializer
-    init(apiService: APIService = .shared) {
+    init(apiService: APIService) {
         self.apiService = apiService
     }
 

@@ -335,7 +335,7 @@ struct FilePreviewSheet: UIViewControllerRepresentable {
                 description: "年度体检血常规检查结果",
                 fileCount: 3
             ),
-            viewModel: MedicalFolderViewModel()
+            viewModel: MedicalFolderViewModel(apiService: .shared)
         )
     }
 }

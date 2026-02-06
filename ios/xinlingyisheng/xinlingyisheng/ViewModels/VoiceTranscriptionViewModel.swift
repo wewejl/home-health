@@ -199,13 +199,12 @@ class VoiceTranscriptionViewModel: ObservableObject {
 
     /// 启动计时和音量监测（合并为一个 Timer）
     private func startMonitoring() {
-        // 使用 CADisplayLink 或 Timer 都可以，这里用 Timer 兼容性好
+        // 所有 MainActor 操作都在 Task 内完成，避免并发警告
         recordingTimer = Timer.scheduledTimer(withTimeInterval: Constants.audioLevelUpdateInterval, repeats: true) { [weak self] _ in
-            guard let self = self, self.isRecording else { return }
-
-            // 更新计时
             Task { @MainActor [weak self] in
-                guard let self = self else { return }
+                guard let self = self, self.isRecording else { return }
+
+                // 更新计时
                 self.recordingDuration += Constants.audioLevelUpdateInterval
 
                 // 检查最大时长
@@ -214,15 +213,11 @@ class VoiceTranscriptionViewModel: ObservableObject {
                     self.stopRecording()
                     return
                 }
-            }
 
-            // 更新音量级别
-            self.audioRecorder?.updateMeters()
-            let level = self.audioRecorder?.averagePower(forChannel: 0) ?? Constants.minAudioLevel
-            let normalizedLevel = max(0, (level - Constants.minAudioLevel) / abs(Constants.minAudioLevel))
-
-            Task { @MainActor [weak self] in
-                guard let self = self else { return }
+                // 更新音量级别
+                self.audioRecorder?.updateMeters()
+                let level = self.audioRecorder?.averagePower(forChannel: 0) ?? Constants.minAudioLevel
+                let normalizedLevel = max(0, (level - Constants.minAudioLevel) / abs(Constants.minAudioLevel))
                 self.audioLevel = normalizedLevel
             }
         }
@@ -244,7 +239,9 @@ class VoiceTranscriptionViewModel: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.handleAudioSessionInterruption()
+            Task { @MainActor [weak self] in
+                self?.handleAudioSessionInterruption()
+            }
         }
     }
 

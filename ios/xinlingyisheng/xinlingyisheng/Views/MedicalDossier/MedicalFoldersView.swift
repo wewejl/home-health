@@ -4,7 +4,7 @@ import PhotosUI
 // MARK: - 病历夹主页（重构版）
 
 struct MedicalFoldersView: View {
-    @StateObject private var viewModel = MedicalFolderViewModel()
+    @StateObject private var viewModel = MedicalFolderViewModel(apiService: .shared)
     @State private var selectedRecord: MedicalRecord?
     @State private var showingCreateRecord = false
     @State private var showingCreateFolder = false
