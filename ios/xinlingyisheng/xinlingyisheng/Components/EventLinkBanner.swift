@@ -44,7 +44,7 @@ struct EventLinkBanner: View {
 
                 if case .linked = status {
                     Image(systemName: "chevron.right")
-                        .font(.system(size: AdaptiveFont.caption, weight: .medium))
+                        .font(.system(size: AdaptiveFont.caption1, weight: .medium))
                         .foregroundColor(DXYColors.textTertiary)
                 }
 
@@ -159,24 +159,24 @@ struct EventLinkBanner: View {
 
             case .creating:
                 Text("问诊内容将自动保存")
-                    .font(.system(size: AdaptiveFont.caption))
+                    .font(.system(size: AdaptiveFont.caption1))
                     .foregroundColor(DXYColors.textTertiary)
 
             case .linked(_, let title, _):
                 Text(title)
-                    .font(.system(size: AdaptiveFont.caption))
+                    .font(.system(size: AdaptiveFont.caption1))
                     .foregroundColor(DXYColors.textTertiary)
                     .lineLimit(1)
 
             case .completed(_, let title):
                 Text(title)
-                    .font(.system(size: AdaptiveFont.caption))
+                    .font(.system(size: AdaptiveFont.caption1))
                     .foregroundColor(DXYColors.textTertiary)
                     .lineLimit(1)
 
             case .error(let message):
                 Text(message)
-                    .font(.system(size: AdaptiveFont.caption))
+                    .font(.system(size: AdaptiveFont.caption1))
                     .foregroundColor(DXYColors.textTertiary)
                     .lineLimit(1)
             }
@@ -254,14 +254,14 @@ struct ConsultationCompleteCard: View {
                         .lineLimit(1)
 
                     Text("皮肤科 · 刚刚完成")
-                        .font(.system(size: AdaptiveFont.caption))
+                        .font(.system(size: AdaptiveFont.caption1))
                         .foregroundColor(DXYColors.textTertiary)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: AdaptiveFont.caption, weight: .medium))
+                    .font(.system(size: AdaptiveFont.caption1, weight: .medium))
                     .foregroundColor(DXYColors.textTertiary)
             }
             .padding(ScaleFactor.padding(12))

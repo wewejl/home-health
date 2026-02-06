@@ -215,7 +215,7 @@ struct UploadActionButtonsViewV2: View {
                     .foregroundColor(DXYColors.textPrimary)
                 
                 Text("图片将保存到本地")
-                    .font(.system(size: AdaptiveFont.caption))
+                    .font(.system(size: AdaptiveFont.caption1))
                     .foregroundColor(DXYColors.textSecondary)
             }
             
@@ -235,7 +235,7 @@ struct UploadActionButtonsViewV2: View {
                     .foregroundColor(DXYColors.textPrimary)
                 
                 Text("请稍候，分析结果即将呈现")
-                    .font(.system(size: AdaptiveFont.caption))
+                    .font(.system(size: AdaptiveFont.caption1))
                     .foregroundColor(DXYColors.textSecondary)
             }
             

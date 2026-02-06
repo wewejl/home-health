@@ -66,7 +66,7 @@ public struct AdaptiveLayout {
     public var bodyFontSize: CGFloat { UnifiedFont.body }
 
     /// 脚注字体 - 使用统一的脚注大小
-    public var captionFontSize: CGFloat { UnifiedFont.caption }
+    public var captionFontSize: CGFloat { UnifiedFont.caption1 }
 
     // 卡片内边距 - 固定内边距
     public var cardInnerPadding: CGFloat { 16 }
@@ -381,7 +381,7 @@ struct HealingGreetingHeader: View {
                             .foregroundColor(HealingColors.textPrimary)
 
                         Text("AI 健康管家 · 随时守护")
-                            .font(.system(size: layout.captionFontSize, weight: .regular))
+                            .font(.system(size: layout.caption1FontSize, weight: .regular))
                             .foregroundColor(HealingColors.textTertiary)
                     }
                 }
@@ -497,7 +497,7 @@ struct HealingTodayCard: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 0) {
                             Text("今日健康")
-                                .font(.system(size: UnifiedFont.caption, weight: .medium))
+                                .font(.system(size: UnifiedFont.caption1, weight: .medium))
                                 .foregroundColor(Color.white.opacity(0.8))
 
                             Text(currentDate + " · " + weekday)
@@ -540,7 +540,7 @@ struct HealingTodayCard: View {
                     // 底部：按钮
                     HStack(spacing: ScaleFactor.spacing(3)) {
                         Text("开始咨询")
-                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption1, weight: .semibold))
                             .foregroundColor(HealingColors.forestMist)
 
                         Image(systemName: "arrow.right")
@@ -606,9 +606,9 @@ struct HealingQuickActions: View {
                 Button(action: {}) {
                     HStack(spacing: 4) {
                         Text("更多")
-                            .font(.system(size: UnifiedFont.caption, weight: .medium))
+                            .font(.system(size: UnifiedFont.caption1, weight: .medium))
                         Image(systemName: "chevron.right")
-                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption1, weight: .semibold))
                     }
                     .foregroundColor(HealingColors.forestMist)
                 }
@@ -712,7 +712,7 @@ struct QuickActionCard: View {
                             .minimumScaleFactor(0.8)
 
                         Text(subtitle)
-                            .font(.system(size: UnifiedFont.caption, weight: .regular))
+                            .font(.system(size: UnifiedFont.caption1, weight: .regular))
                             .foregroundColor(HealingColors.textTertiary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
@@ -781,9 +781,9 @@ struct HealingDepartmentSection: View {
                 Button(action: {}) {
                     HStack(spacing: 4) {
                         Text("全部")
-                            .font(.system(size: UnifiedFont.caption, weight: .medium))
+                            .font(.system(size: UnifiedFont.caption1, weight: .medium))
                         Image(systemName: "chevron.right")
-                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption1, weight: .semibold))
                     }
                     .foregroundColor(HealingColors.forestMist)
                 }
@@ -906,7 +906,7 @@ struct DepartmentGridItem: View {
             .scaleEffect(isPressed ? 0.95 : 1.0)
 
             Text(name)
-                .font(.system(size: AdaptiveFont.caption, weight: .medium))
+                .font(.system(size: AdaptiveFont.caption1, weight: .medium))
                 .foregroundColor(HealingColors.textPrimary)
                 .opacity(isPressed ? 0.7 : 1.0)
         }
@@ -935,9 +935,9 @@ struct HealingHealthTips: View {
                 Button(action: {}) {
                     HStack(spacing: 4) {
                         Text("更多")
-                            .font(.system(size: UnifiedFont.caption, weight: .medium))
+                            .font(.system(size: UnifiedFont.caption1, weight: .medium))
                         Image(systemName: "chevron.right")
-                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption1, weight: .semibold))
                     }
                     .foregroundColor(HealingColors.forestMist)
                 }
@@ -1010,7 +1010,7 @@ struct HealthTipCard: View {
                     .foregroundColor(HealingColors.textPrimary)
 
                 Text(tip)
-                    .font(.system(size: layout.captionFontSize, weight: .regular))
+                    .font(.system(size: layout.caption1FontSize, weight: .regular))
                     .foregroundColor(HealingColors.textSecondary)
                     .lineLimit(2)
             }

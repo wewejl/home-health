@@ -238,7 +238,7 @@ struct HealingLoginFormCard: View {
                     .foregroundColor(HealingColors.textPrimary)
 
                 Text("未注册的手机号将自动创建账号")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -390,12 +390,12 @@ struct HealingCodeSentNotice: View {
                     .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
 
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.forestMist)
             }
 
             Text("验证码已发送至 \(phoneText)")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textSecondary)
 
             Spacer()
@@ -420,7 +420,7 @@ struct HealingCodeInputSection: View {
         VStack(alignment: .leading, spacing: layout.cardSpacing / 2) {
             HStack {
                 Image(systemName: "key.fill")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textSecondary)
 
                 Text("验证码")
@@ -494,7 +494,7 @@ struct HealingSendCodeButton: View {
                 }
 
                 Text(viewModel.codeButtonText)
-                    .font(.system(size: UnifiedFont.caption, weight: .medium))
+                    .font(.system(size: UnifiedFont.caption1, weight: .medium))
                     .foregroundColor(buttonColor)
             }
         }
@@ -518,13 +518,13 @@ struct HealingAgreementSection: View {
                         .frame(width: UnifiedFont.title3, height: UnifiedFont.title3)
 
                     Image(systemName: isAgreed ? "checkmark" : "")
-                        .font(.system(size: AdaptiveFont.caption - 1, weight: .bold))
+                        .font(.system(size: AdaptiveFont.caption1 - 1, weight: .bold))
                         .foregroundColor(.white)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("同意并遵守以下条款")
-                        .font(.system(size: AdaptiveFont.caption))
+                        .font(.system(size: AdaptiveFont.caption1))
                         .foregroundColor(HealingColors.textSecondary)
 
                     HStack(spacing: 4) {
@@ -551,7 +551,7 @@ struct HealingAgreementLink: View {
     var body: some View {
         Link(destination: URL(string: url) ?? URL(string: "https://xinlinyisheng.com")!) {
             Text(title)
-                .font(.system(size: UnifiedFont.caption, weight: .medium))
+                .font(.system(size: UnifiedFont.caption1, weight: .medium))
                 .foregroundColor(HealingColors.forestMist)
                 .underline(true, color: HealingColors.forestMist)
         }

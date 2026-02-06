@@ -25,14 +25,14 @@ struct ExportedConversationRow: View {
                 
                 HStack(spacing: ScaleFactor.spacing(8)) {
                     Label(export.department, systemImage: "stethoscope")
-                        .font(.system(size: AdaptiveFont.caption))
+                        .font(.system(size: AdaptiveFont.caption1))
                         .foregroundColor(DXYColors.textSecondary)
                     
                     Text("•")
                         .foregroundColor(DXYColors.textSecondary)
                     
                     Text("\(export.messageCount) 条对话")
-                        .font(.system(size: AdaptiveFont.caption))
+                        .font(.system(size: AdaptiveFont.caption1))
                         .foregroundColor(DXYColors.textSecondary)
                 }
                 

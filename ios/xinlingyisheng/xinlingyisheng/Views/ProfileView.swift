@@ -131,18 +131,18 @@ struct ProfileView: View {
                 Image(systemName: "cross.fill")
                     .font(.system(size: UnifiedFont.footnote))
                 Text("灵犀健康")
-                    .font(.system(size: UnifiedFont.caption, weight: .medium))
+                    .font(.system(size: UnifiedFont.caption1, weight: .medium))
             }
             .foregroundColor(HealingColors.forestMist.opacity(0.8))
 
             // 版本号
             Text("版本 1.0.0")
-                .font(.system(size: AdaptiveFont.caption - 1))
+                .font(.system(size: AdaptiveFont.caption1 - 1))
                 .foregroundColor(HealingColors.textTertiary)
 
             // Slogan
             Text("一起发现健康生活")
-                .font(.system(size: AdaptiveFont.caption - 2))
+                .font(.system(size: AdaptiveFont.caption1 - 2))
                 .foregroundColor(HealingColors.textTertiary)
 
             // 装饰点
@@ -187,7 +187,7 @@ struct HealingUserInfoCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 // 问候语
                 Text(getGreeting())
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textSecondary)
 
                 // 昵称
@@ -200,7 +200,7 @@ struct HealingUserInfoCard: View {
                     Image(systemName: "phone.fill")
                         .font(.system(size: AdaptiveFont.custom(10)))
                     Text(maskedPhone(user?.phone ?? ""))
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                 }
                 .foregroundColor(HealingColors.textSecondary)
             }
@@ -215,7 +215,7 @@ struct HealingUserInfoCard: View {
                         .frame(width: layout.iconSmallSize + 4, height: layout.iconSmallSize + 4)
 
                     Image(systemName: "pencil")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.forestMist)
                 }
             }

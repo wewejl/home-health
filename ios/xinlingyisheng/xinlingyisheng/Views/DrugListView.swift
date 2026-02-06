@@ -215,9 +215,9 @@ struct HealingDrugListTrustBanner: View {
         HStack(spacing: layout.cardSpacing / 2) {
             HStack(spacing: 4) {
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                 Text("健康百科")
-                    .font(.system(size: UnifiedFont.caption, weight: .medium))
+                    .font(.system(size: UnifiedFont.caption1, weight: .medium))
             }
             .foregroundColor(.white)
             .padding(.horizontal, layout.cardInnerPadding - 2)
@@ -232,7 +232,7 @@ struct HealingDrugListTrustBanner: View {
             .clipShape(Capsule())
 
             Text("药品说明放心查 · 灵犀健康官方出品")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textSecondary)
 
             Spacer()
@@ -276,7 +276,7 @@ struct HealingDrugListSearchBar: View {
                                 .frame(width: UnifiedFont.body * 1.5, height: UnifiedFont.body * 1.5)
 
                             Image(systemName: "xmark")
-                                .font(.system(size: AdaptiveFont.caption - 3, weight: .bold))
+                                .font(.system(size: AdaptiveFont.caption1 - 3, weight: .bold))
                                 .foregroundColor(HealingColors.textTertiary)
                         }
                     }
@@ -429,7 +429,7 @@ struct HealingDrugListRowItem: View {
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textTertiary)
         }
         .padding(.horizontal, layout.cardInnerPadding)
@@ -488,7 +488,7 @@ struct HealingDrugListCategoryCard: View {
                 Spacer()
 
                 Text("\(category.drugs.count)种")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textTertiary)
             }
             .padding(.horizontal, layout.cardInnerPadding)

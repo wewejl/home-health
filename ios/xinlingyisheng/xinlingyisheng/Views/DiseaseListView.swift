@@ -82,9 +82,9 @@ struct DiseaseListView: View {
         HStack(spacing: layout.cardSpacing / 2) {
             HStack(spacing: ScaleFactor.spacing(4)) {
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                 Text("健康百科")
-                    .font(.system(size: UnifiedFont.caption, weight: .medium))
+                    .font(.system(size: UnifiedFont.caption1, weight: .medium))
             }
             .foregroundColor(.white)
             .padding(.horizontal, layout.cardInnerPadding - 2)
@@ -99,7 +99,7 @@ struct DiseaseListView: View {
             .clipShape(Capsule())
 
             Text("疾病百科放心查 · 灵犀医生官方出品")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textSecondary)
 
             Spacer()
@@ -388,7 +388,7 @@ struct HealingDepartmentRow: View {
                 .frame(width: ScaleFactor.size(3))
 
             Text(department.name)
-                .font(.system(size: UnifiedFont.caption, weight: isSelected ? .semibold : .regular))
+                .font(.system(size: UnifiedFont.caption1, weight: isSelected ? .semibold : .regular))
                 .foregroundColor(isSelected ? HealingColors.forestMist : HealingColors.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, layout.cardInnerPadding)
@@ -415,7 +415,7 @@ struct HealingDiseaseRow: View {
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                .font(.system(size: UnifiedFont.caption1, weight: .semibold))
                 .foregroundColor(HealingColors.textTertiary)
         }
         .padding(.horizontal, layout.cardInnerPadding)

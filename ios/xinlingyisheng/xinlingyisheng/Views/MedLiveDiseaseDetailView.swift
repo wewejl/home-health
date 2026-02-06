@@ -312,9 +312,9 @@ struct HealingDiseaseTrustBadge: View {
         HStack(spacing: layout.cardSpacing / 2) {
             HStack(spacing: 4) {
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                 Text("健康百科")
-                    .font(.system(size: UnifiedFont.caption, weight: .medium))
+                    .font(.system(size: UnifiedFont.caption1, weight: .medium))
             }
             .foregroundColor(.white)
             .padding(.horizontal, layout.cardInnerPadding - 2)
@@ -329,7 +329,7 @@ struct HealingDiseaseTrustBadge: View {
             .clipShape(Capsule())
 
             Text("三甲医生专业编审")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textSecondary)
 
             Spacer()
@@ -354,7 +354,7 @@ struct HealingDiseaseHeader: View {
             if let department = disease.department {
                 HStack(spacing: layout.cardSpacing / 2) {
                     Image(systemName: "cross.case.fill")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.forestMist)
                     Text(department)
                         .font(.system(size: UnifiedFont.footnote))
@@ -428,7 +428,7 @@ struct HealingDiseaseSectionCard: View {
                     Spacer()
 
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textTertiary)
                 }
                 .padding(.horizontal, layout.cardInnerPadding)
@@ -585,7 +585,7 @@ struct HealingDiseaseToolbarButton: View {
                 }
 
                 Text(title)
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(isActive ? color : HealingColors.textSecondary)
             }
             .frame(maxWidth: .infinity)
@@ -609,7 +609,7 @@ struct HealingDiseaseBrandFooter: View {
             .foregroundColor(HealingColors.forestMist.opacity(0.7))
 
             Text("一起发现健康生活")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textTertiary)
         }
         .padding(.top, layout.cardSpacing)

@@ -75,7 +75,7 @@ struct RecordDetailView: View {
                         .foregroundColor(HealingColors.textPrimary)
 
                     Text(detailRecord.recordDateText)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textTertiary)
                 }
 
@@ -108,7 +108,7 @@ struct RecordDetailView: View {
                 Spacer()
 
                 Text("\(detailRecord.fileCount) 个文件")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textTertiary)
             }
 
@@ -146,7 +146,7 @@ struct RecordDetailView: View {
                 .foregroundColor(HealingColors.textSecondary)
 
             Text("可以添加图片、PDF等文件")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -256,7 +256,7 @@ struct FileGridItem: View {
 
                 // 文件名
                 Text(file.filename)
-                    .font(.system(size: UnifiedFont.caption2))
+                    .font(.system(size: UnifiedFont.caption12))
                     .foregroundColor(HealingColors.textPrimary)
                     .lineLimit(2)
                     .frame(height: 32)

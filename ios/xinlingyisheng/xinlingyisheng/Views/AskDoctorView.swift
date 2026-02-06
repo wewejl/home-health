@@ -222,7 +222,7 @@ struct HealingDepartmentCard: View {
 
                 VStack(alignment: .leading, spacing: layout.cardSpacing / 3) {
                     Text(department.name)
-                        .font(.system(size: AdaptiveFont.caption, weight: .semibold))
+                        .font(.system(size: AdaptiveFont.caption1, weight: .semibold))
                         .foregroundColor(HealingColors.textPrimary)
                         .lineLimit(1)
 
@@ -283,9 +283,9 @@ struct AskDoctorNavBar: View {
             Button(action: { showMyQuestions = true }) {
                 HStack(spacing: 4) {
                     Text("我的提问")
-                        .font(.system(size: UnifiedFont.caption, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption1, weight: .medium))
                     Image(systemName: "chevron.right")
-                        .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                        .font(.system(size: UnifiedFont.caption1, weight: .semibold))
                 }
                 .foregroundColor(HealingColors.forestMist)
             }
@@ -323,7 +323,7 @@ struct AskDoctorSearchView: View {
 
                 Button(action: {}) {
                     Text("搜索")
-                        .font(.system(size: UnifiedFont.caption, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption1, weight: .medium))
                         .foregroundColor(.white)
                         .padding(.horizontal, layout.cardInnerPadding)
                         .padding(.vertical, layout.cardInnerPadding - 4)
@@ -343,7 +343,7 @@ struct AskDoctorSearchView: View {
                 HStack(spacing: layout.cardSpacing / 2) {
                     ForEach(hotTags, id: \.self) { tag in
                         Text(tag)
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.textSecondary)
                             .padding(.horizontal, layout.cardInnerPadding - 2)
                             .padding(.vertical, layout.cardSpacing / 2)
@@ -373,11 +373,11 @@ struct TrustBadgesView: View {
                 let (icon, text) = element
                 HStack(spacing: 4) {
                     Image(systemName: icon)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.deepSage)
 
                     Text(text)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                 }
                 .foregroundColor(HealingColors.textTertiary)
 
@@ -406,7 +406,7 @@ struct BrandFooterView: View {
             .foregroundColor(HealingColors.forestMist.opacity(0.7))
 
             Text("一起发现健康生活")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textTertiary)
         }
         .padding(.top, layout.cardSpacing)

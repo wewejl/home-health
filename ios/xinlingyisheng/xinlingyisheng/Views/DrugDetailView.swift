@@ -196,9 +196,9 @@ struct HealingDrugDetailTrustBadge: View {
         HStack(spacing: layout.cardSpacing / 2) {
             HStack(spacing: 4) {
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                 Text("健康百科")
-                    .font(.system(size: UnifiedFont.caption, weight: .medium))
+                    .font(.system(size: UnifiedFont.caption1, weight: .medium))
             }
             .foregroundColor(.white)
             .padding(.horizontal, layout.cardInnerPadding - 2)
@@ -213,7 +213,7 @@ struct HealingDrugDetailTrustBadge: View {
             .clipShape(Capsule())
 
             Text("三甲医生专业编审 · 灵犀健康官方出品")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textSecondary)
 
             Spacer()
@@ -238,7 +238,7 @@ struct HealingDrugDetailHeader: View {
             if let commonBrands = drug.common_brands, !commonBrands.isEmpty {
                 HStack(spacing: layout.cardSpacing / 2) {
                     Image(systemName: "tag.fill")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.forestMist)
                     Text("常见商品名：\(commonBrands)")
                         .font(.system(size: UnifiedFont.footnote))
@@ -269,7 +269,7 @@ struct HealingDrugDetailHeader: View {
                     }
 
                     Text(reviewerInfo)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textTertiary)
                 }
             }
@@ -349,7 +349,7 @@ struct HealingSafetyLabelView: View {
             }
 
             Text(title)
-                .font(.system(size: UnifiedFont.caption, weight: .medium))
+                .font(.system(size: UnifiedFont.caption1, weight: .medium))
                 .foregroundColor(HealingColors.textPrimary)
 
             Text(subtitle)
@@ -584,7 +584,7 @@ struct HealingDrugDetailErrorView: View {
                 Button(action: onRetry) {
                     HStack(spacing: layout.cardSpacing / 2) {
                         Image(systemName: "arrow.clockwise")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                         Text("重试")
                             .font(.system(size: UnifiedFont.subheadline, weight: .medium))
                     }

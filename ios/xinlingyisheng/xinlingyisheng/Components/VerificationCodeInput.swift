@@ -180,7 +180,7 @@ struct VerificationCodeStyle {
             light: Color.white,
             dark: Color(red: 0.18, green: 0.18, blue: 0.22)
         ),
-        emptyBorder: AppColor.borderLight,
+        emptyBorder: HealingColorTheme.borderLight,
         activeBorder: DXYColors.primaryPurple,
         filledBorder: DXYColors.primaryPurple.opacity(0.5),
         successBorder: DXYColors.successGreen,

@@ -19,7 +19,7 @@ struct TimelineItemView: View {
                     .font(.system(size: AdaptiveFont.footnote, weight: .medium))
                     .foregroundColor(DXYColors.textSecondary)
                 Text(formatTime(item.contents.first?.message?.timestamp ?? item.date))
-                    .font(.system(size: AdaptiveFont.caption))
+                    .font(.system(size: AdaptiveFont.caption1))
                     .foregroundColor(DXYColors.textTertiary)
             }
             .frame(width: ScaleFactor.size(50))
@@ -107,9 +107,9 @@ struct MessageBubble: View {
                 if message.isImportant {
                     HStack(spacing: ScaleFactor.spacing(4)) {
                         Image(systemName: "star.fill")
-                            .font(.system(size: AdaptiveFont.caption))
+                            .font(.system(size: AdaptiveFont.caption1))
                         Text("重要")
-                            .font(.system(size: AdaptiveFont.caption))
+                            .font(.system(size: AdaptiveFont.caption1))
                     }
                     .foregroundColor(.orange)
                 }
@@ -177,9 +177,9 @@ struct AttachmentPreview: View {
             
             HStack(spacing: ScaleFactor.spacing(4)) {
                 Image(systemName: "camera.fill")
-                    .font(.system(size: AdaptiveFont.caption))
+                    .font(.system(size: AdaptiveFont.caption1))
                 Text(formatDate(attachment.createdAt))
-                    .font(.system(size: AdaptiveFont.caption))
+                    .font(.system(size: AdaptiveFont.caption1))
             }
             .foregroundColor(.white)
             .padding(.horizontal, ScaleFactor.padding(6))
@@ -203,7 +203,7 @@ struct AttachmentPreview: View {
                     .lineLimit(1)
                 
                 Text("\(formatDate(attachment.createdAt))")
-                    .font(.system(size: AdaptiveFont.caption))
+                    .font(.system(size: AdaptiveFont.caption1))
                     .foregroundColor(DXYColors.textTertiary)
             }
             
@@ -308,7 +308,7 @@ struct SessionMarker: View {
                 .frame(height: 1)
             
             Text(type == .sessionStart ? "对话开始" : "对话结束")
-                .font(.system(size: AdaptiveFont.caption))
+                .font(.system(size: AdaptiveFont.caption1))
                 .foregroundColor(DXYColors.textTertiary)
             
             Rectangle()

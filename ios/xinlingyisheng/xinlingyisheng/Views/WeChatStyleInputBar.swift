@@ -115,13 +115,13 @@ struct WeChatStyleInputBar: View {
             ZStack(alignment: .leading) {
                 if messageText.isEmpty {
                     Text("输入消息...")
-                        .font(.system(size: AdaptiveFont.caption))
+                        .font(.system(size: AdaptiveFont.caption1))
                         .foregroundColor(HealingColors.textTertiary)
                         .padding(.leading, ScaleFactor.padding(16))
                 }
 
                 TextField("", text: $messageText, axis: .vertical)
-                    .font(.system(size: AdaptiveFont.caption))
+                    .font(.system(size: AdaptiveFont.caption1))
                     .foregroundColor(HealingColors.textPrimary)
                     .lineLimit(1...5)
                     .padding(.horizontal, ScaleFactor.padding(12))
@@ -148,7 +148,7 @@ struct WeChatStyleInputBar: View {
                             )
 
                         Image(systemName: "mic.fill")
-                            .font(.system(size: AdaptiveFont.caption))
+                            .font(.system(size: AdaptiveFont.caption1))
                             .foregroundColor(HealingColors.dustyBlue)
                     }
                 }
@@ -188,7 +188,7 @@ struct WeChatStyleInputBar: View {
                                 .scaleEffect(0.8)
                         } else {
                             Image(systemName: "arrow.up")
-                                .font(.system(size: AdaptiveFont.caption2, weight: .semibold))
+                                .font(.system(size: AdaptiveFont.caption12, weight: .semibold))
                                 .foregroundColor(.white)
                         }
                     }
@@ -217,7 +217,7 @@ struct WeChatStyleInputBar: View {
     private var pressAndHoldButton: some View {
         Button(action: {}) {
             Text("按住 说话")
-                .font(.system(size: AdaptiveFont.caption, weight: .medium))
+                .font(.system(size: AdaptiveFont.caption1, weight: .medium))
                 .foregroundColor(isDisabled ? HealingColors.textTertiary : HealingColors.forestMist)
                 .frame(maxWidth: .infinity)
                 .frame(height: ScaleFactor.size(44))
@@ -460,14 +460,14 @@ struct PressAndHoldOverlayView: View {
     private var instructionText: some View {
         VStack(spacing: 4) {
             Text(isCanceling ? "松开取消" : "松开发送")
-                .font(.system(size: AdaptiveFont.caption, weight: .semibold))
+                .font(.system(size: AdaptiveFont.caption1, weight: .semibold))
                 .foregroundColor(isCanceling ? HealingColors.terracotta : HealingColors.forestMist)
 
             HStack(spacing: 4) {
                 Image(systemName: "chevron.up")
-                    .font(.system(size: AdaptiveFont.caption2))
+                    .font(.system(size: AdaptiveFont.caption12))
                 Text(isCanceling ? "下滑继续录音" : "上滑可取消")
-                    .font(.system(size: AdaptiveFont.caption2))
+                    .font(.system(size: AdaptiveFont.caption12))
             }
             .foregroundColor(HealingColors.textSecondary)
         }
@@ -483,12 +483,12 @@ struct PressAndHoldOverlayView: View {
                     .opacity(pulseScale * 0.5 + 0.5)
 
                 Text("正在识别")
-                    .font(.system(size: AdaptiveFont.caption2))
+                    .font(.system(size: AdaptiveFont.caption12))
                     .foregroundColor(HealingColors.forestMist)
             }
 
             Text(viewModel.recognizedText)
-                .font(.system(size: AdaptiveFont.caption))
+                .font(.system(size: AdaptiveFont.caption1))
                 .foregroundColor(HealingColors.textPrimary)
                 .lineLimit(3)
                 .multilineTextAlignment(.leading)
@@ -516,11 +516,11 @@ struct PressAndHoldOverlayView: View {
     private var placeholderTextView: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("正在录音...")
-                .font(.system(size: AdaptiveFont.caption2))
+                .font(.system(size: AdaptiveFont.caption12))
                 .foregroundColor(HealingColors.textSecondary)
 
             Text("请说话")
-                .font(.system(size: AdaptiveFont.caption))
+                .font(.system(size: AdaptiveFont.caption1))
                 .foregroundColor(HealingColors.textTertiary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)

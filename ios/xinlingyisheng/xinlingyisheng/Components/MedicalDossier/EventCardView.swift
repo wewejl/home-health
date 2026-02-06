@@ -89,9 +89,9 @@ struct EventCardView: View {
                 if event.status == .exported {
                     HStack(spacing: ScaleFactor.spacing(4)) {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: AdaptiveFont.caption))
+                            .font(.system(size: AdaptiveFont.caption1))
                         Text("已导出")
-                            .font(.system(size: AdaptiveFont.caption))
+                            .font(.system(size: AdaptiveFont.caption1))
                     }
                     .foregroundColor(DossierColors.statusExported)
                 }
@@ -117,7 +117,7 @@ struct SwipeableEventCard: View {
                         Image(systemName: "archivebox")
                             .font(.system(size: UnifiedFont.title2))
                         Text("归档")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                     }
                     .foregroundColor(.white)
                     .frame(width: 70)
@@ -130,7 +130,7 @@ struct SwipeableEventCard: View {
                         Image(systemName: "trash")
                             .font(.system(size: UnifiedFont.title2))
                         Text("删除")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                     }
                     .foregroundColor(.white)
                     .frame(width: 70)

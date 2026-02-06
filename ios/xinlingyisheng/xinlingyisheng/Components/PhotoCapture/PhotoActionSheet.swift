@@ -73,7 +73,7 @@ struct PhotoActionSheet: View {
                     .foregroundColor(DXYColors.orange)
                 
                 Text("照片仅保存在您的手机本地，不会上传到服务器")
-                    .font(.system(size: AdaptiveFont.caption))
+                    .font(.system(size: AdaptiveFont.caption1))
                     .foregroundColor(DXYColors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -42,7 +42,7 @@ struct MedicalDossierView: View {
 
                 HStack(spacing: layout.cardSpacing / 2) {
                     Image(systemName: "doc.text.fill")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.forestMist)
                     Text("AI 智能整理，一键导出")
                         .font(.system(size: UnifiedFont.footnote))
@@ -76,7 +76,7 @@ struct MedicalDossierView: View {
                                 .frame(width: layout.iconSmallSize - 18, height: layout.iconSmallSize - 18)
 
                             Image(systemName: "xmark")
-                                .font(.system(size: AdaptiveFont.caption - 4, weight: .bold))
+                                .font(.system(size: AdaptiveFont.caption1 - 4, weight: .bold))
                                 .foregroundColor(HealingColors.textTertiary)
                         }
                     }
@@ -230,7 +230,7 @@ struct HealingFilterChip: View {
 
                 if count > 0 {
                     Text("(\(count))")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                 }
             }
             .foregroundColor(isSelected ? .white : HealingColors.textSecondary)

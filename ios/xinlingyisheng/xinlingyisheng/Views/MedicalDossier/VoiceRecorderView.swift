@@ -59,7 +59,7 @@ struct VoiceRecorderView: View {
                 // 错误提示
                 if let error = viewModel.errorMessage {
                     Text(error)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.terracotta)
                         .padding(.horizontal)
                 }
@@ -150,7 +150,7 @@ struct VoiceRecorderView: View {
                             .background(HealingColors.textTertiary)
                             .clipShape(Circle())
                         Text("取消")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.textSecondary)
                     }
                 }
@@ -167,7 +167,7 @@ struct VoiceRecorderView: View {
                             .background(HealingColors.terracotta)
                             .clipShape(Circle())
                         Text("完成")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.textSecondary)
                     }
                 }
@@ -194,7 +194,7 @@ struct VoiceRecorderView: View {
                             .clipShape(Circle())
                             .shadow(color: HealingColors.forestMist.opacity(0.4), radius: 8, y: 4)
                         Text(viewModel.transcribedText.isEmpty ? "开始录音" : "重新录音")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.textSecondary)
                     }
                 }
@@ -212,7 +212,7 @@ struct VoiceRecorderView: View {
 
             HStack(spacing: layout.cardSpacing / 2) {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.forestMist)
                 Text("转写结果")
                     .font(.system(size: UnifiedFont.footnote, weight: .medium))
@@ -231,17 +231,17 @@ struct VoiceRecorderView: View {
                 VStack(alignment: .leading, spacing: layout.cardSpacing / 2) {
                     HStack(spacing: 4) {
                         Image(systemName: "list.bullet")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.forestMist)
                         Text("识别到的症状")
-                            .font(.system(size: UnifiedFont.caption, weight: .medium))
+                            .font(.system(size: UnifiedFont.caption1, weight: .medium))
                             .foregroundColor(HealingColors.textSecondary)
                     }
 
                     FlowLayout(spacing: 6) {
                         ForEach(viewModel.extractedSymptoms, id: \.self) { symptom in
                             Text(symptom)
-                                .font(.system(size: UnifiedFont.caption))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.dustyBlue)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)

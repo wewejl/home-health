@@ -165,9 +165,9 @@ struct AIAnalysisCardView: View {
     private var disclaimerSection: some View {
         HStack(spacing: ScaleFactor.spacing(6)) {
             Image(systemName: "info.circle")
-                .font(.system(size: AdaptiveFont.caption))
+                .font(.system(size: AdaptiveFont.caption1))
             Text("AI 分析仅供参考，不构成医疗诊断建议")
-                .font(.system(size: AdaptiveFont.caption))
+                .font(.system(size: AdaptiveFont.caption1))
         }
         .foregroundColor(DXYColors.textTertiary)
         .padding(.top, ScaleFactor.padding(4))

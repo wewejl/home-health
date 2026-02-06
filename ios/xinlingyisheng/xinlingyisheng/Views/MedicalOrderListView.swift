@@ -105,7 +105,7 @@ struct MedicalOrderListView: View {
                         Text("\(viewModel.todayCompletedCount)")
                             .font(.system(size: UnifiedFont.title3, weight: .bold))
                         Text("已完成")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.textTertiary)
                     }
 
@@ -114,7 +114,7 @@ struct MedicalOrderListView: View {
                             .font(.system(size: UnifiedFont.title3, weight: .bold))
                             .foregroundColor(viewModel.todayTasks.pending.isEmpty ? HealingColors.textTertiary : HealingColors.textPrimary)
                         Text("待完成")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.textTertiary)
                     }
 
@@ -124,7 +124,7 @@ struct MedicalOrderListView: View {
                                 .font(.system(size: UnifiedFont.title3, weight: .bold))
                                 .foregroundColor(HealingColors.terracotta)
                             Text("已超时")
-                                .font(.system(size: UnifiedFont.caption))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.textTertiary)
                         }
                     }
@@ -299,7 +299,7 @@ struct TaskCard: View {
                         if let orderType = task.order_type, let type = OrderType(rawValue: orderType) {
                             HStack(spacing: layout.cardSpacing / 3) {
                                 Label(type.displayName, systemImage: type.iconName)
-                                    .font(.system(size: UnifiedFont.caption))
+                                    .font(.system(size: UnifiedFont.caption1))
                                     .foregroundColor(HealingColors.textSecondary)
                             }
                         }
@@ -308,14 +308,14 @@ struct TaskCard: View {
                     Spacer()
 
                     Text(task.scheduled_time)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textTertiary)
                 }
 
                 // 额外信息
                 if task.isCompleted, let completedAt = task.completed_at {
                     Text(completedAt)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textTertiary)
                 }
             }
@@ -410,7 +410,7 @@ struct AlertCard: View {
                     .foregroundColor(HealingColors.textSecondary)
 
                 Text(alert.created_at)
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textTertiary)
             }
 
@@ -422,7 +422,7 @@ struct AlertCard: View {
                         await viewModel.acknowledgeAlert(alertId: alert.id)
                     }
                 }
-                .font(.system(size: UnifiedFont.caption, weight: .medium))
+                .font(.system(size: UnifiedFont.caption1, weight: .medium))
                 .foregroundColor(HealingColors.forestMist)
                 .padding(.horizontal, layout.cardInnerPadding)
                 .padding(.vertical, layout.cardSpacing / 2)

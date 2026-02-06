@@ -42,7 +42,7 @@ struct MergeEventsSheet: View {
                                     .foregroundColor(DXYColors.textPrimary)
                                 Spacer()
                                 Text("主事件")
-                                    .font(.system(size: AdaptiveFont.caption))
+                                    .font(.system(size: AdaptiveFont.caption1))
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
@@ -197,7 +197,7 @@ struct SelectableEventRow: View {
                 
                 if let relationType = event.relation_type {
                     Text(relationDisplayName(relationType))
-                        .font(.system(size: AdaptiveFont.caption))
+                        .font(.system(size: AdaptiveFont.caption1))
                         .foregroundColor(relationColor(relationType))
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)

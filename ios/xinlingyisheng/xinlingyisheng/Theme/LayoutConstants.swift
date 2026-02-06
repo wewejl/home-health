@@ -266,13 +266,13 @@ extension View {
 
     /// 统一脚注1（12pt）
     func caption1(weight: Font.Weight = .regular) -> some View {
-        self.font(Font.system(size: UnifiedFont.caption1, weight: weight))
+        self.font(Font.system(size: UnifiedFont.caption11, weight: weight))
     }
 
     /// 统一脚注（已弃用，使用 caption1 替代）
     @available(*, deprecated, message: "使用 caption1(weight:) 替代")
     func caption(weight: Font.Weight = .regular) -> some View {
-        self.font(Font.system(size: UnifiedFont.caption1, weight: weight))
+        self.font(Font.system(size: UnifiedFont.caption11, weight: weight))
     }
 }
 

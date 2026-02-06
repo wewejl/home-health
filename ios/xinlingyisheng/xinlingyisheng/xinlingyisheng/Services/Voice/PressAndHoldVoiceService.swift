@@ -220,31 +220,58 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
 
     /// 检查麦克风权限
     private func checkMicrophonePermission() async throws {
-        let audioSession = AVAudioSession.sharedInstance()
+        if #available(iOS 17.0, *) {
+            // iOS 17+ 使用 AVAudioApplication
+            let micStatus = AVAudioApplication.shared.recordPermission
 
-        // 检查当前权限状态
-        let micStatus = audioSession.recordPermission
-
-        if micStatus == .denied {
-            state = .error("需要麦克风权限")
-            onError?("需要麦克风权限才能使用语音功能")
-            throw WebSocketVoiceError.microphonePermissionDenied
-        } else if micStatus == .undetermined {
-            // 请求权限
-            audioSession.requestRecordPermission { granted in
-                if !granted {
-                    Task { @MainActor [weak self] in
-                        self?.state = .error("需要麦克风权限")
-                        self?.onError?("需要麦克风权限才能使用语音功能")
+            if micStatus == .denied {
+                state = .error("需要麦克风权限")
+                onError?("需要麦克风权限才能使用语音功能")
+                throw WebSocketVoiceError.microphonePermissionDenied
+            } else if micStatus == .undetermined {
+                // 请求权限
+                AVAudioApplication.requestRecordPermission { granted in
+                    if !granted {
+                        Task { @MainActor [weak self] in
+                            self?.state = .error("需要麦克风权限")
+                            self?.onError?("需要麦克风权限才能使用语音功能")
+                        }
                     }
                 }
-            }
-            // 等待用户响应
-            try await Task.sleep(nanoseconds: VoiceConfig.micPermissionWaitTime)
+                // 等待用户响应
+                try await Task.sleep(nanoseconds: VoiceConfig.micPermissionWaitTime)
 
-            // 再次检查
-            if audioSession.recordPermission == .denied {
+                // 再次检查
+                if AVAudioApplication.shared.recordPermission == .denied {
+                    throw WebSocketVoiceError.microphonePermissionDenied
+                }
+            }
+        } else {
+            // iOS 17 之前使用 AVAudioSession
+            let audioSession = AVAudioSession.sharedInstance()
+            let micStatus = audioSession.recordPermission
+
+            if micStatus == .denied {
+                state = .error("需要麦克风权限")
+                onError?("需要麦克风权限才能使用语音功能")
                 throw WebSocketVoiceError.microphonePermissionDenied
+            } else if micStatus == .undetermined {
+                // 请求权限
+                audioSession.requestRecordPermission { granted in
+                    if !granted {
+                        Task { @MainActor [weak self] in
+                            self?.state = .error("需要麦克风权限")
+                            self?.onError?("需要麦克风权限才能使用语音功能")
+                        }
+                    }
+                }
+                // 等待用户响应
+                try await Task.sleep(nanoseconds: VoiceConfig.micPermissionWaitTime)
+
+                // 再次检查
+                if audioSession.recordPermission == .denied {
+                    throw WebSocketVoiceError.microphonePermissionDenied
+                }
             }
         }
     }

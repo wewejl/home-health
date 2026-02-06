@@ -69,7 +69,7 @@ struct ChatNavBarV2: View {
                     Image(systemName: "cpu")
                         .font(.system(size: ScaleFactor.font(10)))
                     Text("AI分身")
-                        .font(.system(size: AdaptiveFont.caption))
+                        .font(.system(size: AdaptiveFont.caption1))
                 }
                 .foregroundColor(DXYColors.primaryPurple)
             }
@@ -152,7 +152,7 @@ struct SimpleChatNavBar: View {
                 
                 if let subtitle = subtitle {
                     Text(subtitle)
-                        .font(.system(size: AdaptiveFont.caption))
+                        .font(.system(size: AdaptiveFont.caption1))
                         .foregroundColor(DXYColors.textSecondary)
                 }
             }

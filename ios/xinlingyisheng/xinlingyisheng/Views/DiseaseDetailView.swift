@@ -170,23 +170,23 @@ struct DiseaseDetailView: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
                     Text("健康百科")
-                        .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                        .font(.system(size: UnifiedFont.caption1, weight: .semibold))
                         .foregroundColor(HealingColors.forestMist)
 
                     Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.mutedCoral)
                 }
 
                 Text("三甲医生专业编审 · 灵犀健康官方出品")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textSecondary)
             }
 
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                .font(.system(size: UnifiedFont.caption1, weight: .semibold))
                 .foregroundColor(HealingColors.textTertiary)
         }
         .padding(layout.cardInnerPadding)
@@ -223,7 +223,7 @@ struct DiseaseDetailView: View {
                         Text(disease.recommended_department ?? disease.department_name ?? "未知科室")
                             .font(.system(size: UnifiedFont.footnote, weight: .medium))
                         Image(systemName: "chevron.right")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                     }
                     .foregroundColor(HealingColors.forestMist)
                     .padding(.horizontal, layout.cardInnerPadding - 2)
@@ -239,9 +239,9 @@ struct DiseaseDetailView: View {
             if let updatedAt = disease.updated_at {
                 HStack(spacing: 4) {
                     Image(systemName: "clock")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                     Text(formatDate(updatedAt) + " 修订")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                 }
                 .foregroundColor(HealingColors.textTertiary)
             }
@@ -543,18 +543,18 @@ struct HealingAuthorCard: View {
                             .frame(width: 18, height: 18)
 
                         Image(systemName: "checkmark")
-                            .font(.system(size: AdaptiveFont.caption - 4, weight: .bold))
+                            .font(.system(size: AdaptiveFont.caption1 - 4, weight: .bold))
                             .foregroundColor(HealingColors.mutedCoral)
                     }
 
                     Text(role)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textTertiary)
                         .padding(.leading, ScaleFactor.padding(2))
                 }
 
                 Text(title)
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textSecondary)
                     .lineLimit(1)
             }
@@ -678,7 +678,7 @@ struct HealingToolbarButton: View {
                 }
 
                 Text(title)
-                    .font(.system(size: UnifiedFont.caption, weight: isActive ? .semibold : .regular))
+                    .font(.system(size: UnifiedFont.caption1, weight: isActive ? .semibold : .regular))
                     .foregroundColor(isActive ? HealingColors.mutedCoral : HealingColors.textSecondary)
             }
             .frame(maxWidth: .infinity)
@@ -702,7 +702,7 @@ struct ToolbarButton: View {
                     .foregroundColor(isActive ? HealingColors.mutedCoral : HealingColors.textSecondary)
 
                 Text(title)
-                    .font(.system(size: AdaptiveFont.caption))
+                    .font(.system(size: AdaptiveFont.caption1))
                     .foregroundColor(isActive ? HealingColors.mutedCoral : HealingColors.textSecondary)
             }
             .frame(maxWidth: .infinity)

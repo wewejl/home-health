@@ -50,7 +50,7 @@ struct MyQuestionsView: View {
                             Button(action: { loadSessions() }) {
                                 HStack(spacing: layout.cardSpacing / 2) {
                                     Image(systemName: "arrow.clockwise")
-                                        .font(.system(size: UnifiedFont.caption))
+                                        .font(.system(size: UnifiedFont.caption1))
                                     Text("重试")
                                         .font(.system(size: UnifiedFont.footnote, weight: .medium))
                                 }
@@ -86,7 +86,7 @@ struct MyQuestionsView: View {
                                 .foregroundColor(HealingColors.textPrimary)
 
                             Text("开始您的第一次健康咨询吧")
-                                .font(.system(size: UnifiedFont.caption))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.textTertiary)
                         }
                         Spacer()
@@ -245,7 +245,7 @@ struct HealingSessionCardView: View {
                     Spacer()
 
                     Text(formatDate(session.updated_at))
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textTertiary)
                 }
 
@@ -316,7 +316,7 @@ struct HealingChatFromSessionView: View {
                             ProgressView()
                                 .tint(HealingColors.forestMist)
                             Text("加载消息中...")
-                                .font(.system(size: UnifiedFont.caption))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.textSecondary)
                         }
                         Spacer()
@@ -448,7 +448,7 @@ struct HealingChatNavBar: View {
                     .foregroundColor(HealingColors.textPrimary)
 
                 Text("在线为您服务")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.forestMist)
             }
 
@@ -502,7 +502,7 @@ struct HealingMessageBubbleView: View {
                     )
 
                 Text(formatTime(message.created_at))
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textTertiary)
             }
 

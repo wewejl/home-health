@@ -223,7 +223,7 @@ struct ConditionRowView: View {
                 FlowLayout(spacing: ScaleFactor.spacing(4)) {
                     ForEach(condition.rationale, id: \.self) { reason in
                         Text(reason)
-                            .font(.system(size: AdaptiveFont.caption))
+                            .font(.system(size: AdaptiveFont.caption1))
                             .foregroundColor(DXYColors.textTertiary)
                             .padding(.horizontal, ScaleFactor.padding(6))
                             .padding(.vertical, ScaleFactor.padding(2))
@@ -289,7 +289,7 @@ struct EvidenceListView: View {
                     
                     if let source = ref.source {
                         Text("来源: \(source)")
-                            .font(.system(size: AdaptiveFont.caption))
+                            .font(.system(size: AdaptiveFont.caption1))
                             .foregroundColor(DXYColors.teal)
                     }
                 }

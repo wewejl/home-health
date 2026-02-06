@@ -30,7 +30,7 @@ struct PhoneNumberTextField: View {
         HStack(spacing: AdaptiveSpacing.item) {
             Image(systemName: "phone.fill")
                 .font(.system(size: iconSize, weight: .medium))
-                .foregroundColor(textFieldIsFocused ? AppColor.primaryPurple : AppColor.textSecondary)
+                .foregroundColor(textFieldIsFocused ? DXYColors.primaryPurple : DXYColors.textSecondary)
                 .frame(width: ScaleFactor.size(24))
 
             TextField("请输入手机号", text: $displayNumber)
@@ -55,7 +55,7 @@ struct PhoneNumberTextField: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall, style: .continuous)
                         .stroke(
-                            textFieldIsFocused ? AppColor.primaryPurple : AppColor.borderLight,
+                            textFieldIsFocused ? DXYColors.primaryPurple : DXYColors.borderLight,
                             lineWidth: ScaleFactor.size(1)
                         )
                 )

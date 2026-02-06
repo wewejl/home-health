@@ -18,7 +18,7 @@ struct RelatedEventRow: View {
 
                     if let relationType = relatedEvent.relation_type {
                         Text(relationDisplayName(relationType))
-                            .font(.system(size: AdaptiveFont.caption))
+                            .font(.system(size: AdaptiveFont.caption1))
                             .foregroundColor(.white)
                             .padding(.horizontal, ScaleFactor.padding(6))
                             .padding(.vertical, ScaleFactor.padding(2))
@@ -37,9 +37,9 @@ struct RelatedEventRow: View {
                 if let confidence = relatedEvent.confidence {
                     HStack(spacing: ScaleFactor.spacing(4)) {
                         Image(systemName: "chart.bar.fill")
-                            .font(.system(size: AdaptiveFont.caption - 1))
+                            .font(.system(size: AdaptiveFont.caption1 - 1))
                         Text("置信度: \(Int(confidence * 100))%")
-                            .font(.system(size: AdaptiveFont.caption))
+                            .font(.system(size: AdaptiveFont.caption1))
                     }
                     .foregroundColor(DXYColors.textTertiary)
                 }

@@ -218,7 +218,7 @@ struct HealingSessionHistoryCard: View {
                 HStack(spacing: layout.cardSpacing / 2) {
                     // 智能体类型标签
                     Text(agentTypeDisplayName)
-                        .font(.system(size: UnifiedFont.caption, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption1, weight: .medium))
                         .foregroundColor(agentTypeColor)
                         .padding(.horizontal, layout.cardInnerPadding - 2)
                         .padding(.vertical, layout.cardSpacing / 3)
@@ -227,7 +227,7 @@ struct HealingSessionHistoryCard: View {
 
                     // 状态标签
                     Text(session.status == "active" ? "进行中" : "已完成")
-                        .font(.system(size: UnifiedFont.caption, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption1, weight: .medium))
                         .foregroundColor(session.status == "active" ? HealingColors.forestMist : HealingColors.textTertiary)
                         .padding(.horizontal, layout.cardInnerPadding - 2)
                         .padding(.vertical, layout.cardSpacing / 3)
@@ -240,7 +240,7 @@ struct HealingSessionHistoryCard: View {
 
                     // 时间
                     Text(formattedDate)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textTertiary)
                 }
 
@@ -260,19 +260,19 @@ struct HealingSessionHistoryCard: View {
                                 .frame(width: ScaleFactor.size(20), height: ScaleFactor.size(20))
 
                             Image(systemName: "bubble.left.fill")
-                                .font(.system(size: AdaptiveFont.caption - 2, weight: .regular))
+                                .font(.system(size: AdaptiveFont.caption1 - 2, weight: .regular))
                                 .foregroundColor(HealingColors.textTertiary)
                         }
 
                         Text("点击继续对话")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.textSecondary)
                     }
 
                     Spacer()
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                        .font(.system(size: UnifiedFont.caption1, weight: .semibold))
                         .foregroundColor(HealingColors.textTertiary)
                 }
             }

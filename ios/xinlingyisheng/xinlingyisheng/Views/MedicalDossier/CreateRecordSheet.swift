@@ -119,7 +119,7 @@ struct CreateRecordSheet: View {
                 .foregroundColor(HealingColors.textSecondary)
 
             Text("请先创建文件夹来组织病历")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -147,7 +147,7 @@ struct CreateRecordSheet: View {
                     Button("更改") {
                         currentStep = 1
                     }
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.forestMist)
                 }
                 .padding()
@@ -158,7 +158,7 @@ struct CreateRecordSheet: View {
             // 标题输入
             VStack(alignment: .leading, spacing: 8) {
                 Text("标题 *")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textSecondary)
 
                 TextField("如：血常规检查", text: $title)
@@ -171,7 +171,7 @@ struct CreateRecordSheet: View {
             // 日期选择
             VStack(alignment: .leading, spacing: 8) {
                 Text("记录日期 *")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textSecondary)
 
                 DatePicker("", selection: $recordDate, displayedComponents: .date)
@@ -182,7 +182,7 @@ struct CreateRecordSheet: View {
             // 描述输入
             VStack(alignment: .leading, spacing: 8) {
                 Text("描述")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textSecondary)
 
                 TextEditor(text: $description)
@@ -208,7 +208,7 @@ struct CreateRecordSheet: View {
                 .foregroundColor(HealingColors.textPrimary)
 
             Text("可以稍后添加文件")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textTertiary)
 
             // 文件选择按钮
@@ -257,7 +257,7 @@ struct CreateRecordSheet: View {
             if !selectedFiles.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("已选择 \(selectedFiles.count) 个文件")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textSecondary)
 
                     LazyVGrid(columns: [
@@ -379,12 +379,12 @@ struct FolderSelectionCard: View {
                 }
 
                 Text(folder.name)
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textPrimary)
                     .lineLimit(1)
 
                 Text("\(folder.recordCount) 个病历")
-                    .font(.system(size: UnifiedFont.caption2))
+                    .font(.system(size: UnifiedFont.caption12))
                     .foregroundColor(HealingColors.textTertiary)
             }
             .padding()

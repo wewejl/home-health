@@ -59,7 +59,7 @@ struct PDFViewerSheet: View {
                                 .frame(width: layout.iconSmallSize + 2, height: layout.iconSmallSize + 2)
 
                             Image(systemName: "ellipsis.circle")
-                                .font(.system(size: AdaptiveFont.caption))
+                                .font(.system(size: AdaptiveFont.caption1))
                                 .foregroundColor(HealingColors.forestMist)
                         }
                     }
@@ -127,18 +127,18 @@ struct HealingPDFViewerInfoBar: View {
                         .frame(width: UnifiedFont.body * 1.5, height: UnifiedFont.body * 1.5)
 
                     Image(systemName: "stethoscope")
-                        .font(.system(size: AdaptiveFont.caption - 4))
+                        .font(.system(size: AdaptiveFont.caption1 - 4))
                         .foregroundColor(HealingColors.forestMist)
                 }
 
                 Text(export.department)
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textPrimary)
             }
 
             // 分隔符
             Text("·")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textTertiary)
 
             // 消息数量
@@ -149,23 +149,23 @@ struct HealingPDFViewerInfoBar: View {
                         .frame(width: UnifiedFont.body * 1.5, height: UnifiedFont.body * 1.5)
 
                     Image(systemName: "bubble.left.and.bubble.right")
-                        .font(.system(size: AdaptiveFont.caption - 4))
+                        .font(.system(size: AdaptiveFont.caption1 - 4))
                         .foregroundColor(HealingColors.dustyBlue)
                 }
 
                 Text("\(export.messageCount) 条对话")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textPrimary)
             }
 
             // 分隔符
             Text("·")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textTertiary)
 
             // 文件大小
             Text(export.formattedFileSize)
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textSecondary)
         }
         .padding(.horizontal, layout.cardInnerPadding)

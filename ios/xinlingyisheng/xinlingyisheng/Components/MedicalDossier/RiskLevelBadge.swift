@@ -47,7 +47,7 @@ struct DossierRiskLevelBadge: View {
     private var fontSize: CGFloat {
         switch style {
         case .default: return AdaptiveFont.footnote
-        case .compact: return AdaptiveFont.caption
+        case .compact: return AdaptiveFont.caption1
         case .large: return AdaptiveFont.subheadline
         }
     }
@@ -76,9 +76,9 @@ struct AttachmentCountBadge: View {
     var body: some View {
         HStack(spacing: ScaleFactor.spacing(4)) {
             Image(systemName: icon)
-                .font(.system(size: AdaptiveFont.caption))
+                .font(.system(size: AdaptiveFont.caption1))
             Text("\(count)")
-                .font(.system(size: AdaptiveFont.caption, weight: .medium))
+                .font(.system(size: AdaptiveFont.caption1, weight: .medium))
         }
         .foregroundColor(DXYColors.textSecondary)
         .padding(.horizontal, ScaleFactor.padding(8))

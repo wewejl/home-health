@@ -217,7 +217,7 @@ struct ModernConsultationView: View {
                         .fill(HealingColors.forestMist)
                         .frame(width: 6, height: 6)
                     Text("在线服务")
-                        .font(.system(size: AdaptiveFont.caption - 1))
+                        .font(.system(size: AdaptiveFont.caption1 - 1))
                         .foregroundColor(HealingColors.textSecondary)
                 }
             }
@@ -254,7 +254,7 @@ struct ModernConsultationView: View {
     private func navBarButton(icon: String, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(color)
                 .frame(width: 36, height: 36)
                 .background(
@@ -271,7 +271,7 @@ struct ModernConsultationView: View {
             ProgressView()
                 .tint(HealingColors.forestMist)
             Text("初始化会话...")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textSecondary)
             Spacer()
         }
@@ -356,7 +356,7 @@ struct ModernConsultationView: View {
                                 .foregroundColor(HealingColors.textPrimary)
 
                             Text(doctorTitle)
-                                .font(.system(size: UnifiedFont.caption))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.forestMist)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
@@ -369,7 +369,7 @@ struct ModernConsultationView: View {
                                 .fill(HealingColors.forestMist)
                                 .frame(width: 6, height: 6)
                             Text(department)
-                                .font(.system(size: UnifiedFont.caption))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.textSecondary)
                         }
                     }
@@ -377,7 +377,7 @@ struct ModernConsultationView: View {
                     Spacer()
 
                     Image(systemName: "chevron.down")
-                        .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                        .font(.system(size: UnifiedFont.caption1, weight: .semibold))
                         .foregroundColor(HealingColors.textTertiary)
                         .rotationEffect(.degrees(isProfileExpanded ? 180 : 0))
                 }
@@ -393,7 +393,7 @@ struct ModernConsultationView: View {
                         .frame(height: 1)
 
                     Text(doctorBio)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textSecondary)
                         .lineLimit(3)
                         .padding(.horizontal, layout.cardInnerPadding)
@@ -437,7 +437,7 @@ struct ModernConsultationView: View {
                         .foregroundColor(HealingColors.textPrimary)
 
                     Text(viewModel.isNewEvent ? "已为您创建新的病历资料夹" : "已更新病历资料夹")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textSecondary)
                 }
 
@@ -448,7 +448,7 @@ struct ModernConsultationView: View {
             HStack(spacing: layout.cardSpacing) {
                 Button(action: { viewModel.continueConversation() }) {
                     Text("继续对话")
-                        .font(.system(size: UnifiedFont.caption, weight: .medium))
+                        .font(.system(size: UnifiedFont.caption1, weight: .medium))
                         .foregroundColor(HealingColors.forestMist)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, layout.cardInnerPadding)
@@ -465,9 +465,9 @@ struct ModernConsultationView: View {
                 Button(action: { viewDossier() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "doc.text.fill")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                         Text("查看病历")
-                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption1, weight: .semibold))
                     }
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -539,7 +539,7 @@ struct ChatMessageBubble: View {
             }
 
             Text(message.timestamp.formatted(date: .omitted, time: .shortened))
-                .font(.system(size: AdaptiveFont.caption - 1))
+                .font(.system(size: AdaptiveFont.caption1 - 1))
                 .foregroundColor(HealingColors.textTertiary)
                 .padding(message.isFromUser ? .trailing : .leading, 8)
         }
@@ -579,7 +579,7 @@ struct ChatMessageBubble: View {
     private var textBubble: some View {
         if message.isFromUser {
             Text(message.content)
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(.white)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
@@ -600,7 +600,7 @@ struct ChatMessageBubble: View {
                 )
         } else {
             Text(message.content)
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textPrimary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
@@ -622,7 +622,7 @@ struct ChatMessageBubble: View {
 
             if !message.content.isEmpty {
                 Text(message.content)
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textSecondary)
             }
         }
@@ -637,7 +637,7 @@ struct ChatMessageBubble: View {
             ProgressView()
                 .tint(HealingColors.forestMist)
             Text(message.content.isEmpty ? "正在思考中..." : message.content)
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textSecondary)
         }
         .padding(.horizontal, 16)

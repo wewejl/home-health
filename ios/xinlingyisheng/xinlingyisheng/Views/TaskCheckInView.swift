@@ -75,10 +75,10 @@ struct TaskCheckInView: View {
                 if let orderType = task.order_type, let type = OrderType(rawValue: orderType) {
                     HStack(spacing: 4) {
                         Image(systemName: type.iconName)
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
 
                         Text(type.displayName)
-                            .font(.system(size: UnifiedFont.caption, weight: .medium))
+                            .font(.system(size: UnifiedFont.caption1, weight: .medium))
                     }
                     .foregroundColor(.white)
                     .padding(.horizontal, layout.cardInnerPadding)
@@ -94,7 +94,7 @@ struct TaskCheckInView: View {
                 // 计划时间
                 HStack(spacing: ScaleFactor.spacing(4)) {
                     Image(systemName: "clock.fill")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                     Text(task.scheduled_time)
                         .font(.system(size: UnifiedFont.footnote))
                 }
@@ -110,9 +110,9 @@ struct TaskCheckInView: View {
             // 鼓励语
             HStack(spacing: 6) {
                 Image(systemName: "heart.fill")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                 Text("按时完成，守护健康")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
             }
             .foregroundColor(HealingColors.forestMist.opacity(0.8))
         }
@@ -151,7 +151,7 @@ struct TaskCheckInView: View {
                             }
 
                             Text(type.displayName)
-                                .font(.system(size: layout.captionFontSize, weight: selectedType == type ? .semibold : .regular))
+                                .font(.system(size: layout.caption1FontSize, weight: selectedType == type ? .semibold : .regular))
                                 .foregroundColor(selectedType == type ? HealingColors.forestMist : HealingColors.textSecondary)
                         }
                         .frame(maxWidth: .infinity)
@@ -269,7 +269,7 @@ struct TaskCheckInView: View {
                                 .foregroundColor(HealingColors.dustyBlue.opacity(0.5))
 
                             Text("点击下方按钮选择照片")
-                                .font(.system(size: UnifiedFont.caption))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.textSecondary)
                         }
                     }
@@ -449,9 +449,9 @@ struct TaskCheckInView: View {
 
         return HStack(spacing: 4) {
             Image(systemName: "info.circle")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
             Text(hint)
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
         }
         .foregroundColor(HealingColors.textTertiary)
     }

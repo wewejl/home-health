@@ -45,7 +45,7 @@ struct DepartmentDetailView: View {
                             ProgressView()
                                 .tint(HealingColors.forestMist)
                             Text("加载医生中...")
-                                .font(.system(size: UnifiedFont.caption))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.textSecondary)
                         }
                         Spacer()
@@ -70,7 +70,7 @@ struct DepartmentDetailView: View {
                                 Button(action: { loadDoctors() }) {
                                     HStack(spacing: layout.cardSpacing / 2) {
                                         Image(systemName: "arrow.clockwise")
-                                            .font(.system(size: UnifiedFont.caption))
+                                            .font(.system(size: UnifiedFont.caption1))
                                         Text("点击重试")
                                             .font(.system(size: UnifiedFont.footnote, weight: .medium))
                                     }
@@ -288,11 +288,11 @@ struct HealingDepartmentSearchBar: View {
     var body: some View {
         HStack(spacing: layout.cardSpacing / 2) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textTertiary)
 
             TextField("搜索医生 / 医院 / 擅长疾病", text: $searchText)
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textPrimary)
 
             if !searchText.isEmpty {
@@ -336,11 +336,11 @@ struct HealingFilterBarView: View {
 
                         if hasDropdown {
                             Image(systemName: "chevron.down")
-                                .font(.system(size: AdaptiveFont.caption - 2, weight: .semibold))
+                                .font(.system(size: AdaptiveFont.caption1 - 2, weight: .semibold))
                                 .foregroundColor(HealingColors.textTertiary)
                         } else {
                             Image(systemName: "slider.horizontal.3")
-                                .font(.system(size: UnifiedFont.caption))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.forestMist)
                         }
                     }
@@ -387,9 +387,9 @@ struct HealingQuickFilterTagsView: View {
                     }) {
                         HStack(spacing: 4) {
                             Image(systemName: icon)
-                                .font(.system(size: UnifiedFont.caption))
+                                .font(.system(size: UnifiedFont.caption1))
                             Text(text)
-                                .font(.system(size: UnifiedFont.caption, weight: .medium))
+                                .font(.system(size: UnifiedFont.caption1, weight: .medium))
                         }
                         .foregroundColor(isSelected ? .white : color)
                         .padding(.horizontal, layout.cardInnerPadding)
@@ -480,9 +480,9 @@ struct HealingDoctorCardView: View {
                     if doctor.hasRecommendBadge {
                         HStack(spacing: 2) {
                             Image(systemName: "hand.thumbsup.fill")
-                                .font(.system(size: AdaptiveFont.caption - 3))
+                                .font(.system(size: AdaptiveFont.caption1 - 3))
                             Text("力荐")
-                                .font(.system(size: AdaptiveFont.caption - 3, weight: .semibold))
+                                .font(.system(size: AdaptiveFont.caption1 - 3, weight: .semibold))
                         }
                         .foregroundColor(.white)
                         .padding(.horizontal, ScaleFactor.padding(4))
@@ -505,15 +505,15 @@ struct HealingDoctorCardView: View {
                             .foregroundColor(HealingColors.textPrimary)
 
                         Text(doctor.title)
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.textSecondary)
 
                         if doctor.canPrescribe {
                             HStack(spacing: 2) {
                                 Image(systemName: "pills.fill")
-                                    .font(.system(size: AdaptiveFont.caption - 2))
+                                    .font(.system(size: AdaptiveFont.caption1 - 2))
                                 Text("处方")
-                                    .font(.system(size: AdaptiveFont.caption - 2, weight: .medium))
+                                    .font(.system(size: AdaptiveFont.caption1 - 2, weight: .medium))
                             }
                             .foregroundColor(HealingColors.forestMist)
                             .padding(.horizontal, ScaleFactor.padding(5))
@@ -524,7 +524,7 @@ struct HealingDoctorCardView: View {
 
                         if doctor.isTopHospital {
                             Text("三甲")
-                                .font(.system(size: UnifiedFont.caption, weight: .medium))
+                                .font(.system(size: UnifiedFont.caption1, weight: .medium))
                                 .foregroundColor(.white)
                                 .padding(.horizontal, ScaleFactor.padding(5))
                                 .padding(.vertical, ScaleFactor.padding(2))
@@ -538,11 +538,11 @@ struct HealingDoctorCardView: View {
                     // 医院 + 科室
                     HStack(spacing: layout.cardSpacing / 2) {
                         Image(systemName: "building.2.fill")
-                            .font(.system(size: AdaptiveFont.caption - 1))
+                            .font(.system(size: AdaptiveFont.caption1 - 1))
                             .foregroundColor(HealingColors.textTertiary)
 
                         Text(doctor.hospital)
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.textSecondary)
                             .lineLimit(1)
 
@@ -550,18 +550,18 @@ struct HealingDoctorCardView: View {
                             .foregroundColor(HealingColors.textTertiary)
 
                         Text(doctor.department)
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.textSecondary)
                     }
 
                     // 擅长
                     HStack(spacing: 4) {
                         Image(systemName: "star.fill")
-                            .font(.system(size: AdaptiveFont.caption - 2))
+                            .font(.system(size: AdaptiveFont.caption1 - 2))
                             .foregroundColor(HealingColors.warmSand)
 
                         Text("擅长：\(doctor.specialty)")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.textSecondary)
                             .lineLimit(2)
                     }
@@ -580,16 +580,16 @@ struct HealingDoctorCardView: View {
                             .frame(width: layout.iconSmallSize - 4, height: layout.iconSmallSize - 4)
 
                         Image(systemName: "heart.fill")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.terracotta)
                     }
 
                     VStack(alignment: .leading, spacing: 1) {
                         Text("评分")
-                            .font(.system(size: AdaptiveFont.caption - 2))
+                            .font(.system(size: AdaptiveFont.caption1 - 2))
                             .foregroundColor(HealingColors.textTertiary)
                         Text(String(format: "%.1f", doctor.rating))
-                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption1, weight: .semibold))
                             .foregroundColor(HealingColors.terracotta)
                     }
                 }
@@ -602,16 +602,16 @@ struct HealingDoctorCardView: View {
                             .frame(width: layout.iconSmallSize - 4, height: layout.iconSmallSize - 4)
 
                         Image(systemName: "bubble.left.fill")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.forestMist)
                     }
 
                     VStack(alignment: .leading, spacing: 1) {
                         Text("月回答")
-                            .font(.system(size: AdaptiveFont.caption - 2))
+                            .font(.system(size: AdaptiveFont.caption1 - 2))
                             .foregroundColor(HealingColors.textTertiary)
                         Text("\(doctor.monthlyAnswers)")
-                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption1, weight: .semibold))
                             .foregroundColor(HealingColors.forestMist)
                     }
                 }
@@ -624,16 +624,16 @@ struct HealingDoctorCardView: View {
                             .frame(width: layout.iconSmallSize - 4, height: layout.iconSmallSize - 4)
 
                         Image(systemName: "clock.fill")
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption1))
                             .foregroundColor(HealingColors.dustyBlue)
                     }
 
                     VStack(alignment: .leading, spacing: 1) {
                         Text("响应")
-                            .font(.system(size: AdaptiveFont.caption - 2))
+                            .font(.system(size: AdaptiveFont.caption1 - 2))
                             .foregroundColor(HealingColors.textTertiary)
                         Text(doctor.avgResponseTime)
-                            .font(.system(size: UnifiedFont.caption, weight: .semibold))
+                            .font(.system(size: UnifiedFont.caption1, weight: .semibold))
                             .foregroundColor(HealingColors.dustyBlue)
                     }
                 }

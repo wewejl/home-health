@@ -76,7 +76,7 @@ struct SymptomsTagView: View {
             FlowLayoutV2(spacing: 8) {
                 ForEach(symptoms, id: \.self) { symptom in
                     Text(symptom)
-                        .font(.caption)
+                        .font(.caption1)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(Color.blue.opacity(0.1))
@@ -156,7 +156,7 @@ struct ConfidenceBadge: View {
     
     var body: some View {
         Text("\(Int(confidence * 100))%")
-            .font(.caption)
+            .font(.caption1)
             .fontWeight(.medium)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
@@ -175,12 +175,12 @@ struct ConsultationProgressView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(stage.displayName)
-                    .font(.caption)
+                    .font(.caption1)
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
                 Spacer()
                 Text("\(progress)%")
-                    .font(.caption)
+                    .font(.caption1)
                     .foregroundColor(.blue)
             }
             
@@ -231,9 +231,9 @@ struct RiskLevelBadgeV2: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: riskLevel == .emergency ? "exclamationmark.triangle.fill" : "shield.fill")
-                .font(.caption2)
+                .font(.caption12)
             Text(riskLevel.displayName)
-                .font(.caption)
+                .font(.caption1)
                 .fontWeight(.medium)
         }
         .padding(.horizontal, 10)

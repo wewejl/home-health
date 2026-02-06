@@ -73,7 +73,7 @@ struct MedicalFoldersView: View {
 
                 HStack(spacing: layout.cardSpacing / 2) {
                     Image(systemName: "folder.fill")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.forestMist)
                     Text("分类管理，随时查阅")
                         .font(.system(size: UnifiedFont.footnote))
@@ -240,13 +240,13 @@ struct FolderCard: View {
                 }
 
                 Text(folder?.name ?? "全部")
-                    .font(.system(size: UnifiedFont.caption, weight: isSelected ? .semibold : .regular))
+                    .font(.system(size: UnifiedFont.caption1, weight: isSelected ? .semibold : .regular))
                     .foregroundColor(isSelected ? HealingColors.forestMist : HealingColors.textSecondary)
                     .lineLimit(1)
 
                 if recordCount > 0 {
                     Text("\(recordCount)")
-                        .font(.system(size: UnifiedFont.caption2))
+                        .font(.system(size: UnifiedFont.caption12))
                         .foregroundColor(HealingColors.textTertiary)
                 }
             }
@@ -282,7 +282,7 @@ struct RecordCard: View {
                                 .fill(Color(hex: folder.color))
                                 .frame(width: 8, height: 8)
                             Text(folder.name)
-                                .font(.system(size: UnifiedFont.caption))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.textSecondary)
                         }
                     }
@@ -290,7 +290,7 @@ struct RecordCard: View {
                     Spacer()
 
                     Text(record.recordDateShortText)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textTertiary)
                 }
 
@@ -303,7 +303,7 @@ struct RecordCard: View {
                 // 描述
                 if let description = record.description, !description.isEmpty {
                     Text(description)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textSecondary)
                         .lineLimit(2)
                 }
@@ -341,7 +341,7 @@ struct FileThumbnailGrid: View {
 
             if fileCount > 4 {
                 Image(systemName: "ellipsis")
-                    .font(.system(size: UnifiedFont.caption))
+                    .font(.system(size: UnifiedFont.caption1))
                     .foregroundColor(HealingColors.textTertiary)
                     .frame(width: 40, height: 40)
                     .background(HealingColors.textTertiary.opacity(0.1))
@@ -351,7 +351,7 @@ struct FileThumbnailGrid: View {
             Spacer()
 
             Text("\(fileCount) 个文件")
-                .font(.system(size: UnifiedFont.caption2))
+                .font(.system(size: UnifiedFont.caption12))
                 .foregroundColor(HealingColors.textTertiary)
         }
     }

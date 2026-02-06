@@ -185,7 +185,7 @@ struct HealingExportScopeCard: View {
                         .frame(width: layout.iconSmallSize + 2, height: layout.iconSmallSize + 2)
 
                     Image(systemName: "doc.on.doc")
-                        .font(.system(size: AdaptiveFont.caption))
+                        .font(.system(size: AdaptiveFont.caption1))
                         .foregroundColor(HealingColors.forestMist)
                 }
 
@@ -266,7 +266,7 @@ struct HealingExportDateRangeCard: View {
                         .frame(width: layout.iconSmallSize + 2, height: layout.iconSmallSize + 2)
 
                     Image(systemName: "calendar")
-                        .font(.system(size: AdaptiveFont.caption))
+                        .font(.system(size: AdaptiveFont.caption1))
                         .foregroundColor(HealingColors.dustyBlue)
                 }
 
@@ -279,7 +279,7 @@ struct HealingExportDateRangeCard: View {
             HStack(spacing: layout.cardSpacing) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("开始日期")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textSecondary)
 
                     DatePicker("", selection: $config.startDate, displayedComponents: .date)
@@ -294,7 +294,7 @@ struct HealingExportDateRangeCard: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("结束日期")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.textSecondary)
 
                     DatePicker("", selection: $config.endDate, displayedComponents: .date)
@@ -334,7 +334,7 @@ struct HealingExportContentCard: View {
                         .frame(width: layout.iconSmallSize + 2, height: layout.iconSmallSize + 2)
 
                     Image(systemName: "doc.text")
-                        .font(.system(size: AdaptiveFont.caption))
+                        .font(.system(size: AdaptiveFont.caption1))
                         .foregroundColor(HealingColors.mutedCoral)
                 }
 
@@ -419,7 +419,7 @@ struct HealingExportPersonalInfoCard: View {
                         .frame(width: layout.iconSmallSize + 2, height: layout.iconSmallSize + 2)
 
                     Image(systemName: "person.text.rectangle")
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.warmSand)
                 }
 
@@ -491,12 +491,12 @@ struct HealingExportPrivacyNotice: View {
                     .frame(width: layout.iconSmallSize - 2, height: layout.iconSmallSize - 2)
 
                 Image(systemName: "lock.shield.fill")
-                    .font(.system(size: AdaptiveFont.caption - 2))
+                    .font(.system(size: AdaptiveFont.caption1 - 2))
                     .foregroundColor(HealingColors.forestMist)
             }
 
             Text("个人信息仅用于病历导出，不会上传至服务器")
-                .font(.system(size: UnifiedFont.caption))
+                .font(.system(size: UnifiedFont.caption1))
                 .foregroundColor(HealingColors.textSecondary)
         }
         .padding(.horizontal, layout.cardInnerPadding)

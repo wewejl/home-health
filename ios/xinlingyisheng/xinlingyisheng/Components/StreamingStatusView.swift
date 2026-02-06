@@ -28,7 +28,7 @@ struct StreamingStatusView: View {
                         // 工具调用进度
                         if !activeToolCalls.isEmpty {
                             Text(formatToolProgress())
-                                .font(Font.system(size: AdaptiveFont.caption))
+                                .font(Font.system(size: AdaptiveFont.caption1))
                                 .foregroundColor(DXYColors.textSecondary)
                         }
                     }
@@ -51,7 +51,7 @@ struct StreamingStatusView: View {
                                 .foregroundColor(DossierColors.riskLow)
 
                             Text(getToolDisplayName(tool))
-                                .font(Font.system(size: AdaptiveFont.caption))
+                                .font(Font.system(size: AdaptiveFont.caption1))
                                 .foregroundColor(DXYColors.textSecondary)
                         }
                         .padding(.horizontal, ScaleFactor.padding(12))
@@ -128,7 +128,7 @@ struct StreamingStatusIndicator: View {
             if !activeToolCalls.isEmpty {
                 HStack(spacing: ScaleFactor.spacing(4)) {
                     Image(systemName: "gear")
-                        .font(.system(size: AdaptiveFont.caption))
+                        .font(.system(size: AdaptiveFont.caption1))
                         .foregroundColor(DXYColors.primaryPurple)
                         .rotationEffect(.degrees(rotationAngle))
                         .animation(
@@ -138,7 +138,7 @@ struct StreamingStatusIndicator: View {
                         )
 
                     Text(activeToolCalls.first ?? "")
-                        .font(.system(size: AdaptiveFont.caption, weight: .medium))
+                        .font(.system(size: AdaptiveFont.caption1, weight: .medium))
                         .foregroundColor(DXYColors.textSecondary)
                 }
             }
@@ -190,7 +190,7 @@ struct ToolCallStatusCard: View {
                     .foregroundColor(DXYColors.textPrimary)
 
                 Text(statusText)
-                    .font(Font.system(size: AdaptiveFont.caption))
+                    .font(Font.system(size: AdaptiveFont.caption1))
                     .foregroundColor(DXYColors.textSecondary)
             }
 
