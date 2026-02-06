@@ -226,7 +226,7 @@ struct HealingEventAISummaryCard: View {
                     HealingAISummaryContent(summary: summary, layout: layout)
                 } else if let error = viewModel.summaryError {
                     Text(error)
-                        .font(.system(size: UnifiedFont.caption))
+                        .font(.system(size: UnifiedFont.caption1))
                         .foregroundColor(HealingColors.terracotta)
                         .padding(.vertical, layout.cardSpacing)
                 } else {
@@ -296,7 +296,7 @@ struct HealingAISummaryContent: View {
                                 .frame(width: ScaleFactor.size(5), height: ScaleFactor.size(5))
                                 .padding(.top, ScaleFactor.padding(5))
                             Text(point)
-                                .font(.system(size: UnifiedFont.caption))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.textPrimary)
                         }
                     }
@@ -308,7 +308,7 @@ struct HealingAISummaryContent: View {
                 FlowLayout(spacing: 6) {
                     ForEach(symptoms, id: \.self) { symptom in
                         Text(symptom)
-                            .font(.system(size: UnifiedFont.caption))
+                            .font(.system(size: UnifiedFont.caption2))
                             .foregroundColor(HealingColors.dustyBlue)
                             .padding(.horizontal, ScaleFactor.padding(10))
                             .padding(.vertical, ScaleFactor.padding(5))
@@ -347,10 +347,10 @@ struct HealingAISummaryContent: View {
                     ForEach(Array(recommendations.enumerated()), id: \.offset) { index, rec in
                         HStack(alignment: .top, spacing: 6) {
                             Text("\(index + 1).")
-                                .font(.system(size: UnifiedFont.caption))
+                                .font(.system(size: UnifiedFont.caption2))
                                 .foregroundColor(HealingColors.textTertiary)
                             Text(rec)
-                                .font(.system(size: UnifiedFont.caption))
+                                .font(.system(size: UnifiedFont.caption1))
                                 .foregroundColor(HealingColors.textPrimary)
                         }
                     }
