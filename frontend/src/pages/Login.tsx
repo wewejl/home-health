@@ -37,11 +37,16 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       }}
     >
       <Card style={{ width: 400, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <Title level={2} style={{ marginBottom: 8 }}>
-            AI医生管理后台
+            灵犀健康
           </Title>
-          <Typography.Text type="secondary">医生AI分身管理系统</Typography.Text>
+          <Typography.Text type="secondary">智能健康管理平台</Typography.Text>
+        </div>
+        <div style={{ textAlign: 'center', marginBottom: 24, fontSize: 12, color: '#888' }}>
+          <div>岳阳琳烨网络科技有限公司</div>
+          <div style={{ marginTop: 4 }}>邮箱: 1024344053@qq.com | 电话: 18107300167</div>
+          <div style={{ marginTop: 4 }}>湖南省岳阳市岳阳楼区三眼桥街道李家冲社区居民委员大楼605室</div>
         </div>
         <Form
           name="login"

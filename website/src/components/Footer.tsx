@@ -30,6 +30,7 @@ const footerLinks = {
   company: {
     title: '公司',
     links: [
+      { name: '公司介绍', path: '/company' },
       { name: '关于我们', path: '/about' },
       { name: '联系我们', path: '/about#contact' },
       { name: '加入我们', path: '/about#careers' },
@@ -52,9 +53,9 @@ const socialLinks = [
 ];
 
 const contactInfo = [
-  { icon: Mail, value: 'contact@lingxi.health', href: 'mailto:contact@lingxi.health' },
-  { icon: Phone, value: '400-888-8888', href: 'tel:400-888-8888' },
-  { icon: MapPin, value: '北京市海淀区中关村科技园', href: '#' },
+  { icon: Mail, value: '1024344053@qq.com', href: 'mailto:1024344053@qq.com' },
+  { icon: Phone, value: '18107300167', href: 'tel:18107300167' },
+  { icon: MapPin, value: '湖南省岳阳市岳阳楼区三眼桥街道李家冲社区居民委员大楼605室', href: '#' },
 ];
 
 export default function Footer() {
@@ -76,7 +77,7 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-text-muted mb-6 max-w-sm">
-              灵犀健康致力于通过 AI 技术让每个人都能享受到专业、便捷的健康咨询服务。
+              灵犀健康由岳阳琳烨网络科技有限公司运营，致力于通过 AI 技术让每个人都能享受到专业、便捷的健康咨询服务。
             </p>
             {/* 社交链接 */}
             <div className="flex items-center gap-3">
@@ -135,10 +136,10 @@ export default function Footer() {
         <div className="container-custom py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-text-muted">
             <p>
-              © {currentYear} 灵犀健康. 保留所有权利.
+              © {currentYear} 岳阳琳烨网络科技有限公司. 保留所有权利.
             </p>
             <p>
-              京ICP备XXXXXXXX号 | 京公网安备XXXXXXXXXXXXXX号
+              湖南省岳阳市岳阳楼区三眼桥街道李家冲社区居民委员大楼605室
             </p>
           </div>
         </div>

@@ -73,7 +73,7 @@ class ConversationPDFGenerator {
         var yPosition: CGFloat = margin
         
         // 标题
-        let titleText = "心灵医生 - 对话记录"
+        let titleText = "灵犀健康 - 对话记录"
         let titleAttributes: [NSAttributedString.Key: Any] = [
             .font: PDFStyle.titleFont,
             .foregroundColor: PDFStyle.titleColor
@@ -194,7 +194,7 @@ class ConversationPDFGenerator {
         let margin = PDFStyle.margin
         let yPosition = pageSize.height - margin + 10
         
-        let footerText = "第 \(pageNumber) 页 | 导出时间：\(formatDate(Date())) | 本记录由心灵医生 AI 生成"
+        let footerText = "第 \(pageNumber) 页 | 导出时间：\(formatDate(Date())) | 本记录由灵犀健康 AI 生成"
         let footerAttributes: [NSAttributedString.Key: Any] = [
             .font: PDFStyle.footerFont,
             .foregroundColor: PDFStyle.footerColor

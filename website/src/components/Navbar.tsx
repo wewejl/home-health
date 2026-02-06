@@ -6,6 +6,7 @@ const navItems = [
   { name: '首页', path: '/' },
   { name: '产品功能', path: '/features' },
   { name: '使用场景', path: '/scenarios' },
+  { name: '公司介绍', path: '/company' },
   { name: '关于我们', path: '/about' },
   { name: '下载应用', path: '/download' },
 ];

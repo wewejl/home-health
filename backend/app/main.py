@@ -42,7 +42,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="灵犀健康 API",
-    description="AI医生分身系统后端API",
+    description="灵犀健康智能健康管理平台 - 岳阳琳烨网络科技有限公司",
     version="2.0.0"
 )
 

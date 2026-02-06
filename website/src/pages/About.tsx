@@ -200,15 +200,15 @@ export default function About() {
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
                   <a
-                    href="mailto:hr@lingxi.health"
+                    href="mailto:1024344053@qq.com"
                     className="flex items-center gap-3 px-6 py-3 bg-white/10 rounded-xl hover:bg-white/20 transition-all duration-300"
                   >
                     <Mail size={20} />
-                    hr@lingxi.health
+                    1024344053@qq.com
                   </a>
                   <div className="flex items-center gap-3 px-6 py-3 bg-white/10 rounded-xl">
                     <MapPin size={20} />
-                    北京市海淀区中关村科技园
+                    湖南省岳阳市岳阳楼区三眼桥街道李家冲社区居民委员大楼605室
                   </div>
                 </div>
 
@@ -234,14 +234,14 @@ export default function About() {
               </p>
               <div className="inline-flex flex-col sm:flex-row items-center gap-6">
                 <a
-                  href="mailto:business@lingxi.health"
+                  href="mailto:1024344053@qq.com"
                   className="btn btn-primary"
                 >
                   <Mail size={20} />
-                  business@lingxi.health
+                  1024344053@qq.com
                 </a>
-                <a href="tel:400-888-8888" className="flex items-center gap-2 text-text-secondary hover:text-primary-500 transition-colors">
-                  400-888-8888
+                <a href="tel:18107300167" className="flex items-center gap-2 text-text-secondary hover:text-primary-500 transition-colors">
+                  18107300167
                 </a>
               </div>
             </div>

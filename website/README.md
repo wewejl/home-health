@@ -119,6 +119,14 @@ vercel deploy
 netlify deploy --prod
 ```
 
+## 公司信息
+
+**岳阳琳烨网络科技有限公司**
+
+- 邮箱: 1024344053@qq.com
+- 电话: 18107300167
+- 地址: 湖南省岳阳市岳阳楼区三眼桥街道李家冲社区居民委员大楼605室
+
 ## License
 
-© 2026 灵犀健康. All rights reserved.
+© 2026 岳阳琳烨网络科技有限公司. All rights reserved.

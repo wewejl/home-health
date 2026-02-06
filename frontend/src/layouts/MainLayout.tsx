@@ -26,7 +26,7 @@ import {
   VideoCameraOutlined,
 } from '@ant-design/icons';
 
-const { Header, Sider, Content } = Layout;
+const { Header, Sider, Content, Footer } = Layout;
 
 interface MainLayoutProps {
   user: { username: string; role: string } | null;
@@ -140,7 +140,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ user, onLogout }) => {
           }}
         >
           <h2 style={{ color: token.colorPrimary, margin: 0, fontSize: collapsed ? 16 : 18 }}>
-            {collapsed ? 'AI' : 'AI医生管理'}
+            {collapsed ? '灵犀' : '灵犀健康'}
           </h2>
         </div>
         <Menu
@@ -189,6 +189,22 @@ const MainLayout: React.FC<MainLayoutProps> = ({ user, onLogout }) => {
         >
           <Outlet />
         </Content>
+        <Footer
+          style={{
+            textAlign: 'center',
+            background: token.colorBgContainer,
+            borderTop: `1px solid ${token.colorBorderSecondary}`,
+            padding: '16px 24px',
+          }}
+        >
+          <div style={{ fontSize: 12, color: token.colorTextSecondary }}>
+            <div style={{ marginBottom: 4 }}>
+              <strong>灵犀健康</strong> © {new Date().getFullYear()} 岳阳琳烨网络科技有限公司
+            </div>
+            <div>邮箱: 1024344053@qq.com | 电话: 18107300167</div>
+            <div>湖南省岳阳市岳阳楼区三眼桥街道李家冲社区居民委员大楼605室</div>
+          </div>
+        </Footer>
       </Layout>
     </Layout>
   );

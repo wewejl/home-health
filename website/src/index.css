@@ -56,7 +56,20 @@
   }
 
   .text-gradient-teal {
-    @apply bg-clip-text text-transparent from-teal-500 to-primary-500;
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #0d9488 0%, #1890ff 100%);
+  }
+
+  /* 深色渐变文字 - 用于浅色背景，更易阅读 */
+  .text-gradient-deep {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #006d75 0%, #0050b3 100%);
+  }
+
+  /* 品牌渐变文字 - 使用品牌深色 */
+  .text-gradient-brand {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #08979c 0%, #096dd9 100%);
   }
 
   /* 按钮基础样式 */
