@@ -1,5 +1,10 @@
-# 医生工作台实施计划
+# 医生工作台实施计划 v1.0
 
+> **状态**: ❌ **已废弃** - 请参考 v2.0 实施计划
+>
+> **废弃原因**: 概念混淆 - doctors 表是 AI 分身配置，不是真实医生
+> **新方案**: `docs/plans/2026-02-07-doctor-workstation-implementation-v2.md`
+>
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 >
 > **最后更新:** 2026-02-07 - 已基于现有代码审查并修正
