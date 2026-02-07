@@ -57,12 +57,33 @@ class AdminAuthService:
             return None
 
     @staticmethod
-    def create_admin_user(db: Session, username: str, password: str, email: str = None, role: str = "editor") -> AdminUser:
+    def create_admin_user(
+        db: Session,
+        username: str,
+        password: str,
+        email: str = None,
+        role: str = "editor",
+        department_id: int = None,
+        doctor_attributes: dict = None
+    ) -> AdminUser:
+        """创建管理员用户
+
+        Args:
+            db: 数据库会话
+            username: 用户名
+            password: 密码
+            email: 邮箱
+            role: 角色 (admin/doctor/editor/reviewer)
+            department_id: 科室ID（医生角色需要）
+            doctor_attributes: 医生专属属性（role='doctor'时使用）
+        """
         admin = AdminUser(
             username=username,
             password_hash=AdminAuthService.hash_password(password),
             email=email,
-            role=role
+            role=role,
+            department_id=department_id,
+            doctor_attributes=doctor_attributes
         )
         db.add(admin)
         db.commit()

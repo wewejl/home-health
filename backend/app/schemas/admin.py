@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional, Any, Dict
+from typing import Optional, Any, Dict, List
 from datetime import datetime
 
 
@@ -63,6 +63,62 @@ class AdminUserUpdate(BaseModel):
     # ========== Phase 0 新增字段 ==========
     department_id: Optional[int] = None
     doctor_attributes: Optional[Dict[str, Any]] = None
+
+
+# ========== Phase 1: 医生工作台相关 Schemas ==========
+
+class PatientListItem(BaseModel):
+    """患者列表项"""
+    id: int
+    nickname: Optional[str] = None
+    phone: str
+    gender: Optional[str] = None
+    age: Optional[int] = None
+    last_consultation_at: Optional[datetime] = None
+    active_orders_count: int = 0
+    completion_rate: float = 0.0
+
+    class Config:
+        from_attributes = True
+
+
+class PatientDetailResponse(PatientListItem):
+    """患者详情"""
+    avatar_url: Optional[str] = None
+    is_profile_completed: bool = False
+    created_at: Optional[datetime] = None
+
+
+class ConsultationMessage(BaseModel):
+    """对话消息"""
+    id: int
+    sender: str  # "user" or "ai"
+    content: str
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ConsultationSession(BaseModel):
+    """对话会话"""
+    id: str
+    user_id: int
+    doctor_id: Optional[int] = None
+    agent_type: str
+    last_message: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    message_count: int = 0
+
+    class Config:
+        from_attributes = True
+
+
+class ConsultationDetailResponse(BaseModel):
+    """对话详情（含消息列表）"""
+    session: ConsultationSession
+    messages: List[ConsultationMessage]
 
 
 class AuditLogResponse(BaseModel):

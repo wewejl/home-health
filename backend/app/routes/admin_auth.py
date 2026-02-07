@@ -77,6 +77,23 @@ def require_admin_role(admin: AdminUser = Depends(get_current_admin)) -> AdminUs
     return admin
 
 
+def get_current_doctor(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: Session = Depends(get_db)
+) -> AdminUser:
+    """获取当前登录的医生（role 必须为 'doctor'）"""
+    admin = get_current_admin(credentials, db)
+
+    # 验证角色
+    if admin.role != "doctor":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="需要医生权限"
+        )
+
+    return admin
+
+
 @router.post("/login", response_model=AdminLoginResponse)
 def admin_login(request: AdminLoginRequest, db: Session = Depends(get_db)):
     admin = AdminAuthService.authenticate_admin(db, request.username, request.password)
@@ -114,13 +131,20 @@ def create_admin_user(
     existing = db.query(AdminUser).filter(AdminUser.username == request.username).first()
     if existing:
         raise HTTPException(status_code=400, detail="用户名已存在")
-    
+
+    # 处理医生属性（将 Pydantic model 转为 dict）
+    doctor_attrs = None
+    if request.doctor_attributes:
+        doctor_attrs = request.doctor_attributes.model_dump(exclude_none=True)
+
     new_admin = AdminAuthService.create_admin_user(
         db=db,
         username=request.username,
         password=request.password,
         email=request.email,
-        role=request.role
+        role=request.role,
+        department_id=request.department_id,
+        doctor_attributes=doctor_attrs
     )
     return AdminUserResponse.model_validate(new_admin)
 
@@ -144,7 +168,7 @@ def update_admin_user(
     user = db.query(AdminUser).filter(AdminUser.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
-    
+
     if request.email is not None:
         user.email = request.email
     if request.role is not None:
@@ -155,7 +179,12 @@ def update_admin_user(
         user.is_active = request.is_active
     if request.password:
         user.password_hash = AdminAuthService.hash_password(request.password)
-    
+    # Phase 0 新增字段
+    if request.department_id is not None:
+        user.department_id = request.department_id
+    if request.doctor_attributes is not None:
+        user.doctor_attributes = request.doctor_attributes
+
     db.commit()
     db.refresh(user)
     return AdminUserResponse.model_validate(user)
