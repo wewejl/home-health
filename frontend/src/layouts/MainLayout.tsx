@@ -24,6 +24,9 @@ import {
   MonitorOutlined,
   HeartOutlined,
   VideoCameraOutlined,
+  UserSwitchOutlined,
+  ClockCircleOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content, Footer } = Layout;
@@ -39,7 +42,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ user, onLogout }) => {
   const location = useLocation();
   const { token } = theme.useToken();
 
-  const menuItems = [
+  // 医生专用菜单
+  const doctorMenuItems = [
+    {
+      key: '/patients',
+      icon: <UserSwitchOutlined />,
+      label: '我的患者',
+    },
+  ];
+
+  // 管理员菜单（原有菜单）
+  const adminMenuItems = [
     {
       key: '/',
       icon: <DashboardOutlined />,
@@ -101,6 +114,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ user, onLogout }) => {
       label: '远程查房',
     },
   ];
+
+  // 根据角色选择菜单
+  const menuItems = user?.role === 'doctor' ? doctorMenuItems : adminMenuItems;
 
   const userMenuItems = [
     {
@@ -173,7 +189,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ user, onLogout }) => {
           >
             <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
               <Avatar icon={<UserOutlined />} />
-              <span>{user?.username}</span>
+              <span>
+                {user?.username} ({user?.role === 'doctor' ? '医生' : '管理员'})
+              </span>
             </div>
           </Dropdown>
         </Header>

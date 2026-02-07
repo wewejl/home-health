@@ -19,6 +19,9 @@ import Rounding from './pages/Rounding';
 import RoundingDetail from './pages/RoundingDetail';
 import DoctorPersonaChat from './pages/admin/DoctorPersonaChat';
 import DoctorRecordAnalysis from './pages/admin/DoctorRecordAnalysis';
+// 医生工作台页面
+import PatientList from './pages/doctor/PatientList';
+import PatientDetail from './pages/doctor/PatientDetail';
 
 interface AdminUser {
   id: number;
@@ -91,21 +94,34 @@ function App() {
                 )
               }
             >
-              <Route index element={<Dashboard />} />
-              <Route path="departments" element={<Departments />} />
-              <Route path="doctors" element={<Doctors />} />
-              <Route path="doctors/:id/persona" element={<DoctorPersonaChat />} />
-              <Route path="doctors/:id/analyze" element={<DoctorRecordAnalysis />} />
-              <Route path="diseases" element={<Diseases />} />
-              <Route path="drugs" element={<Drugs />} />
-              <Route path="knowledge" element={<Knowledge />} />
-              <Route path="feedbacks" element={<Feedbacks />} />
-              <Route path="stats" element={<Stats />} />
-              <Route path="derma-chat" element={<DermaChat />} />
-              <Route path="medical-orders" element={<MedicalOrders />} />
-              <Route path="patient-compliance" element={<PatientCompliance />} />
-              <Route path="rounding" element={<Rounding />} />
-              <Route path="rounding/:patientId" element={<RoundingDetail />} />
+              {/* 医生路由 */}
+              {user?.role === 'doctor' && (
+                <>
+                  <Route path="patients" element={<PatientList />} />
+                  <Route path="patients/:patientId" element={<PatientDetail />} />
+                </>
+              )}
+
+              {/* 管理员路由（保持不变） */}
+              {user?.role !== 'doctor' && (
+                <>
+                  <Route index element={<Dashboard />} />
+                  <Route path="departments" element={<Departments />} />
+                  <Route path="doctors" element={<Doctors />} />
+                  <Route path="doctors/:id/persona" element={<DoctorPersonaChat />} />
+                  <Route path="doctors/:id/analyze" element={<DoctorRecordAnalysis />} />
+                  <Route path="diseases" element={<Diseases />} />
+                  <Route path="drugs" element={<Drugs />} />
+                  <Route path="knowledge" element={<Knowledge />} />
+                  <Route path="feedbacks" element={<Feedbacks />} />
+                  <Route path="stats" element={<Stats />} />
+                  <Route path="derma-chat" element={<DermaChat />} />
+                  <Route path="medical-orders" element={<MedicalOrders />} />
+                  <Route path="patient-compliance" element={<PatientCompliance />} />
+                  <Route path="rounding" element={<Rounding />} />
+                  <Route path="rounding/:patientId" element={<RoundingDetail />} />
+                </>
+              )}
             </Route>
           </Routes>
         </BrowserRouter>
