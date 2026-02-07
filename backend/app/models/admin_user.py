@@ -23,10 +23,8 @@ class AdminRole:
             # 处理医生角色逻辑
             pass
     """
-    ADMIN = "admin"          # 系统管理员
-    DOCTOR = "doctor"        # 医生
-    EDITOR = "editor"        # 内容编辑
-    REVIEWER = "reviewer"    # 审核员
+    ADMIN = "admin"    # 系统管理员
+    DOCTOR = "doctor"  # 医生
 
 
 class AdminUser(Base):
@@ -36,7 +34,7 @@ class AdminUser(Base):
     username = Column(String(50), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     email = Column(String(100), nullable=True)
-    role = Column(String(20), default="editor")  # admin/editor/reviewer/doctor
+    role = Column(String(20), default="admin")  # admin/doctor
     permissions = Column(JSON, nullable=True)
     is_active = Column(Boolean, default=True)
     last_login_at = Column(DateTime(timezone=True), nullable=True)

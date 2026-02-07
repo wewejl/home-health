@@ -30,7 +30,7 @@ class AdminUserResponse(BaseModel):
     id: int
     username: str
     email: Optional[str] = None
-    role: str = "editor"
+    role: str = "admin"
     permissions: Optional[Any] = None
     is_active: bool = True
     last_login_at: Optional[datetime] = None
@@ -47,7 +47,7 @@ class AdminUserCreate(BaseModel):
     username: str
     password: str
     email: Optional[str] = None
-    role: str = "editor"
+    role: str = "admin"
     permissions: Optional[dict] = None
     # ========== Phase 0 新增字段 ==========
     department_id: Optional[int] = None

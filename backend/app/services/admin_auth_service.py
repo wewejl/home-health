@@ -62,7 +62,7 @@ class AdminAuthService:
         username: str,
         password: str,
         email: str = None,
-        role: str = "editor",
+        role: str = "admin",
         department_id: int = None,
         doctor_attributes: dict = None
     ) -> AdminUser:
@@ -73,7 +73,7 @@ class AdminAuthService:
             username: 用户名
             password: 密码
             email: 邮箱
-            role: 角色 (admin/doctor/editor/reviewer)
+            role: 角色 (admin/doctor)
             department_id: 科室ID（医生角色需要）
             doctor_attributes: 医生专属属性（role='doctor'时使用）
         """
