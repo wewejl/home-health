@@ -13,5 +13,9 @@ class Department(Base):
     sort_order = Column(Integer, default=0)
     is_primary = Column(Boolean, default=False, nullable=False)
 
+    # 现有关系
     doctors = relationship("Doctor", back_populates="department")
     diseases = relationship("Disease", back_populates="department")
+
+    # ========== Phase 0 新增反向关系 ==========
+    admin_users = relationship("AdminUser", back_populates="department")
