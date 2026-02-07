@@ -24,8 +24,8 @@ struct MedicalOrderListView: View {
                         // 顶部统计卡片
                         complianceHeader(layout: layout)
 
-                        // 日期选择器
-                        datePickerSection(layout: layout)
+                        // 横向日期选择器
+                        horizontalDatePickerSection(layout: layout)
 
                         // 任务列表
                         tasksSection(layout: layout)
@@ -57,7 +57,7 @@ struct MedicalOrderListView: View {
         }
         .sheet(isPresented: $showTaskDetail) {
             if let task = selectedTask {
-                TaskCheckInView(task: task, viewModel: viewModel)
+                SimplifiedTaskCompletionView(task: task, viewModel: viewModel)
             }
         }
         .sheet(isPresented: $showAlerts) {
@@ -139,17 +139,16 @@ struct MedicalOrderListView: View {
         .padding(.top, layout.cardSpacing)
     }
 
-    // MARK: - 日期选择器（响应式）
+    // MARK: - 横向日期选择器（响应式）
 
-    private func datePickerSection(layout: AdaptiveLayout) -> some View {
-        DatePicker("", selection: $viewModel.selectedDate, displayedComponents: .date)
-            .datePickerStyle(.graphical)
-            .frame(height: layout.isCompact ? 300 : 350)
-            .onChange(of: viewModel.selectedDate) { _, newValue in
-                viewModel.changeDate(to: newValue)
+    private func horizontalDatePickerSection(layout: AdaptiveLayout) -> some View {
+        HorizontalDatePicker(
+            selectedDate: $viewModel.selectedDate,
+            onDateChanged: { newDate in
+                viewModel.changeDate(to: newDate)
             }
-            .padding(.horizontal, layout.horizontalPadding)
-            .padding(.top, layout.cardSpacing)
+        )
+        .padding(.top, layout.cardSpacing)
     }
 
     // MARK: - 任务列表区域（响应式）

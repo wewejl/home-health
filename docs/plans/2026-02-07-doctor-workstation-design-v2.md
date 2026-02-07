@@ -1,8 +1,23 @@
-# 医生工作台设计方案 v2.0
+# 医生工作台设计方案 v2.2
 
 > 创建日期：2026-02-07
-> 状态：🔄 重新设计中
-> 版本：v2.0 - 基于代码评估后的修正方案
+> 状态：✅ 已评估并修正，可以实施
+> 版本：v2.2 - 修正代码示例和边界情况处理
+
+---
+
+## 📋 代码验证结论
+
+| 验证项 | 状态 | 说明 |
+|--------|------|------|
+| 概念设计 | ✅ 正确 | AI分身 vs 真实医生区分正确 |
+| 架构设计 | ✅ 正确 | 复用现有系统，整体合理 |
+| AdminUser 模型 | ⚠️ 需扩展 | 缺少 `department_id` 字段 |
+| 认证系统 | ✅ 可用 | admin_auth.py 可直接复用 |
+| 前端架构 | ✅ 正确 | MainLayout 和 App.tsx 需小幅修改 |
+| 医嘱 API | ⚠️ 需扩展 | 需新增医生专用端点 |
+
+**总体评分：8.0/10** - 方案基本正确，需先完成 Phase 0 数据模型准备。
 
 ---
 
@@ -85,43 +100,90 @@ admin_users (id = 1, role = 'doctor', ...)
 ```python
 # backend/app/models/admin_user.py
 
-class AdminRole(str, enum.Enum):
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, JSON, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+from app.database import Base  # 注意：根据实际导入路径调整
+
+# 角色常量（用于代码提示和验证）
+class AdminRole:
     ADMIN = "admin"          # 系统管理员
     DOCTOR = "doctor"        # 医生（新增）
     EDITOR = "editor"        # 内容编辑
     REVIEWER = "reviewer"    # 审核员
 
+
 class AdminUser(Base):
     __tablename__ = "admin_users"
 
+    # ========== 现有字段保持不变 ==========
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     email = Column(String(100), nullable=True)
 
     # 角色字段（已存在，扩展枚举值）
+    # 可选值: admin, doctor, editor, reviewer
     role = Column(String(20), default="editor")
 
-    # 新增：医生专属属性
-    doctor_attributes = Column(JSON, nullable=True)  # 医生信息
+    permissions = Column(JSON, nullable=True)
+    is_active = Column(Boolean, default=True)
+    last_login_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # ========== 新增字段（Phase 0 实施） ==========
+
+    # 科室关联（医生角色用于关联 AI 分身）
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+    department = relationship("Department", back_populates="admin_users")
+
+    # 医生专属属性
+    doctor_attributes = Column(JSON, nullable=True)
     # {
     #   "title": "主治医师",
     #   "specialty": "皮肤科",
     #   "license_no": "执业医师证号",
     #   "hospital": "医院名称"
     # }
-
-    permissions = Column(JSON, nullable=True)
-    is_active = Column(Boolean, default=True)
-    last_login_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
 ```
 
-#### 数据库迁移
+#### 同步修改 Department 模型
+
+```python
+# backend/app/models/department.py
+
+class Department(Base):
+    __tablename__ = "departments"
+
+    # ... 现有字段 ...
+
+    # 现有关系
+    doctors = relationship("Doctor", back_populates="department")
+    diseases = relationship("Disease", back_populates="department")
+
+    # ========== 新增反向关系 ==========
+    admin_users = relationship("AdminUser", back_populates="department")
+```
+
+#### 数据库迁移脚本
 
 ```sql
--- 添加医生属性字段
+-- ========== Phase 0: AdminUser 模型扩展 ==========
+
+-- 1. 添加 doctor_attributes 字段
 ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS doctor_attributes JSONB;
+
+-- 2. 添加 department_id 字段
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS department_id INTEGER;
+
+-- 3. 添加外键约束
+ALTER TABLE admin_users ADD CONSTRAINT fk_admin_users_department
+    FOREIGN KEY (department_id) REFERENCES departments(id)
+    ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- 4. 创建索引（提升查询性能）
+CREATE INDEX idx_admin_users_department_id ON admin_users(department_id);
+CREATE INDEX idx_admin_users_role ON admin_users(role);
 ```
 
 ### 3.2 Schemas 扩展
@@ -225,14 +287,17 @@ class ConsultationDetailResponse(BaseModel):
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from ..database import get_db
-from ..models.admin_user import AdminUser
-from ..models.user import User
-from ..models.session import Session as ConsultationSession
-from ..models.message import Message
-from ..models.medical_order import MedicalOrder
-from ..routes.admin_auth import get_current_admin
-from ..schemas.admin import PatientListItem, ConsultationSession, ConsultationDetailResponse
+from typing import Optional
+
+from app.database import get_db
+from app.models.admin_user import AdminUser
+from app.models.user import User
+from app.models.doctor import Doctor  # 新增：AI 分身模型
+from app.models.session import Session as ConsultationSession
+from app.models.message import Message
+from app.models.medical_order import MedicalOrder
+from app.routes.admin_auth import get_current_admin
+from app.schemas.admin import PatientListItem, ConsultationSession, ConsultationDetailResponse
 
 router = APIRouter(prefix="/api/doctor", tags=["doctor-workstation"])
 
@@ -253,15 +318,30 @@ def get_patients(
     doctor: AdminUser = Depends(get_current_doctor),
     db: Session = Depends(get_db)
 ):
-    """获取医生的患者列表（有咨询记录的患者）"""
-    # 获取与该医生关联的 AI 分身咨询过的患者
+    """
+    获取医生的患者列表（本科室 AI 分身咨询过的患者）
+    """
+    # 边界情况处理：医生未分配科室
+    if not doctor.department_id:
+        return []
+
+    # 获取医生所在科室的 AI 分身列表
+    ai_doctors = db.query(Doctor).filter(
+        Doctor.department_id == doctor.department_id
+    ).all()
+
+    # 边界情况处理：科室无 AI 分身
+    if not ai_doctors:
+        return []
+
+    ai_doctor_ids = [d.id for d in ai_doctors]
+
+    # 获取与这些 AI 分身咨询过的患者
     patient_ids = db.query(ConsultationSession.user_id).filter(
-        ConsultationSession.doctor_id.in_(
-            db.query(Doctor.id)  # 获取该医生管理的所有 AI 分身
-        )
+        ConsultationSession.doctor_id.in_(ai_doctor_ids)
     ).distinct().all()
 
-    # ... 查询逻辑
+    # ... 后续查询逻辑
     pass
 
 
@@ -325,53 +405,62 @@ def get_patient_tasks(
 
 ### 3.4 医生与 AI 分身的关联
 
-#### ⚠️ 重要问题：医生如何关联到患者的对话记录？
+#### 关联逻辑
 
-当前系统设计问题：
-- `Session.doctor_id` → `doctors.id`（AI 分身）
-- 医生（`admin_users.role='doctor'`）与 AI 分身没有关联关系
+医生（`admin_users.role='doctor'`）通过 **科室** 关联 AI 分身（`doctors` 表）：
 
-#### 解决方案选择
-
-| 方案 | 描述 | 优势 | 劣势 |
-|------|------|------|------|
-| **A: 无关联** | 医生可以查看所有患者的对话 | 简单 | 无权限隔离 |
-| **B: 科室关联** | 医生通过 `department_id` 关联 AI 分身 | 符合实际 | 需要新建字段 |
-| **C: 直接管理** | 医生直接管理某些 AI 分身 | 灵活 | 需要关联表 |
-
-#### 推荐：方案 B - 科室关联
-
-```python
-# backend/app/models/admin_user.py
-
-class AdminUser(Base):
-    # ... 现有字段
-
-    # 新增：医生所属科室（用于关联 AI 分身）
-    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
-
-    # 医生专属属性
-    doctor_attributes = Column(JSON, nullable=True)
+```
+admin_users (真实医生)
+    ↓ department_id
+departments.id
+    ↑ department_id
+doctors (AI 分身)
 ```
 
+#### 查询逻辑实现
+
 ```python
-# 查询逻辑：医生可以看到本科室 AI 分身的咨询记录
+# backend/app/routes/doctor_workstation.py
 
-# 获取医生管理的科室下的 AI 分身
-department_doctor_ids = db.query(Doctor.id).filter(
-    Doctor.department_id == current_doctor.department_id
-).all()
+from ..models.doctor import Doctor
+from ..models.session import Session as ConsultationSession
 
-# 获取这些 AI 分身的咨询记录
-patient_sessions = db.query(ConsultationSession).filter(
-    ConsultationSession.doctor_id.in_([d.id for d in department_doctor_ids])
-).all()
+@router.get("/patients", response_model=list[PatientListItem])
+def get_patients(
+    doctor: AdminUser = Depends(get_current_doctor),
+    db: Session = Depends(get_db)
+):
+    """获取医生的患者列表（本科室 AI 分身咨询过的患者）"""
+
+    # 1. 获取医生所在科室的 AI 分身列表
+    ai_doctors = db.query(Doctor).filter(
+        Doctor.department_id == doctor.department_id  # ← Phase 0 添加的字段
+    ).all()
+    ai_doctor_ids = [d.id for d in ai_doctors]
+
+    # 2. 获取这些 AI 分身接待过的患者
+    patient_ids = db.query(ConsultationSession.user_id).filter(
+        ConsultationSession.doctor_id.in_(ai_doctor_ids)
+    ).distinct().all()
+
+    # 3. 查询患者详细信息
+    patients = db.query(User).filter(
+        User.id.in_([p[0] for p in patient_ids])
+    ).all()
+
+    # 4. 组装返回数据
+    return [format_patient_info(p) for p in patients]
 ```
 
-**注意**：
-- `AdminUser` 已有 `department_id` 字段的 schema 支持（但模型可能需要添加）
-- `Doctor` 模型已有 `department_id` 字段 ✓
-- 这样医生可以查看本科室 AI 分身接待的患者对话
+#### 为什么选择科室关联？
+
+| 方案 | 优势 | 劣势 |
+|------|------|------|
+| **科室关联** ✅ | 符合实际业务逻辑；利用现有字段 | 医生只能看本科室 |
+| 无关联 | 简单 | 无权限隔离 |
+| 直接管理表 | 灵活 | 需要新建关联表 |
+
+**实际业务场景**：皮肤科医生查看皮肤科 AI 分身接待的患者，符合医院科室分工模式。
 
 ---
 
@@ -489,28 +578,73 @@ const menuItems = user?.role === 'doctor' ? [
 
 ## 六、实施步骤
 
+### Phase 0: 数据模型准备（🔴 必须首先完成）
+
+**此阶段是代码验证后发现必须先执行的步骤。**
+
+1. **扩展 AdminUser 模型** - `backend/app/models/admin_user.py`
+   - 添加 `department_id` 字段（外键 → departments.id）
+   - 添加 `department` 关系
+   - 添加 `doctor_attributes` JSON 字段
+
+2. **扩展 Department 模型** - `backend/app/models/department.py`
+   - 添加 `admin_users` 反向关系
+
+3. **执行数据库迁移**
+   ```bash
+   # 连接数据库
+   psql -h localhost -U xinlingyisheng -d xinlingyisheng
+
+   # 执行迁移脚本（见上方 SQL）
+   \i migrations/phase_0_admin_user_extension.sql
+   ```
+
+4. **验证迁移**
+   ```sql
+   -- 验证字段已添加
+   \d admin_users
+
+   -- 验证索引已创建
+   \d admin_users_department_id_idx
+
+   -- 验证外键约束
+   SELECT
+       constraint_name,
+       constraint_type
+   FROM information_schema.table_constraints
+   WHERE table_name = 'admin_users';
+   ```
+
 ### Phase 1: 后端基础（1-2天）
 
-1. 扩展 `AdminUser` 模型，添加 `doctor_attributes` 字段
-2. 扩展 `schemas/admin.py`，添加医生相关 schemas
-3. 更新 `admin_auth.py`，支持 `doctor` 角色登录
+**依赖**: Phase 0 完成
+
+1. 扩展 `schemas/admin.py`，添加医生相关 schemas
+2. 更新 `admin_auth.py`，支持 `doctor` 角色登录
+3. 添加 `get_current_doctor` 依赖函数
 4. 创建 `routes/doctor_workstation.py`
 5. 在 `main.py` 中注册新路由
 
 ### Phase 2: 后端 API（2-3天）
 
-6. 实现患者列表 API
+**依赖**: Phase 1 完成
+
+6. 实现患者列表 API（含科室关联逻辑）
 7. 实现对话记录 API
 8. 实现医嘱管理 API（复用现有医嘱逻辑）
 9. 实现任务执行情况 API
 
 ### Phase 3: 前端基础（1天）
 
+**依赖**: Phase 1 完成
+
 10. 修改 `MainLayout.tsx`，根据角色显示不同菜单
 11. 修改 `App.tsx`，添加医生路由
 12. 创建 `pages/doctor/` 目录和基础组件
 
 ### Phase 4: 前端页面（2-3天）
+
+**依赖**: Phase 2-3 完成
 
 13. 实现患者列表页
 14. 实现患者详情页框架
@@ -519,6 +653,8 @@ const menuItems = user?.role === 'doctor' ? [
 17. 实现任务执行情况 Tab
 
 ### Phase 5: 测试（1天）
+
+**依赖**: Phase 1-4 完成
 
 18. 端到端测试
 19. 修复 bug

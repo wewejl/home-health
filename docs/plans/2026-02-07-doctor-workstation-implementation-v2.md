@@ -1,37 +1,169 @@
-# 医生工作台实施计划 v2.0
+# 医生工作台实施计划 v2.2
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 >
-> **最后更新:** 2026-02-07 - v2.0 基于代码评估重新设计
+> **最后更新:** 2026-02-07 - v2.2 修正代码示例和边界情况处理
 
 **核心变更:**
 - 复用 `admin_users` 表，新增 `doctor` 角色
 - 前端在 `frontend/src/pages/doctor/` 子目录
 - 复用现有 admin 认证系统
 - 保持 `MedicalOrder.doctor_id` → `admin_users.id` 不变
+- **🔴 重要：Phase 0 是代码验证后发现必须首先执行的数据模型准备步骤**
+
+---
+
+## 代码验证结论
+
+| 验证项 | 状态 | 说明 |
+|--------|------|------|
+| 概念设计 | ✅ 正确 | AI分身 vs 真实医生区分正确 |
+| AdminUser 模型 | ⚠️ 需扩展 | 缺少 `department_id` 字段 |
+| 认证系统 | ✅ 可用 | admin_auth.py 可直接复用 |
+| 前端架构 | ✅ 正确 | MainLayout 和 App.tsx 需小幅修改 |
+| 医嘱 API | ⚠️ 需扩展 | 需新增医生专用端点 |
+
+**总体评分：8.0/10** - 方案基本正确，需先完成 Phase 0 数据模型准备。
 
 ---
 
 ## 实施步骤总览
 
-| Phase | 任务 | 预计时间 |
-|-------|------|----------|
-| Phase 1 | 后端基础扩展 | 1-2天 |
-| Phase 2 | 后端 API 开发 | 2-3天 |
-| Phase 3 | 前端基础 | 1天 |
-| Phase 4 | 前端页面开发 | 2-3天 |
-| Phase 5 | 测试验证 | 1天 |
+| Phase | 任务 | 预计时间 | 依赖 |
+|-------|------|----------|------|
+| **Phase 0** | **数据模型准备（🔴 必须首先完成）** | **0.5天** | **无** |
+| Phase 1 | 后端基础扩展 | 1-2天 | Phase 0 |
+| Phase 2 | 后端 API 开发 | 2-3天 | Phase 1 |
+| Phase 3 | 前端基础 | 1天 | Phase 1 |
+| Phase 4 | 前端页面开发 | 2-3天 | Phase 2-3 |
+| Phase 5 | 测试验证 | 1天 | Phase 1-4 |
 
 ---
 
-## Phase 1: 后端基础扩展
+## Phase 0: 数据模型准备（🔴 必须首先完成）
 
-### Task 1: 扩展 AdminUser 模型
+**⚠️ 重要提示：代码验证发现 `AdminUser` 模型当前缺少 `department_id` 字段。此阶段必须最先完成。**
+
+### Task 0.1: 创建数据库迁移脚本
+
+**Files:**
+- Create: `backend/migrations/phase_0_admin_user_extension.sql`
+
+**Step 1: 创建迁移文件**
+
+```bash
+mkdir -p backend/migrations
+nano backend/migrations/phase_0_admin_user_extension.sql
+```
+
+**Step 2: 编写迁移 SQL**
+
+```sql
+-- ========== Phase 0: AdminUser 模型扩展 ==========
+-- 创建日期: 2026-02-07
+-- 说明: 为医生工作台功能添加必要的字段
+
+-- 1. 添加 doctor_attributes 字段（医生专属信息）
+ALTER TABLE admin_users
+ADD COLUMN IF NOT EXISTS doctor_attributes JSONB;
+
+-- 2. 添加 department_id 字段（科室关联）
+ALTER TABLE admin_users
+ADD COLUMN IF NOT EXISTS department_id INTEGER;
+
+-- 3. 添加外键约束
+ALTER TABLE admin_users
+ADD CONSTRAINT fk_admin_users_department
+FOREIGN KEY (department_id)
+REFERENCES departments(id)
+ON DELETE SET NULL
+ON UPDATE CASCADE;
+
+-- 4. 创建索引（提升查询性能）
+CREATE INDEX IF NOT EXISTS idx_admin_users_department_id
+ON admin_users(department_id);
+
+CREATE INDEX IF NOT EXISTS idx_admin_users_role
+ON admin_users(role);
+
+-- 5. 添加注释
+COMMENT ON COLUMN admin_users.doctor_attributes IS '医生专属属性（JSON）：职称、专科、执业证号、医院等';
+COMMENT ON COLUMN admin_users.department_id IS '科室ID，医生角色用于关联本科室的AI分身';
+```
+
+**Step 3: Commit**
+
+```bash
+git add backend/migrations/phase_0_admin_user_extension.sql
+git commit -m "feat(migration): add phase 0 migration for admin_user extension"
+```
+
+---
+
+### Task 0.2: 执行数据库迁移
+
+**Step 1: 连接数据库**
+
+```bash
+# 查看 docs/启动指南.md 确认连接信息
+psql -h localhost -U xinlingyisheng -d xinlingyisheng
+```
+
+**Step 2: 执行迁移**
+
+```sql
+-- 在 psql 中执行
+\i backend/migrations/phase_0_admin_user_extension.sql
+```
+
+**或者使用命令行：**
+
+```bash
+psql -h localhost -U xinlingyisheng -d xinlingyisheng \
+  -f backend/migrations/phase_0_admin_user_extension.sql
+```
+
+**Step 3: 验证迁移**
+
+```sql
+-- 验证字段已添加
+\d admin_users
+
+-- 应该看到：
+-- Column          | Type                      |
+-- --------------- | ------------------------- |
+-- ...
+-- doctor_attributes| jsonb                     |
+-- department_id   | integer                   |
+
+-- 验证索引已创建
+\di idx_admin_users_*
+
+-- 验证外键约束
+SELECT
+    conname AS constraint_name,
+    contype AS constraint_type
+FROM pg_constraint
+WHERE conrelid = 'admin_users'::regclass;
+
+-- 应该看到 fk_admin_users_department
+```
+
+**Step 4: 记录验证结果**
+
+```bash
+# 记录到任务文档
+echo "✅ Phase 0 数据库迁移完成 - $(date)" >> migration_log.txt
+```
+
+---
+
+### Task 0.3: 扩展 AdminUser 模型
 
 **Files:**
 - Modify: `backend/app/models/admin_user.py`
 
-**Step 1: 添加医生属性字段**
+**Step 1: 添加导入**
 
 ```python
 # backend/app/models/admin_user.py
@@ -39,68 +171,111 @@
 # 需要添加的导入
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
-
-# 在 AdminUser 类中添加（last_login_at 字段之后）：
-
-# 医生专属属性（当 role='doctor' 时使用）
-doctor_attributes = Column(JSON, nullable=True)
-# 示例数据：
-# {
-#   "title": "主治医师",
-#   "specialty": "皮肤科",
-#   "license_no": "执业医师证号",
-#   "hospital": "医院名称"
-# }
-
-# 科室关联（用于关联 AI 分身）
-department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
-department = relationship("Department", back_populates="admin_users")
 ```
 
-**注意**：同时需要在 `Department` 模型中添加反向关系：
+**Step 2: 在 AdminUser 类中添加新字段**
+
+在现有字段之后（`created_at` 之后）添加：
 
 ```python
-# backend/app/models/department.py
+class AdminUser(Base):
+    __tablename__ = "admin_users"
 
-class Department(Base):
-    # ... 现有字段
+    # ========== 现有字段保持不变 ==========
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    email = Column(String(100), nullable=True)
+    role = Column(String(20), default="editor")
+    permissions = Column(JSON, nullable=True)
+    is_active = Column(Boolean, default=True)
+    last_login_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # 新增：反向关系
-    admin_users = relationship("AdminUser", back_populates="department")
+    # ========== 新增字段（Phase 0） ==========
+
+    # 科室关联（医生角色用于关联 AI 分身）
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+    department = relationship("Department", back_populates="admin_users")
+
+    # 医生专属属性
+    doctor_attributes = Column(JSON, nullable=True)
 ```
 
-**Step 2: 数据库迁移**
-
-```bash
-# 连接到数据库
-psql -h localhost -U your_user -d xinlin
-
-# 执行迁移
-ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS doctor_attributes JSONB;
-ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS department_id INTEGER;
-
-# 添加外键约束（可选）
-ALTER TABLE admin_users ADD CONSTRAINT fk_admin_users_department
-  FOREIGN KEY (department_id) REFERENCES departments(id);
-```
-
-**Step 3: 验证**
+**Step 3: 验证模型**
 
 ```bash
 cd backend
-python -c "from app.models.admin_user import AdminUser; print('AdminUser model OK')"
+python -c "from app.models.admin_user import AdminUser; print('✅ AdminUser model OK')"
 ```
 
 **Step 4: Commit**
 
 ```bash
 git add backend/app/models/admin_user.py
-git commit -m "feat(model): add doctor_attributes to AdminUser for doctor role"
+git commit -m "feat(model): add department_id and doctor_attributes to AdminUser"
 ```
 
 ---
 
-### Task 2: 扩展 Admin Schemas
+### Task 0.4: 扩展 Department 模型
+
+**Files:**
+- Modify: `backend/app/models/department.py`
+
+**Step 1: 添加反向关系**
+
+```python
+# backend/app/models/department.py
+
+from sqlalchemy.orm import relationship
+
+class Department(Base):
+    __tablename__ = "departments"
+
+    # ... 现有字段 ...
+
+    # 现有关系（保持不变）
+    doctors = relationship("Doctor", back_populates="department")
+    diseases = relationship("Disease", back_populates="department")
+
+    # ========== 新增反向关系 ==========
+    admin_users = relationship("AdminUser", back_populates="department")
+```
+
+**Step 2: 验证模型**
+
+```bash
+cd backend
+python -c "from app.models.department import Department; print('✅ Department model OK')"
+```
+
+**Step 3: Commit**
+
+```bash
+git add backend/app/models/department.py
+git commit -m "feat(model): add admin_users relationship to Department"
+```
+
+---
+
+### Phase 0 完成检查清单
+
+- [ ] Task 0.1: 迁移脚本创建完成
+- [ ] Task 0.2: 数据库迁移执行成功
+- [ ] Task 0.3: AdminUser 模型更新完成
+- [ ] Task 0.4: Department 模型更新完成
+- [ ] 验证：字段、索引、外键约束全部存在
+
+---
+
+## Phase 1: 后端基础扩展
+
+**依赖**: Phase 0 完成
+
+**注意**: AdminUser 和 Department 模型扩展已在 Phase 0 完成，本阶段专注于 schemas、认证服务和路由。
+
+### Task 1.1: 扩展 Admin Schemas
 
 **Files:**
 - Modify: `backend/app/schemas/admin.py`
@@ -213,18 +388,28 @@ git commit -m "feat(schemas): add doctor-related schemas for doctor workstation"
 
 ---
 
-### Task 3: 更新认证服务支持医生角色
+### Task 1.2: 更新认证服务支持医生角色
 
 **Files:**
 - Modify: `backend/app/routes/admin_auth.py`
 
-**Step 1: 添加医生角色验证函数**
+**Step 1: 添加必要的导入**
+
+确保文件顶部有以下导入：
+
+```python
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
+```
+
+**Step 2: 添加医生角色验证函数**
 
 在 `get_current_admin` 函数后添加：
 
 ```python
 def get_current_doctor(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ) -> AdminUser:
     """获取当前登录的医生（role 必须为 'doctor'）"""
@@ -233,14 +418,14 @@ def get_current_doctor(
     # 验证角色
     if admin.role != "doctor":
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=403,
             detail="需要医生权限"
         )
 
     return admin
 ```
 
-**Step 2: 导出新函数**
+**Step 3: 导出新函数**
 
 确保导出：
 
@@ -248,7 +433,7 @@ def get_current_doctor(
 from .admin_auth import get_current_admin, get_current_doctor
 ```
 
-**Step 3: Commit**
+**Step 4: Commit**
 
 ```bash
 git add backend/app/routes/admin_auth.py
@@ -257,12 +442,18 @@ git commit -m "feat(auth): add get_current_doctor dependency for doctor role"
 
 ---
 
-### Task 4: 更新 AdminUserService 支持创建医生
+### Task 1.3: 更新 AdminUserService 支持创建医生
 
 **Files:**
 - Modify: `backend/app/services/admin_auth_service.py`
 
-**Step 1: 扩展创建方法**
+**Step 1: 添加必要的导入**
+
+```python
+from typing import Optional
+```
+
+**Step 2: 扩展创建方法**
 
 ```python
 @staticmethod
@@ -270,9 +461,9 @@ def create_admin_user(
     db: Session,
     username: str,
     password: str,
-    email: str = None,
+    email: Optional[str] = None,
     role: str = "editor",
-    doctor_attributes: dict = None  # 新增参数
+    doctor_attributes: Optional[dict] = None  # 新增参数
 ) -> AdminUser:
     admin = AdminUser(
         username=username,
@@ -287,7 +478,7 @@ def create_admin_user(
     return admin
 ```
 
-**Step 5: Commit**
+**Step 3: Commit**
 
 ```bash
 git add backend/app/services/admin_auth_service.py
@@ -321,25 +512,26 @@ from sqlalchemy import desc, func
 from typing import Optional, List
 from datetime import datetime, timedelta, date
 
-from ..database import get_db
-from ..models.admin_user import AdminUser
-from ..models.user import User
-from ..models.session import Session as ConsultationSession
-from ..models.message import Message, SenderType
-from ..models.medical_order import (
+from app.database import get_db
+from app.models.admin_user import AdminUser
+from app.models.user import User
+from app.models.doctor import Doctor  # 新增：AI 分身模型
+from app.models.session import Session as ConsultationSession
+from app.models.message import Message, SenderType
+from app.models.medical_order import (
     MedicalOrder, TaskInstance, OrderStatus, OrderType,
     ScheduleType, TaskStatus
 )
-from ..routes.admin_auth import get_current_doctor
-from ..schemas.admin import (
+from app.routes.admin_auth import get_current_doctor
+from app.schemas.admin import (
     PatientListItem, PatientDetailResponse,
     ConsultationSession, ConsultationMessage, ConsultationDetailResponse
 )
-from ..schemas.medical_order import (
+from app.schemas.medical_order import (
     MedicalOrderCreateRequest, MedicalOrderResponse,
     TaskInstanceResponse, TaskListResponse
 )
-from ..services.medical_order_service import MedicalOrderService
+from app.services.medical_order_service import MedicalOrderService
 
 router = APIRouter(prefix="/api/doctor", tags=["doctor-workstation"])
 
@@ -355,13 +547,27 @@ def get_patients(
     """
     获取医生的患者列表
 
-    返回与该医生管理的 AI 分身有过咨询的患者
+    返回与该医生所在科室的 AI 分身有过咨询的患者
     """
-    # TODO: 关联医生与 AI 分身后，这里需要过滤
-    # 当前返回所有有咨询记录的患者
+    # 边界情况处理：医生未分配科室
+    if not doctor.department_id:
+        return []
+
+    # 获取医生所在科室的 AI 分身列表
+    ai_doctors = db.query(Doctor).filter(
+        Doctor.department_id == doctor.department_id
+    ).all()
+
+    # 边界情况处理：科室无 AI 分身
+    if not ai_doctors:
+        return []
+
+    ai_doctor_ids = [d.id for d in ai_doctors]
 
     # 获取所有有咨询记录的患者 ID
-    patient_ids = db.query(ConsultationSession.user_id).distinct().all()
+    patient_ids = db.query(ConsultationSession.user_id).filter(
+        ConsultationSession.doctor_id.in_(ai_doctor_ids)
+    ).distinct().all()
     patient_ids = [p[0] for p in patient_ids]
 
     if not patient_ids:
@@ -1804,6 +2010,7 @@ git commit -m "test(e2e): complete doctor workstation testing"
 
 ## 完成检查清单
 
+- [ ] Phase 0: 数据模型准备完成（数据库迁移 + 模型更新）
 - [ ] Phase 1: 后端基础扩展完成
 - [ ] Phase 2: 后端 API 开发完成
 - [ ] Phase 3: 前端基础完成
@@ -1816,8 +2023,9 @@ git commit -m "test(e2e): complete doctor workstation testing"
 
 | 类型 | 文件 |
 |------|------|
-| 设计文档 | `docs/plans/2026-02-07-doctor-workstation-design-v2.md` |
-| 评估报告 | `docs/plans/2026-02-07-doctor-workstation-evaluation.md` |
+| 设计文档 v2.1 | `docs/plans/2026-02-07-doctor-workstation-design-v2.md` |
+| 代码验证报告 | `docs/plans/2026-02-07-code-verification-report.md` |
+| v2 评估报告 | `docs/plans/2026-02-07-doctor-workstation-v2-evaluation.md` |
 | 后端模型 | `backend/app/models/admin_user.py` |
 | 后端路由 | `backend/app/routes/admin_auth.py` |
 | 前端布局 | `frontend/src/layouts/MainLayout.tsx` |
