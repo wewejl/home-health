@@ -1,6 +1,12 @@
+from typing import TYPE_CHECKING, List
 from sqlalchemy import Column, Integer, String, Text, Boolean
 from sqlalchemy.orm import relationship
 from ..database import Base
+
+if TYPE_CHECKING:
+    from .admin_user import AdminUser
+    from .doctor import Doctor
+    from .disease import Disease
 
 
 class Department(Base):

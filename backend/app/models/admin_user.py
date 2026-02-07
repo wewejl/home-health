@@ -1,11 +1,28 @@
+from typing import TYPE_CHECKING, Optional
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from ..database import Base
 
+if TYPE_CHECKING:
+    from .department import Department
+
+
+__all__ = ["AdminUser", "AuditLog", "AdminRole"]
+
 
 # 角色常量（用于代码提示和验证）
 class AdminRole:
+    """AdminUser 角色常量
+
+    使用方式:
+        from app.models.admin_user import AdminUser, AdminRole
+
+        user = AdminUser(role=AdminRole.DOCTOR)
+        if user.role == AdminRole.DOCTOR:
+            # 处理医生角色逻辑
+            pass
+    """
     ADMIN = "admin"          # 系统管理员
     DOCTOR = "doctor"        # 医生
     EDITOR = "editor"        # 内容编辑
