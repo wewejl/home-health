@@ -325,31 +325,53 @@ def get_patient_tasks(
 
 ### 3.4 医生与 AI 分身的关联
 
-需要建立医生与 AI 分身的关系：
+#### ⚠️ 重要问题：医生如何关联到患者的对话记录？
+
+当前系统设计问题：
+- `Session.doctor_id` → `doctors.id`（AI 分身）
+- 医生（`admin_users.role='doctor'`）与 AI 分身没有关联关系
+
+#### 解决方案选择
+
+| 方案 | 描述 | 优势 | 劣势 |
+|------|------|------|------|
+| **A: 无关联** | 医生可以查看所有患者的对话 | 简单 | 无权限隔离 |
+| **B: 科室关联** | 医生通过 `department_id` 关联 AI 分身 | 符合实际 | 需要新建字段 |
+| **C: 直接管理** | 医生直接管理某些 AI 分身 | 灵活 | 需要关联表 |
+
+#### 推荐：方案 B - 科室关联
 
 ```python
-# 方案 1：在 doctors 表中添加 owner_id
-# backend/app/models/doctor.py
-
-class Doctor(Base):
-    # ... 现有字段
-
-    # 新增：所属的管理员/医生
-    owner_id = Column(Integer, ForeignKey("admin_users.id"), nullable=True)
-    owner = relationship("AdminUser", back_populates="managed_ai_doctors")
-
-
-# 方案 2：在 AdminUser 中添加 managed_doctor_ids
 # backend/app/models/admin_user.py
 
 class AdminUser(Base):
     # ... 现有字段
 
-    # 新增：管理的 AI 分身列表
-    managed_doctor_ids = Column(JSON, nullable=True)  # [1, 2, 3]
+    # 新增：医生所属科室（用于关联 AI 分身）
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+
+    # 医生专属属性
+    doctor_attributes = Column(JSON, nullable=True)
 ```
 
-**推荐方案 2**：更简单，不需要修改外键关系。
+```python
+# 查询逻辑：医生可以看到本科室 AI 分身的咨询记录
+
+# 获取医生管理的科室下的 AI 分身
+department_doctor_ids = db.query(Doctor.id).filter(
+    Doctor.department_id == current_doctor.department_id
+).all()
+
+# 获取这些 AI 分身的咨询记录
+patient_sessions = db.query(ConsultationSession).filter(
+    ConsultationSession.doctor_id.in_([d.id for d in department_doctor_ids])
+).all()
+```
+
+**注意**：
+- `AdminUser` 已有 `department_id` 字段的 schema 支持（但模型可能需要添加）
+- `Doctor` 模型已有 `department_id` 字段 ✓
+- 这样医生可以查看本科室 AI 分身接待的患者对话
 
 ---
 
@@ -525,7 +547,99 @@ const menuItems = user?.role === 'doctor' ? [
 
 ---
 
-## 九、待确认问题
+## 九、与现有系统的整合点
+
+### 9.1 现有医嘱 API 需要调整
+
+**现状**：`/medical-orders` 路由的创建医嘱接口
+
+```python
+# backend/app/routes/medical_orders.py (第 41-65 行)
+
+@router.post("", response_model=MedicalOrderResponse, status_code=status.HTTP_201_CREATED)
+def create_medical_order(
+    request: MedicalOrderCreateRequest,
+    current_user: User = Depends(get_current_user),  # ← 当前是患者
+    db: Session = Depends(get_db)
+):
+    order_data["patient_id"] = current_user.id  # 暂时只允许为自己创建
+```
+
+**问题**：当前只允许患者为自己创建医嘱，医生无法为患者创建。
+
+**调整方案**：
+
+```python
+# 选项 1：修改现有路由支持医生
+@router.post("", response_model=MedicalOrderResponse)
+def create_medical_order(
+    request: MedicalOrderCreateRequest,
+    current_user: User = Depends(get_current_user),  # 患者
+    current_admin: Optional[AdminUser] = Depends(get_current_admin_optional),  # 医生
+    db: Session = Depends(get_db)
+):
+    # 如果是医生，为指定患者创建
+    if current_admin and current_admin.role == "doctor":
+        patient_id = request.patient_id
+    else:
+        # 如果是患者，只能为自己创建
+        patient_id = current_user.id
+
+    order_data = request.model_dump()
+    order_data["doctor_id"] = current_admin.id if current_admin else None
+    order_data["patient_id"] = patient_id
+
+# 选项 2：保持现有路由，新增医生专用路由
+# backend/app/routes/doctor_workstation.py
+@router.post("/orders")
+def create_order(
+    request: MedicalOrderCreateRequest,
+    doctor: AdminUser = Depends(get_current_doctor),
+    db: Session = Depends(get_db)
+):
+    # 医生专用创建逻辑
+    order_data = request.model_dump()
+    order_data["doctor_id"] = doctor.id
+    ...
+```
+
+**推荐**：选项 2，保持现有 `/medical-orders` 路由不变，新增 `/api/doctor/orders` 医生专用路由。
+
+### 9.2 测试模式处理
+
+现有代码使用 `TEST_MODE` 全局变量处理测试：
+
+```python
+# backend/app/dependencies.py
+TEST_MODE = True
+
+def get_current_user(...):
+    if TEST_MODE:
+        return test_user  # 返回测试用户
+```
+
+医生工作台需要保持一致的模式：
+
+```python
+# backend/app/routes/admin_auth.py
+TEST_MODE = True  # 已存在
+
+def get_current_admin(...):
+    if TEST_MODE:
+        return test_admin  # 已实现
+```
+
+### 9.3 路由前缀确认
+
+| 路由 | 前缀 | 说明 |
+|------|------|------|
+| 患者医嘱 | `/medical-orders` | 现有，患者为自己创建 |
+| 医生医嘱 | `/api/doctor/orders` | 新增，医生为患者创建 |
+| 管理员医嘱 | `/admin/orders` | 可选，管理员管理所有 |
+
+---
+
+## 十、待确认问题
 
 1. 医生是否需要管理多个 AI 分身？
 2. 医生是否有权限编辑 AI 分身的提示词？

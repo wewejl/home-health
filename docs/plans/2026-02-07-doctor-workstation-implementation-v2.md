@@ -36,6 +36,10 @@
 ```python
 # backend/app/models/admin_user.py
 
+# 需要添加的导入
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship
+
 # 在 AdminUser 类中添加（last_login_at 字段之后）：
 
 # 医生专属属性（当 role='doctor' 时使用）
@@ -47,6 +51,22 @@ doctor_attributes = Column(JSON, nullable=True)
 #   "license_no": "执业医师证号",
 #   "hospital": "医院名称"
 # }
+
+# 科室关联（用于关联 AI 分身）
+department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+department = relationship("Department", back_populates="admin_users")
+```
+
+**注意**：同时需要在 `Department` 模型中添加反向关系：
+
+```python
+# backend/app/models/department.py
+
+class Department(Base):
+    # ... 现有字段
+
+    # 新增：反向关系
+    admin_users = relationship("AdminUser", back_populates="department")
 ```
 
 **Step 2: 数据库迁移**
@@ -57,6 +77,11 @@ psql -h localhost -U your_user -d xinlin
 
 # 执行迁移
 ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS doctor_attributes JSONB;
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS department_id INTEGER;
+
+# 添加外键约束（可选）
+ALTER TABLE admin_users ADD CONSTRAINT fk_admin_users_department
+  FOREIGN KEY (department_id) REFERENCES departments(id);
 ```
 
 **Step 3: 验证**
