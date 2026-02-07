@@ -27,6 +27,7 @@ from .funasr import router as funasr_router
 # TTS 已移除，voice.py 只包含状态查询端点（可保留或删除）
 # from .voice import router as voice_router
 from .voice_asr import router as voice_asr_router  # GLM-ASR 语音识别
+from .doctor_workstation import router as doctor_workstation_router  # 医生工作台
 
 __all__ = [
     "auth_router", "departments_router",
@@ -42,5 +43,6 @@ __all__ = [
     "voice_asr_router",  # GLM-ASR语音识别
     "admin_auth_router", "admin_doctors_router", "admin_departments_router",
     "admin_knowledge_router", "admin_documents_router", "admin_feedbacks_router", "admin_stats_router",
-    "admin_diseases_router", "admin_drugs_router", "admin_drug_categories_router"
+    "admin_diseases_router", "admin_drugs_router", "admin_drug_categories_router",
+    "doctor_workstation_router",  # 医生工作台
 ]

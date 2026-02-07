@@ -22,6 +22,7 @@ from .routes import (
     funasr_router,  # FunASR 语音识别
     # voice_router,  # TTS 已移除，状态端点已废弃
     voice_asr_router,  # GLM-ASR 语音识别
+    doctor_workstation_router,  # 医生工作台
 )
 from .services.admin_auth_service import AdminAuthService
 from .seed import seed_data
@@ -81,6 +82,7 @@ app.include_router(admin_doctors_router)
 app.include_router(persona_chat_router)  # 医生分身对话式采集
 app.include_router(record_analysis_router)  # 病历分析
 app.include_router(admin_departments_router)
+app.include_router(doctor_workstation_router)  # 医生工作台
 app.include_router(admin_knowledge_router)
 app.include_router(admin_documents_router)
 app.include_router(admin_feedbacks_router)
