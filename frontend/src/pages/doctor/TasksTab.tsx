@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DatePicker, Card, Row, Col, Statistic, List, Tag, Empty, Typography } from 'antd';
+import { DatePicker, Card, Row, Col, Statistic, List, Tag, Empty, Typography, Space } from 'antd';
 import { CheckCircleOutlined, ClockCircleOutlined, WarningOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -221,7 +221,5 @@ const TasksTab: React.FC<TasksTabProps> = ({ patientId }) => {
     </div>
   );
 };
-
-import { Space } from 'antd';
 
 export default TasksTab;
