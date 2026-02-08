@@ -1,6 +1,6 @@
 # 技术债务清单
 
-> 最后更新：2026-02-07
+> 最后更新：2026-02-08
 
 ---
 
@@ -12,32 +12,12 @@
 
 ## 🟡 中优先级（有空就做）
 
-### iOS Caption 废弃警告
-- **位置**:
-  - `Views/MedicalDossier/RecordDetailView.swift`
-  - `Theme/ModernDesignSystem.swift`
-- **问题**: `caption` 已废弃，需替换为 `caption1`/`caption2`
-- **影响**: 编译警告，代码质量
-- **预估工作量**: 10 分钟
-- **备注**: EventDetailView 已修复
-
 ### iOS 变量声明警告
+- **状态**: ❌ 已检查，不存在此问题（可能已修复）
 - **位置**: `ios/xinlingyisheng/ViewModels/MedicalFolderViewModel.swift:383`
 - **问题**: `var chunk` 应改为 `let chunk`
 - **影响**: 代码质量
 - **预估工作量**: 1 分钟
-
-### 未使用的依赖
-- **位置**: iOS 项目配置
-- **问题**: Starscream 包未使用但仍在依赖中
-- **影响**: 项目大小和依赖清晰度
-- **预估工作量**: 5 分钟
-
-### Python 虚拟环境路径警告
-- **位置**: Xcode Build Settings
-- **问题**: 不存在的 Python venv 路径
-- **影响**: 编译警告
-- **预估工作量**: 10 分钟
 
 ---
 
@@ -66,6 +46,11 @@
 | iOS 并发安全警告 (@MainActor) | v1.0 | 2026-02-06 |
 | iOS 编译错误 (uploadFile) | v1.0 | 2026-02-06 |
 | Python 虚拟环境路径警告 | v1.0 | 2026-02-06 |
+| **iOS Caption 废弃警告（SpecialtyDataView + LogoView）** | **v1.0** | **2026-02-08** |
+
+### 说明
+- **未使用的依赖（Starscream）**: 经检查，Starscream 正在被 `PressAndHoldVoiceService.swift` 使用，用于 WebSocket 连接，不是未使用的依赖。
+- **Python 虚拟环境路径警告**: 经检查，项目配置中不存在相关警告。
 
 ---
 
