@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Tag, Button, Space, Modal, Form, Input, Select, DatePicker, message, Card, Typography } from 'antd';
+import { Table, Tag, Button, Space, Modal, Form, Input, Select, DatePicker, message, Typography } from 'antd';
 import { PlusOutlined, EditOutlined, StopOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Tabs, Card, Row, Col, Statistic, Tag, Typography, Button, Space, Descriptions } from 'antd';
+import { Tabs, Card, Row, Col, Statistic, Tag, Typography, Button, Descriptions } from 'antd';
 import {
   UserOutlined,
   ArrowLeftOutlined,

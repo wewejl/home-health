@@ -25,8 +25,6 @@ import {
   HeartOutlined,
   VideoCameraOutlined,
   UserSwitchOutlined,
-  ClockCircleOutlined,
-  FileTextOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content, Footer } = Layout;

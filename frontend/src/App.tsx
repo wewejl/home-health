@@ -36,11 +36,11 @@ function App() {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // 测试模式：使用虚拟用户
+  // 测试模式：使用虚拟用户（测试医生工作台，设为 doctor 角色以查看医生页面）
   const testUser: AdminUser = {
     id: 1,
-    username: "test_admin",
-    role: "admin",
+    username: "test_doctor",
+    role: "doctor",
     is_active: true
   };
 
