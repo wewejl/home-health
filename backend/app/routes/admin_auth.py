@@ -82,16 +82,51 @@ def get_current_doctor(
     db: Session = Depends(get_db)
 ) -> AdminUser:
     """获取当前登录的医生（role 必须为 'doctor'）"""
-    admin = get_current_admin(credentials, db)
+    # 测试模式：返回测试医生
+    if TEST_MODE:
+        test_doctor = db.query(AdminUser).filter(AdminUser.username == "test_doctor").first()
+        if not test_doctor:
+            test_doctor = AdminUser(
+                username="test_doctor",
+                email="doctor@example.com",
+                role="doctor",
+                is_active=True
+            )
+            test_doctor.password_hash = AdminAuthService.hash_password("test123")
+            db.add(test_doctor)
+            db.commit()
+            db.refresh(test_doctor)
+        return test_doctor
 
-    # 验证角色
-    if admin.role != "doctor":
+    # 生产模式：验证 token
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的医生凭证",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    token = credentials.credentials
+    admin_id = AdminAuthService.verify_admin_token(token)
+
+    if admin_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的医生凭证",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    doctor = db.query(AdminUser).filter(
+        AdminUser.id == admin_id,
+        AdminUser.is_active == True,
+        AdminUser.role == "doctor"
+    ).first()
+    if doctor is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="需要医生权限"
         )
 
-    return admin
+    return doctor
 
 
 @router.post("/login", response_model=AdminLoginResponse)
