@@ -60,3 +60,20 @@ htmlcov/
 *.retry
 
 .secrets/
+
+# Temporary screenshots and snapshots
+*.png
+*.jpg
+*.jpeg
+*.gif
+*-snapshot.md
+!ios/xinlingyisheng/xinlingyisheng/Assets.xcassets/**/*.png
+
+# Temporary testing directories
+.playwright-mcp/
+frontend-test/
+frontend/.tasks/
+.tasks/screenshots/
+
+# Temporary HTML files
+*-design.html
