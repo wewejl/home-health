@@ -16,6 +16,7 @@
 | 2026-02-11 | 创建详尽入职手册 README.md | ✅ 完成 | Team Lead |
 | 2026-02-11 | 创建进度追踪文档 PROGRESS.md | ✅ 完成 | Team Lead |
 | 2026-02-11 | 更新 CLAUDE.md 添加入职文档优先级 | ✅ 完成 | Team Lead |
+| 2026-02-11 | 组建测试团队并新增6个API测试文件 | ✅ 完成 | Team Lead + 团队 |
 
 ### 新增文件
 
@@ -32,6 +33,12 @@
 - `backend/test/test_value_extraction_agent.py` - 值提取代理测试 (50 tests)
 - `backend/test/test_feedbacks_api.py` - 反馈API测试 (13 tests)
 - `backend/test/test_rounding_api.py` - 查房API测试 (25 tests)
+- `backend/test/test_sessions_v2_api.py` - V2会话API测试 (43 tests)
+- `backend/test/test_medical_events_api.py` - 医疗事件API测试 (48 tests)
+- `backend/test/test_medical_folders_api.py` - 医疗文件夹API测试 (35 tests)
+- `backend/test/test_admin_knowledge_api.py` - 管理员知识库API测试 (42 tests)
+- `backend/test/test_persona_chat_api.py` - AI分身聊天API测试 (38 tests)
+- `backend/test/test_admin_stats_api.py` - 管理员统计API测试 (28 tests)
 
 ### 提交记录
 
@@ -47,11 +54,11 @@ d728aa9d docs(test): add test coverage report
 
 | 指标 | 数值 |
 |------|------|
-| 测试文件总数 | 28 |
-| 测试代码总行数 | ~12,178 |
-| 新增测试用例 | ~280+ |
+| 测试文件总数 | 34 |
+| 测试代码总行数 | ~16,500 |
+| 总测试用例 | ~514 |
 | 覆盖的服务模块 | 15+ |
-| 覆盖的API路由 | 10+ |
+| 覆盖的API路由 | 16+ |
 
 ---
 
