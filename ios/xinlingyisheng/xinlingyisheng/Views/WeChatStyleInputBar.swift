@@ -527,7 +527,7 @@ struct PressAndHoldOverlayView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(HealingColors.warmCream.opacity(0.4))
+                        .fill(HealingColors.warmCream)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
                                 .stroke(HealingColors.softSage.opacity(0.2), lineWidth: 1)

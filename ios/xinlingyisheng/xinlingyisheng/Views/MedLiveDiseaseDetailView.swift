@@ -461,7 +461,7 @@ struct HealingDiseaseSectionCard: View {
                 .padding(.horizontal, layout.cardInnerPadding)
                 .padding(.vertical, layout.cardInnerPadding)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(HealingColors.warmCream.opacity(0.5))
+                .background(HealingColors.warmCream)
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))

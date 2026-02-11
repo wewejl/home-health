@@ -205,10 +205,6 @@ struct UnifiedFont {
     /// 脚注2（11pt）- 小脚注
     static var caption2: CGFloat { ScaleFactor.font(11) }
 
-    /// 兼容旧代码：caption 映射到 caption1
-    @available(*, deprecated, message: "使用 caption1 替代")
-    static var caption: CGFloat { caption1 }
-
     /// 自定义字体大小（不缩放）
     static func custom(_ size: CGFloat) -> CGFloat {
         ScaleFactor.font(size)  // 返回原始大小，不进行缩放
@@ -266,12 +262,6 @@ extension View {
 
     /// 统一脚注1（12pt）
     func caption1(weight: Font.Weight = .regular) -> some View {
-        self.font(Font.system(size: UnifiedFont.caption1, weight: weight))
-    }
-
-    /// 统一脚注（已弃用，使用 caption1 替代）
-    @available(*, deprecated, message: "使用 caption1(weight:) 替代")
-    func caption(weight: Font.Weight = .regular) -> some View {
         self.font(Font.system(size: UnifiedFont.caption1, weight: weight))
     }
 }
@@ -335,10 +325,6 @@ struct AdaptiveFont {
 
     /// 说明文字2（11pt）
     static var caption2: CGFloat { ScaleFactor.font(11) }
-
-    /// 兼容旧代码：caption 映射到 caption1
-    @available(*, deprecated, message: "使用 caption1 替代")
-    static var caption: CGFloat { caption1 }
 
     /// 自定义字体大小（不缩放）
     static func custom(_ size: CGFloat) -> CGFloat {

@@ -370,7 +370,7 @@ struct HealingPhoneInputSection: View {
             }
             .padding(.horizontal, layout.cardInnerPadding)
             .padding(.vertical, layout.cardInnerPadding - 2)
-            .background(HealingColors.warmCream.opacity(0.5))
+            .background(HealingColors.warmCream)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }

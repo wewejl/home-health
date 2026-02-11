@@ -3,44 +3,6 @@ import SwiftUI
 // MARK: - 现代医疗问诊界面设计系统
 // 基于 Soft UI Evolution + Minimalism 风格
 
-// MARK: - 颜色系统（已迁移到统一的 DXYColors）
-@available(*, deprecated, message: "使用 DXYColors 替代")
-struct MedicalColors {
-    // 使用统一的治愈系颜色
-    static let primaryBlue = DXYColors.blue
-    static let primaryBlueLight = DXYColors.blue.opacity(0.8)
-    static let primaryBlueDark = DXYColors.blue.opacity(0.8)
-
-    static let secondaryTeal = DXYColors.teal
-    static let secondaryTealLight = DXYColors.teal.opacity(0.8)
-
-    static let ctaOrange = DXYColors.orange
-    static let successGreen = HealingColorTheme.successGreen
-
-    // 使用治愈系暖色背景
-    static let bgPrimary = DXYColors.background
-    static let bgSecondary = DXYColors.searchBackground
-    static let bgCard = DXYColors.cardBackground
-
-    static let textPrimary = DXYColors.textPrimary
-    static let textSecondary = DXYColors.textSecondary
-    static let textMuted = DXYColors.textTertiary
-
-    static let borderLight = HealingColorTheme.borderLight
-    static let borderMedium = HealingColorTheme.borderMedium
-
-    static let statusInfo = DXYColors.blue
-    static let statusSuccess = HealingColorTheme.successGreen
-    static let statusWarning = DXYColors.orange
-    static let statusError = HealingColorTheme.errorRed
-
-    static let aiMessageBg = DXYColors.primaryPurple.opacity(0.08)
-    static let userMessageBg = DXYColors.primaryPurple
-
-    static let hoverBg = DXYColors.searchBackground
-    static let activeBg = HealingColorTheme.borderLight
-}
-
 // MARK: - 字体系统（使用统一的 UnifiedFont）
 struct MedicalTypography {
     // Headings

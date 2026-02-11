@@ -5,12 +5,12 @@ import Combine
 @MainActor
 class AuthManager: ObservableObject {
     static let shared = AuthManager()
-    
+
     // MARK: - 全局通知
     static let unauthorizedNotification = Notification.Name("AuthManager.unauthorized")
     static let profileNeedsSetupNotification = Notification.Name("AuthManager.profileNeedsSetup")
     static let loginCompletedNotification = Notification.Name("AuthManager.loginCompleted")
-    
+
     @Published var isLoggedIn: Bool = false
     @Published var currentUser: UserModel?
     @Published var token: String?
@@ -19,26 +19,37 @@ class AuthManager: ObservableObject {
     @Published var logoutReason: String = ""
     @Published var isNewUser: Bool = false
     @Published var needsProfileSetup: Bool = false
-    
-    private let tokenKey = "auth_token"
-    private let refreshTokenKey = "refresh_token"
+
     private let userKey = "current_user"
-    
+    private let keychainManager = KeychainManager.shared
+
     private init() {
         loadStoredAuth()
         setupNotificationObservers()
     }
-    
+
     private func loadStoredAuth() {
-        if let token = UserDefaults.standard.string(forKey: tokenKey) {
-            self.token = token
-            self.refreshToken = UserDefaults.standard.string(forKey: refreshTokenKey)
-            self.isLoggedIn = true
-            
-            if let userData = UserDefaults.standard.data(forKey: userKey),
-               let user = try? JSONDecoder().decode(UserModel.self, from: userData) {
-                self.currentUser = user
-                self.needsProfileSetup = !user.is_profile_completed
+        // 从 Keychain 读取 Token（安全存储）
+        Task {
+            do {
+                let token = try await keychainManager.retrieveAsync(forKey: "auth_token")
+                let refreshToken = try await keychainManager.retrieveAsync(forKey: "refresh_token")
+
+                await MainActor.run {
+                    self.token = token
+                    self.refreshToken = refreshToken
+                    self.isLoggedIn = true
+
+                    // 从 UserDefaults 读取用户信息（非敏感数据）
+                    if let userData = UserDefaults.standard.data(forKey: userKey),
+                       let user = try? JSONDecoder().decode(UserModel.self, from: userData) {
+                        self.currentUser = user
+                        self.needsProfileSetup = !user.is_profile_completed
+                    }
+                }
+                print("[Auth] Token 从 Keychain 加载成功")
+            } catch {
+                print("[Auth] 从 Keychain 加载 Token 失败: \(error.localizedDescription)")
             }
         }
     }
@@ -76,22 +87,31 @@ class AuthManager: ObservableObject {
         self.isLoggedIn = true
         self.isNewUser = isNewUser
         self.needsProfileSetup = !user.is_profile_completed
-        
-        // 持久化存储
-        UserDefaults.standard.set(token, forKey: tokenKey)
-        if let refreshToken = refreshToken {
-            UserDefaults.standard.set(refreshToken, forKey: refreshTokenKey)
+
+        // 持久化存储 - Token 使用 Keychain（安全存储）
+        Task {
+            do {
+                try await keychainManager.saveAsync(token, forKey: "auth_token")
+                if let refreshToken = refreshToken {
+                    try await keychainManager.saveAsync(refreshToken, forKey: "refresh_token")
+                }
+                print("[Auth] Token 已保存到 Keychain")
+            } catch {
+                print("[Auth] 保存 Token 到 Keychain 失败: \(error.localizedDescription)")
+            }
         }
+
+        // 用户数据使用 UserDefaults 存储（非敏感数据）
         if let userData = try? JSONEncoder().encode(user) {
             UserDefaults.standard.set(userData, forKey: userKey)
         }
-        
+
         // 日志埋点
         logEvent("login_success", data: ["user_id": user.id, "is_new_user": isNewUser])
-        
+
         // 发送通知
         NotificationCenter.default.post(name: Self.loginCompletedNotification, object: nil)
-        
+
         // 如果需要完善资料，发送通知
         if needsProfileSetup {
             NotificationCenter.default.post(name: Self.profileNeedsSetupNotification, object: nil)
@@ -101,16 +121,25 @@ class AuthManager: ObservableObject {
     // MARK: - 登出
     func logout() {
         logEvent("logout", data: ["user_id": currentUser?.id ?? 0])
-        
+
         self.token = nil
         self.refreshToken = nil
         self.currentUser = nil
         self.isLoggedIn = false
         self.isNewUser = false
         self.needsProfileSetup = false
-        
-        UserDefaults.standard.removeObject(forKey: tokenKey)
-        UserDefaults.standard.removeObject(forKey: refreshTokenKey)
+
+        // 清除 Keychain 中的 Token
+        Task {
+            do {
+                try await keychainManager.clearAllTokens()
+                print("[Auth] Keychain 中的 Token 已清除")
+            } catch {
+                print("[Auth] 清除 Keychain Token 失败: \(error.localizedDescription)")
+            }
+        }
+
+        // 清除 UserDefaults 中的用户数据
         UserDefaults.standard.removeObject(forKey: userKey)
     }
     
@@ -132,18 +161,20 @@ class AuthManager: ObservableObject {
             print("[Auth] 无 refresh token，无法刷新")
             return false
         }
-        
+
         do {
             let response = try await APIService.shared.refreshToken(refreshToken: refreshToken)
-            
+
             await MainActor.run {
                 self.token = response.token
                 self.refreshToken = response.refresh_token
-                
-                UserDefaults.standard.set(response.token, forKey: tokenKey)
-                UserDefaults.standard.set(response.refresh_token, forKey: refreshTokenKey)
             }
-            
+
+            // 更新 Keychain 中的 Token
+            try await keychainManager.saveAsync(response.token, forKey: "auth_token")
+            // refresh_token 是非可选的 String，直接保存
+            try await keychainManager.saveAsync(response.refresh_token, forKey: "refresh_token")
+
             print("[Auth] Token 刷新成功")
             logEvent("token_refreshed", data: [:])
             return true

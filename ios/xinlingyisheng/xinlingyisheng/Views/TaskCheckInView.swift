@@ -313,7 +313,7 @@ struct TaskCheckInView: View {
                 .foregroundColor(HealingColors.textPrimary)
                 .padding(.horizontal, layout.cardInnerPadding)
                 .padding(.vertical, layout.cardInnerPadding - 2)
-                .background(HealingColors.warmCream.opacity(0.5))
+                .background(HealingColors.warmCream)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .keyboardType(.decimalPad)
 
@@ -386,7 +386,7 @@ struct TaskCheckInView: View {
                 .foregroundColor(HealingColors.textPrimary)
                 .padding(.horizontal, layout.cardInnerPadding)
                 .padding(.vertical, layout.cardInnerPadding - 2)
-                .background(HealingColors.warmCream.opacity(0.5))
+                .background(HealingColors.warmCream)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .lineLimit(3...6)
         }

@@ -14,7 +14,6 @@ import Foundation
 /// 使用方法：
 /// 1. 在任何包含 deinit 的类中，添加 `DeinitSafety.check()` 作为第一行
 /// 2. 如果 deinit 中有异步操作，会在 DEBUG 模式下触发断言
-@available(*, deprecated, message: "使用 DeinitSafety 替代直接在 deinit 中清理")
 public enum DeinitSafety {
 
     /// 检查当前是否在主线程（用于检测 @MainActor 属性访问）

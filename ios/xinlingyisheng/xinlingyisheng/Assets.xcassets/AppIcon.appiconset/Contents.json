@@ -67,9 +67,21 @@
       "size" : "20x20"
     },
     {
+      "filename" : "iPhone-20.png",
+      "idiom" : "iphone",
+      "scale" : "1x",
+      "size" : "20x20"
+    },
+    {
       "filename" : "iPad-20@2x.png",
       "idiom" : "ipad",
       "scale" : "2x",
+      "size" : "20x20"
+    },
+    {
+      "filename" : "iPad-20.png",
+      "idiom" : "ipad",
+      "scale" : "1x",
       "size" : "20x20"
     },
     {
@@ -107,6 +119,12 @@
       "idiom" : "ipad",
       "scale" : "2x",
       "size" : "76x76"
+    },
+    {
+      "filename" : "iPhone-83.5@2x.png",
+      "idiom" : "ipad",
+      "scale" : "2x",
+      "size" : "83.5x83.5"
     }
   ],
   "info" : {

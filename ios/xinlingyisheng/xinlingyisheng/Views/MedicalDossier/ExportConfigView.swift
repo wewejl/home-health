@@ -237,7 +237,7 @@ struct HealingExportScopeCard: View {
                 }
             }
             .padding(layout.cardSpacing / 2)
-            .background(HealingColors.warmCream.opacity(0.5))
+            .background(HealingColors.warmCream)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .padding(layout.cardInnerPadding)
@@ -390,7 +390,7 @@ struct HealingExportContentCard: View {
                     isOn: $config.includeNotes
                 )
             }
-            .background(HealingColors.warmCream.opacity(0.5))
+            .background(HealingColors.warmCream)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .padding(layout.cardInnerPadding)
@@ -465,7 +465,7 @@ struct HealingExportPersonalInfoCard: View {
                     isOn: $config.includePhone
                 )
             }
-            .background(HealingColors.warmCream.opacity(0.5))
+            .background(HealingColors.warmCream)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .padding(layout.cardInnerPadding)

@@ -318,7 +318,7 @@ struct AskDoctorSearchView: View {
                 }
                 .padding(.horizontal, layout.cardInnerPadding - 2)
                 .padding(.vertical, layout.cardInnerPadding - 4)
-                .background(HealingColors.warmCream.opacity(0.5))
+                .background(HealingColors.warmCream)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
 
                 Button(action: {}) {
