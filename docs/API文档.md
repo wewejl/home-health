@@ -1083,6 +1083,494 @@ Authorization: Bearer <token>
 
 ---
 
+### 病历夹管理 (`/medical-folders`)
+
+#### 创建病历夹
+
+```http
+POST /medical-folders
+Authorization: Bearer <token>
+```
+
+**请求体：**
+```json
+{
+  "name": "皮肤科病历",
+  "description": "存放皮肤科相关病历",
+  "color": "#7B5FEA",
+  "icon": "folder",
+  "sort_order": 1
+}
+```
+
+**响应：**
+```json
+{
+  "id": "uuid-string",
+  "user_id": 1,
+  "name": "皮肤科病历",
+  "description": "存放皮肤科相关病历",
+  "color": "#7B5FEA",
+  "icon": "folder",
+  "sort_order": 1,
+  "record_count": 0,
+  "created_at": "2024-01-01T00:00:00Z",
+  "updated_at": "2024-01-01T00:00:00Z"
+}
+```
+
+#### 获取病历夹列表
+
+```http
+GET /medical-folders
+Authorization: Bearer <token>
+```
+
+#### 获取病历夹详情
+
+```http
+GET /medical-folders/{folder_id}
+Authorization: Bearer <token>
+```
+
+#### 更新病历夹
+
+```http
+PUT /medical-folders/{folder_id}
+Authorization: Bearer <token>
+```
+
+#### 删除病历夹
+
+```http
+DELETE /medical-folders/{folder_id}
+Authorization: Bearer <token>
+```
+
+---
+
+### 病历记录管理 (`/medical-records`)
+
+#### 创建病历记录
+
+```http
+POST /medical-records
+Authorization: Bearer <token>
+```
+
+**请求体：**
+```json
+{
+  "folder_id": "uuid-string",
+  "title": "皮肤过敏记录",
+  "record_date": "2024-01-01",
+  "description": "患者出现皮肤过敏症状"
+}
+```
+
+**响应：**
+```json
+{
+  "id": "uuid-string",
+  "folder_id": "uuid-string",
+  "user_id": 1,
+  "title": "皮肤过敏记录",
+  "record_date": "2024-01-01",
+  "description": "患者出现皮肤过敏症状",
+  "file_count": 0,
+  "created_at": "2024-01-01T00:00:00Z",
+  "updated_at": "2024-01-01T00:00:00Z"
+}
+```
+
+#### 获取病历记录列表
+
+```http
+GET /medical-records?folder_id={folder_id}
+Authorization: Bearer <token>
+```
+
+#### 获取病历记录详情
+
+```http
+GET /medical-records/{record_id}
+Authorization: Bearer <token>
+```
+
+#### 更新病历记录
+
+```http
+PUT /medical-records/{record_id}
+Authorization: Bearer <token>
+```
+
+#### 删除病历记录
+
+```http
+DELETE /medical-records/{record_id}
+Authorization: Bearer <token>
+```
+
+---
+
+### 医疗文件管理 (`/medical-files`)
+
+#### 上传文件
+
+```http
+POST /medical-files
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+**表单参数：**
+- `file`: 文件（支持图片、PDF、视频、音频、文档）
+- `record_id`: 病历记录 ID
+- `description`: 文件描述（可选）
+
+**支持的文件类型：**
+- 图片：`.jpg`, `.jpeg`, `.png`, `.gif`, `.heic`, `.webp`
+- PDF：`.pdf`
+- 视频：`.mp4`, `.mov`, `.avi`, `.mkv`
+- 音频：`.mp3`, `.m4a`, `.wav`, `.aac`
+- 文档：`.doc`, `.docx`, `.txt`, `.xls`, `.xlsx`
+
+**响应：**
+```json
+{
+  "id": "uuid-string",
+  "record_id": "uuid-string",
+  "file_name": "photo.jpg",
+  "file_type": "image",
+  "file_size": 102400,
+  "url": "/static/uploads/medical_files/1/record/photo.jpg",
+  "thumbnail_url": "/static/uploads/medical_files/1/record/.thumbnails/photo.jpg",
+  "description": "皮肤照片",
+  "created_at": "2024-01-01T00:00:00Z"
+}
+```
+
+#### 获取文件列表
+
+```http
+GET /medical-files?record_id={record_id}
+Authorization: Bearer <token>
+```
+
+#### 获取文件详情
+
+```http
+GET /medical-files/{file_id}
+Authorization: Bearer <token>
+```
+
+#### 重命名文件
+
+```http
+PUT /medical-files/{file_id}
+Authorization: Bearer <token>
+```
+
+**请求体：**
+```json
+{
+  "file_name": "new_name.jpg"
+}
+```
+
+#### 删除文件
+
+```http
+DELETE /medical-files/{file_id}
+Authorization: Bearer <token>
+```
+
+---
+
+### 健康检查端点
+
+#### 基础健康检查
+
+```http
+GET /
+```
+
+**响应：**
+```json
+{
+  "message": "灵犀健康 AI分身系统 API 服务运行中",
+  "version": "2.0.0"
+}
+```
+
+#### 详细健康检查
+
+```http
+GET /health/detailed
+```
+
+**响应：**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-01T00:00:00Z",
+  "version": "2.0.0",
+  "checks": {
+    "database": {"status": "healthy"},
+    "llm": {"status": "configured", "provider": "qwen"}
+  },
+  "environment": {
+    "debug": true,
+    "test_mode": true,
+    "production": false
+  },
+  "response_time_ms": 45.2
+}
+```
+
+#### 就绪检查
+
+```http
+GET /health/ready
+```
+
+用于 Kubernetes 等容器编排系统。
+
+#### 存活检查
+
+```http
+GET /health/live
+```
+
+用于 Kubernetes 等容器编排系统。
+
+---
+
+## 医生工作台 API
+
+> 医生工作台 API 需要医生角色认证，使用前缀 `/api/doctor`
+
+### 医生信息 (`/api/doctor`)
+
+#### 获取当前医生信息
+
+```http
+GET /api/doctor/me
+Authorization: Bearer <doctor_token>
+```
+
+**响应：**
+```json
+{
+  "id": 1,
+  "username": "doctor001",
+  "email": "doctor@example.com",
+  "role": "doctor",
+  "department_id": 1,
+  "department_name": "皮肤科",
+  "managed_doctors": [
+    {
+      "id": 1,
+      "name": "AI助手-皮肤科",
+      "title": "主治医师",
+      "department": "皮肤科"
+    }
+  ]
+}
+```
+
+### 患者管理 (`/api/doctor/patients`)
+
+#### 获取患者列表
+
+```http
+GET /api/doctor/patients?search=张三
+Authorization: Bearer <doctor_token>
+```
+
+**查询参数：**
+- `search` - 搜索关键词（姓名/手机号）
+
+**响应：**
+```json
+[
+  {
+    "id": 1,
+    "nickname": "张三",
+    "phone": "138****1234",
+    "gender": "male",
+    "age": 35,
+    "last_consultation_at": "2024-01-01T10:00:00Z",
+    "active_orders_count": 2,
+    "completion_rate": 0.85
+  }
+]
+```
+
+#### 获取患者详情
+
+```http
+GET /api/doctor/patients/{patient_id}
+Authorization: Bearer <doctor_token>
+```
+
+**响应：**
+```json
+{
+  "id": 1,
+  "nickname": "张三",
+  "phone": "138****1234",
+  "gender": "male",
+  "age": 35,
+  "avatar_url": null,
+  "is_profile_completed": true,
+  "last_consultation_at": "2024-01-01T10:00:00Z",
+  "active_orders_count": 2,
+  "completion_rate": 0.85,
+  "created_at": "2024-01-01T00:00:00Z"
+}
+```
+
+### 对话记录 (`/api/doctor`)
+
+#### 获取患者对话列表
+
+```http
+GET /api/doctor/patients/{patient_id}/consultations?limit=10
+Authorization: Bearer <doctor_token>
+```
+
+**响应：**
+```json
+[
+  {
+    "id": "uuid-string",
+    "user_id": 1,
+    "doctor_id": 1,
+    "agent_type": "derma",
+    "last_message": "患者主诉皮肤瘙痒",
+    "message_count": 15,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T10:00:00Z"
+  }
+]
+```
+
+#### 获取对话详情
+
+```http
+GET /api/doctor/consultations/{session_id}
+Authorization: Bearer <doctor_token>
+```
+
+**响应：**
+```json
+{
+  "session": {
+    "id": "uuid-string",
+    "user_id": 1,
+    "doctor_id": 1,
+    "agent_type": "derma",
+    "last_message": "患者主诉皮肤瘙痒",
+    "message_count": 15,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T10:00:00Z"
+  },
+  "messages": [
+    {
+      "id": 1,
+      "sender": "user",
+      "content": "你好，我最近皮肤有点痒",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+### 医嘱管理 (`/api/doctor`)
+
+#### 创建医嘱
+
+```http
+POST /api/doctor/orders
+Authorization: Bearer <doctor_token>
+```
+
+**请求体：**
+```json
+{
+  "patient_id": 1,
+  "title": "每日测量血压",
+  "order_type": "medication",
+  "description": "每天早晚各测量一次血压",
+  "start_date": "2024-01-01",
+  "end_date": "2024-01-31",
+  "frequency": "daily"
+}
+```
+
+#### 获取患者医嘱列表
+
+```http
+GET /api/doctor/patients/{patient_id}/orders?status_filter=active
+Authorization: Bearer <doctor_token>
+```
+
+**查询参数：**
+- `status_filter` - 状态筛选 (draft/active/stopped/completed)
+
+#### 更新医嘱
+
+```http
+PUT /api/doctor/orders/{order_id}
+Authorization: Bearer <doctor_token>
+```
+
+**请求体：**
+```json
+{
+  "title": "更新后的医嘱标题",
+  "description": "更新后的描述",
+  "end_date": "2024-02-01"
+}
+```
+
+#### 停用医嘱
+
+```http
+DELETE /api/doctor/orders/{order_id}
+Authorization: Bearer <doctor_token>
+```
+
+### 任务执行情况 (`/api/doctor`)
+
+#### 获取患者指定日期的任务
+
+```http
+GET /api/doctor/patients/{patient_id}/tasks?task_date=2024-01-01
+Authorization: Bearer <doctor_token>
+```
+
+**响应：**
+```json
+{
+  "date": "2024-01-01",
+  "pending": [...],
+  "completed": [...],
+  "overdue": [...],
+  "summary": {
+    "date": "2024-01-01",
+    "total": 5,
+    "completed": 3,
+    "overdue": 1,
+    "pending": 1,
+    "rate": 0.6
+  }
+}
+```
+
+---
+
 ## 管理后台 API
 
 ### 管理员认证 (`/admin/auth`)
