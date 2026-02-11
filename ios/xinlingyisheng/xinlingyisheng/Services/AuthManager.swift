@@ -47,9 +47,9 @@ class AuthManager: ObservableObject {
                         self.needsProfileSetup = !user.is_profile_completed
                     }
                 }
-                print("[Auth] Token 从 Keychain 加载成功")
+                AppLogger.success("[Auth] Token 从 Keychain 加载成功")
             } catch {
-                print("[Auth] 从 Keychain 加载 Token 失败: \(error.localizedDescription)")
+                AppLogger.error("[Auth] 从 Keychain 加载 Token 失败", error: error)
             }
         }
     }

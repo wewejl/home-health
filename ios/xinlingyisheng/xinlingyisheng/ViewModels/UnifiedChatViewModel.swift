@@ -48,13 +48,13 @@ class UnifiedChatViewModel: ObservableObject {
     }
 
     nonisolated deinit {
-        print("[UnifiedChatVM] deinit")
+        AppLogger.debug("[UnifiedChatVM] deinit")
     }
 
     /// 主动清理语音绑定（在视图消失时调用）
     func cleanupVoiceBindings() {
         voiceService.cleanupVoiceBindings()
-        print("[UnifiedChatVM] 语音绑定已清理")
+        AppLogger.cleanup("[UnifiedChatVM] 语音绑定已清理")
     }
 
     /// 完整清理资源（在视图完全消失时调用）
@@ -63,7 +63,7 @@ class UnifiedChatViewModel: ObservableObject {
         messageService.clearMessages()
         inputMode = .text
         isVoiceMode = false
-        print("[UnifiedChatVM] 完整资源清理完成")
+        AppLogger.cleanup("[UnifiedChatVM] 完整资源清理完成")
     }
 
     // MARK: - 服务绑定（将服务状态同步到 ViewModel）
