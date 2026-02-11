@@ -2,6 +2,9 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
+// 读取测试模式配置（可通过环境变量 VITE_ADMIN_TEST_MODE 关闭）
+const ADMIN_TEST_MODE = import.meta.env.VITE_ADMIN_TEST_MODE === 'true';
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000,
@@ -10,9 +13,44 @@ const api = axios.create({
   },
 });
 
-// 测试模式：移除所有认证检查
-// 不再添加 Authorization header
-// 不再处理 401 跳转登录
+// 请求拦截器：添加认证头（仅在非测试模式下）
+api.interceptors.request.use((config) => {
+  // 测试模式下不添加认证头
+  if (ADMIN_TEST_MODE) {
+    return config;
+  }
+
+  // 生产模式：从 localStorage 获取 token 并添加到请求头
+  const token = localStorage.getItem('admin_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
+
+// 响应拦截器：处理 401 未授权（仅在非测试模式下）
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // 测试模式下不处理 401 跳转
+    if (ADMIN_TEST_MODE) {
+      return Promise.reject(error);
+    }
+
+    // 生产模式：401 时清除本地存储并跳转登录
+    if (error.response?.status === 401) {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+      // 使用 window.location 而非 navigate 以确保跳转生效
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Auth API
 export const authApi = {
@@ -40,7 +78,66 @@ export const departmentsApi = {
   delete: (id: number) => api.delete(`/admin/departments/${id}`),
 };
 
-// Doctors API
+// Doctor Workstation API (医生工作台)
+export const doctorApi = {
+  // 医生信息
+  getMe: () => api.get('/api/doctor/me'),
+
+  // 患者管理
+  getPatients: (search?: string) =>
+    api.get('/api/doctor/patients', { params: search ? { search } : undefined }),
+  getPatient: (patientId: number) => api.get(`/api/doctor/patients/${patientId}`),
+  getPatientStats: () => api.get('/api/doctor/patient-stats'),
+
+  // 患者分配管理
+  getAssignablePatients: (search?: string, limit: number = 50) =>
+    api.get('/api/doctor/patients/assignable', { params: { search, limit } }),
+  assignPatient: (patientId: number, relationshipType: string = 'primary', notes?: string) =>
+    api.post('/api/doctor/patients/assign', { patient_id: patientId, relationship_type: relationshipType, notes }),
+  unassignPatient: (patientId: number) =>
+    api.delete(`/api/doctor/patients/${patientId}/unassign`),
+
+  // 医嘱管理
+  getPatientOrders: (patientId: number) =>
+    api.get(`/api/doctor/patients/${patientId}/orders`),
+  deleteOrder: (orderId: number) =>
+    api.delete(`/api/doctor/orders/${orderId}`),
+  activateOrder: (orderId: number, confirm: boolean = true) =>
+    api.post(`/api/doctor/orders/${orderId}/activate`, { confirm }),
+  createOrder: (data: {
+    patient_id: number;
+    order_type: string;
+    title: string;
+    description?: string;
+    schedule_type: string;
+    start_date: string;
+    end_date?: string;
+    frequency?: string;
+    reminder_times?: string[];
+    weekdays?: number[];
+    status?: string;
+  }) => api.post('/api/doctor/orders', data),
+  updateOrder: (orderId: number, data: {
+    title?: string;
+    description?: string;
+    end_date?: string;
+    frequency?: string;
+    reminder_times?: string[];
+    weekdays?: number[];
+  }) => api.put(`/api/doctor/orders/${orderId}`, data),
+
+  // 任务管理
+  getPatientTasks: (patientId: number, taskDate: string) =>
+    api.get(`/api/doctor/patients/${patientId}/tasks`, { params: { task_date: taskDate } }),
+
+  // 会话管理
+  getPatientConsultations: (patientId: number, limit: number = 20) =>
+    api.get(`/api/doctor/patients/${patientId}/consultations`, { params: { limit } }),
+  getConsultation: (sessionId: string) =>
+    api.get(`/api/doctor/consultations/${sessionId}`),
+};
+
+// Doctors API (管理员端)
 export const doctorsApi = {
   list: (params?: any) => api.get('/admin/doctors', { params }),
   get: (id: number) => api.get(`/admin/doctors/${id}`),
@@ -187,6 +284,7 @@ export const dermaAgentApi = {
     }),
 
   // 创建新会话（SSE 流式）
+  // 使用 fetch API 而非 EventSource，因为 EventSource 不支持自定义请求头（如 Authorization）
   createSessionStream: (chiefComplaint?: string, callbacks?: {
     onMeta?: (data: any) => void;
     onChunk?: (text: string) => void;
@@ -195,48 +293,84 @@ export const dermaAgentApi = {
     onError?: (error: string) => void;
   }) => {
     const token = localStorage.getItem('admin_token');
-    const eventSource = new EventSource(
-      `${API_BASE_URL}/derma/start?chief_complaint=${encodeURIComponent(chiefComplaint || '')}`,
-      {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
-      } as any
-    );
 
-    eventSource.addEventListener('meta', (e: MessageEvent) => {
-      const data = JSON.parse(e.data);
-      callbacks?.onMeta?.(data);
-    });
+    const url = new URL(`${API_BASE_URL}/derma/start`);
+    if (chiefComplaint) {
+      url.searchParams.append('chief_complaint', chiefComplaint);
+    }
 
-    eventSource.addEventListener('chunk', (e: MessageEvent) => {
-      const data = JSON.parse(e.data);
-      callbacks?.onChunk?.(data.text);
-    });
-
-    eventSource.addEventListener('step', (e: MessageEvent) => {
-      const data = JSON.parse(e.data);
-      callbacks?.onStep?.(data);
-    });
-
-    eventSource.addEventListener('complete', (e: MessageEvent) => {
-      const data = JSON.parse(e.data);
-      callbacks?.onComplete?.(data);
-      eventSource.close();
-    });
-
-    eventSource.addEventListener('error', (e: MessageEvent) => {
-      if (e.data) {
-        const data = JSON.parse(e.data);
-        callbacks?.onError?.(data.error);
+    fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Accept': 'text/event-stream',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+    }).then(async (response) => {
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
-      eventSource.close();
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+
+          const eventMatch = line.match(/event:\s*(.+)/);
+          const dataMatch = line.match(/data:\s*(.+)/s);
+
+          if (eventMatch && dataMatch) {
+            const eventType = eventMatch[1].trim();
+            const dataStr = dataMatch[1].trim();
+
+            try {
+              const data = JSON.parse(dataStr);
+
+              switch (eventType) {
+                case 'meta':
+                  callbacks?.onMeta?.(data);
+                  break;
+                case 'chunk':
+                  callbacks?.onChunk?.(data.text);
+                  break;
+                case 'step':
+                  callbacks?.onStep?.(data);
+                  break;
+                case 'complete':
+                  callbacks?.onComplete?.(data);
+                  break;
+                case 'error':
+                  callbacks?.onError?.(data.error);
+                  break;
+              }
+            } catch (parseError) {
+              console.error('[createSessionStream] JSON parse error:', parseError);
+            }
+          }
+        }
+      }
+    }).catch((error) => {
+      console.error('[createSessionStream] Fetch error:', error);
+      callbacks?.onError?.(error.message);
     });
 
-    eventSource.onerror = () => {
-      callbacks?.onError?.('连接错误');
-      eventSource.close();
-    };
-
-    return eventSource;
+    // 返回一个空对象（没有实际的关闭方法，因为 fetch 不像 EventSource）
+    return { close: () => {} } as any;
   },
 
   // 发送消息（SSE 流式）

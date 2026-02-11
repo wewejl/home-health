@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Input, message, Card, Space, Modal, Tag, Typography } from 'antd';
-import { ArrowLeftOutlined, SendOutlined, ReloadOutlined, CheckOutlined } from '@ant-design/icons';
-import { personaChatApi } from '../../api';
-import './DoctorPersonaChat.css';
-
-const { TextArea } = Input;
-const { Title, Text, Paragraph } = Typography;
+import { ArrowLeft, Send, RotateCcw, Check } from 'lucide-react';
+import { personaChatApi } from '@/api';
+import { useToast } from '@/components/ui/toast';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { cn } from '@/lib/utils';
 
 // 采集阶段定义
 const STAGES = [
@@ -39,6 +41,7 @@ const DoctorPersonaChat: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const doctorId = parseInt(id || '0');
+  const { success, error } = useToast();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -50,8 +53,12 @@ const DoctorPersonaChat: React.FC = () => {
   const [doctorInfo, setDoctorInfo] = useState<DoctorInfo | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  // 对话框状态
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [backDialogOpen, setBackDialogOpen] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<any>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // 滚动到底部
   const scrollToBottom = useCallback(() => {
@@ -91,13 +98,13 @@ const DoctorPersonaChat: React.FC = () => {
         setCollectionState(startRes.data.state);
         setCurrentStage(startRes.data.stage);
         setIsComplete(startRes.data.is_complete);
-      } catch (error: any) {
-        message.error(error.response?.data?.detail || '初始化失败');
+      } catch (err: any) {
+        error(err.response?.data?.detail || '初始化失败');
       }
     };
 
     initChat();
-  }, [doctorId]);
+  }, [doctorId, error]);
 
   // 添加 AI 消息
   const addAIMessage = (content: string) => {
@@ -148,8 +155,8 @@ const DoctorPersonaChat: React.FC = () => {
       if (!res.data.is_complete) {
         setTimeout(() => inputRef.current?.focus(), 100);
       }
-    } catch (error: any) {
-      message.error(error.response?.data?.detail || '发送失败');
+    } catch (err: any) {
+      error(err.response?.data?.detail || '发送失败');
       // 恢复输入
       setInputValue(userMessage);
     } finally {
@@ -159,46 +166,37 @@ const DoctorPersonaChat: React.FC = () => {
 
   // 确认配置
   const handleConfirm = () => {
-    message.success('医生分身配置已保存');
+    success('医生分身配置已保存');
     navigate('/admin/doctors');
   };
 
   // 重新配置
   const handleReset = async () => {
-    Modal.confirm({
-      title: '重新配置',
-      content: '确定要清空当前配置重新开始吗？',
-      onOk: async () => {
-        try {
-          await personaChatApi.reset(doctorId);
-          // 重置状态
-          setMessages([]);
-          setCollectionState('');
-          setCurrentStage('');
-          setIsComplete(false);
-          setGeneratedPrompt('');
-          setHasUnsavedChanges(false);
+    try {
+      await personaChatApi.reset(doctorId);
+      // 重置状态
+      setMessages([]);
+      setCollectionState('');
+      setCurrentStage('');
+      setIsComplete(false);
+      setGeneratedPrompt('');
+      setHasUnsavedChanges(false);
 
-          // 重新开始
-          const startRes = await personaChatApi.start(doctorId);
-          addAIMessage(startRes.data.message);
-          setCollectionState(startRes.data.state);
-          setCurrentStage(startRes.data.stage);
-        } catch (error: any) {
-          message.error(error.response?.data?.detail || '重置失败');
-        }
-      },
-    });
+      // 重新开始
+      const startRes = await personaChatApi.start(doctorId);
+      addAIMessage(startRes.data.message);
+      setCollectionState(startRes.data.state);
+      setCurrentStage(startRes.data.stage);
+      setResetDialogOpen(false);
+    } catch (err: any) {
+      error(err.response?.data?.detail || '重置失败');
+    }
   };
 
-  // 返回确认
+  // 返回
   const handleBack = () => {
     if (hasUnsavedChanges && !isComplete) {
-      Modal.confirm({
-        title: '离开页面',
-        content: '配置进度将丢失，确定离开吗？',
-        onOk: () => navigate('/admin/doctors'),
-      });
+      setBackDialogOpen(true);
     } else {
       navigate('/admin/doctors');
     }
@@ -220,114 +218,210 @@ const DoctorPersonaChat: React.FC = () => {
   };
 
   return (
-    <div className="persona-chat-container">
-      {/* 顶部导航 */}
-      <div className="persona-header">
-        <div className="persona-header-left">
-          <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
-            返回
-          </Button>
-          <Title level={4} style={{ margin: '0 16px' }}>
-            {doctorInfo?.name} - 医生分身配置
-          </Title>
-        </div>
-        <Space>
-          {!isComplete && (
-            <Tag color="blue">进度: {currentStageIndex + 1}/{STAGES.length}</Tag>
-          )}
-          {isComplete && (
-            <Tag color="success" icon={<CheckOutlined />}>配置完成</Tag>
-          )}
-          {!isComplete && (
-            <Button icon={<ReloadOutlined />} onClick={handleReset} size="small">
-              重新开始
+    <div className="min-h-screen bg-background p-4 md:p-6">
+      <div className="max-w-4xl mx-auto space-y-4">
+        {/* 顶部导航 */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={handleBack}>
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-          )}
-        </Space>
-      </div>
-
-      {/* 阶段进度条 */}
-      <div className="stage-progress">
-        {STAGES.map((stage, index) => (
-          <React.Fragment key={stage.key}>
-            <div
-              className={`stage-dot ${index === currentStageIndex ? 'active' : ''} ${index < currentStageIndex ? 'completed' : ''}`}
-              title={stage.label}
-            >
-              {index < currentStageIndex ? <CheckOutlined /> : index + 1}
-            </div>
-            {index < STAGES.length - 1 && (
-              <div className={`stage-line ${index < currentStageIndex ? 'completed' : ''}`} />
+            <h2 className="text-xl font-semibold">
+              {doctorInfo?.name} - 医生分身配置
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            {!isComplete && (
+              <Badge variant="info">进度: {currentStageIndex + 1}/{STAGES.length}</Badge>
             )}
-          </React.Fragment>
-        ))}
-      </div>
+            {isComplete && (
+              <Badge variant="success" className="gap-1">
+                <Check className="h-3 w-3" />
+                配置完成
+              </Badge>
+            )}
+            {!isComplete && (
+              <Button variant="outline" size="sm" onClick={() => setResetDialogOpen(true)} className="gap-1">
+                <RotateCcw className="h-4 w-4" />
+                重新开始
+              </Button>
+            )}
+          </div>
+        </div>
 
-      {/* 聊天区域 */}
-      <div className="chat-container">
-        <div className="messages-list">
-          {messages.map((msg) => (
-            <div key={msg.id} className={`message-item ${msg.role}`}>
-              <div className={`message-bubble ${msg.role}`}>
-                {msg.role === 'ai' && <div className="ai-avatar">🤖</div>}
-                <div className="message-content">
-                  <div className="message-text">{msg.content}</div>
-                  <div className="message-time">
-                    {msg.timestamp.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+        {/* 阶段进度条 */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              {STAGES.map((stage, index) => (
+                <React.Fragment key={stage.key}>
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors",
+                        index === currentStageIndex && "bg-primary text-primary-foreground ring-4 ring-primary/20",
+                        index < currentStageIndex && "bg-success text-success-foreground",
+                        index > currentStageIndex && "bg-secondary text-foreground-secondary"
+                      )}
+                      title={stage.label}
+                    >
+                      {index < currentStageIndex ? <Check className="h-4 w-4" /> : index + 1}
+                    </div>
+                    <span className={cn(
+                      "text-xs mt-1",
+                      index === currentStageIndex ? "text-primary font-medium" : "text-foreground-secondary"
+                    )}>
+                      {stage.label}
+                    </span>
+                  </div>
+                  {index < STAGES.length - 1 && (
+                    <div className={cn(
+                      "flex-1 h-0.5 mx-2 transition-colors",
+                      index < currentStageIndex ? "bg-success" : "bg-secondary"
+                    )} />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 聊天区域 */}
+        <Card className="min-h-[400px]">
+          <CardContent className="p-4">
+            <div className="space-y-4 max-h-[500px] overflow-y-auto">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={cn(
+                    "flex gap-3",
+                    msg.role === 'user' ? "justify-end" : "justify-start"
+                  )}
+                >
+                  {msg.role === 'ai' && (
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-lg">
+                      🤖
+                    </div>
+                  )}
+                  <div className={cn(
+                    "max-w-[70%] rounded-lg px-4 py-2",
+                    msg.role === 'ai'
+                      ? "bg-secondary text-foreground"
+                      : "bg-primary text-primary-foreground"
+                  )}>
+                    <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+                    <div className={cn(
+                      "text-xs mt-1",
+                      msg.role === 'ai' ? "text-foreground-secondary" : "text-primary-foreground/70"
+                    )}>
+                      {msg.timestamp.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* 完成后显示生成的 Prompt */}
+            {isComplete && generatedPrompt && (
+              <div className="mt-6 space-y-4 p-4 rounded-lg bg-success-light/10 border border-success/20">
+                <h3 className="font-semibold text-success">配置摘要</h3>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm font-medium mb-2">生成的 AI 人设 Prompt：</p>
+                    <p className="text-sm text-foreground-secondary whitespace-pre-wrap bg-background/50 p-3 rounded-md">
+                      {generatedPrompt}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={handleConfirm} className="gap-1">
+                      <Check className="h-4 w-4" />
+                      确认保存
+                    </Button>
+                    <Button variant="outline" onClick={() => setResetDialogOpen(true)}>
+                      重新配置
+                    </Button>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
+            )}
+          </CardContent>
+        </Card>
 
-        {/* 完成后显示生成的 Prompt */}
-        {isComplete && generatedPrompt && (
-          <Card className="summary-card" title="配置摘要" bordered={false}>
-            <Space direction="vertical" style={{ width: '100%' }} size="middle">
-              <div>
-                <Text strong>生成的 AI 人设 Prompt：</Text>
-                <Paragraph className="generated-prompt">
-                  {generatedPrompt}
-                </Paragraph>
+        {/* 输入区域 */}
+        {!isComplete && (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex gap-2">
+                <Textarea
+                  ref={inputRef}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="输入您的回答...（Enter 发送，Shift + Enter 换行）"
+                  rows={1}
+                  disabled={loading}
+                  className={cn(
+                    "flex-1 resize-none",
+                    "min-h-[38px] max-h-[120px] h-auto"
+                  )}
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = 'auto';
+                    target.style.height = Math.min(target.scrollHeight, 120) + 'px';
+                  }}
+                />
+                <Button
+                  onClick={handleSend}
+                  disabled={!inputValue.trim() || loading}
+                  className="gap-1"
+                >
+                  {loading ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  发送
+                </Button>
               </div>
-              <Space>
-                <Button type="primary" icon={<CheckOutlined />} onClick={handleConfirm}>
-                  确认保存
-                </Button>
-                <Button onClick={handleReset}>
-                  重新配置
-                </Button>
-              </Space>
-            </Space>
+            </CardContent>
           </Card>
         )}
       </div>
 
-      {/* 输入区域 */}
-      {!isComplete && (
-        <div className="input-area">
-          <TextArea
-            ref={inputRef}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="输入您的回答...（Enter 发送，Shift + Enter 换行）"
-            autoSize={{ minRows: 1, maxRows: 4 }}
-            disabled={loading}
-          />
-          <Button
-            type="primary"
-            icon={<SendOutlined />}
-            onClick={handleSend}
-            loading={loading}
-            disabled={!inputValue.trim()}
-          >
-            发送
-          </Button>
-        </div>
-      )}
+      {/* 重置确认对话框 */}
+      <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>重新配置</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要清空当前配置重新开始吗？
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReset}>确定</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 返回确认对话框 */}
+      <AlertDialog open={backDialogOpen} onOpenChange={setBackDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>离开页面</AlertDialogTitle>
+            <AlertDialogDescription>
+              配置进度将丢失，确定离开吗？
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={() => navigate('/admin/doctors')}>
+              确定
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

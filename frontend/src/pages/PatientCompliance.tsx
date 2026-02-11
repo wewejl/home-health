@@ -1,32 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Card,
-  Row,
-  Col,
-  Select,
-  DatePicker,
-  Statistic,
-  Table,
-  Typography,
-  Tag,
-  Alert,
-  Space,
-  Progress,
-  List,
-} from 'antd';
-import {
-  RiseOutlined,
-  FallOutlined,
-  CheckCircleOutlined,
-  WarningOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
-import { Line, Column, Pie } from '@ant-design/charts';
 import { medicalOrdersApi } from '../api';
 import dayjs from 'dayjs';
-
-const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
+import {
+  TrendingUp,
+  TrendingDown,
+  CheckCircle,
+  AlertTriangle,
+  Calendar,
+  Activity,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { StatCardGrid } from '@/components/medical/stat-card';
+import { PageHeader } from '@/components/medical/page-header';
+import { Progress } from '@/components/ui/progress';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+// 使用自定义图表组件（基于 Recharts）
+import { CustomLineChart, CustomColumnChart, CustomPieChart } from '@/components/charts';
+import { getThemeColors } from '@/lib/theme';
 
 // 依从性数据类型
 interface DailyCompliance {
@@ -53,12 +55,15 @@ interface AbnormalRecord {
 }
 
 const PatientCompliance: React.FC = () => {
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<number>(1);
-  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
-    dayjs().subtract(7, 'day'),
-    dayjs(),
-  ]);
+  const [dateRange, setDateRange] = useState<{
+    start: Date;
+    end: Date;
+  }>({
+    start: dayjs().subtract(7, 'day').toDate(),
+    end: dayjs().toDate(),
+  });
 
   // 依从性数据
   const [weeklyData, setWeeklyData] = useState<WeeklyCompliance | null>(null);
@@ -104,9 +109,9 @@ const PatientCompliance: React.FC = () => {
   };
 
   useEffect(() => {
-    setLoading(true);
+    // setLoading(true);
     Promise.all([fetchWeeklyCompliance(), fetchAbnormalRecords()]).finally(() => {
-      setLoading(false);
+      // setLoading(false);
     });
   }, [selectedPatient]);
 
@@ -135,304 +140,340 @@ const PatientCompliance: React.FC = () => {
     { type: '待完成', value: totalTasks - completedTasks - overdueTasks },
   ];
 
+  // 获取主题颜色
+  const themeColors = getThemeColors();
+
+  // 折线图配置
+  const lineTooltipFormatter = (_name: string, value: any) => ({
+    name: '完成率',
+    value: `${value}%`,
+  });
+
+  // 柱状图配置
+  const barTooltipFormatter = (name: string, value: any) => ({
+    name,
+    value: `${value}`,
+  });
+
+  // 饼图配置
+  const pieTooltipFormatter = (name: string, value: any) => ({
+    name,
+    value: `${value}`,
+  });
+
   // 异常记录表格列
   const abnormalColumns = [
-    {
-      title: '任务',
-      dataIndex: 'task_title',
-      key: 'task_title',
-    },
+    { title: '任务', key: 'task', render: (_: any, record: AbnormalRecord) => record.task_title },
     {
       title: '异常值',
-      dataIndex: 'value_data',
-      key: 'value_data',
-      render: (value: Record<string, any>) => {
-        if (!value) return '-';
-        return JSON.stringify(value);
+      key: 'value',
+      render: (_: any, record: AbnormalRecord) => {
+        if (!record.value_data) return '-';
+        try {
+          return JSON.stringify(record.value_data);
+        } catch {
+          return '-';
+        }
       },
     },
     {
       title: '记录时间',
-      dataIndex: 'completed_at',
-      key: 'completed_at',
-      render: (time: string) => dayjs(time).format('MM-DD HH:mm'),
+      key: 'time',
+      render: (_: any, record: AbnormalRecord) => dayjs(record.completed_at).format('MM-DD HH:mm'),
     },
     {
       title: '类型',
-      dataIndex: 'alert_type',
-      key: 'alert_type',
-      render: (type: string) => {
-        const typeMap: Record<string, { text: string; color: string }> = {
-          glucose_low: { text: '低血糖', color: 'red' },
-          glucose_high: { text: '高血糖', color: 'orange' },
-          bp_high: { text: '高血压', color: 'red' },
-          temp_high: { text: '发烧', color: 'orange' },
+      key: 'type',
+      render: (_: any, record: AbnormalRecord) => {
+        const typeMap: Record<string, { text: string; variant: 'success' | 'warning' | 'danger' | 'info' | 'default' }> = {
+          glucose_low: { text: '低血糖', variant: 'danger' },
+          glucose_high: { text: '高血糖', variant: 'warning' },
+          bp_high: { text: '高血压', variant: 'danger' },
+          temp_high: { text: '发烧', variant: 'warning' },
         };
-        const config = typeMap[type] || { text: type, color: 'default' };
-        return <Tag color={config.color}>{config.text}</Tag>;
+        const config = typeMap[record.alert_type || ''] || { text: record.alert_type || '-', variant: 'default' as const };
+        return <Badge variant={config.variant}>{config.text}</Badge>;
       },
     },
   ];
 
-  // 折线图配置
-  const lineConfig = {
-    data: trendLineData,
-    xField: 'date',
-    yField: 'value',
-    yAxis: { max: 100, min: 0 },
-    smooth: true,
-    point: { size: 4 },
-    color: '#1890ff',
-    tooltip: {
-      formatter: (datum: any) => ({
-        name: '完成率',
-        value: `${datum.value}%`,
-      }),
-    },
+  // 统计卡片
+  const getComplianceVariant = (): 'success' | 'warning' | 'danger' | 'primary' | 'info' => {
+    if (averageRate >= 0.8) return 'success';
+    if (averageRate >= 0.6) return 'warning';
+    return 'danger';
   };
 
-  // 柱状图配置
-  const barConfig = {
-    data: barChartData,
-    xField: 'date',
-    yField: ['总任务数', '已完成'],
-    seriesField: 'type',
-    color: ['#1890ff', '#52c41a'],
-    columnWidthRatio: 0.6,
-    legend: {
-      position: 'top' as const,
-    },
+  const getOverdueVariant = (): 'success' | 'danger' => {
+    return overdueTasks > 0 ? 'danger' : 'success';
   };
 
-  // 饼图配置
-  const pieConfig = {
-    data: pieData,
-    angleField: 'value',
-    colorField: 'type',
-    radius: 0.8,
-    innerRadius: 0.6,
-    color: ['#52c41a', '#f5222d', '#faad14'],
-    label: {
-      type: 'inner' as const,
-      offset: '-50%',
-      content: '{value}',
-      style: { textAlign: 'center' as const, fontSize: 14 },
+  const statsCards = [
+    {
+      title: '平均依从率',
+      value: Math.round(averageRate * 100),
+      unit: '%',
+      icon: averageRate >= 0.8 ? <TrendingUp className="h-5 w-5" /> : <TrendingDown className="h-5 w-5" />,
+      variant: getComplianceVariant(),
     },
-    legend: {
-      position: 'bottom' as const,
+    {
+      title: '总任务数',
+      value: totalTasks,
+      icon: <Calendar className="h-5 w-5" />,
+      variant: 'primary' as const,
     },
-  };
+    {
+      title: '已完成',
+      value: completedTasks,
+      icon: <CheckCircle className="h-5 w-5" />,
+      variant: 'success' as const,
+    },
+    {
+      title: '已超时',
+      value: overdueTasks,
+      icon: <AlertTriangle className="h-5 w-5" />,
+      variant: getOverdueVariant(),
+    },
+  ];
 
   return (
-    <div>
-      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-        <Col>
-          <Title level={4} style={{ margin: 0 }}>
-            患者依从性分析
-          </Title>
-        </Col>
-        <Col>
-          <Space>
+    <div className="space-y-6">
+      {/* 页面头部 */}
+      <PageHeader
+        title="患者依从性分析"
+        description="查看患者医嘱执行情况、依从性趋势和异常记录"
+        actions={
+          <div className="flex items-center gap-2">
             <Select
-              style={{ width: 120 }}
-              value={selectedPatient}
-              onChange={setSelectedPatient}
+              value={selectedPatient.toString()}
+              onValueChange={(v) => setSelectedPatient(Number(v))}
             >
-              {patients.map((p) => (
-                <Select.Option key={p.id} value={p.id}>
-                  {p.name}
-                </Select.Option>
-              ))}
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="选择患者" />
+              </SelectTrigger>
+              <SelectContent>
+                {patients.map((p) => (
+                  <SelectItem key={p.id} value={p.id.toString()}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
-            <RangePicker
-              value={dateRange}
-              onChange={(dates) => dates && setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs])}
-            />
-          </Space>
-        </Col>
-      </Row>
+            <div className="flex items-center gap-2 border border-border rounded-sm px-3 py-1.5">
+              <DatePicker
+                value={dateRange.start}
+                onChange={(date) => date && setDateRange(prev => ({ ...prev, start: date }))}
+              />
+              <span className="text-foreground-secondary">-</span>
+              <DatePicker
+                value={dateRange.end}
+                onChange={(date) => date && setDateRange(prev => ({ ...prev, end: date }))}
+              />
+            </div>
+          </div>
+        }
+      />
 
       {/* 统计概览 */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card loading={loading}>
-            <Statistic
-              title="平均依从率"
-              value={Math.round(averageRate * 100)}
-              suffix="%"
-              prefix={
-                averageRate >= 0.8 ? (
-                  <RiseOutlined style={{ color: '#52c41a' }} />
-                ) : (
-                  <FallOutlined style={{ color: '#f5222d' }} />
-                )
-              }
-              valueStyle={{
-                color: averageRate >= 0.8 ? '#52c41a' : averageRate >= 0.6 ? '#faad14' : '#f5222d',
-              }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card loading={loading}>
-            <Statistic
-              title="总任务数"
-              value={totalTasks}
-              prefix={<CalendarOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card loading={loading}>
-            <Statistic
-              title="已完成"
-              value={completedTasks}
-              prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card loading={loading}>
-            <Statistic
-              title="已超时"
-              value={overdueTasks}
-              prefix={<WarningOutlined />}
-              valueStyle={{ color: overdueTasks > 0 ? '#f5222d' : '#52c41a' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <StatCardGrid items={statsCards} cols={4} />
 
       {/* 趋势图表 */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} lg={16}>
-          <Card title="近7天依从性趋势" loading={loading}>
-            <Line {...lineConfig} height={250} />
-          </Card>
-        </Col>
-        <Col xs={24} lg={8}>
-          <Card title="任务完成分布" loading={loading}>
-            <Pie {...pieConfig} height={200} />
-          </Card>
-        </Col>
-      </Row>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base font-medium">近7天依从性趋势</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CustomLineChart
+              data={trendLineData}
+              xField="date"
+              yField="value"
+              height={250}
+              smooth={true}
+              yAxisMax={100}
+              yAxisMin={0}
+              colors={[themeColors.colorPrimary]}
+              tooltipFormatter={lineTooltipFormatter}
+            />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-medium">任务完成分布</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CustomPieChart
+              data={pieData}
+              nameField="type"
+              valueField="value"
+              height={200}
+              radius={0.8}
+              innerRadius={0.6}
+              colors={[themeColors.colorSuccess, themeColors.colorError, themeColors.colorWarning]}
+              legendPosition="bottom"
+              tooltipFormatter={pieTooltipFormatter}
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* 每日详细数据 */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} lg={12}>
-          <Card title="每日任务详情" loading={loading}>
-            <Column {...barConfig} height={200} />
-          </Card>
-        </Col>
-        <Col xs={24} lg={12}>
-          <Card title="近7天完成率" loading={loading}>
-            <List
-              dataSource={dailyData}
-              renderItem={(day) => {
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-medium">每日任务详情</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CustomColumnChart
+              data={barChartData}
+              xField="date"
+              yField={['总任务数', '已完成']}
+              height={200}
+              columnWidthRatio={0.6}
+              colors={[themeColors.colorPrimary, themeColors.colorSuccess]}
+              legendPosition="top"
+              tooltipFormatter={barTooltipFormatter}
+            />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-medium">近7天完成率</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {dailyData.map((day) => {
                 const percent = Math.round(day.rate * 100);
                 return (
-                  <List.Item>
-                    <List.Item.Meta
-                      title={
-                        <Space>
-                          <Text>{dayjs(day.date).format('MM月DD日')}</Text>
-                          <Text type="secondary">({day.completed}/{day.total})</Text>
-                        </Space>
-                      }
-                      description={
-                        <Progress
-                          percent={percent}
-                          status={percent >= 80 ? 'success' : percent >= 60 ? 'normal' : 'exception'}
-                          size="small"
-                        />
-                      }
-                    />
-                  </List.Item>
+                  <div key={day.date} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-foreground">
+                        {dayjs(day.date).format('MM月DD日')}
+                      </span>
+                      <span className="text-foreground-secondary">
+                        ({day.completed}/{day.total})
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <Progress
+                        value={percent}
+                        max={100}
+                        className={cn(
+                          "h-2",
+                          percent >= 80 && "[&_div]:bg-success",
+                          percent >= 60 && percent < 80 && "[&_div]:bg-warning",
+                          percent < 60 && "[&_div]:bg-danger"
+                        )}
+                      />
+                    </div>
+                  </div>
                 );
-              }}
-            />
-          </Card>
-        </Col>
-      </Row>
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* 异常记录 */}
-      <Card
-        title={
-          <Space>
-            <WarningOutlined style={{ color: '#f5222d' }} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-danger" />
             <span>异常监测记录</span>
-            <Tag color="#f5222d">{abnormalRecords.length}</Tag>
-          </Space>
-        }
-        loading={loading}
-      >
-        {abnormalRecords.length === 0 ? (
-          <Alert
-            message="暂无异常记录"
-            description="患者近30天内没有监测到异常数值"
-            type="success"
-            showIcon
-          />
-        ) : (
-          <Table
-            columns={abnormalColumns}
-            dataSource={abnormalRecords}
-            rowKey="id"
-            pagination={{ pageSize: 5 }}
-            size="small"
-          />
-        )}
+            <Badge variant="danger">{abnormalRecords.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {abnormalRecords.length === 0 ? (
+            <Alert variant="success">
+              <CheckCircle className="h-4 w-4" />
+              <AlertTitle>暂无异常记录</AlertTitle>
+              <AlertDescription>
+                患者近30天内没有监测到异常数值
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {abnormalColumns.map((col, i) => (
+                      <TableHead key={i}>{col.title}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {abnormalRecords.map((record) => (
+                    <TableRow key={record.id}>
+                      {abnormalColumns.map((col, i) => (
+                        <TableCell key={i}>{col.render(null, record)}</TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
       </Card>
 
       {/* 健康建议 */}
-      <Card
-        title="健康建议"
-        style={{ marginTop: 16 }}
-        loading={loading}
-      >
-        <Space direction="vertical" style={{ width: '100%' }}>
-          {averageRate >= 0.8 ? (
-            <Alert
-              message="依从性优秀"
-              description="患者近7天医嘱执行率保持在80%以上，请继续保持！"
-              type="success"
-              showIcon
-            />
-          ) : averageRate >= 0.6 ? (
-            <Alert
-              message="依从性一般"
-              description="患者近7天医嘱执行率为60%-80%，建议关注提醒，帮助患者按时完成医嘱。"
-              type="warning"
-              showIcon
-            />
-          ) : (
-            <Alert
-              message="依从性偏低"
-              description="患者近7天医嘱执行率低于60%，需要重点关注，建议联系患者了解原因并提供帮助。"
-              type="error"
-              showIcon
-            />
-          )}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            健康建议
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {averageRate >= 0.8 ? (
+              <Alert variant="success">
+                <CheckCircle className="h-4 w-4" />
+                <AlertTitle>依从性优秀</AlertTitle>
+                <AlertDescription>
+                  患者近7天医嘱执行率保持在80%以上，请继续保持！
+                </AlertDescription>
+              </Alert>
+            ) : averageRate >= 0.6 ? (
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>依从性一般</AlertTitle>
+                <AlertDescription>
+                  患者近7天医嘱执行率为60%-80%，建议关注提醒，帮助患者按时完成医嘱。
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <Alert className="border-danger/50 text-danger">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>依从性偏低</AlertTitle>
+                <AlertDescription>
+                  患者近7天医嘱执行率低于60%，需要重点关注，建议联系患者了解原因并提供帮助。
+                </AlertDescription>
+              </Alert>
+            )}
 
-          {overdueTasks > 0 && (
-            <Alert
-              message={`发现 ${overdueTasks} 个超时任务`}
-              description="有部分任务未按时完成，建议患者设置提醒，或联系家属协助监督。"
-              type="warning"
-              showIcon
-            />
-          )}
+            {overdueTasks > 0 && (
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>发现 {overdueTasks} 个超时任务</AlertTitle>
+                <AlertDescription>
+                  有部分任务未按时完成，建议患者设置提醒，或联系家属协助监督。
+                </AlertDescription>
+              </Alert>
+            )}
 
-          {abnormalRecords.length > 0 && (
-            <Alert
-              message={`发现 ${abnormalRecords.length} 条异常记录`}
-              description="监测到异常数值，建议及时就医或调整治疗方案。"
-              type="error"
-              showIcon
-            />
-          )}
-        </Space>
+            {abnormalRecords.length > 0 && (
+              <Alert className="border-danger/50 text-danger">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>发现 {abnormalRecords.length} 条异常记录</AlertTitle>
+                <AlertDescription>
+                  监测到异常数值，建议及时就医或调整治疗方案。
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        </CardContent>
       </Card>
     </div>
   );

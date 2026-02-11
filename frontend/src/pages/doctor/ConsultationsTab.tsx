@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { List, Tag, Typography, Empty, Card, Collapse } from 'antd';
-import { MessageOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { useState, useEffect } from 'react';
+import { MessageSquare, Clock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { doctorApi } from '@/api';
 import dayjs from 'dayjs';
-
-const { Text, Paragraph } = Typography;
-const { Panel } = Collapse;
 
 interface ConsultationMessage {
   id: number;
@@ -42,8 +42,7 @@ const ConsultationsTab: React.FC<ConsultationsTabProps> = ({ patientId }) => {
   const fetchSessions = async () => {
     setSessionsLoading(true);
     try {
-      const response = await fetch(`/api/doctor/patients/${patientId}/consultations?limit=20`);
-      const data = await response.json();
+      const { data } = await doctorApi.getPatientConsultations(patientId, 20);
       setSessions(data);
     } catch (error) {
       console.error('Failed to fetch consultations:', error);
@@ -55,8 +54,7 @@ const ConsultationsTab: React.FC<ConsultationsTabProps> = ({ patientId }) => {
   const fetchMessages = async (sessionId: string) => {
     setMessagesLoading(true);
     try {
-      const response = await fetch(`/api/doctor/consultations/${sessionId}`);
-      const data = await response.json();
+      const { data } = await doctorApi.getConsultation(sessionId);
       setSelectedSession(data.session);
       setMessages(data.messages);
     } catch (error) {
@@ -81,104 +79,138 @@ const ConsultationsTab: React.FC<ConsultationsTabProps> = ({ patientId }) => {
   };
 
   return (
-    <div style={{ padding: 16 }}>
-      <div style={{ display: 'flex', gap: 16, height: 'calc(100vh - 300px)' }}>
+    <div className="p-4">
+      <div className="flex flex-col md:flex-row gap-4 h-[600px]">
         {/* 会话列表 */}
-        <Card
-          title="对话记录"
-          style={{ width: 350, overflow: 'auto' }}
-          bodyStyle={{ padding: 0 }}
-        >
-          {sessionsLoading ? (
-            <div style={{ padding: 16, textAlign: 'center' }}>加载中...</div>
-          ) : sessions.length === 0 ? (
-            <Empty description="暂无对话记录" style={{ padding: 32 }} />
-          ) : (
-            <List
-              dataSource={sessions}
-              renderItem={(session) => (
-                <List.Item
-                  key={session.id}
-                  onClick={() => fetchMessages(session.id)}
-                  style={{
-                    padding: '12px 16px',
-                    cursor: 'pointer',
-                    background: selectedSession?.id === session.id ? '#e6f7ff' : undefined
-                  }}
-                >
-                  <List.Item.Meta
-                    avatar={<MessageOutlined style={{ fontSize: 24, color: '#1890ff' }} />}
-                    title={
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Text strong>{getAgentTypeLabel(session.agent_type)}</Text>
-                        <Tag color="blue">{session.message_count} 条消息</Tag>
+        <Card className="w-full md:w-80 flex-shrink-0 overflow-hidden flex flex-col">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">对话记录</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 overflow-auto flex-1">
+            {sessionsLoading ? (
+              <div className="p-4 space-y-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex items-start gap-3 p-4 border rounded-lg">
+                    <div className="h-5 w-5 bg-muted animate-pulse rounded mt-0.5" />
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="h-4 w-20 bg-muted animate-pulse rounded" />
+                        <div className="h-5 w-10 bg-muted animate-pulse rounded" />
                       </div>
-                    }
-                    description={
-                      <div>
-                        <Text ellipsis style={{ display: 'block' }}>
+                      <div className="h-4 w-full bg-muted animate-pulse rounded" />
+                      <div className="flex items-center gap-1">
+                        <div className="h-3 w-3 bg-muted animate-pulse rounded" />
+                        <div className="h-3 w-24 bg-muted animate-pulse rounded" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="text-center p-8 text-muted-foreground">
+                <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>暂无对话记录</p>
+              </div>
+            ) : (
+              <div className="divide-y">
+                {sessions.map((session) => (
+                  <div
+                    key={session.id}
+                    onClick={() => fetchMessages(session.id)}
+                    className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 ${
+                      selectedSession?.id === session.id ? 'bg-muted' : ''
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <MessageSquare className="h-5 w-5 text-primary mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-medium text-sm">{getAgentTypeLabel(session.agent_type)}</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {session.message_count} 条
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground truncate mb-1">
                           {session.last_message || '无消息'}
-                        </Text>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          <ClockCircleOutlined /> {dayjs(session.updated_at).format('YYYY-MM-DD HH:mm')}
-                        </Text>
+                        </p>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {dayjs(session.updated_at).format('YYYY-MM-DD HH:mm')}
+                        </div>
                       </div>
-                    }
-                  />
-                </List.Item>
-              )}
-            />
-          )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
         </Card>
 
         {/* 消息详情 */}
-        <Card
-          title={selectedSession ? '对话详情' : '请选择一个对话'}
-          style={{ flex: 1, overflow: 'auto' }}
-          bodyStyle={{ padding: 16 }}
-        >
-          {messagesLoading ? (
-            <div style={{ textAlign: 'center' }}>加载中...</div>
-          ) : !selectedSession ? (
-            <Empty description="请从左侧选择一个对话查看详情" />
-          ) : (
-            <Collapse defaultActiveKey={['1']}>
-              <Panel header={`${selectedSession.agent_type} - ${selectedSession.message_count} 条消息`} key="1">
-                <List
-                  dataSource={messages}
-                  renderItem={(message) => (
-                    <List.Item
+        <Card className="flex-1 min-w-0 overflow-hidden flex flex-col">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">
+              {selectedSession ? '对话详情' : '请选择一个对话'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 overflow-auto flex-1">
+            {messagesLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="p-3 rounded-lg border-l-4 bg-muted/30">
+                    <div className="h-5 w-16 bg-muted animate-pulse rounded mb-2" />
+                    <div className="space-y-2">
+                      <div className="h-4 w-full bg-muted animate-pulse rounded" />
+                      <div className="h-4 w-4/5 bg-muted animate-pulse rounded" />
+                    </div>
+                    <div className="h-3 w-32 bg-muted animate-pulse rounded mt-2" />
+                  </div>
+                ))}
+              </div>
+            ) : !selectedSession ? (
+              <div className="text-center text-muted-foreground h-full flex items-center justify-center">
+                <p>请从左侧选择一个对话查看详情</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* 会话信息 */}
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm font-medium">
+                    {getAgentTypeLabel(selectedSession.agent_type)} - {selectedSession.message_count} 条消息
+                  </p>
+                </div>
+
+                <Separator />
+
+                {/* 消息列表 */}
+                <div className="space-y-3">
+                  {messages.map((message) => (
+                    <div
                       key={message.id}
-                      style={{
-                        borderLeft: message.sender === 'user' ? '3px solid #52c41a' : '3px solid #1890ff',
-                        paddingLeft: 12,
-                        marginBottom: 8,
-                        background: message.sender === 'user' ? '#f6ffed' : '#e6f7ff'
-                      }}
+                      className={`p-3 rounded-lg border-l-4 ${
+                        message.sender === 'user'
+                          ? 'border-success bg-success-light/30'
+                          : 'border-info bg-info-light/30'
+                      }`}
                     >
-                      <List.Item.Meta
-                        title={
-                          <Tag color={message.sender === 'user' ? 'green' : 'blue'}>
-                            {message.sender === 'user' ? '患者' : 'AI助手'}
-                          </Tag>
-                        }
-                        description={
-                          <div>
-                            <Paragraph style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                              {message.content}
-                            </Paragraph>
-                            <Text type="secondary" style={{ fontSize: 12 }}>
-                              {dayjs(message.created_at).format('YYYY-MM-DD HH:mm:ss')}
-                            </Text>
-                          </div>
-                        }
-                      />
-                    </List.Item>
-                  )}
-                />
-              </Panel>
-            </Collapse>
-          )}
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge
+                          variant={message.sender === 'user' ? 'default' : 'secondary'}
+                          className={message.sender === 'user' ? 'bg-success' : ''}
+                        >
+                          {message.sender === 'user' ? '患者' : 'AI助手'}
+                        </Badge>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap mb-2">{message.content}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {dayjs(message.created_at).format('YYYY-MM-DD HH:mm:ss')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
     </div>

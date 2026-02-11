@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Card, Statistic, Spin, Typography } from 'antd';
 import {
-  TeamOutlined,
-  MessageOutlined,
-  FileTextOutlined,
-  CommentOutlined,
-  RobotOutlined,
-  MedicineBoxOutlined,
-} from '@ant-design/icons';
+  Users,
+  MessageSquare,
+  FileText,
+  MessageCircle,
+  Bot,
+  BriefcaseMedical,
+} from 'lucide-react';
 import { statsApi } from '../api';
-
-const { Title } = Typography;
+import { StatCardGrid } from '@/components/medical/stat-card';
+import { PageHeader } from '@/components/medical/page-header';
+import { LoadingSkeleton } from '@/components/medical/loading-skeleton';
 
 interface OverviewStats {
   total_departments: number;
@@ -45,100 +45,88 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: 50 }}>
-        <Spin size="large" />
+      <div className="space-y-6">
+        <div className="h-8 w-32 bg-surface-alt rounded animate-pulse" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <LoadingSkeleton key={i} variant="card" />
+          ))}
+        </div>
       </div>
     );
   }
 
-  return (
-    <div>
-      <Title level={4}>仪表盘</Title>
-      
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="科室总数"
-              value={stats?.total_departments || 0}
-              prefix={<MedicineBoxOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="AI医生总数"
-              value={stats?.active_ai_doctors || 0}
-              suffix={`/ ${stats?.total_doctors || 0}`}
-              prefix={<RobotOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="总会话数"
-              value={stats?.total_sessions || 0}
-              prefix={<TeamOutlined />}
-              valueStyle={{ color: '#722ed1' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="总消息数"
-              value={stats?.total_messages || 0}
-              prefix={<MessageOutlined />}
-              valueStyle={{ color: '#fa8c16' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+  // 第一行统计卡片
+  const primaryStats = [
+    {
+      title: '科室总数',
+      value: stats?.total_departments || 0,
+      icon: <BriefcaseMedical className="h-5 w-5" />,
+      variant: 'primary' as const,
+    },
+    {
+      title: 'AI医生总数',
+      value: `${stats?.active_ai_doctors || 0} / ${stats?.total_doctors || 0}`,
+      icon: <Bot className="h-5 w-5" />,
+      variant: 'success' as const,
+    },
+    {
+      title: '总会话数',
+      value: stats?.total_sessions || 0,
+      icon: <Users className="h-5 w-5" />,
+      variant: 'info' as const,
+    },
+    {
+      title: '总消息数',
+      value: stats?.total_messages || 0,
+      icon: <MessageSquare className="h-5 w-5" />,
+      variant: 'warning' as const,
+    },
+  ];
 
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="今日会话"
-              value={stats?.today_sessions || 0}
-              prefix={<TeamOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="今日消息"
-              value={stats?.today_messages || 0}
-              prefix={<MessageOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="待审核文档"
-              value={stats?.pending_documents || 0}
-              prefix={<FileTextOutlined />}
-              valueStyle={{ color: stats?.pending_documents ? '#faad14' : undefined }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="待处理反馈"
-              value={stats?.pending_feedbacks || 0}
-              prefix={<CommentOutlined />}
-              valueStyle={{ color: stats?.pending_feedbacks ? '#f5222d' : undefined }}
-            />
-          </Card>
-        </Col>
-      </Row>
+  // 第二行统计卡片 - 动态颜色根据数值决定
+  const pendingDocsVariant: 'primary' | 'warning' = stats?.pending_documents ? 'warning' : 'primary';
+  const pendingFeedbacksVariant: 'primary' | 'danger' = stats?.pending_feedbacks ? 'danger' : 'primary';
+
+  const secondaryStats = [
+    {
+      title: '今日会话',
+      value: stats?.today_sessions || 0,
+      icon: <Users className="h-5 w-5" />,
+      variant: 'primary' as const,
+    },
+    {
+      title: '今日消息',
+      value: stats?.today_messages || 0,
+      icon: <MessageSquare className="h-5 w-5" />,
+      variant: 'primary' as const,
+    },
+    {
+      title: '待审核文档',
+      value: stats?.pending_documents || 0,
+      icon: <FileText className="h-5 w-5" />,
+      variant: pendingDocsVariant,
+    },
+    {
+      title: '待处理反馈',
+      value: stats?.pending_feedbacks || 0,
+      icon: <MessageCircle className="h-5 w-5" />,
+      variant: pendingFeedbacksVariant,
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="仪表盘"
+        description="查看系统运营数据和关键指标"
+      />
+
+      {/* 主要统计卡片 */}
+      <StatCardGrid items={primaryStats} cols={4} />
+
+      {/* 次要统计卡片 */}
+      <StatCardGrid items={secondaryStats} cols={4} />
     </div>
   );
 };

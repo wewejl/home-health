@@ -1,15 +1,59 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Table, Button, Space, Modal, Form, Input, InputNumber, Select,
-  message, Popconfirm, Typography, Tag, Switch, Tabs
-} from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, FireOutlined } from '@ant-design/icons';
 import { diseasesApi, departmentsApi } from '../api';
+import { useToast } from '@/components/ui/toast';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { PageHeader } from '@/components/medical/page-header';
+import { LoadingSkeleton } from '@/components/medical/loading-skeleton';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Flame,
+  Search,
+  Filter,
+  Loader2,
+} from 'lucide-react';
 
-const { Title } = Typography;
-const { TextArea } = Input;
-const { TabPane } = Tabs;
-
+// Types
 interface Disease {
   id: number;
   name: string;
@@ -43,309 +87,578 @@ interface Department {
   name: string;
 }
 
+interface FormData {
+  name?: string;
+  department_id?: number;
+  pinyin?: string;
+  pinyin_abbr?: string;
+  aliases?: string;
+  recommended_department?: string;
+  overview?: string;
+  symptoms?: string;
+  causes?: string;
+  diagnosis?: string;
+  treatment?: string;
+  prevention?: string;
+  care?: string;
+  author_name?: string;
+  author_title?: string;
+  author_avatar?: string;
+  reviewer_info?: string;
+  sort_order?: number;
+  is_hot?: boolean;
+  is_active?: boolean;
+}
+
 const Diseases: React.FC = () => {
   const [diseases, setDiseases] = useState<Disease[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [editingDisease, setEditingDisease] = useState<Disease | null>(null);
-  const [filters, setFilters] = useState<{ department_id?: number; is_active?: boolean; search?: string }>({});
-  const [form] = Form.useForm();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [filters, setFilters] = useState<{
+    department_id?: number;
+    is_active?: boolean;
+    search?: string;
+  }>({});
+  const [formData, setFormData] = useState<FormData>({});
+  const { success, error } = useToast();
 
+  // Fetch departments (only once on mount)
   useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await departmentsApi.list();
+        setDepartments(response.data);
+      } catch (err) {
+        error('加载科室列表失败');
+      }
+    };
     fetchDepartments();
-    fetchDiseases();
-  }, []);
+  }, [error]);
 
+  // Fetch diseases when filters change or refreshKey increments
   useEffect(() => {
+    const fetchDiseases = async () => {
+      setLoading(true);
+      try {
+        const response = await diseasesApi.list(filters);
+        setDiseases(response.data);
+      } catch (err) {
+        error('加载疾病列表失败');
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchDiseases();
-  }, [filters]);
+  }, [filters, refreshKey, error]);
 
-  const fetchDepartments = async () => {
-    try {
-      const response = await departmentsApi.list();
-      setDepartments(response.data);
-    } catch (error) {
-      message.error('加载科室列表失败');
-    }
-  };
-
-  const fetchDiseases = async () => {
-    setLoading(true);
-    try {
-      const response = await diseasesApi.list(filters);
-      setDiseases(response.data);
-    } catch (error) {
-      message.error('加载疾病列表失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Handlers
   const handleCreate = () => {
     setEditingDisease(null);
-    form.resetFields();
-    form.setFieldsValue({
+    setFormData({
       sort_order: 0,
       is_active: true,
       is_hot: false,
-      reviewer_info: '三甲医生专业编审 · 灵犀健康官方出品'
+      reviewer_info: '三甲医生专业编审 · 灵犀健康官方出品',
     });
-    setModalVisible(true);
+    setModalOpen(true);
   };
 
   const handleEdit = async (record: Disease) => {
     try {
       const response = await diseasesApi.get(record.id);
       setEditingDisease(response.data);
-      form.setFieldsValue(response.data);
-      setModalVisible(true);
-    } catch (error) {
-      message.error('加载疾病详情失败');
+      setFormData(response.data);
+      setModalOpen(true);
+    } catch (err) {
+      error('加载疾病详情失败');
     }
   };
 
   const handleSubmit = async () => {
+    if (!formData.name || !formData.department_id) {
+      error('请填写必填字段');
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      const values = await form.validateFields();
       if (editingDisease) {
-        await diseasesApi.update(editingDisease.id, values);
-        message.success('更新成功');
+        await diseasesApi.update(editingDisease.id, formData);
+        success('更新成功');
       } else {
-        await diseasesApi.create(values);
-        message.success('创建成功');
+        await diseasesApi.create(formData);
+        success('创建成功');
       }
-      setModalVisible(false);
-      fetchDiseases();
-    } catch (error: any) {
-      message.error(error.response?.data?.detail || '操作失败');
+      setModalOpen(false);
+      setRefreshKey(prev => prev + 1);
+    } catch (err: any) {
+      error(err.response?.data?.detail || '操作失败');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleDelete = async (id: number) => {
     try {
       await diseasesApi.delete(id);
-      message.success('删除成功');
-      fetchDiseases();
-    } catch (error: any) {
-      message.error(error.response?.data?.detail || '删除失败');
+      success('删除成功');
+      setRefreshKey(prev => prev + 1);
+    } catch (err: any) {
+      error(err.response?.data?.detail || '删除失败');
     }
   };
 
   const handleToggleHot = async (id: number, isHot: boolean) => {
     try {
       await diseasesApi.toggleHot(id, isHot);
-      message.success(isHot ? '已设为热门' : '已取消热门');
-      fetchDiseases();
-    } catch (error) {
-      message.error('操作失败');
+      success(isHot ? '已设为热门' : '已取消热门');
+      setRefreshKey(prev => prev + 1);
+    } catch (err) {
+      error('操作失败');
     }
   };
 
   const handleToggleActive = async (id: number, isActive: boolean) => {
     try {
       await diseasesApi.toggleActive(id, isActive);
-      message.success(isActive ? '已启用' : '已禁用');
-      fetchDiseases();
-    } catch (error) {
-      message.error('操作失败');
+      success(isActive ? '已启用' : '已禁用');
+      setRefreshKey(prev => prev + 1);
+    } catch (err) {
+      error('操作失败');
     }
   };
 
-  const columns = [
-    { title: 'ID', dataIndex: 'id', width: 60 },
-    {
-      title: '名称',
-      dataIndex: 'name',
-      width: 150,
-      render: (text: string, record: Disease) => (
-        <Space>
-          {text}
-          {record.is_hot && <FireOutlined style={{ color: '#ff4d4f' }} />}
-        </Space>
-      ),
-    },
-    { title: '科室', dataIndex: 'department_name', width: 100 },
-    { title: '拼音', dataIndex: 'pinyin', width: 120, ellipsis: true },
-    { title: '别名', dataIndex: 'aliases', width: 150, ellipsis: true },
-    {
-      title: '浏览量',
-      dataIndex: 'view_count',
-      width: 80,
-      render: (v: number) => <Tag color="blue">{v}</Tag>,
-    },
-    {
-      title: '热门',
-      dataIndex: 'is_hot',
-      width: 70,
-      render: (isHot: boolean, record: Disease) => (
-        <Switch
-          size="small"
-          checked={isHot}
-          onChange={(checked) => handleToggleHot(record.id, checked)}
-        />
-      ),
-    },
-    {
-      title: '状态',
-      dataIndex: 'is_active',
-      width: 70,
-      render: (isActive: boolean, record: Disease) => (
-        <Switch
-          size="small"
-          checked={isActive}
-          onChange={(checked) => handleToggleActive(record.id, checked)}
-        />
-      ),
-    },
-    {
-      title: '操作',
-      width: 100,
-      render: (_: any, record: Disease) => (
-        <Space>
-          <Button size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
-          <Popconfirm title="确定删除?" onConfirm={() => handleDelete(record.id)}>
-            <Button size="small" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  const updateFormData = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  if (loading) {
+    return <LoadingSkeleton />;
+  }
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Title level={4}>疾病百科管理</Title>
-        <Space>
-          <Select
-            placeholder="选择科室"
-            allowClear
-            style={{ width: 150 }}
-            onChange={(v) => setFilters({ ...filters, department_id: v })}
-          >
-            {departments.map((d) => (
-              <Select.Option key={d.id} value={d.id}>{d.name}</Select.Option>
-            ))}
-          </Select>
-          <Select
-            placeholder="状态"
-            allowClear
-            style={{ width: 100 }}
-            onChange={(v) => setFilters({ ...filters, is_active: v })}
-          >
-            <Select.Option value={true}>已启用</Select.Option>
-            <Select.Option value={false}>已禁用</Select.Option>
-          </Select>
-          <Input.Search
-            placeholder="搜索疾病名称"
-            allowClear
-            style={{ width: 200 }}
-            onSearch={(v) => setFilters({ ...filters, search: v || undefined })}
-          />
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-            新增疾病
-          </Button>
-        </Space>
-      </div>
-
-      <Table
-        columns={columns}
-        dataSource={diseases}
-        rowKey="id"
-        loading={loading}
-        scroll={{ x: 1000 }}
-        pagination={{ pageSize: 20, showSizeChanger: true, showTotal: (t) => `共 ${t} 条` }}
+    <div className="space-y-6">
+      <PageHeader
+        title="疾病百科管理"
+        description="管理系统中的疾病信息，包括症状、病因、诊断、治疗等"
       />
 
-      <Modal
-        title={editingDisease ? '编辑疾病' : '新增疾病'}
-        open={modalVisible}
-        onOk={handleSubmit}
-        onCancel={() => setModalVisible(false)}
-        width={900}
-        destroyOnClose
-      >
-        <Form form={form} layout="vertical">
-          <Tabs defaultActiveKey="basic">
-            <TabPane tab="基本信息" key="basic">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <Form.Item name="name" label="疾病名称" rules={[{ required: true, message: '请输入疾病名称' }]}>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="department_id" label="所属科室" rules={[{ required: true, message: '请选择科室' }]}>
-                  <Select>
-                    {departments.map((d) => (
-                      <Select.Option key={d.id} value={d.id}>{d.name}</Select.Option>
-                    ))}
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex flex-wrap gap-3 items-center">
+          <Select
+            value={filters.department_id?.toString() || ''}
+            onValueChange={(v) =>
+              setFilters({ ...filters, department_id: v ? Number(v) : undefined })
+            }
+          >
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="选择科室" />
+            </SelectTrigger>
+            <SelectContent>
+              {departments.map((d) => (
+                <SelectItem key={d.id} value={d.id.toString()}>
+                  {d.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.is_active?.toString() || ''}
+            onValueChange={(v) =>
+              setFilters({ ...filters, is_active: v === 'true' ? true : v === 'false' ? false : undefined })
+            }
+          >
+            <SelectTrigger className="w-[100px]">
+              <SelectValue placeholder="状态" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="true">已启用</SelectItem>
+              <SelectItem value="false">已禁用</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-tertiary" />
+            <Input
+              placeholder="搜索疾病名称"
+              value={filters.search || ''}
+              onChange={(e) =>
+                setFilters({ ...filters, search: e.target.value || undefined })
+              }
+              className="pl-9 w-[200px]"
+            />
+          </div>
+        </div>
+
+        <Button onClick={handleCreate}>
+          <Plus className="h-4 w-4 mr-2" />
+          新增疾病
+        </Button>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-lg border bg-surface overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[60px]">ID</TableHead>
+                <TableHead className="w-[150px]">名称</TableHead>
+                <TableHead className="w-[100px]">科室</TableHead>
+                <TableHead className="w-[120px]">拼音</TableHead>
+                <TableHead className="w-[150px]">别名</TableHead>
+                <TableHead className="w-[80px]">浏览量</TableHead>
+                <TableHead className="w-[70px]">热门</TableHead>
+                <TableHead className="w-[70px]">状态</TableHead>
+                <TableHead className="w-[100px]">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {diseases.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="h-32 text-center text-foreground-secondary">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Filter className="h-8 w-8 text-foreground-tertiary" />
+                      <span className="text-sm">暂无数据</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                diseases.map((disease) => (
+                  <TableRow key={disease.id}>
+                    <TableCell className="text-foreground-secondary">{disease.id}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {disease.name}
+                        {disease.is_hot && <Flame className="h-4 w-4 text-orange-500" />}
+                      </div>
+                    </TableCell>
+                    <TableCell>{disease.department_name}</TableCell>
+                    <TableCell className="truncate max-w-[120px]" title={disease.pinyin}>
+                      {disease.pinyin}
+                    </TableCell>
+                    <TableCell className="truncate max-w-[150px]" title={disease.aliases}>
+                      {disease.aliases}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{disease.view_count}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={disease.is_hot}
+                        onCheckedChange={(checked) => handleToggleHot(disease.id, checked)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={disease.is_active}
+                        onCheckedChange={(checked) => handleToggleActive(disease.id, checked)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => handleEdit(disease)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>确认删除</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                确定要删除疾病 "{disease.name}" 吗？此操作无法撤销。
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>取消</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(disease.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive-hover"
+                              >
+                                删除
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      {/* Edit/Create Dialog */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingDisease ? '编辑疾病' : '新增疾病'}</DialogTitle>
+            <DialogDescription>
+              {editingDisease ? '修改疾病信息' : '创建新的疾病条目'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs defaultValue="basic" className="mt-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="basic">基本信息</TabsTrigger>
+              <TabsTrigger value="content">疾病内容</TabsTrigger>
+              <TabsTrigger value="author">作者信息</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="basic" className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">
+                    疾病名称 <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="name"
+                    value={formData.name || ''}
+                    onChange={(e) => updateFormData('name', e.target.value)}
+                    placeholder="请输入疾病名称"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="department_id">
+                    所属科室 <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={formData.department_id?.toString()}
+                    onValueChange={(v) => updateFormData('department_id', Number(v))}
+                  >
+                    <SelectTrigger id="department_id">
+                      <SelectValue placeholder="选择科室" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map((d) => (
+                        <SelectItem key={d.id} value={d.id.toString()}>
+                          {d.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
-                </Form.Item>
-                <Form.Item name="pinyin" label="拼音">
-                  <Input placeholder="留空自动生成" />
-                </Form.Item>
-                <Form.Item name="pinyin_abbr" label="拼音首字母">
-                  <Input placeholder="留空自动生成" />
-                </Form.Item>
-                <Form.Item name="aliases" label="别名/同义词" style={{ gridColumn: 'span 2' }}>
-                  <Input placeholder="多个别名用逗号分隔" />
-                </Form.Item>
-                <Form.Item name="recommended_department" label="推荐就诊科室">
-                  <Input placeholder="如：内科、儿科等" />
-                </Form.Item>
-                <Form.Item name="sort_order" label="排序">
-                  <InputNumber min={0} style={{ width: '100%' }} />
-                </Form.Item>
-                <Form.Item name="is_hot" label="热门" valuePropName="checked">
-                  <Switch />
-                </Form.Item>
-                <Form.Item name="is_active" label="启用" valuePropName="checked">
-                  <Switch />
-                </Form.Item>
-              </div>
-            </TabPane>
+                </div>
 
-            <TabPane tab="疾病内容" key="content">
-              <Form.Item name="overview" label="简介/概述">
-                <TextArea rows={4} placeholder="支持 Markdown 格式" />
-              </Form.Item>
-              <Form.Item name="symptoms" label="症状">
-                <TextArea rows={4} placeholder="支持 Markdown 格式" />
-              </Form.Item>
-              <Form.Item name="causes" label="病因">
-                <TextArea rows={4} placeholder="支持 Markdown 格式" />
-              </Form.Item>
-              <Form.Item name="diagnosis" label="诊断">
-                <TextArea rows={4} placeholder="支持 Markdown 格式" />
-              </Form.Item>
-              <Form.Item name="treatment" label="治疗">
-                <TextArea rows={4} placeholder="支持 Markdown 格式" />
-              </Form.Item>
-              <Form.Item name="prevention" label="预防">
-                <TextArea rows={4} placeholder="支持 Markdown 格式" />
-              </Form.Item>
-              <Form.Item name="care" label="日常护理/注意事项">
-                <TextArea rows={4} placeholder="支持 Markdown 格式" />
-              </Form.Item>
-            </TabPane>
+                <div className="space-y-2">
+                  <Label htmlFor="pinyin">拼音</Label>
+                  <Input
+                    id="pinyin"
+                    value={formData.pinyin || ''}
+                    onChange={(e) => updateFormData('pinyin', e.target.value)}
+                    placeholder="留空自动生成"
+                  />
+                </div>
 
-            <TabPane tab="作者信息" key="author">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <Form.Item name="author_name" label="作者姓名">
-                  <Input />
-                </Form.Item>
-                <Form.Item name="author_title" label="作者职称">
-                  <Input placeholder="如：主治医师、副主任医师等" />
-                </Form.Item>
-                <Form.Item name="author_avatar" label="作者头像URL" style={{ gridColumn: 'span 2' }}>
-                  <Input placeholder="头像图片链接" />
-                </Form.Item>
-                <Form.Item name="reviewer_info" label="审核信息" style={{ gridColumn: 'span 2' }}>
-                  <Input placeholder="如：三甲医生专业编审 · 灵犀健康官方出品" />
-                </Form.Item>
+                <div className="space-y-2">
+                  <Label htmlFor="pinyin_abbr">拼音首字母</Label>
+                  <Input
+                    id="pinyin_abbr"
+                    value={formData.pinyin_abbr || ''}
+                    onChange={(e) => updateFormData('pinyin_abbr', e.target.value)}
+                    placeholder="留空自动生成"
+                  />
+                </div>
+
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="aliases">别名/同义词</Label>
+                  <Input
+                    id="aliases"
+                    value={formData.aliases || ''}
+                    onChange={(e) => updateFormData('aliases', e.target.value)}
+                    placeholder="多个别名用逗号分隔"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="recommended_department">推荐就诊科室</Label>
+                  <Input
+                    id="recommended_department"
+                    value={formData.recommended_department || ''}
+                    onChange={(e) => updateFormData('recommended_department', e.target.value)}
+                    placeholder="如：内科、儿科等"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="sort_order">排序</Label>
+                  <Input
+                    id="sort_order"
+                    type="number"
+                    min={0}
+                    value={formData.sort_order ?? 0}
+                    onChange={(e) => updateFormData('sort_order', Number(e.target.value))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="is_hot">热门</Label>
+                    <Switch
+                      id="is_hot"
+                      checked={formData.is_hot ?? false}
+                      onCheckedChange={(checked) => updateFormData('is_hot', checked)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="is_active">启用</Label>
+                    <Switch
+                      id="is_active"
+                      checked={formData.is_active ?? true}
+                      onCheckedChange={(checked) => updateFormData('is_active', checked)}
+                    />
+                  </div>
+                </div>
               </div>
-            </TabPane>
+            </TabsContent>
+
+            <TabsContent value="content" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="overview">简介/概述</Label>
+                <Input
+                  id="overview"
+                  value={formData.overview || ''}
+                  onChange={(e) => updateFormData('overview', e.target.value)}
+                  placeholder="支持 Markdown 格式"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="symptoms">症状</Label>
+                <Input
+                  id="symptoms"
+                  value={formData.symptoms || ''}
+                  onChange={(e) => updateFormData('symptoms', e.target.value)}
+                  placeholder="支持 Markdown 格式"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="causes">病因</Label>
+                <Input
+                  id="causes"
+                  value={formData.causes || ''}
+                  onChange={(e) => updateFormData('causes', e.target.value)}
+                  placeholder="支持 Markdown 格式"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="diagnosis">诊断</Label>
+                <Input
+                  id="diagnosis"
+                  value={formData.diagnosis || ''}
+                  onChange={(e) => updateFormData('diagnosis', e.target.value)}
+                  placeholder="支持 Markdown 格式"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="treatment">治疗</Label>
+                <Input
+                  id="treatment"
+                  value={formData.treatment || ''}
+                  onChange={(e) => updateFormData('treatment', e.target.value)}
+                  placeholder="支持 Markdown 格式"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="prevention">预防</Label>
+                <Input
+                  id="prevention"
+                  value={formData.prevention || ''}
+                  onChange={(e) => updateFormData('prevention', e.target.value)}
+                  placeholder="支持 Markdown 格式"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="care">日常护理/注意事项</Label>
+                <Input
+                  id="care"
+                  value={formData.care || ''}
+                  onChange={(e) => updateFormData('care', e.target.value)}
+                  placeholder="支持 Markdown 格式"
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="author" className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="author_name">作者姓名</Label>
+                  <Input
+                    id="author_name"
+                    value={formData.author_name || ''}
+                    onChange={(e) => updateFormData('author_name', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="author_title">作者职称</Label>
+                  <Input
+                    id="author_title"
+                    value={formData.author_title || ''}
+                    onChange={(e) => updateFormData('author_title', e.target.value)}
+                    placeholder="如：主治医师、副主任医师等"
+                  />
+                </div>
+
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="author_avatar">作者头像URL</Label>
+                  <Input
+                    id="author_avatar"
+                    value={formData.author_avatar || ''}
+                    onChange={(e) => updateFormData('author_avatar', e.target.value)}
+                    placeholder="头像图片链接"
+                  />
+                </div>
+
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="reviewer_info">审核信息</Label>
+                  <Input
+                    id="reviewer_info"
+                    value={formData.reviewer_info || ''}
+                    onChange={(e) => updateFormData('reviewer_info', e.target.value)}
+                    placeholder="如：三甲医生专业编审 · 灵犀健康官方出品"
+                  />
+                </div>
+              </div>
+            </TabsContent>
           </Tabs>
-        </Form>
-      </Modal>
+
+          <DialogFooter className="mt-6">
+            <Button variant="outline" onClick={() => setModalOpen(false)}>
+              取消
+            </Button>
+            <Button onClick={handleSubmit} disabled={submitting}>
+              {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {editingDisease ? '更新' : '创建'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

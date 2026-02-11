@@ -7,35 +7,35 @@ import {
 import { doctorsApi, departmentsApi, knowledgeBasesApi } from '../api';
 
 // shadcn/ui components
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Table, TableHeader, TableBody,
   TableHead, TableRow, TableCell
-} from '../components/ui/table';
+} from '@/components/ui/table';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogFooter
-} from '../components/ui/dialog';
+} from '@/components/ui/dialog';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle
-} from '../components/ui/sheet';
+} from '@/components/ui/sheet';
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader,
   AlertDialogTitle, AlertDialogDescription, AlertDialogFooter,
   AlertDialogAction, AlertDialogCancel
-} from '../components/ui/alert-dialog';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Switch } from '../components/ui/switch';
+} from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem
-} from '../components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Textarea } from '../components/ui/textarea';
-import { InputNumber } from '../components/ui/input-number';
-import { useToast } from '../components/ui/toast';
+} from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { InputNumber } from '@/components/ui/input-number';
+import { useToast } from '@/components/ui/toast';
 
 interface Doctor {
   id: number;

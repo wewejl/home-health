@@ -1,42 +1,40 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Row,
-  Col,
-  Card,
-  Table,
-  Button,
-  Tag,
-  Space,
-  Modal,
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  Typography,
-  Tooltip,
-  message,
-  Tabs,
-  Statistic,
-  Progress,
-  Descriptions,
-} from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  EyeOutlined,
-  ClockCircleOutlined,
-  MedicineBoxOutlined,
-  FileTextOutlined,
-  RobotOutlined,
-} from '@ant-design/icons';
 import { medicalOrdersApi } from '../api';
 import dayjs from 'dayjs';
-
-const { Title, Text } = Typography;
-const { Option } = Select;
-const { TextArea } = Input;
+import {
+  Plus,
+  Edit,
+  CheckCircle,
+  Ban,
+  Eye,
+  Clock,
+  Pill,
+  FileText,
+  Calendar,
+  Bot,
+  AlertCircle,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Tooltip } from '@/components/ui/tooltip';
+import { Textarea } from '@/components/ui/textarea';
+import { StatCardGrid } from '@/components/medical/stat-card';
+import { PageHeader } from '@/components/medical/page-header';
+import { useToast } from '@/components/ui/toast';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 // 类型定义
 interface MedicalOrder {
@@ -86,12 +84,12 @@ interface TaskListResponse {
   summary: ComplianceSummary;
 }
 
-// 医嘱类型映射
-const ORDER_TYPE_MAP: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  medication: { label: '用药', color: 'blue', icon: <MedicineBoxOutlined /> },
-  monitoring: { label: '监测', color: 'green', icon: <FileTextOutlined /> },
-  behavior: { label: '行为', color: 'orange', icon: <ClockCircleOutlined /> },
-  followup: { label: '复诊', color: 'purple', icon: <CheckCircleOutlined /> },
+// 医嘱类型配置
+const ORDER_TYPE_CONFIG: Record<string, { label: string; variant: 'primary' | 'success' | 'warning' | 'info' | 'danger'; icon: React.ReactNode }> = {
+  medication: { label: '用药', variant: 'primary', icon: <Pill className="h-3 w-3" /> },
+  monitoring: { label: '监测', variant: 'success', icon: <FileText className="h-3 w-3" /> },
+  behavior: { label: '行为', variant: 'warning', icon: <Clock className="h-3 w-3" /> },
+  followup: { label: '复诊', variant: 'info', icon: <Calendar className="h-3 w-3" /> },
 };
 
 // 调度类型映射
@@ -102,21 +100,41 @@ const SCHEDULE_TYPE_MAP: Record<string, string> = {
   custom: '自定义',
 };
 
-// 状态映射
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  draft: { label: '草稿', color: 'default' },
-  active: { label: '进行中', color: 'blue' },
-  completed: { label: '已完成', color: 'green' },
-  stopped: { label: '已停用', color: 'red' },
+// 状态配置
+const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'primary' }> = {
+  draft: { label: '草稿', variant: 'default' },
+  active: { label: '进行中', variant: 'primary' },
+  completed: { label: '已完成', variant: 'success' },
+  stopped: { label: '已停用', variant: 'danger' },
 };
 
-// 任务状态映射
-const TASK_STATUS_MAP: Record<string, { label: string; color: string }> = {
-  pending: { label: '待完成', color: 'default' },
-  completed: { label: '已完成', color: 'success' },
-  overdue: { label: '已超时', color: 'error' },
-  skipped: { label: '已跳过', color: 'warning' },
+// 任务状态配置
+const TASK_STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' }> = {
+  pending: { label: '待完成', variant: 'default' },
+  completed: { label: '已完成', variant: 'success' },
+  overdue: { label: '已超时', variant: 'danger' },
+  skipped: { label: '已跳过', variant: 'warning' },
 };
+
+// 移除未使用的 TASK_STATUS_CONFIG 警告
+void TASK_STATUS_CONFIG;
+
+// 表单字段类型
+interface FormField {
+  value: string | Date | string[] | boolean;
+  error?: string;
+}
+
+type FormData = Record<string, FormField>;
+
+// 更新医嘱数据类型
+interface UpdateOrderData {
+  title?: string;
+  description?: string;
+  end_date?: string;
+  frequency?: string;
+  reminder_times?: string[];
+}
 
 const MedicalOrders: React.FC = () => {
   // 列表数据
@@ -129,13 +147,20 @@ const MedicalOrders: React.FC = () => {
   const [todayTasks, setTodayTasks] = useState<TaskListResponse | null>(null);
   const [tasksLoading, setTasksLoading] = useState(true);
 
+  // 移除未使用警告
+  void tasksLoading;
+
   // 弹窗状态
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [currentOrder, setCurrentOrder] = useState<MedicalOrder | null>(null);
 
-  const [form] = Form.useForm();
+  // 表单状态
+  const [formData, setFormData] = useState<FormData>({});
+
+  // Toast hook
+  const toast = useToast();
 
   // 获取医嘱列表
   const fetchOrders = async () => {
@@ -145,7 +170,7 @@ const MedicalOrders: React.FC = () => {
       setOrders(response.data);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
-      message.error('获取医嘱列表失败');
+      toast.error('获取医嘱列表失败');
     } finally {
       setLoading(false);
     }
@@ -173,21 +198,32 @@ const MedicalOrders: React.FC = () => {
   // 创建医嘱
   const handleCreate = async () => {
     try {
-      const values = await form.validateFields();
       const data = {
-        ...values,
-        start_date: values.start_date.format('YYYY-MM-DD'),
-        end_date: values.end_date?.format('YYYY-MM-DD'),
-        reminder_times: values.reminder_times?.map((t: dayjs.Dayjs) => t.format('HH:mm')) || [],
+        order_type: formData.order_type?.value as string,
+        title: formData.title?.value as string,
+        description: formData.description?.value as string | undefined,
+        schedule_type: formData.schedule_type?.value as string,
+        start_date: formData.start_date?.value instanceof Date
+          ? dayjs(formData.start_date.value).format('YYYY-MM-DD')
+          : dayjs().format('YYYY-MM-DD'),
+        end_date: formData.end_date?.value instanceof Date
+          ? dayjs(formData.end_date.value).format('YYYY-MM-DD')
+          : undefined,
+        frequency: formData.frequency?.value as string | undefined,
+        reminder_times: Array.isArray(formData.reminder_times?.value)
+          ? (formData.reminder_times.value as string[])
+          : [],
+        ai_generated: formData.ai_generated?.value as boolean ?? false,
       };
+
       await medicalOrdersApi.create(data);
-      message.success('医嘱创建成功');
+      toast.success('医嘱创建成功');
       setCreateModalVisible(false);
-      form.resetFields();
+      setFormData({});
       fetchOrders();
     } catch (error) {
       console.error('Create failed:', error);
-      message.error('创建失败');
+      toast.error('创建失败');
     }
   };
 
@@ -195,21 +231,26 @@ const MedicalOrders: React.FC = () => {
   const handleUpdate = async () => {
     if (!currentOrder) return;
     try {
-      const values = await form.validateFields();
-      const data = {
-        ...values,
-        end_date: values.end_date?.format('YYYY-MM-DD'),
-        reminder_times: values.reminder_times?.map((t: dayjs.Dayjs) => t.format('HH:mm')) || [],
-      };
+      const data: UpdateOrderData = {};
+      if (formData.title?.value) data.title = String(formData.title.value);
+      if (formData.description?.value) data.description = String(formData.description.value);
+      if (formData.end_date?.value instanceof Date) {
+        data.end_date = dayjs(formData.end_date.value).format('YYYY-MM-DD');
+      }
+      if (formData.frequency?.value) data.frequency = String(formData.frequency.value);
+      if (Array.isArray(formData.reminder_times?.value)) {
+        data.reminder_times = formData.reminder_times.value as string[];
+      }
+
       await medicalOrdersApi.update(currentOrder.id, data);
-      message.success('医嘱更新成功');
+      toast.success('医嘱更新成功');
       setEditModalVisible(false);
       setCurrentOrder(null);
-      form.resetFields();
+      setFormData({});
       fetchOrders();
     } catch (error) {
       console.error('Update failed:', error);
-      message.error('更新失败');
+      toast.error('更新失败');
     }
   };
 
@@ -217,22 +258,23 @@ const MedicalOrders: React.FC = () => {
   const handleActivate = async (id: number) => {
     try {
       await medicalOrdersApi.activate(id, true);
-      message.success('医嘱已激活');
+      toast.success('医嘱已激活');
       fetchOrders();
     } catch (error) {
       console.error('Activate failed:', error);
-      message.error('激活失败');
+      toast.error('激活失败');
     }
   };
 
   // 打开编辑弹窗
   const openEditModal = (order: MedicalOrder) => {
     setCurrentOrder(order);
-    form.setFieldsValue({
-      ...order,
-      start_date: dayjs(order.start_date),
-      end_date: order.end_date ? dayjs(order.end_date) : undefined,
-      reminder_times: order.reminder_times?.map((t) => dayjs(t, 'HH:mm')) || [],
+    setFormData({
+      title: { value: order.title },
+      description: { value: order.description || '' },
+      end_date: { value: order.end_date ? new Date(order.end_date) : '' },
+      frequency: { value: order.frequency || '' },
+      reminder_times: { value: order.reminder_times || [] },
     });
     setEditModalVisible(true);
   };
@@ -243,163 +285,30 @@ const MedicalOrders: React.FC = () => {
     setDetailModalVisible(true);
   };
 
-  // 医嘱列表表格列
-  const orderColumns = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 60,
-    },
-    {
-      title: '类型',
-      dataIndex: 'order_type',
-      key: 'order_type',
-      width: 80,
-      render: (type: string) => {
-        const config = ORDER_TYPE_MAP[type] || ORDER_TYPE_MAP.medication;
-        return (
-          <Tag color={config.color} icon={config.icon}>
-            {config.label}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: '标题',
-      dataIndex: 'title',
-      key: 'title',
-      ellipsis: true,
-    },
-    {
-      title: '调度',
-      dataIndex: 'schedule_type',
-      key: 'schedule_type',
-      width: 80,
-      render: (type: string) => SCHEDULE_TYPE_MAP[type] || type,
-    },
-    {
-      title: '提醒时间',
-      dataIndex: 'reminder_times',
-      key: 'reminder_times',
-      width: 120,
-      render: (times: string[]) => times?.join(', ') || '-',
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      width: 90,
-      render: (status: string, record: MedicalOrder) => {
-        const config = STATUS_MAP[status] || STATUS_MAP.draft;
-        return (
-          <Space direction="vertical" size={0}>
-            <Tag color={config.color}>{config.label}</Tag>
-            {record.ai_generated && (
-              <Tag color="cyan" icon={<RobotOutlined />}>AI生成</Tag>
-            )}
-          </Space>
-        );
-      },
-    },
-    {
-      title: '开始日期',
-      dataIndex: 'start_date',
-      key: 'start_date',
-      width: 110,
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      width: 180,
-      render: (_: any, record: MedicalOrder) => (
-        <Space size="small">
-          <Tooltip title="查看详情">
-            <Button
-              type="link"
-              size="small"
-              icon={<EyeOutlined />}
-              onClick={() => openDetailModal(record)}
-            />
-          </Tooltip>
-          {record.status === 'draft' && (
-            <>
-              <Tooltip title="编辑">
-                <Button
-                  type="link"
-                  size="small"
-                  icon={<EditOutlined />}
-                  onClick={() => openEditModal(record)}
-                />
-              </Tooltip>
-              <Tooltip title="激活医嘱">
-                <Button
-                  type="link"
-                  size="small"
-                  icon={<CheckCircleOutlined />}
-                  onClick={() => handleActivate(record.id)}
-                />
-              </Tooltip>
-            </>
-          )}
-          {record.status === 'active' && (
-            <Tooltip title="停用">
-              <Button
-                type="link"
-                size="small"
-                danger
-                icon={<StopOutlined />}
-                onClick={() => message.info('停用功能开发中')}
-              />
-            </Tooltip>
-          )}
-        </Space>
-      ),
-    },
-  ];
+  // 更新表单字段
+  const updateFormField = (name: string, value: string | Date | string[] | boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: { value },
+    }));
+  };
 
-  // 任务表格列
-  const taskColumns = [
-    {
-      title: '任务',
-      dataIndex: 'order_title',
-      key: 'order_title',
-      ellipsis: true,
-      render: (title: string, record: TaskInstance) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{title || '未命名任务'}</Text>
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            {record.order_type && ORDER_TYPE_MAP[record.order_type]?.label}
-          </Text>
-        </Space>
-      ),
-    },
-    {
-      title: '计划时间',
-      key: 'time',
-      width: 100,
-      render: (_: any, record: TaskInstance) => (
-        <Text>{record.scheduled_time}</Text>
-      ),
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      width: 90,
-      render: (status: string) => {
-        const config = TASK_STATUS_MAP[status] || TASK_STATUS_MAP.pending;
-        return <Tag color={config.color}>{config.label}</Tag>;
-      },
-    },
-    {
-      title: '完成时间',
-      dataIndex: 'completed_at',
-      key: 'completed_at',
-      width: 160,
-      render: (time: string) => time ? dayjs(time).format('MM-DD HH:mm') : '-',
-    },
-  ];
+  // 渲染医嘱类型标签
+  const renderOrderTypeBadge = (type: string) => {
+    const config = ORDER_TYPE_CONFIG[type] || ORDER_TYPE_CONFIG.medication;
+    return (
+      <Badge variant={config.variant} className="gap-1">
+        {config.icon}
+        {config.label}
+      </Badge>
+    );
+  };
+
+  // 渲染状态标签
+  const renderStatusBadge = (status: string) => {
+    const config = STATUS_CONFIG[status] || STATUS_CONFIG.draft;
+    return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
 
   // 今日任务概览卡片
   const renderTodayOverview = () => {
@@ -407,357 +316,378 @@ const MedicalOrders: React.FC = () => {
     const { summary } = todayTasks;
     const percent = Math.round(summary.rate * 100);
 
-    return (
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="今日任务"
-              value={summary.total}
-              suffix={`/ ${summary.completed + summary.overdue}`}
-              prefix={<ClockCircleOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="完成率"
-              value={percent}
-              suffix="%"
-              valueStyle={{ color: percent >= 80 ? '#52c41a' : percent >= 50 ? '#faad14' : '#f5222d' }}
-            />
-            <Progress percent={percent} size="small" showInfo={false} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="待完成"
-              value={summary.pending}
-              valueStyle={{ color: summary.pending > 0 ? '#1890ff' : undefined }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="已超时"
-              value={summary.overdue}
-              valueStyle={{ color: summary.overdue > 0 ? '#f5222d' : '#52c41a' }}
-            />
-          </Card>
-        </Col>
-      </Row>
-    );
+    const stats = [
+      {
+        title: '今日任务',
+        value: `${summary.total}`,
+        unit: `/ ${summary.completed + summary.overdue}`,
+        icon: <Clock className="h-5 w-5" />,
+        variant: 'primary' as const,
+      },
+      {
+        title: '完成率',
+        value: percent,
+        unit: '%',
+        icon: null,
+        variant: percent >= 80 ? 'success' as const : percent >= 50 ? 'warning' as const : 'danger' as const,
+      },
+      {
+        title: '待完成',
+        value: summary.pending,
+        icon: null,
+        variant: 'primary' as const,
+      },
+      {
+        title: '已超时',
+        value: summary.overdue,
+        icon: <AlertCircle className="h-5 w-5" />,
+        variant: summary.overdue > 0 ? 'danger' as const : 'success' as const,
+      },
+    ];
+
+    return <StatCardGrid items={stats} cols={4} gap="gap-4" />;
   };
 
-  return (
-    <div>
-      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-        <Col>
-          <Title level={4} style={{ margin: 0 }}>
-            医嘱执行监督
-          </Title>
-        </Col>
-        <Col>
-          <Space>
-            <Select
-              placeholder="筛选状态"
-              allowClear
-              style={{ width: 120 }}
-              onChange={setStatusFilter}
-            >
-              <Option value="">全部</Option>
-              <Option value="draft">草稿</Option>
-              <Option value="active">进行中</Option>
-              <Option value="completed">已完成</Option>
-              <Option value="stopped">已停用</Option>
-            </Select>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setCreateModalVisible(true)}
-            >
-              新建医嘱
-            </Button>
-          </Space>
-        </Col>
-      </Row>
+  // 渲染医嘱列表
+  const renderOrdersList = () => (
+    <Card>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16">ID</TableHead>
+                <TableHead className="w-24">类型</TableHead>
+                <TableHead>标题</TableHead>
+                <TableHead className="w-20">调度</TableHead>
+                <TableHead className="w-28">提醒时间</TableHead>
+                <TableHead className="w-24">状态</TableHead>
+                <TableHead className="w-28">开始日期</TableHead>
+                <TableHead className="w-32">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-32 text-center text-foreground-secondary">
+                    加载中...
+                  </TableCell>
+                </TableRow>
+              ) : orders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-32 text-center text-foreground-secondary">
+                    暂无数据
+                  </TableCell>
+                </TableRow>
+              ) : (
+                orders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="text-sm">{order.id}</TableCell>
+                    <TableCell>{renderOrderTypeBadge(order.order_type)}</TableCell>
+                    <TableCell className="max-w-xs truncate">{order.title}</TableCell>
+                    <TableCell className="text-sm text-foreground-secondary">
+                      {SCHEDULE_TYPE_MAP[order.schedule_type] || order.schedule_type}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {order.reminder_times?.join(', ') || '-'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        {renderStatusBadge(order.status)}
+                        {order.ai_generated && (
+                          <Badge variant="info" className="gap-1 w-fit">
+                            <Bot className="h-3 w-3" />
+                            AI生成
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm">{order.start_date}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Tooltip content="查看详情">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => openDetailModal(order)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Tooltip>
+                        {order.status === 'draft' && (
+                          <>
+                            <Tooltip content="编辑">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => openEditModal(order)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </Tooltip>
+                            <Tooltip content="激活医嘱">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-success hover:text-success"
+                                onClick={() => handleActivate(order.id)}
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                            </Tooltip>
+                          </>
+                        )}
+                        {order.status === 'active' && (
+                          <Tooltip content="停用">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-danger hover:text-danger"
+                              onClick={() => toast.info('停用功能开发中')}
+                            >
+                              <Ban className="h-4 w-4" />
+                            </Button>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        items={[
-          {
-            key: 'orders',
-            label: `医嘱列表 (${orders.length})`,
-            children: (
-              <Card>
-                <Table
-                  columns={orderColumns}
-                  dataSource={orders}
-                  rowKey="id"
-                  loading={loading}
-                  pagination={{ pageSize: 10 }}
-                  scroll={{ x: 800 }}
-                />
-              </Card>
-            ),
-          },
-          {
-            key: 'tasks',
-            label: '今日任务',
-            children: (
-              <>
-                {renderTodayOverview()}
-                <Card
-                  title={
-                    <Space>
-                      <ClockCircleOutlined />
-                      <span>{dayjs().format('YYYY年MM月DD日')} 任务清单</span>
-                    </Space>
-                  }
-                  loading={tasksLoading}
-                >
-                  <Row gutter={[16, 16]}>
-                    {/* 待完成任务 */}
-                    <Col xs={24} lg={8}>
-                      <Card
-                        type="inner"
-                        title={<Tag color="default">待完成 ({todayTasks?.pending.length || 0})</Tag>}
-                        size="small"
-                      >
-                        <Table
-                          columns={taskColumns}
-                          dataSource={todayTasks?.pending || []}
-                          rowKey="id"
-                          size="small"
-                          pagination={false}
-                          showHeader={false}
-                        />
-                      </Card>
-                    </Col>
-                    {/* 已完成任务 */}
-                    <Col xs={24} lg={8}>
-                      <Card
-                        type="inner"
-                        title={<Tag color="success">已完成 ({todayTasks?.completed.length || 0})</Tag>}
-                        size="small"
-                      >
-                        <Table
-                          columns={taskColumns}
-                          dataSource={todayTasks?.completed || []}
-                          rowKey="id"
-                          size="small"
-                          pagination={false}
-                          showHeader={false}
-                        />
-                      </Card>
-                    </Col>
-                    {/* 已超时任务 */}
-                    <Col xs={24} lg={8}>
-                      <Card
-                        type="inner"
-                        title={<Tag color="error">已超时 ({todayTasks?.overdue.length || 0})</Tag>}
-                        size="small"
-                      >
-                        <Table
-                          columns={taskColumns}
-                          dataSource={todayTasks?.overdue || []}
-                          rowKey="id"
-                          size="small"
-                          pagination={false}
-                          showHeader={false}
-                        />
-                      </Card>
-                    </Col>
-                  </Row>
-                </Card>
-              </>
-            ),
-          },
-        ]}
-      />
+  // 渲染任务列表
+  const renderTaskList = (tasks: TaskInstance[], title: string, variant: 'default' | 'success' | 'danger') => (
+    <Card className="h-full">
+      <CardHeader className="py-3 px-4">
+        <CardTitle className="text-sm font-medium">
+          <Badge variant={variant} className="mb-2">
+            {title} ({tasks.length})
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="divide-y divide-border">
+          {tasks.length === 0 ? (
+            <div className="p-4 text-center text-sm text-foreground-secondary">
+              无任务
+            </div>
+          ) : (
+            tasks.map((task) => (
+              <div key={task.id} className="p-3 hover:bg-surface-alt/50 transition-colors">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{task.order_title || '未命名任务'}</p>
+                    <p className="text-xs text-foreground-secondary">
+                      {task.order_type && ORDER_TYPE_CONFIG[task.order_type]?.label}
+                    </p>
+                  </div>
+                  <span className="text-xs text-foreground-secondary">{task.scheduled_time}</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
 
-      {/* 创建医嘱弹窗 */}
-      <Modal
-        title={
-          <Space>
-            <PlusOutlined />
-            新建医嘱
-          </Space>
-        }
-        open={createModalVisible}
-        onOk={handleCreate}
-        onCancel={() => {
-          setCreateModalVisible(false);
-          form.resetFields();
-        }}
-        width={600}
-        okText="创建"
-        cancelText="取消"
-      >
-        <Form form={form} layout="vertical">
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="医嘱类型"
-                name="order_type"
-                rules={[{ required: true, message: '请选择医嘱类型' }]}
-              >
-                <Select placeholder="选择类型">
-                  <Option value="medication">用药</Option>
-                  <Option value="monitoring">监测</Option>
-                  <Option value="behavior">行为</Option>
-                  <Option value="followup">复诊</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="调度类型"
-                name="schedule_type"
-                rules={[{ required: true, message: '请选择调度类型' }]}
-              >
-                <Select placeholder="选择调度">
-                  <Option value="once">一次性</Option>
-                  <Option value="daily">每日</Option>
-                  <Option value="weekly">每周</Option>
-                  <Option value="custom">自定义</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item
-            label="医嘱标题"
-            name="title"
-            rules={[{ required: true, message: '请输入标题' }]}
-          >
-            <Input placeholder="例如：早餐前注射胰岛素" />
-          </Form.Item>
-          <Form.Item label="详细说明" name="description">
-            <TextArea rows={3} placeholder="医嘱的详细说明..." />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="开始日期"
-                name="start_date"
-                rules={[{ required: true, message: '请选择开始日期' }]}
-              >
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="结束日期" name="end_date">
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item label="频次" name="frequency">
-            <Input placeholder="例如：每日3次" />
-          </Form.Item>
-          <Form.Item label="提醒时间" name="reminder_times">
-            <Select
-              mode="tags"
-              placeholder="输入提醒时间，如 08:00"
-              style={{ width: '100%' }}
-            >
-              <Option value="08:00">08:00</Option>
-              <Option value="12:00">12:00</Option>
-              <Option value="18:00">18:00</Option>
-              <Option value="21:00">21:00</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="AI 生成标记" name="ai_generated" valuePropName="checked">
-            <Select placeholder="选择来源" defaultValue={false}>
-              <Option value={false}>手动创建</Option>
-              <Option value={true}>AI 生成</Option>
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
+  // 渲染今日任务
+  const renderTodayTasks = () => (
+    <>
+      {renderTodayOverview()}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            <span>{dayjs().format('YYYY年MM月DD日')} 任务清单</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {renderTaskList(todayTasks?.pending || [], '待完成', 'default')}
+            {renderTaskList(todayTasks?.completed || [], '已完成', 'success')}
+            {renderTaskList(todayTasks?.overdue || [], '已超时', 'danger')}
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  );
 
-      {/* 编辑医嘱弹窗 */}
-      <Modal
-        title={
-          <Space>
-            <EditOutlined />
-            编辑医嘱
-          </Space>
-        }
-        open={editModalVisible}
-        onOk={handleUpdate}
-        onCancel={() => {
-          setEditModalVisible(false);
-          setCurrentOrder(null);
-          form.resetFields();
-        }}
-        width={600}
-        okText="保存"
-        cancelText="取消"
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            label="医嘱标题"
-            name="title"
-            rules={[{ required: true, message: '请输入标题' }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item label="详细说明" name="description">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item label="结束日期" name="end_date">
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="频次" name="frequency">
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item label="提醒时间" name="reminder_times">
-            <Select
-              mode="tags"
-              placeholder="输入提醒时间，如 08:00"
-              style={{ width: '100%' }}
-            >
-              <Option value="08:00">08:00</Option>
-              <Option value="12:00">12:00</Option>
-              <Option value="18:00">18:00</Option>
-              <Option value="21:00">21:00</Option>
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
+  // 表单对话框
+  const renderFormDialog = (
+    isOpen: boolean,
+    onClose: () => void,
+    title: string,
+    onSubmit: () => void,
+    fields: Array<{ key: string; label: string; type: 'text' | 'select' | 'textarea' | 'date' | 'tags'; options?: Array<{ value: string; label: string }> }>,
+    submitText: string
+  ) => (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Plus className="h-5 w-5" />
+            {title}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            {fields.map((field) => (
+              <div key={field.key} className={field.type === 'textarea' || field.type === 'tags' ? 'col-span-2' : ''}>
+                <label className="block text-sm font-medium mb-1.5">{field.label}</label>
+                {field.type === 'text' && (
+                  <Input
+                    value={(formData[field.key]?.value as string) || ''}
+                    onChange={(e) => updateFormField(field.key, e.target.value)}
+                    placeholder={`请输入${field.label}`}
+                  />
+                )}
+                {field.type === 'textarea' && (
+                  <Textarea
+                    value={(formData[field.key]?.value as string) || ''}
+                    onChange={(e) => updateFormField(field.key, e.target.value)}
+                    placeholder={`请输入${field.label}`}
+                    rows={3}
+                  />
+                )}
+                {field.type === 'select' && (
+                  <Select
+                    value={(formData[field.key]?.value as string) || ''}
+                    onValueChange={(value) => updateFormField(field.key, value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={`请选择${field.label}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {field.options?.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {field.type === 'date' && (
+                  <DatePicker
+                    value={(formData[field.key]?.value as Date) || null}
+                    onChange={(date) => updateFormField(field.key, date || '')}
+                  />
+                )}
+                {field.type === 'tags' && (
+                  <Input
+                    value={Array.isArray(formData[field.key]?.value)
+                      ? (formData[field.key]?.value as string[]).join(', ')
+                      : (formData[field.key]?.value as string) || ''
+                    }
+                    onChange={(e) => updateFormField(field.key, e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                    placeholder="输入多个值，用逗号分隔"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            取消
+          </Button>
+          <Button onClick={onSubmit}>
+            {submitText}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 
-      {/* 医嘱详情弹窗 */}
-      <Modal
-        title={
-          <Space>
-            <EyeOutlined />
+  // 医嘱详情
+  const renderDetailDialog = () => (
+    <Dialog open={detailModalVisible} onOpenChange={(open) => !open && setDetailModalVisible(false)}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Eye className="h-5 w-5" />
             医嘱详情
-          </Space>
-        }
-        open={detailModalVisible}
-        onCancel={() => {
-          setDetailModalVisible(false);
-          setCurrentOrder(null);
-        }}
-        footer={[
-          <Button key="close" onClick={() => setDetailModalVisible(false)}>
+          </DialogTitle>
+        </DialogHeader>
+        {currentOrder && (
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-foreground-secondary">医嘱ID</p>
+                <p className="text-sm font-medium">{currentOrder.id}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-foreground-secondary">类型</p>
+                {renderOrderTypeBadge(currentOrder.order_type)}
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-foreground-secondary">状态</p>
+                {renderStatusBadge(currentOrder.status)}
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-foreground-secondary">调度类型</p>
+                <p className="text-sm font-medium">{SCHEDULE_TYPE_MAP[currentOrder.schedule_type]}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-foreground-secondary">频次</p>
+                <p className="text-sm font-medium">{currentOrder.frequency || '-'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-foreground-secondary">开始日期</p>
+                <p className="text-sm font-medium">{currentOrder.start_date}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-foreground-secondary">结束日期</p>
+                <p className="text-sm font-medium">{currentOrder.end_date || '未设置'}</p>
+              </div>
+              <div className="space-y-1 col-span-2">
+                <p className="text-sm text-foreground-secondary">提醒时间</p>
+                <p className="text-sm font-medium">{currentOrder.reminder_times?.join(', ') || '-'}</p>
+              </div>
+              <div className="space-y-1 col-span-2">
+                <p className="text-sm text-foreground-secondary">标题</p>
+                <p className="text-sm font-medium">{currentOrder.title}</p>
+              </div>
+              <div className="space-y-1 col-span-2">
+                <p className="text-sm text-foreground-secondary">详细说明</p>
+                <p className="text-sm">{currentOrder.description || '-'}</p>
+              </div>
+              <div className="space-y-1 col-span-2">
+                <p className="text-sm text-foreground-secondary">AI 生成</p>
+                {currentOrder.ai_generated ? (
+                  <Badge variant="info" className="gap-1">
+                    <Bot className="h-3 w-3" />
+                    AI 生成
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">手动创建</Badge>
+                )}
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-foreground-secondary">创建时间</p>
+                <p className="text-sm">{dayjs(currentOrder.created_at).format('YYYY-MM-DD HH:mm')}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-foreground-secondary">更新时间</p>
+                <p className="text-sm">{dayjs(currentOrder.updated_at).format('YYYY-MM-DD HH:mm')}</p>
+              </div>
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setDetailModalVisible(false)}>
             关闭
-          </Button>,
-          currentOrder?.status === 'draft' && (
+          </Button>
+          {currentOrder?.status === 'draft' && (
             <Button
-              key="activate"
-              type="primary"
-              icon={<CheckCircleOutlined />}
               onClick={() => {
                 if (currentOrder) {
                   handleActivate(currentOrder.id);
@@ -765,66 +695,126 @@ const MedicalOrders: React.FC = () => {
                 }
               }}
             >
+              <CheckCircle className="h-4 w-4 mr-2" />
               激活医嘱
             </Button>
-          ),
-        ]}
-        width={700}
-      >
-        {currentOrder && (
-          <Descriptions bordered column={2}>
-            <Descriptions.Item label="医嘱ID" span={2}>
-              {currentOrder.id}
-            </Descriptions.Item>
-            <Descriptions.Item label="类型">
-              <Tag color={ORDER_TYPE_MAP[currentOrder.order_type]?.color}>
-                {ORDER_TYPE_MAP[currentOrder.order_type]?.label}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="状态">
-              <Tag color={STATUS_MAP[currentOrder.status]?.color}>
-                {STATUS_MAP[currentOrder.status]?.label}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="标题" span={2}>
-              {currentOrder.title}
-            </Descriptions.Item>
-            <Descriptions.Item label="调度类型">
-              {SCHEDULE_TYPE_MAP[currentOrder.schedule_type]}
-            </Descriptions.Item>
-            <Descriptions.Item label="频次">
-              {currentOrder.frequency || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="开始日期">
-              {currentOrder.start_date}
-            </Descriptions.Item>
-            <Descriptions.Item label="结束日期">
-              {currentOrder.end_date || '未设置'}
-            </Descriptions.Item>
-            <Descriptions.Item label="提醒时间" span={2}>
-              {currentOrder.reminder_times?.join(', ') || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="详细说明" span={2}>
-              {currentOrder.description || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="AI 生成" span={2}>
-              {currentOrder.ai_generated ? (
-                <Tag color="cyan" icon={<RobotOutlined />}>
-                  AI 生成
-                </Tag>
-              ) : (
-                <Tag>手动创建</Tag>
-              )}
-            </Descriptions.Item>
-            <Descriptions.Item label="创建时间">
-              {dayjs(currentOrder.created_at).format('YYYY-MM-DD HH:mm')}
-            </Descriptions.Item>
-            <Descriptions.Item label="更新时间">
-              {dayjs(currentOrder.updated_at).format('YYYY-MM-DD HH:mm')}
-            </Descriptions.Item>
-          </Descriptions>
-        )}
-      </Modal>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
+  // 创建医嘱表单字段
+  const createFormFields = [
+    { key: 'order_type', label: '医嘱类型', type: 'select' as const, options: [
+      { value: 'medication', label: '用药' },
+      { value: 'monitoring', label: '监测' },
+      { value: 'behavior', label: '行为' },
+      { value: 'followup', label: '复诊' },
+    ]},
+    { key: 'schedule_type', label: '调度类型', type: 'select' as const, options: [
+      { value: 'once', label: '一次性' },
+      { value: 'daily', label: '每日' },
+      { value: 'weekly', label: '每周' },
+      { value: 'custom', label: '自定义' },
+    ]},
+    { key: 'title', label: '医嘱标题', type: 'text' as const },
+    { key: 'description', label: '详细说明', type: 'textarea' as const },
+    { key: 'start_date', label: '开始日期', type: 'date' as const },
+    { key: 'end_date', label: '结束日期', type: 'date' as const },
+    { key: 'frequency', label: '频次', type: 'text' as const },
+    { key: 'reminder_times', label: '提醒时间（逗号分隔）', type: 'tags' as const },
+    { key: 'ai_generated', label: 'AI 生成', type: 'select' as const, options: [
+      { value: 'false', label: '手动创建' },
+      { value: 'true', label: 'AI 生成' },
+    ]},
+  ];
+
+  // 编辑医嘱表单字段
+  const editFormFields = [
+    { key: 'title', label: '医嘱标题', type: 'text' as const },
+    { key: 'description', label: '详细说明', type: 'textarea' as const },
+    { key: 'end_date', label: '结束日期', type: 'date' as const },
+    { key: 'frequency', label: '频次', type: 'text' as const },
+    { key: 'reminder_times', label: '提醒时间（逗号分隔）', type: 'tags' as const },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* 页面头部 */}
+      <PageHeader
+        title="医嘱执行监督"
+        description="管理患者医嘱、查看执行情况和任务列表"
+        actions={
+          <div className="flex items-center gap-2">
+            <Select
+              value={statusFilter}
+              onValueChange={setStatusFilter}
+            >
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="筛选状态" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">全部</SelectItem>
+                <SelectItem value="draft">草稿</SelectItem>
+                <SelectItem value="active">进行中</SelectItem>
+                <SelectItem value="completed">已完成</SelectItem>
+                <SelectItem value="stopped">已停用</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={() => setCreateModalVisible(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              新建医嘱
+            </Button>
+          </div>
+        }
+      />
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="orders">
+        <TabsList>
+          <TabsTrigger value="orders">
+            医嘱列表 ({orders.length})
+          </TabsTrigger>
+          <TabsTrigger value="tasks">
+            今日任务
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="orders" className="mt-4">
+          {renderOrdersList()}
+        </TabsContent>
+
+        <TabsContent value="tasks" className="mt-4">
+          {renderTodayTasks()}
+        </TabsContent>
+      </Tabs>
+
+      {/* 创建医嘱弹窗 */}
+      {renderFormDialog(
+        createModalVisible,
+        () => setCreateModalVisible(false),
+        '新建医嘱',
+        handleCreate,
+        createFormFields,
+        '创建'
+      )}
+
+      {/* 编辑医嘱弹窗 */}
+      {renderFormDialog(
+        editModalVisible,
+        () => {
+          setEditModalVisible(false);
+          setCurrentOrder(null);
+        },
+        '编辑医嘱',
+        handleUpdate,
+        editFormFields,
+        '保存'
+      )}
+
+      {/* 医嘱详情弹窗 */}
+      {renderDetailDialog()}
     </div>
   );
 };

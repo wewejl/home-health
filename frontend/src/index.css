@@ -1,13 +1,484 @@
-* {
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================
+   医疗工作台主题系统
+   ======================================== */
+
+@layer base {
+  :root {
+    /* === 基础色彩 - 浅色模式 === */
+
+    /* 背景色系 */
+    --background: 210 40% 98%;          /* 浅灰蓝背景，减少视觉疲劳 */
+    --surface: 0 0% 100%;               /* 纯白表面，用于卡片 */
+    --surface-alt: 220 20% 94%;         /* 交替表面，用于斑马纹，稍微暗一点 */
+    --card: 0 0% 100%;                  /* 纯白卡片，用于导航栏等 */
+    --card-foreground: 222 47% 11%;     /* 卡片上的文字颜色 */
+
+    /* 文字色系 */
+    --foreground: 222 47% 11%;          /* 深色主文字 */
+    --foreground-secondary: 215 20% 40%; /* 次要文字 */
+    --foreground-tertiary: 215 20% 60%; /* 辅助文字 */
+
+    /* 主色调 - 医疗蓝 */
+    --primary: 199 89% 48%;             /* #0EA5E9 Sky 500 */
+    --primary-hover: 200 88% 42%;       /* #0284C7 Sky 600 */
+    --primary-active: 200 95% 35%;      /* #0369A1 Sky 700 */
+    --primary-foreground: 0 0% 100%;
+
+    /* 次要色 */
+    --secondary: 210 40% 96%;           /* 稍微亮一点，用于次要按钮 */
+    --secondary-foreground: 222 47% 11%;
+
+    /* 强调色 */
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+
+    /* 弹出层颜色 */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* 状态色 */
+    --success: 160 84% 39%;             /* #10B981 Emerald 500 */
+    --success-light: 160 84% 95%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;              /* #F59E0B Amber 500 */
+    --warning-light: 38 92% 95%;
+    --warning-foreground: 0 0% 100%;
+
+    --danger: 0 72% 51%;                /* #EF4444 Red 500 */
+    --danger-light: 0 72% 96%;
+    --danger-foreground: 0 0% 100%;
+
+    --info: 217 91% 60%;                /* #3B82F6 Blue 500 */
+    --info-light: 217 91% 96%;
+    --info-foreground: 0 0% 100%;
+
+    /* 边框和输入框 */
+    --border: 214 32% 91%;              /* #E2E8F0 Slate 200 */
+    --input: 214 32% 91%;
+    --ring: 199 89% 48%;                /* 焦点环，使用主色 */
+
+    /* 圆角 */
+    --radius: 6px;
+    --radius-sm: 4px;
+    --radius-lg: 8px;
+
+    /* 阴影 */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  .dark {
+    /* === 基础色彩 - 深色模式 === */
+
+    /* 背景色系 */
+    --background: 222 47% 11%;          /* 深色背景 */
+    --surface: 223 47% 14%;             /* 深色表面 */
+    --surface-alt: 220 20% 18%;         /* 深色交替表面，稍微亮一点 */
+    --card: 223 47% 14%;                /* 深色卡片 */
+    --card-foreground: 210 40% 98%;     /* 卡片上的文字颜色 */
+
+    /* 文字色系 */
+    --foreground: 210 40% 98%;
+    --foreground-secondary: 215 20% 65%;
+    --foreground-tertiary: 215 20% 50%;
+
+    /* 主色调 - 深色模式下更亮 */
+    --primary: 199 89% 60%;             /* #38BDF8 Sky 400 */
+    --primary-hover: 199 89% 55%;
+    --primary-active: 199 89% 50%;
+
+    /* 次要色 */
+    --secondary: 223 47% 18%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* 强调色 */
+    --accent: 223 47% 18%;
+    --accent-foreground: 210 40% 98%;
+
+    /* 弹出层颜色 - 深色模式 */
+    --popover: 223 47% 14%;
+    --popover-foreground: 210 40% 98%;
+
+    /* 状态色 - 深色模式下调整亮度 */
+    --success: 160 84% 45%;
+    --success-light: 160 84% 20%;
+    --warning: 38 92% 55%;
+    --warning-light: 38 92% 20%;
+    --danger: 0 72% 55%;
+    --danger-light: 0 72% 20%;
+    --info: 217 91% 65%;
+    --info-light: 217 91% 20%;
+
+    /* 边框和输入框 */
+    --border: 217 33% 25%;
+    --input: 217 33% 25%;
+    --ring: 199 89% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
+                 'Helvetica Neue', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* 改善文字渲染 */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ========================================
+   医疗专业风格组件类
+   ======================================== */
+
+@layer components {
+  /* 页面容器 */
+  .page-container {
+    @apply max-w-[1440px] mx-auto p-6;
+  }
+
+  /* 统计卡片 */
+  .stat-card {
+    @apply bg-surface border border-border rounded-lg p-5
+           transition-all duration-200 ease-out;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .stat-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+
+  /* 状态标签基础样式 */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1
+           text-xs font-medium rounded-md
+           transition-colors duration-150;
+  }
+
+  /* 状态标签变体 */
+  .badge-success {
+    @apply bg-success-light/80 text-success;
+    border: 1px solid hsl(var(--success) / 0.2);
+  }
+
+  .badge-warning {
+    @apply bg-warning-light/80 text-warning;
+    border: 1px solid hsl(var(--warning) / 0.2);
+  }
+
+  .badge-danger {
+    @apply bg-danger-light/80 text-danger;
+    border: 1px solid hsl(var(--danger) / 0.2);
+  }
+
+  .badge-info {
+    @apply bg-info-light/80 text-info;
+    border: 1px solid hsl(var(--info) / 0.2);
+  }
+
+  .badge-neutral {
+    @apply bg-secondary text-foreground-secondary;
+    border: 1px solid var(--border);
+  }
+
+  /* 搜索栏 */
+  .search-bar {
+    @apply flex items-center gap-3 bg-surface
+           border border-border rounded-lg
+           px-3 py-2.5;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 150ms ease-out, border-color 150ms ease-out;
+  }
+
+  .search-bar:focus-within {
+    border-color: hsl(var(--primary) / 0.5);
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+  }
+
+  /* 表格样式 */
+  .table-header {
+    @apply bg-surface-alt text-foreground-secondary
+           text-xs font-semibold uppercase tracking-wider;
+  }
+
+  .table-zebra tbody tr:nth-child(even) {
+    @apply bg-surface-alt/50;
+  }
+
+  .table-row-hover {
+    @apply transition-colors duration-150;
+  }
+
+  .table-row-hover:hover {
+    @apply bg-surface-alt;
+  }
+
+  /* 卡片样式增强 */
+  .card-elevated {
+    @apply bg-surface border border-border rounded-lg
+           shadow-sm hover:shadow-md
+           transition-all duration-200;
+  }
+
+  /* 分隔线 */
+  .divider {
+    @apply border-t border-border;
+  }
+
+  .divider-vertical {
+    @apply border-l border-border;
+  }
+
+  /* 信息网格 */
+  .info-grid {
+    @apply grid grid-cols-2 md:grid-cols-3 gap-3;
+  }
+
+  .info-item {
+    @apply flex items-center justify-between
+           p-3 rounded-lg bg-surface-alt/50
+           border border-border/50;
+  }
+
+  .info-label {
+    @apply text-sm text-foreground-secondary;
+  }
+
+  .info-value {
+    @apply font-medium text-foreground;
+  }
+
+  /* 标签页列表 */
+  .tabs-list {
+    @apply inline-flex items-center gap-1
+           bg-secondary rounded-lg p-1
+           border border-border;
+  }
+
+  /* 按钮增强 */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground
+           font-medium rounded-lg
+           px-4 py-2.5
+           transition-all duration-150;
+    box-shadow: 0 1px 2px hsl(var(--primary) / 0.2);
+  }
+
+  .btn-primary:hover {
+    @apply bg-primary-hover;
+    box-shadow: 0 2px 4px hsl(var(--primary) / 0.3);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    @apply bg-primary-active;
+    transform: translateY(0);
+  }
+
+  .btn-ghost {
+    @apply text-foreground-secondary
+           hover:bg-secondary hover:text-foreground
+           rounded-lg
+           px-3 py-2
+           transition-colors duration-150;
+  }
+
+  .btn-ghost:hover {
+    @apply bg-surface-alt;
+  }
+
+  /* 进度条容器 */
+  .progress-container {
+    @apply flex items-center gap-2;
+  }
+
+  .progress-bar {
+    @apply flex-1 h-2 rounded-full
+           bg-secondary
+           overflow-hidden;
+  }
+
+  /* 加载状态 */
+  .loading-skeleton {
+    @apply animate-pulse bg-surface-alt rounded;
+  }
+
+  /* 空状态 */
+  .empty-state {
+    @apply flex flex-col items-center justify-center
+           py-12 text-foreground-secondary;
+  }
+
+  .empty-state-icon {
+    @apply w-16 h-16 rounded-full
+           bg-secondary
+           flex items-center justify-center
+           mb-4;
+  }
+
+  /* 患者卡片 */
+  .patient-card {
+    @apply bg-surface border border-border rounded-lg
+           transition-all duration-200 ease-out;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .patient-card:hover {
+    @apply border-primary/50;
+    box-shadow: 0 12px 24px -4px rgb(0 0 0 / 0.1);
+    transform: translateY(-4px);
+  }
+
+  .dark .patient-card:hover {
+    box-shadow: 0 12px 24px -4px rgb(0 0 0 / 0.3);
+  }
+
+  /* 卡片悬停效果 (用于大卡片) */
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(14, 165, 233, 0.15);
+    border-color: rgb(14, 165, 233);
+  }
+
+  .dark .card-hover:hover {
+    box-shadow: 0 20px 40px rgba(14, 165, 233, 0.3);
+  }
+
+  /* 进度条渐变 */
+  .progress-bar {
+    background: linear-gradient(90deg, #0ea5e9 0%, #10b981 100%);
+  }
+}
+
+/* ========================================
+   深色模式适配
+   ======================================== */
+
+@layer components {
+  .dark .badge-success {
+    @apply bg-success-light/20;
+    border-color: hsl(var(--success) / 0.3);
+  }
+
+  .dark .badge-warning {
+    @apply bg-warning-light/20;
+    border-color: hsl(var(--warning) / 0.3);
+  }
+
+  .dark .badge-danger {
+    @apply bg-danger-light/20;
+    border-color: hsl(var(--danger) / 0.3);
+  }
+
+  .dark .badge-info {
+    @apply bg-info-light/20;
+    border-color: hsl(var(--info) / 0.3);
+  }
+}
+
+/* ========================================
+   工具类扩展
+   ======================================== */
+
+@layer utilities {
+  /* 文字颜色 - 使用 hsl() 以匹配 CSS 变量格式 */
+  .text-primary {
+    color: hsl(var(--primary));
+  }
+
+  .text-success {
+    color: hsl(var(--success));
+  }
+
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+
+  .text-danger {
+    color: hsl(var(--danger));
+  }
+
+  .text-info {
+    color: hsl(var(--info));
+  }
+
+  /* 背景颜色 - 使用 hsl() 以匹配 CSS 变量格式 */
+  .bg-primary {
+    background-color: hsl(var(--primary));
+  }
+
+  .bg-success-light {
+    background-color: hsl(var(--success-light));
+  }
+
+  .bg-warning-light {
+    background-color: hsl(var(--warning-light));
+  }
+
+  .bg-danger-light {
+    background-color: hsl(var(--danger-light));
+  }
+
+  .bg-info-light {
+    background-color: hsl(var(--info-light));
+  }
+
+  /* 边框颜色 - 使用 hsl() 以匹配 CSS 变量格式 */
+  .border-primary {
+    border-color: hsl(var(--primary));
+  }
+
+  /* 焦点样式 */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/50
+           focus:ring-offset-2 focus:ring-offset-background;
+  }
+}
+
+/* ========================================
+   动画定义
+   ======================================== */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ========================================
+   浏览器默认样式重置
+   ======================================== */
+
+/* 移除 number input 的上下箭头 */
+input[type="number"].remove-spinner::-webkit-outer-spin-button,
+input[type="number"].remove-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
   margin: 0;
-  padding: 0;
-  box-sizing: border-box;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-}
-
-#root {
-  min-height: 100vh;
+input[type="number"].remove-spinner {
+  -moz-appearance: textfield;
 }
