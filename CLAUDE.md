@@ -458,6 +458,45 @@ const isVisible = rect && rect.top < viewportHeight && rect.bottom > 0;
 
 ---
 
+## ⭐ 入职文档优先级（强制遵循）
+
+**每个 Agent 会话必须首先阅读以下文档**：
+
+| 优先级 | 文档 | 位置 | 说明 |
+|-------|------|------|------|
+| 🔴 P0 | **README.md** | 根目录 | **入职手册** - 30秒快速导航、项目概述、启动步骤 |
+| 🔴 P0 | **PROGRESS.md** | 根目录 | **进度追踪** - 本次会话工作、历史记录、待办事项 |
+| 🟡 P1 | `docs/启动指南.md` | docs/ | 详细启动步骤、验证命令 |
+| 🟡 P1 | `docs/架构设计.md` | docs/ | 系统架构设计 |
+| 🟡 P1 | `docs/API文档.md` | docs/ | API 接口文档 |
+| 🟡 P1 | `docs/配置指南.md` | docs/ | 环境配置、开发规范 |
+| 🟢 P2 | `docs/planning/` | docs/planning/ | 项目规划（roadmap、backlog、sprint、tech-debt） |
+
+### 每个 Agent 必须维护文档
+
+**工作前**：
+1. 阅读 `README.md` 了解项目全貌
+2. 阅读 `PROGRESS.md` 了解当前进度
+3. 阅读 `.tasks/TASK-XXX/task.md` 了解任务详情
+
+**工作中**：
+1. 更新 `PROGRESS.md` 记录本次会话工作内容
+2. 遵循开发规范（`docs/配置指南.md`）
+
+**完成后**：
+1. 更新 `PROGRESS.md` 的"历史会话记录"
+2. 更新相关规划文档（tech-debt、backlog、sprint）
+
+### 文档映射关系
+
+| 文档 | 维护者 | 更新频率 |
+|------|--------|----------|
+| README.md | Team Lead | 项目结构变化时 |
+| PROGRESS.md | **每个 Agent** | **每次会话必更新** |
+| docs/planning/*.md | 执行者 | 任务完成后 |
+
+---
+
 ## 文档更新规则（重要！）
 
 **原则**: 代码修复完成后，**必须**同步更新相关文档，才能算任务完成
@@ -736,7 +775,8 @@ docs/
 | `.gitignore` | Git 忽略配置 |
 | `.env` | 本地环境变量 |
 | `CLAUDE.md` | 本文件，Claude 配置 + Team Lead 角色定义 |
-| `README.md` | 项目说明文档 |
+| `README.md` | **入职手册**（30秒导航、启动、开发指南） |
+| `PROGRESS.md` | **进度追踪**（每个 Agent 会话必更新） |
 
 ---
 
