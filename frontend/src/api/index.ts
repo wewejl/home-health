@@ -1,10 +1,28 @@
-import axios from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// 修复: 默认端口从 8000 改为 8100
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8100';
 
 // 读取测试模式配置（可通过环境变量 VITE_ADMIN_TEST_MODE 关闭）
 const ADMIN_TEST_MODE = import.meta.env.VITE_ADMIN_TEST_MODE === 'true';
 
+// 开发模式调试日志开关
+const DEBUG_MODE = import.meta.env.MODE === 'development';
+
+// 调试日志函数（仅在开发环境输出）
+const debugLog = {
+  log: (...args: unknown[]) => {
+    if (DEBUG_MODE) console.log('[API]', ...args);
+  },
+  error: (...args: unknown[]) => {
+    if (DEBUG_MODE) console.error('[API]', ...args);
+  },
+  warn: (...args: unknown[]) => {
+    if (DEBUG_MODE) console.warn('[API]', ...args);
+  },
+};
+
+// 创建 axios 实例
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000,
@@ -12,6 +30,24 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// 请求重试配置
+const MAX_RETRY = 2;
+const RETRY_DELAY = 1000;
+
+// 重试延迟函数
+const retryDelay = (retryCount: number) => {
+  return new Promise((resolve) => setTimeout(resolve, RETRY_DELAY * retryCount));
+};
+
+// 判断是否应该重试
+const shouldRetry = (error: AxiosError) => {
+  const code = error.code || '';
+  const isNetworkError = code === 'ECONNABORTED' || code === 'ETIMEDOUT' || !error.response;
+  const isServerError = error.response?.status ? error.response.status >= 500 : false;
+  const isRetryableStatus = error.response?.status === 429; // Too Many Requests
+  return isNetworkError || isServerError || isRetryableStatus;
+};
 
 // 请求拦截器：添加认证头（仅在非测试模式下）
 api.interceptors.request.use((config) => {
@@ -30,10 +66,12 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-// 响应拦截器：处理 401 未授权（仅在非测试模式下）
+// 响应拦截器：处理 401 未授权和请求重试
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error: AxiosError) => {
+    const config = error.config as InternalAxiosRequestConfig & { _retry?: number; _retryCount?: number };
+
     // 测试模式下不处理 401 跳转
     if (ADMIN_TEST_MODE) {
       return Promise.reject(error);
@@ -47,10 +85,44 @@ api.interceptors.response.use(
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
+
+    // 请求重试逻辑
+    if (!config || !shouldRetry(error)) {
+      return Promise.reject(error);
+    }
+
+    // 初始化重试计数
+    config._retry = config._retry ?? 0;
+    config._retryCount = config._retryCount ?? 0;
+
+    // 检查是否超过最大重试次数
+    if (config._retryCount >= MAX_RETRY) {
+      return Promise.reject(error);
+    }
+
+    // 增加重试计数
+    config._retryCount += 1;
+
+    // 等待后重试
+    await retryDelay(config._retryCount);
+
+    return api(config);
   }
 );
+
+// 全局错误处理器
+export const handleApiError = (error: unknown, context?: string): string => {
+  if (axios.isAxiosError(error)) {
+    const message = error.response?.data?.detail || error.message || '请求失败';
+    return context ? `${context}: ${message}` : message;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return '发生未知错误';
+};
 
 // Auth API
 export const authApi = {
@@ -359,13 +431,13 @@ export const dermaAgentApi = {
                   break;
               }
             } catch (parseError) {
-              console.error('[createSessionStream] JSON parse error:', parseError);
+              debugLog.error('[createSessionStream] JSON parse error:', parseError);
             }
           }
         }
       }
     }).catch((error) => {
-      console.error('[createSessionStream] Fetch error:', error);
+      debugLog.error('[createSessionStream] Fetch error:', error);
       callbacks?.onError?.(error.message);
     });
 
@@ -388,7 +460,7 @@ export const dermaAgentApi = {
   ) => {
     const token = localStorage.getItem('admin_token');
 
-    console.log('[SSE] Starting stream request to:', `${API_BASE_URL}/derma/${sessionId}/continue`);
+    debugLog.log('[SSE] Starting stream request to:', `${API_BASE_URL}/derma/${sessionId}/continue`);
 
     fetch(`${API_BASE_URL}/derma/${sessionId}/continue`, {
       method: 'POST',
@@ -403,8 +475,8 @@ export const dermaAgentApi = {
         task_type: 'conversation',
       }),
     }).then(async (response) => {
-      console.log('[SSE] Response status:', response.status);
-      console.log('[SSE] Response headers:', Object.fromEntries(response.headers.entries()));
+      debugLog.log('[SSE] Response status:', response.status);
+      debugLog.log('[SSE] Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -425,7 +497,7 @@ export const dermaAgentApi = {
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
-          console.log('[SSE] Stream ended, total events:', eventCount);
+          debugLog.log('[SSE] Stream ended, total events:', eventCount);
           break;
         }
 
@@ -436,7 +508,7 @@ export const dermaAgentApi = {
         for (const line of lines) {
           if (!line.trim()) continue;
 
-          console.log('[SSE] Raw line:', line);
+          debugLog.log('[SSE] Raw line:', line);
 
           // 改进的解析逻辑
           const eventMatch = line.match(/event:\s*(.+)/);
@@ -446,8 +518,8 @@ export const dermaAgentApi = {
             const eventType = eventMatch[1].trim();
             const dataStr = dataMatch[1].trim();
 
-            console.log('[SSE] Event type:', eventType);
-            console.log('[SSE] Data string:', dataStr);
+            debugLog.log('[SSE] Event type:', eventType);
+            debugLog.log('[SSE] Data string:', dataStr);
 
             try {
               const data = JSON.parse(dataStr);
@@ -455,27 +527,27 @@ export const dermaAgentApi = {
 
               switch (eventType) {
                 case 'meta':
-                  console.log('[SSE] Meta event:', data);
+                  debugLog.log('[SSE] Meta event:', data);
                   callbacks?.onMeta?.(data);
                   break;
                 case 'chunk':
-                  console.log('[SSE] Chunk event:', data.text);
+                  debugLog.log('[SSE] Chunk event:', data.text);
                   callbacks?.onChunk?.(data.text);
                   break;
                 case 'step':
-                  console.log('[SSE] Step event:', data);
+                  debugLog.log('[SSE] Step event:', data);
                   callbacks?.onStep?.(data);
                   break;
                 case 'complete':
-                  console.log('[SSE] Complete event:', data);
+                  debugLog.log('[SSE] Complete event:', data);
                   callbacks?.onComplete?.(data);
                   break;
                 case 'error':
-                  console.error('[SSE] Error event:', data.error);
+                  debugLog.error('[SSE] Error event:', data.error);
                   callbacks?.onError?.(data.error);
                   break;
                 default:
-                  console.warn('[SSE] Unknown event type:', eventType);
+                  debugLog.warn('[SSE] Unknown event type:', eventType);
               }
             } catch (parseError) {
               console.error('[SSE] JSON parse error:', parseError, 'Data:', dataStr);

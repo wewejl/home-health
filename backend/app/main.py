@@ -1,9 +1,12 @@
 from dotenv import load_dotenv
 load_dotenv()  # 加载 .env 文件中的环境变量
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from .database import engine, Base, SessionLocal
 from .config import get_settings
 from .routes import (
@@ -41,11 +44,15 @@ settings = get_settings()
 
 Base.metadata.create_all(bind=engine)
 
+# 初始化速率限制器
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(
     title="灵犀健康 API",
     description="灵犀健康智能健康管理平台 - 岳阳琳烨网络科技有限公司",
     version="2.0.0"
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS 配置 - 使用 Settings 类中的配置
 app.add_middleware(

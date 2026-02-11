@@ -8,8 +8,9 @@ services:
     environment:
       POSTGRES_DB: home_health
       POSTGRES_USER: postgres
-      # 生产环境必须使用强密码（通过环境变量设置）
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      # ⚠️ 安全警告: 生产环境必须设置强密码
+      # 生成命令: openssl rand -base64 32
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5433:5432"
     healthcheck:
@@ -17,6 +18,16 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   # 后端API服务
   backend:
@@ -25,46 +36,90 @@ services:
       dockerfile: Dockerfile
     container_name: home-health-backend
     environment:
-      # 数据库配置（密码使用环境变量）
-      DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/home_health?options=-c%20timezone%3DUTC
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      # 数据库配置
+      DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD}@postgres:5432/home_health?options=-c%20timezone%3DUTC
 
-      # JWT 配置 - 生产环境必须设置强密钥
+      # JWT 配置 - ⚠️ 生产环境必须设置强密钥
       # 生成命令: python -c "import secrets; print(secrets.token_urlsafe(32))"
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-your-secret-key-change-in-production}
-      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-admin-secret-key-change-in-production}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET}
 
-      # 测试模式配置（默认关闭，生产环境安全）
-      # ADMIN_TEST_MODE: 管理员/医生 API 认证测试模式
-      #   - true: 跳过认证检查，自动使用测试账号（仅开发环境）
-      #   - false (默认): 必须提供有效的 JWT token（生产环境必须设置）
-      # TEST_MODE: 验证码测试模式
-      #   - true: 验证码 000000 始终有效（仅开发环境）
-      #   - false (默认): 必须真实验证（生产环境必须设置）
+      # 测试模式配置（生产环境必须为 false）
       ADMIN_TEST_MODE: ${ADMIN_TEST_MODE:-false}
       TEST_MODE: ${TEST_MODE:-false}
+
+      # 生产环境配置
+      DEBUG: ${DEBUG:-false}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
     ports:
       - "8100:8100"
     depends_on:
       postgres:
         condition: service_healthy
+    restart: unless-stopped
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Redis 缓存服务
   redis:
     image: redis:7-alpine
     container_name: home_health_redis
+    command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
+    restart: unless-stopped
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    volumes:
+      - redis_data:/data
 
   # 前端Web服务
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: home-health-frontend
     ports:
       - "80:80"
     depends_on:
       - backend
+    restart: unless-stopped
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+volumes:
+  postgres_data:
+  redis_data:
+
+# 环境变量说明（创建 .env 文件配置以下变量）:
+# POSTGRES_PASSWORD=your_strong_password_here
+# JWT_SECRET_KEY=your_jwt_secret_key_here
+# ADMIN_JWT_SECRET=your_admin_jwt_secret_here
+# ADMIN_TEST_MODE=false
+# TEST_MODE=false
+# DEBUG=false
+# CORS_ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
