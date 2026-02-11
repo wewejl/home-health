@@ -2,8 +2,12 @@
 审计日志测试
 """
 import pytest
-from backend.app.models.admin_user import AuditLog
-from backend.app.routes.admin_auth import create_audit_log, validate_password_complexity
+try:
+    from app.models.admin_user import AuditLog
+    from app.routes.admin_auth import create_audit_log, validate_password_complexity
+except ImportError:
+    from backend.app.models.admin_user import AuditLog
+    from backend.app.routes.admin_auth import create_audit_log, validate_password_complexity
 
 
 class TestAuditLog:

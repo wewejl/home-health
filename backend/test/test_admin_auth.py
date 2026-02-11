@@ -2,8 +2,12 @@
 认证相关测试
 """
 import pytest
-from backend.app.services.admin_auth_service import AdminAuthService
-from backend.app.models.admin_user import AdminUser
+try:
+    from app.services.admin_auth_service import AdminAuthService
+    from app.models.admin_user import AdminUser
+except ImportError:
+    from backend.app.services.admin_auth_service import AdminAuthService
+    from backend.app.models.admin_user import AdminUser
 
 
 class TestAdminAuthService:

@@ -3,7 +3,10 @@
 """
 import pytest
 import os
-from backend.app.config import Settings, get_settings, reset_settings
+try:
+    from app.config import Settings, get_settings, reset_settings
+except ImportError:
+    from backend.app.config import Settings, get_settings, reset_settings
 
 
 class TestSettings:

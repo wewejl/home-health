@@ -2,7 +2,10 @@
 密码复杂度验证测试
 """
 import pytest
-from backend.app.routes.admin_auth import validate_password_complexity
+try:
+    from app.routes.admin_auth import validate_password_complexity
+except ImportError:
+    from backend.app.routes.admin_auth import validate_password_complexity
 
 
 class TestPasswordValidation:
