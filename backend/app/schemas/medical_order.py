@@ -10,6 +10,7 @@ from datetime import date, time, datetime
 
 class MedicalOrderCreateRequest(BaseModel):
     """创建医嘱请求"""
+    patient_id: int = Field(..., description="患者ID")
     order_type: str = Field(..., description="医嘱类型")
     title: str = Field(..., max_length=200, description="医嘱标题")
     description: Optional[str] = Field(None, description="详细说明")
@@ -18,6 +19,7 @@ class MedicalOrderCreateRequest(BaseModel):
     end_date: Optional[date] = Field(None, description="结束日期")
     frequency: Optional[str] = Field(None, max_length=50, description="频次")
     reminder_times: Optional[List[str]] = Field(default_factory=list, description="提醒时间")
+    weekdays: Optional[List[int]] = Field(default_factory=list, description="每周调度：星期几 [0-6]，0=周日")
     ai_generated: bool = Field(False, description="是否AI生成")
     ai_session_id: Optional[str] = Field(None, description="关联的问诊会话ID")
 
@@ -60,6 +62,7 @@ class MedicalOrderResponse(BaseModel):
     end_date: Optional[date]
     frequency: Optional[str]
     reminder_times: List[str]
+    weekdays: List[int] = []
     ai_generated: bool
     status: str
     created_at: datetime

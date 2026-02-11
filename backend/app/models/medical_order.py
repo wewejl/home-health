@@ -112,6 +112,7 @@ class MedicalOrder(Base):
     end_date = Column(Date, nullable=True)
     frequency = Column(String(50), nullable=True)
     reminder_times = Column(JSON, nullable=True, default=list)  # ["08:00", "12:00", "18:00"]
+    weekdays = Column(JSON, nullable=True, default=list)  # 每周调度：[0, 1, 2, 3, 4, 5, 6] (0=周日, 1=周一...)
 
     # AI 生成标记
     ai_generated = Column(Boolean, default=False)

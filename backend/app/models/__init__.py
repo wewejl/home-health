@@ -22,6 +22,9 @@ from .medical_order import (
 from .medical_folder import MedicalFolder
 from .medical_record import MedicalRecord
 from .medical_file import MedicalFile, FileType
+from .doctor_patient_relationship import (
+    DoctorPatientRelationship, RelationshipType
+)
 
 __all__ = [
     "User", "Department", "Doctor", "Session", "Message", "SenderType",
@@ -33,5 +36,6 @@ __all__ = [
     "MedicalOrder", "TaskInstance", "CompletionRecord", "FamilyBond",
     "OrderType", "ScheduleType", "OrderStatus", "TaskStatus",
     "CompletionType", "NotificationLevel",
-    "MedicalFolder", "MedicalRecord", "MedicalFile", "FileType"
+    "MedicalFolder", "MedicalRecord", "MedicalFile", "FileType",
+    "DoctorPatientRelationship", "RelationshipType"
 ]

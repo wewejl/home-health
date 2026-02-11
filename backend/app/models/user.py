@@ -1,6 +1,11 @@
+from typing import TYPE_CHECKING
 from sqlalchemy import Column, Integer, String, DateTime, Date, Boolean, Sequence
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from ..database import Base
+
+if TYPE_CHECKING:
+    from .doctor_patient_relationship import DoctorPatientRelationship
 
 
 class User(Base):
@@ -31,3 +36,10 @@ class User(Base):
     # 时间戳
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # 医生-患者关联关系
+    doctor_relationships = relationship(
+        "DoctorPatientRelationship",
+        back_populates="patient",
+        foreign_keys="DoctorPatientRelationship.patient_id"
+    )

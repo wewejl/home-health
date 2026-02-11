@@ -9,12 +9,14 @@ from ..schemas.admin import (
     AdminLoginRequest, AdminLoginResponse, AdminUserResponse,
     AdminUserCreate, AdminUserUpdate
 )
+from ..config import get_settings
 
 router = APIRouter(prefix="/admin/auth", tags=["admin-auth"])
 security = HTTPBearer(auto_error=False)
 
-# 测试模式：禁用所有认证检查
-TEST_MODE = True
+# 测试模式：从配置文件读取（可通过环境变量 ADMIN_TEST_MODE 关闭）
+settings = get_settings()
+TEST_MODE = getattr(settings, 'ADMIN_TEST_MODE', settings.TEST_MODE)
 
 
 def get_current_admin(

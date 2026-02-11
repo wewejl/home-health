@@ -14,7 +14,7 @@ import logging
 from datetime import date, datetime
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from ..database import get_db
 from ..dependencies import get_current_user, TEST_MODE
@@ -176,8 +176,15 @@ def get_family_bonds(
         FamilyBond.family_member_id == current_user.id
     ).all()
 
+    # 批量获取患者信息 - 优化 N+1 查询
+    patient_ids = [bond.patient_id for bond in as_family]
+    patients_map = {
+        p.id: p
+        for p in db.query(User).filter(User.id.in_(patient_ids)).all()
+    } if patient_ids else {}
+
     for bond in as_family:
-        patient = db.query(User).filter(User.id == bond.patient_id).first()
+        patient = patients_map.get(bond.patient_id)
         results.append(FamilyBondResponse(
             id=bond.id,
             patient_id=bond.patient_id,
@@ -194,8 +201,15 @@ def get_family_bonds(
         FamilyBond.patient_id == current_user.id
     ).all()
 
+    # 批量获取家属信息 - 优化 N+1 查询
+    member_ids = [bond.family_member_id for bond in as_patient]
+    members_map = {
+        m.id: m
+        for m in db.query(User).filter(User.id.in_(member_ids)).all()
+    } if member_ids else {}
+
     for bond in as_patient:
-        member = db.query(User).filter(User.id == bond.family_member_id).first()
+        member = members_map.get(bond.family_member_id)
         results.append(FamilyBondResponse(
             id=bond.id,
             patient_id=bond.patient_id,
@@ -263,8 +277,10 @@ def get_family_member_tasks(
     if not bond:
         raise HTTPException(status_code=403, detail="无权查看此患者信息")
 
-    # 获取任务
-    tasks = db.query(TaskInstance).filter(
+    # 使用 selectinload 预加载 order 关系 - 优化 N+1 查询
+    tasks = db.query(TaskInstance).options(
+        selectinload(TaskInstance.order)
+    ).filter(
         TaskInstance.patient_id == patient_id,
         TaskInstance.scheduled_date == task_date
     ).all()
@@ -275,6 +291,7 @@ def get_family_member_tasks(
 
     def build_response(task):
         data = TaskInstanceResponse.model_validate(task).model_dump()
+        # 现在 task.order 已预加载，不会触发额外查询
         if task.order:
             data["order_title"] = task.order.title
             data["order_type"] = task.order.order_type.value
@@ -392,7 +409,10 @@ def get_daily_tasks(
 
     返回按状态分组的任务
     """
-    tasks = db.query(TaskInstance).filter(
+    # 使用 selectinload 预加载 order 关系 - 优化 N+1 查询
+    tasks = db.query(TaskInstance).options(
+        selectinload(TaskInstance.order)
+    ).filter(
         TaskInstance.patient_id == current_user.id,
         TaskInstance.scheduled_date == task_date
     ).all()
@@ -401,9 +421,10 @@ def get_daily_tasks(
     completed = [t for t in tasks if t.status == TaskStatus.COMPLETED]
     overdue = [t for t in tasks if t.status == TaskStatus.OVERDUE]
 
-    # 构建响应
+    # 构建响应 - 现在 task.order 已预加载
     def build_response(task):
         data = TaskInstanceResponse.model_validate(task).model_dump()
+        # 不再触发额外查询
         if task.order:
             data["order_title"] = task.order.title
             data["order_type"] = task.order.order_type.value
@@ -575,7 +596,10 @@ def get_alerts(
     from ..services.alert_service import AlertService
     from ..models.medical_order import Alert, AlertSeverity
 
-    query = db.query(Alert).filter(Alert.patient_id == current_user.id)
+    # 预加载 task_instance 和 order 关系 - 优化 N+1 查询
+    query = db.query(Alert).options(
+        selectinload(Alert.task_instance).selectinload(TaskInstance.order)
+    ).filter(Alert.patient_id == current_user.id)
 
     if active_only:
         query = query.filter(Alert.is_acknowledged == False)
@@ -595,6 +619,7 @@ def get_alerts(
             "value_data": alert.value_data,
             "is_acknowledged": alert.is_acknowledged,
             "created_at": alert.created_at.isoformat() if alert.created_at else None,
+            # 不再触发额外查询 - 已预加载
             "task_title": alert.task_instance.order.title if alert.task_instance and alert.task_instance.order else None
         }
         for alert in alerts

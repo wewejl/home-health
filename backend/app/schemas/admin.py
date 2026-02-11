@@ -38,6 +38,8 @@ class AdminUserResponse(BaseModel):
     # ========== Phase 0 新增字段 ==========
     department_id: Optional[int] = None
     doctor_attributes: Optional[Dict[str, Any]] = None
+    # ========== 医生工作台新增字段 ==========
+    managed_doctor_ids: Optional[List[int]] = None
 
     class Config:
         from_attributes = True
@@ -133,6 +135,84 @@ class AuditLogResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ManagedDoctorInfo(BaseModel):
+    """管理的 AI 分身信息"""
+    id: int
+    name: str
+    title: Optional[str] = None
+    department: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class DoctorInfoResponse(BaseModel):
+    """医生信息响应（含管理的 AI 分身）"""
+    id: int
+    username: str
+    email: Optional[str] = None
+    role: str
+    department_id: Optional[int] = None
+    department_name: Optional[str] = None
+    managed_doctors: List[ManagedDoctorInfo] = []
+
+
+# ========== Phase 2: 患者分配管理 Schemas ==========
+
+class PatientAssignRequest(BaseModel):
+    """患者分配请求"""
+    patient_id: int = Field(..., description="患者 ID")
+    relationship_type: str = Field(default="temporary", description="关联类型：primary/consulting/temporary")
+    notes: Optional[str] = Field(None, description="备注信息")
+
+    @field_validator('relationship_type')
+    @classmethod
+    def validate_relationship_type(cls, v):
+        from ..models.doctor_patient_relationship import RelationshipType
+        valid_types = [RelationshipType.PRIMARY, RelationshipType.CONSULTING, RelationshipType.TEMPORARY]
+        if v not in valid_types:
+            raise ValueError(f"关联类型必须是以下之一: {', '.join(valid_types)}")
+        return v
+
+
+class PatientAssignResponse(BaseModel):
+    """患者分配响应"""
+    id: int
+    doctor_id: int
+    patient_id: int
+    relationship_type: str
+    is_active: bool
+    notes: Optional[str] = None
+    assigned_at: datetime
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AssignablePatientResponse(BaseModel):
+    """可分配的患者列表项"""
+    id: int
+    nickname: Optional[str] = None
+    phone: str
+    gender: Optional[str] = None
+    age: Optional[int] = None
+    is_assigned: bool = False  # 是否已分配给当前医生
+    assigned_at: Optional[datetime] = None  # 分配时间
+
+    class Config:
+        from_attributes = True
+
+
+class PatientStatsResponse(BaseModel):
+    """患者统计数据"""
+    total: int
+    active: int
+    new_today: int
+    low_compliance: int
 
 
 AdminLoginResponse.model_rebuild()

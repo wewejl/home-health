@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from typing import List
+from sqlalchemy.orm import Session, joinedload
+from typing import List, Optional
 from pydantic import BaseModel
 from ..database import get_db
 from ..models.department import Department
@@ -30,8 +30,8 @@ class DepartmentUpdate(BaseModel):
 class DepartmentDetailResponse(BaseModel):
     id: int
     name: str
-    description: str = None
-    icon: str = None
+    description: Optional[str] = None
+    icon: Optional[str] = None
     sort_order: int = 0
     is_active: bool = True
     doctor_count: int = 0
@@ -45,9 +45,13 @@ def list_departments(
     db: Session = Depends(get_db),
     admin: AdminUser = Depends(get_current_admin)
 ):
-    departments = db.query(Department).order_by(Department.sort_order).all()
+    # 使用 joinedload 预加载 doctors 关系 - 优化 N+1 查询
+    departments = db.query(Department).options(
+        joinedload(Department.doctors)
+    ).order_by(Department.sort_order).all()
     result = []
     for dept in departments:
+        # 现在 dept.doctors 已经预加载，不会触发额外查询
         doctor_count = len(dept.doctors) if dept.doctors else 0
         result.append(DepartmentDetailResponse(
             id=dept.id,
@@ -106,10 +110,13 @@ def get_department(
     db: Session = Depends(get_db),
     admin: AdminUser = Depends(get_current_admin)
 ):
-    dept = db.query(Department).filter(Department.id == dept_id).first()
+    # 使用 joinedload 预加载 doctors 关系 - 优化 N+1 查询
+    dept = db.query(Department).options(
+        joinedload(Department.doctors)
+    ).filter(Department.id == dept_id).first()
     if not dept:
         raise HTTPException(status_code=404, detail="科室不存在")
-    
+
     doctor_count = len(dept.doctors) if dept.doctors else 0
     return DepartmentDetailResponse(
         id=dept.id,
@@ -129,18 +136,21 @@ def update_department(
     db: Session = Depends(get_db),
     admin: AdminUser = Depends(get_current_admin)
 ):
-    dept = db.query(Department).filter(Department.id == dept_id).first()
+    # 使用 joinedload 预加载 doctors 关系 - 优化 N+1 查询
+    dept = db.query(Department).options(
+        joinedload(Department.doctors)
+    ).filter(Department.id == dept_id).first()
     if not dept:
         raise HTTPException(status_code=404, detail="科室不存在")
-    
+
     update_data = request.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         if hasattr(dept, key):
             setattr(dept, key, value)
-    
+
     db.commit()
     db.refresh(dept)
-    
+
     doctor_count = len(dept.doctors) if dept.doctors else 0
     return DepartmentDetailResponse(
         id=dept.id,
@@ -159,13 +169,16 @@ def delete_department(
     db: Session = Depends(get_db),
     admin: AdminUser = Depends(get_current_admin)
 ):
-    dept = db.query(Department).filter(Department.id == dept_id).first()
+    # 使用 joinedload 预加载 doctors 关系 - 优化 N+1 查询
+    dept = db.query(Department).options(
+        joinedload(Department.doctors)
+    ).filter(Department.id == dept_id).first()
     if not dept:
         raise HTTPException(status_code=404, detail="科室不存在")
-    
+
     if dept.doctors and len(dept.doctors) > 0:
         raise HTTPException(status_code=400, detail="科室下还有医生，无法删除")
-    
+
     db.delete(dept)
     db.commit()
     return {"message": "删除成功"}

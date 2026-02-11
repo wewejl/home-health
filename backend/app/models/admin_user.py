@@ -6,6 +6,7 @@ from ..database import Base
 
 if TYPE_CHECKING:
     from .department import Department
+    from .doctor_patient_relationship import DoctorPatientRelationship
 
 
 __all__ = ["AdminUser", "AuditLog", "AdminRole"]
@@ -46,6 +47,10 @@ class AdminUser(Base):
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
     department = relationship("Department", back_populates="admin_users")
 
+    # 管理的 AI 分身 ID 列表（JSON 数组）
+    # 示例：[1, 2, 3] 表示管理 Doctor#1, #2, #3
+    managed_doctor_ids = Column(JSON, nullable=True, default=list)
+
     # 医生专属属性
     doctor_attributes = Column(JSON, nullable=True)
     # {
@@ -54,6 +59,13 @@ class AdminUser(Base):
     #   "license_no": "执业医师证号",
     #   "hospital": "医院名称"
     # }
+
+    # 医生-患者关联关系
+    patient_relationships = relationship(
+        "DoctorPatientRelationship",
+        back_populates="doctor",
+        foreign_keys="DoctorPatientRelationship.doctor_id"
+    )
 
 
 class AuditLog(Base):
