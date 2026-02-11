@@ -26,8 +26,15 @@ services:
           memory: 512M
         reservations:
           memory: 256M
+    # 日志配置
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - postgres_backup:/backups
 
   # 后端API服务
   backend:
@@ -64,6 +71,12 @@ services:
           memory: 1G
         reservations:
           memory: 512M
+    # 日志配置
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
       interval: 30s
@@ -89,6 +102,12 @@ services:
           memory: 256M
         reservations:
           memory: 128M
+    # 日志配置
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     volumes:
       - redis_data:/data
 
@@ -113,6 +132,7 @@ services:
 
 volumes:
   postgres_data:
+  postgres_backup:
   redis_data:
 
 # 环境变量说明（创建 .env 文件配置以下变量）:

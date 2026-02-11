@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { ThemeProvider } from './components/theme-provider';
 import { ToastProvider } from '@/components/ui/toast';
@@ -18,13 +18,21 @@ import Feedbacks from './pages/Feedbacks';
 import Stats from './pages/Stats';
 import MedicalOrders from './pages/MedicalOrders';
 import PatientCompliance from './pages/PatientCompliance';
-import Rounding from './pages/Rounding';
-import RoundingDetail from './pages/RoundingDetail';
-import DoctorPersonaChat from './pages/admin/DoctorPersonaChat';
-import DoctorRecordAnalysis from './pages/admin/DoctorRecordAnalysis';
-// 医生工作台页面
 import PatientList from './pages/doctor/PatientList';
 import PatientDetail from './pages/doctor/PatientDetail';
+
+// 代码分割 - 使用 React.lazy() 按需加载大型页面
+const Rounding = lazy(() => import('./pages/Rounding'));
+const RoundingDetail = lazy(() => import('./pages/RoundingDetail'));
+const DoctorPersonaChat = lazy(() => import('./pages/admin/DoctorPersonaChat'));
+const DoctorRecordAnalysis = lazy(() => import('./pages/admin/DoctorRecordAnalysis'));
+
+// 加载中组件
+const PageLoading = () => (
+  <div className="flex items-center justify-center min-h-[400px]">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+  </div>
+);
 
 // 读取测试模式配置（可通过环境变量 VITE_ADMIN_TEST_MODE 关闭）
 const ADMIN_TEST_MODE = import.meta.env.VITE_ADMIN_TEST_MODE === 'true';
@@ -116,7 +124,8 @@ function AppContent() {
         disableTransitionOnChange
       >
         <ToastProvider>
-          <Routes>
+          <Suspense fallback={<PageLoading />}>
+            <Routes>
           <Route
               path="/login"
               element={
@@ -163,6 +172,7 @@ function AppContent() {
               </Route>
             </Route>
           </Routes>
+          </Suspense>
         </ToastProvider>
       </ThemeProvider>
     </ErrorBoundary>

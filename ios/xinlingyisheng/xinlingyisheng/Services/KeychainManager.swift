@@ -3,10 +3,14 @@ import Security
 
 /// Keychain 管理器 - 安全存储敏感信息（如 Token）
 /// 使用 Keychain 而非 UserDefaults 存储 Token，防止越狱设备读取
+/// Keychain 失败时自动降级到 UserDefaults（带警告）
 actor KeychainManager {
     static let shared = KeychainManager()
 
-    private init() {}
+    private init() {
+        // 配置 UserDefaults 前缀，避免冲突
+        UserDefaults.standard.register(defaults: ["keychain_fallback_enabled": true])
+    }
 
     // MARK: - 错误类型
     enum KeychainError: Error, LocalizedError {
@@ -26,36 +30,87 @@ actor KeychainManager {
         }
     }
 
+    // MARK: - UserDefaults 降级存储
+
+    /// UserDefaults 前缀
+    private var userDefaultsPrefix: String {
+        return "secure_fallback_"
+    }
+
+    /// 保存到 UserDefaults（降级方案）
+    private func saveToUserDefaults(_ value: String, forKey key: String) {
+        let fullKey = userDefaultsPrefix + key
+        UserDefaults.standard.set(value, forKey: fullKey)
+        AppLogger.warning("[Keychain] 降级到 UserDefaults 存储: \(key)")
+    }
+
+    /// 从 UserDefaults 读取（降级方案）
+    private func retrieveFromUserDefaults(forKey key: String) -> String? {
+        let fullKey = userDefaultsPrefix + key
+        return UserDefaults.standard.string(forKey: fullKey)
+    }
+
+    /// 从 UserDefaults 删除（降级方案）
+    private func deleteFromUserDefaults(forKey key: String) {
+        let fullKey = userDefaultsPrefix + key
+        UserDefaults.standard.removeObject(forKey: fullKey)
+    }
+
     // MARK: - 通用方法
 
-    /// 保存字符串到 Keychain
+    /// 保存字符串到 Keychain（失败时自动降级到 UserDefaults）
     func save(_ value: String, forKey key: String) throws {
-        // 先删除已存在的项（避免重复）
-        try? delete(forKey: key)
+        // 先尝试 Keychain
+        do {
+            // 先删除已存在的项（避免重复）
+            try? deleteFromKeychain(forKey: key)
 
-        // 从字符串创建数据
-        guard let data = value.data(using: .utf8) else {
-            // errSecEncode 不是标准的 SecItem 错误码，使用通用错误
-            throw KeychainError.unexpectedStatus(-1)
-        }
+            // 从字符串创建数据
+            guard let data = value.data(using: .utf8) else {
+                throw KeychainError.unexpectedStatus(-1)
+            }
 
-        // 构建 Keychain 查询
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key,
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly // 仅本设备可访问
-        ]
+            // 构建 Keychain 查询
+            let query: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrAccount as String: key,
+                kSecValueData as String: data,
+                kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+            ]
 
-        // 添加到 Keychain
-        let status = SecItemAdd(query as CFDictionary, nil)
-        guard status == errSecSuccess else {
-            throw KeychainError.unexpectedStatus(status)
+            // 添加到 Keychain
+            let status = SecItemAdd(query as CFDictionary, nil)
+            guard status == errSecSuccess else {
+                throw KeychainError.unexpectedStatus(status)
+            }
+
+            AppLogger.success("[Keychain] 保存成功: \(key)")
+
+        } catch {
+            // Keychain 失败，降级到 UserDefaults
+            AppLogger.error("[Keychain] 保存失败，降级到 UserDefaults: \(key)", error: error)
+            saveToUserDefaults(value, forKey: key)
         }
     }
 
-    /// 从 Keychain 读取字符串
+    /// 从 Keychain 读取字符串（失败时自动降级到 UserDefaults）
     func retrieve(forKey key: String) throws -> String {
+        // 先尝试 Keychain
+        do {
+            let value = try retrieveFromKeychain(forKey: key)
+            return value
+        } catch {
+            // Keychain 失败，尝试 UserDefaults
+            if let fallbackValue = retrieveFromUserDefaults(forKey: key) {
+                AppLogger.warning("[Keychain] 从 UserDefaults 读取（降级模式）: \(key)")
+                return fallbackValue
+            }
+            throw error
+        }
+    }
+
+    /// 从 Keychain 读取（内部方法）
+    private func retrieveFromKeychain(forKey key: String) throws -> String {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: key,
@@ -81,8 +136,21 @@ actor KeychainManager {
         return value
     }
 
-    /// 从 Keychain 删除项
+    /// 从 Keychain 删除项（同时清除 UserDefaults 降级数据）
     func delete(forKey key: String) throws {
+        // 删除 Keychain 项
+        do {
+            try deleteFromKeychain(forKey: key)
+        } catch {
+            AppLogger.warning("[Keychain] 删除 Keychain 失败: \(key)")
+        }
+
+        // 同时清除 UserDefaults 降级数据
+        deleteFromUserDefaults(forKey: key)
+    }
+
+    /// 从 Keychain 删除（内部方法）
+    private func deleteFromKeychain(forKey key: String) throws {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: key
