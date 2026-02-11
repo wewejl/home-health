@@ -3,6 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 import secrets
 import warnings
+import os
 
 
 class Settings(BaseSettings):
@@ -25,22 +26,31 @@ class Settings(BaseSettings):
         "audio": {".mp3", ".m4a", ".wav", ".aac"},
         "document": {".doc", ".docx", ".txt", ".xls", ".xlsx"}
     }
-    
+
     # 数据库
     # 添加 UTC 时区配置以修复日期格式问题 (PostgreSQL 输出格式与 Pydantic 兼容)
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5433/home_health?options=-c%20timezone%3DUTC"
+    # 默认使用 Docker 内部网络配置，本地开发可通过环境变量覆盖
+    DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@postgres:5432/home_health?options=-c%20timezone%3DUTC"
     KNOWLEDGE_DB_URL: str = "sqlite:///./knowledge.db"  # 知识库独立存储
-    
+
     # JWT 配置
-    JWT_SECRET_KEY: str = "dev-secret-key-change-in-production"
+    # 生成强随机密钥作为默认值（仅用于开发环境）
+    # 生产环境必须通过环境变量设置
+    _default_jwt_secret = secrets.token_urlsafe(32)
+    JWT_SECRET_KEY: str = _default_jwt_secret
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # 测试模式
-    TEST_MODE: bool = True
+    # 测试模式（默认关闭，生产环境安全）
+    TEST_MODE: bool = False
     # - true 时: 验证码 000000 为万能验证码，其他验证码正常验证（但不发真实短信）
     # - false 时: 所有验证码必须真实验证，发送真实短信（需配置阿里云）
+
+    # 管理员认证测试模式（独立控制，默认关闭，生产环境安全）
+    ADMIN_TEST_MODE: bool = False
+    # - true 时: 管理员/医生 API 跳过认证检查，自动使用测试账号
+    # - false 时: 必须提供有效的 JWT token
 
     # 测试账号手机号（仅这些号码可以使用 000000 验证码）
     TEST_PHONES: str = "18107300888"  # 多个号码用逗号分隔，如 "13800138000,13900139000"
@@ -86,7 +96,10 @@ class Settings(BaseSettings):
     DASHSCOPE_API_KEY: str = ""
     
     # Admin JWT 配置
-    ADMIN_JWT_SECRET: str = "admin-secret-key-change-in-production"
+    # 生成强随机密钥作为默认值（仅用于开发环境）
+    # 生产环境必须通过环境变量设置
+    _default_admin_jwt_secret = secrets.token_urlsafe(32)
+    ADMIN_JWT_SECRET: str = _default_admin_jwt_secret
     ADMIN_JWT_EXPIRE_HOURS: int = 24
 
     # CORS 配置
@@ -104,21 +117,51 @@ class Settings(BaseSettings):
         self._validate_security_settings()
 
     def _validate_security_settings(self):
-        """验证安全配置，在非开发环境发出警告"""
+        """验证安全配置，生产环境强制检查"""
         if not self.DEBUG:
             # 生产环境安全检查
-            if self.JWT_SECRET_KEY in [
+            # 检查是否使用了默认生成的密钥或已知的弱密钥
+            default_secrets = {
                 "dev-secret-key-change-in-production",
                 "admin-secret-key-change-in-production",
+                "your-secret-key-change-in-production",
                 "xinlin-doctor-secret-key-2024",
-            ]:
-                warnings.warn(
-                    "⚠️  SECURITY WARNING: Using default JWT secret key in production! "
-                    "Set a strong JWT_SECRET_KEY and ADMIN_JWT_SECRET in environment.",
-                    RuntimeWarning,
-                    stacklevel=2
+                self._default_jwt_secret,
+                self._default_admin_jwt_secret,
+                # 检查示例配置中的弱密钥
+                "CHANGE_THIS_IN_PRODUCTION_USE_STRONG_RANDOM_KEY",
+                "",
+            }
+
+            # 强制检查 JWT 密钥（生产环境必须设置强密钥）
+            if not self.JWT_SECRET_KEY or self.JWT_SECRET_KEY in default_secrets:
+                raise ValueError(
+                    "SECURITY ERROR: Production environment requires a strong JWT_SECRET_KEY. "
+                    "Set it via environment variable. Generate with: "
+                    'python -c "import secrets; print(secrets.token_urlsafe(32))"'
                 )
 
+            if not self.ADMIN_JWT_SECRET or self.ADMIN_JWT_SECRET in default_secrets:
+                raise ValueError(
+                    "SECURITY ERROR: Production environment requires a strong ADMIN_JWT_SECRET. "
+                    "Set it via environment variable. Generate with: "
+                    'python -c "import secrets; print(secrets.token_urlsafe(32))"'
+                )
+
+            # 检查测试模式（生产环境必须关闭）
+            if self.TEST_MODE:
+                raise ValueError(
+                    "SECURITY ERROR: TEST_MODE is enabled in production environment. "
+                    "Set TEST_MODE=false in environment variables."
+                )
+
+            if self.ADMIN_TEST_MODE:
+                raise ValueError(
+                    "SECURITY ERROR: ADMIN_TEST_MODE is enabled in production environment. "
+                    "Set ADMIN_TEST_MODE=false in environment variables."
+                )
+
+            # CORS 配置警告（可选，不阻止启动）
             if not self.CORS_ALLOWED_ORIGINS:
                 warnings.warn(
                     "⚠️  SECURITY WARNING: CORS_ALLOWED_ORIGINS not set in production. "

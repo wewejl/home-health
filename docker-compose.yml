@@ -8,7 +8,8 @@ services:
     environment:
       POSTGRES_DB: home_health
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      # 生产环境必须使用强密码（通过环境变量设置）
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
       - "5433:5432"
     healthcheck:
@@ -24,7 +25,24 @@ services:
       dockerfile: Dockerfile
     container_name: home-health-backend
     environment:
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/home_health
+      # 数据库配置（密码使用环境变量）
+      DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/home_health?options=-c%20timezone%3DUTC
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+
+      # JWT 配置 - 生产环境必须设置强密钥
+      # 生成命令: python -c "import secrets; print(secrets.token_urlsafe(32))"
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-your-secret-key-change-in-production}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-admin-secret-key-change-in-production}
+
+      # 测试模式配置（默认关闭，生产环境安全）
+      # ADMIN_TEST_MODE: 管理员/医生 API 认证测试模式
+      #   - true: 跳过认证检查，自动使用测试账号（仅开发环境）
+      #   - false (默认): 必须提供有效的 JWT token（生产环境必须设置）
+      # TEST_MODE: 验证码测试模式
+      #   - true: 验证码 000000 始终有效（仅开发环境）
+      #   - false (默认): 必须真实验证（生产环境必须设置）
+      ADMIN_TEST_MODE: ${ADMIN_TEST_MODE:-false}
+      TEST_MODE: ${TEST_MODE:-false}
     ports:
       - "8100:8100"
     depends_on:
