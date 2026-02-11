@@ -1,0 +1,93 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - heading "灵犀健康" [level=2] [ref=e6]
+    - navigation [ref=e7]:
+      - list [ref=e8]:
+        - listitem [ref=e9]:
+          - button "我的患者" [ref=e10] [cursor=pointer]:
+            - img [ref=e11]
+            - generic [ref=e15]: 我的患者
+    - button [ref=e16] [cursor=pointer]:
+      - img [ref=e17]
+  - generic [ref=e20]:
+    - banner [ref=e21]:
+      - button [ref=e23] [cursor=pointer]:
+        - img
+      - generic [ref=e24]:
+        - button "切换主题" [ref=e25] [cursor=pointer]:
+          - img
+          - generic [ref=e26]: 切换主题
+        - button "test_doctor (医生)" [ref=e28] [cursor=pointer]:
+          - img [ref=e31]
+          - generic [ref=e34]: test_doctor (医生)
+    - main [ref=e35]:
+      - generic [ref=e37]:
+        - generic [ref=e39]:
+          - generic [ref=e40]:
+            - generic [ref=e41]:
+              - img [ref=e42]
+              - heading "当前医生" [level=3] [ref=e45]
+            - generic [ref=e46]:
+              - generic [ref=e47]:
+                - term [ref=e48]: 用户名
+                - definition [ref=e49]: test_doctor
+              - generic [ref=e50]:
+                - term [ref=e51]: 科室
+                - definition [ref=e52]: 皮肤科
+          - generic [ref=e53]:
+            - generic [ref=e54]:
+              - img [ref=e55]
+              - heading "管理的 AI 分身" [level=3] [ref=e59]
+            - generic [ref=e61]:
+              - term [ref=e62]: 皮肤科AI智能体
+              - definition [ref=e63]: AI专家团队 皮肤科
+        - generic [ref=e64]:
+          - heading "我的患者" [level=1] [ref=e65]
+          - generic [ref=e66]:
+            - img [ref=e67]
+            - textbox "搜索患者姓名或手机号" [ref=e70]
+        - table [ref=e73]:
+          - rowgroup [ref=e74]:
+            - row "ID 姓名 年龄 手机号 进行中医嘱 完成率 最后咨询 操作" [ref=e75]:
+              - columnheader "ID" [ref=e76]
+              - columnheader "姓名" [ref=e77]
+              - columnheader "年龄" [ref=e78]
+              - columnheader "手机号" [ref=e79]
+              - columnheader "进行中医嘱" [ref=e80]
+              - columnheader "完成率" [ref=e81]
+              - columnheader "最后咨询" [ref=e82]
+              - columnheader "操作" [ref=e83]
+          - rowgroup [ref=e84]:
+            - row "55 测试用户 未填写 test_user 2 0% 2026/2/3 查看" [ref=e85] [cursor=pointer]:
+              - cell "55" [ref=e86]
+              - cell "测试用户" [ref=e87]:
+                - generic [ref=e89]: 测试用户
+              - cell "未填写" [ref=e90]
+              - cell "test_user" [ref=e91]
+              - cell "2" [ref=e92]:
+                - generic [ref=e93]: "2"
+              - cell "0%" [ref=e94]:
+                - generic [ref=e98]: 0%
+              - cell "2026/2/3" [ref=e99]
+              - cell "查看" [ref=e100]:
+                - button "查看" [ref=e101]
+            - row "54 用户0167 未填写 18107300167 1 0% 2026/1/24 查看" [ref=e102] [cursor=pointer]:
+              - cell "54" [ref=e103]
+              - cell "用户0167" [ref=e104]:
+                - generic [ref=e106]: 用户0167
+              - cell "未填写" [ref=e107]
+              - cell "18107300167" [ref=e108]
+              - cell "1" [ref=e109]:
+                - generic [ref=e110]: "1"
+              - cell "0%" [ref=e111]:
+                - generic [ref=e115]: 0%
+              - cell "2026/1/24" [ref=e116]
+              - cell "查看" [ref=e117]:
+                - button "查看" [ref=e118]
+    - contentinfo [ref=e119]:
+      - generic [ref=e120]:
+        - generic [ref=e121]:
+          - strong [ref=e122]: 灵犀健康
+          - text: © 2026 岳阳琳烨网络科技有限公司
+        - generic [ref=e123]: "邮箱: 1024344053@qq.com | 电话: 18107300167"
+        - generic [ref=e124]: 湖南省岳阳市岳阳楼区三眼桥街道李家冲社区居民委员大楼605室
