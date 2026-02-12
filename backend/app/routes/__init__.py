@@ -1,8 +1,6 @@
 from .auth import router as auth_router
 from .departments import router as departments_router
-# V1 API 已废弃，统一使用 V2 (sessions_v2)
-# from .sessions import router as sessions_router
-from .sessions_v2 import router as sessions_v2_router
+from .sessions import router as sessions_router  # 多智能体架构
 from .feedbacks import router as feedbacks_router
 from .diseases import router as diseases_router
 from .drugs import router as drugs_router
@@ -31,7 +29,7 @@ from .doctor_workstation import router as doctor_workstation_router  # 医生工
 
 __all__ = [
     "auth_router", "departments_router",
-    "sessions_v2_router",
+    "sessions_router",  # 多智能体架构
     "feedbacks_router", "diseases_router", "drugs_router",
     "medical_events_router", "ai_router", "persona_chat_router", "record_analysis_router",
     "medical_orders_router",  # 医嘱执行监督系统

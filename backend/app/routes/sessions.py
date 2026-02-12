@@ -1,7 +1,7 @@
 """
-统一会话接口 V2
+统一会话接口
 
-使用新的多智能体架构：
+使用多智能体架构：
 - AgentRouterV2 路由器
 - BaseAgentV2 基类
 - AgentResponse 统一响应格式
@@ -24,55 +24,55 @@ from ..models.user import User
 from ..dependencies import get_current_user
 from ..services.agent_router_v2 import AgentRouterV2
 
-router = APIRouter(prefix="/v2/sessions", tags=["sessions-v2"])
+router = APIRouter(prefix="/sessions", tags=["sessions"])
 
 
-def migrate_v1_state_to_v2(v1_state: Optional[Dict]) -> Dict:
+def migrate_legacy_state(legacy_state: Optional[Dict]) -> Dict:
     """
-    将 V1 状态转换为 V2 格式
+    将旧版本状态转换为新格式
 
-    V1 字段 -> V2 字段映射：
-    - questions_asked -> 删除（V2 不需要）
-    - session_id -> 删除（V2 从 session 对象获取）
-    - user_id -> 删除（V2 从 session 对象获取）
-    - stage -> 保留（V2 也使用）
-    - chief_complaint -> 保留（V2 也使用）
+    旧版本字段 -> 新版本字段映射：
+    - questions_asked -> 删除（新版本不需要）
+    - session_id -> 删除（新版本从 session 对象获取）
+    - user_id -> 删除（新版本从 session 对象获取）
+    - stage -> 保留（新版本也使用）
+    - chief_complaint -> 保留（新版本也使用）
     - symptoms -> 保留
     - skin_location -> 保留
     - diagnosis_card -> 保留
     - advice_history -> 保留
     """
-    if not v1_state:
+    if not legacy_state:
         return {}
 
-    # 处理 JSON 字符串情况（V1 可能存成字符串）
-    if isinstance(v1_state, str):
+    # 处理 JSON 字符串情况（旧版本可能存成字符串）
+    if isinstance(legacy_state, str):
         try:
-            v1_state = json.loads(v1_state)
+            legacy_state = json.loads(legacy_state)
         except:
             return {}
 
-    # V2 需要保留的状态字段
-    v2_fields = {
+    # 新版本需要保留的状态字段
+    valid_fields = {
         "stage", "chief_complaint", "symptoms",
         "skin_location", "diagnosis_card", "advice_history",
         "knowledge_refs", "reasoning_steps", "latest_analysis",
         "latest_interpretation", "current_response"
     }
 
-    return {k: v for k, v in v1_state.items() if k in v2_fields}
+    return {k: v for k, v in legacy_state.items() if k in valid_fields}
 
 
 @router.post("", response_model=SessionResponse)
-async def create_session_v2(
+async def create_session(
     request: Union[SessionCreate, EnhancedSessionCreate],
     db: DBSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    创建会话 (V2)
-    
-    使用新的 AgentRouterV2 架构
+    创建会话
+
+    使用 AgentRouterV2 架构
     """
     doctor = None
     if request.doctor_id:
@@ -98,7 +98,7 @@ async def create_session_v2(
         user_id=current_user.id,
         doctor_id=request.doctor_id,
         agent_type=agent_type,
-        agent_state={}  # V2: 初始状态为空字典
+        agent_state={}  # 初始状态为空字典
     )
     db.add(session)
     db.commit()
@@ -117,7 +117,7 @@ async def create_session_v2(
 
 
 @router.post("/{session_id}/messages")
-async def send_message_v2(
+async def send_message(
     session_id: str,
     request: Union[MessageCreate, EnhancedMessageCreate],
     http_request: Request,
@@ -125,7 +125,7 @@ async def send_message_v2(
     current_user: User = Depends(get_current_user)
 ):
     """
-    发送消息 (V2)
+    发送消息
 
     返回 AgentResponse 统一格式
 
@@ -147,7 +147,7 @@ async def send_message_v2(
     if not session:
         raise HTTPException(status_code=404, detail="会话不存在")
 
-    # 获取 V2 智能体
+    # 获取智能体
     agent_type = session.agent_type or "general"
     try:
         agent = AgentRouterV2.get_agent(agent_type)
@@ -180,8 +180,8 @@ async def send_message_v2(
     db.commit()
     db.refresh(user_message)
 
-    # 恢复智能体状态（使用状态转换函数兼容 V1 会话）
-    state = migrate_v1_state_to_v2(session.agent_state)
+    # 恢复智能体状态（使用状态转换函数兼容旧会话）
+    state = migrate_legacy_state(session.agent_state)
 
     # 检查是否请求流式响应
     accept_header = http_request.headers.get("accept", "")
@@ -189,7 +189,7 @@ async def send_message_v2(
 
     if want_stream:
         return StreamingResponse(
-            stream_agent_response_v2(
+            stream_agent_response(
                 agent=agent,
                 state=state,
                 user_input=content,
@@ -235,7 +235,7 @@ async def send_message_v2(
         return response.model_dump()
 
 
-async def stream_agent_response_v2(
+async def stream_agent_response(
     agent,
     state: Dict,
     user_input: str,
@@ -246,8 +246,8 @@ async def stream_agent_response_v2(
     db_session: Optional[DBSession] = None
 ) -> AsyncGenerator[str, None]:
     """
-    生成 SSE 流式响应 (V2)
-    
+    生成 SSE 流式响应
+
     返回 AgentResponse 统一格式
     """
     chunk_queue = asyncio.Queue()
@@ -269,7 +269,7 @@ async def stream_agent_response_v2(
             )
         except Exception as e:
             error_occurred = str(e)
-            print(f"[stream_agent_response_v2] Error: {e}")
+            print(f"[stream_agent_response] Error: {e}")
             import traceback
             traceback.print_exc()
         finally:
@@ -322,7 +322,7 @@ async def stream_agent_response_v2(
                 session_obj.last_message = final_response.message[:100] if final_response.message else ""
                 db_save.commit()
         except Exception as e:
-            print(f"[stream_agent_response_v2] 保存状态时出错: {e}")
+            print(f"[stream_agent_response] 保存状态时出错: {e}")
         finally:
             db_save.close()
         
@@ -332,14 +332,14 @@ async def stream_agent_response_v2(
 
 
 @router.get("", response_model=List[SessionResponse])
-def get_sessions_v2(
+def get_sessions(
     db: DBSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    获取用户会话列表 (V2)
+    获取用户会话列表
 
-    与 V1 功能对等，返回当前用户的所有会话
+    返回当前用户的所有会话
     """
     sessions = db.query(SessionModel).filter(
         SessionModel.user_id == current_user.id
@@ -362,7 +362,7 @@ def get_sessions_v2(
 
 
 @router.get("/{session_id}/messages", response_model=MessageListResponse)
-def get_session_messages_v2(
+def get_session_messages(
     session_id: str,
     limit: int = 20,
     before: Optional[int] = None,
@@ -370,9 +370,9 @@ def get_session_messages_v2(
     current_user: User = Depends(get_current_user)
 ):
     """
-    获取会话消息列表 (V2)
+    获取会话消息列表
 
-    与 V1 功能对等，支持分页加载
+    支持分页加载
     """
     from ..dependencies import TEST_MODE
 
@@ -407,14 +407,14 @@ def get_session_messages_v2(
 
 
 @router.get("/agents", response_model=Dict[str, Any])
-async def list_agents_v2():
-    """获取所有可用智能体及其能力 (V2)"""
+async def list_agents():
+    """获取所有可用智能体及其能力"""
     return AgentRouterV2.list_agents()
 
 
 @router.get("/agents/{agent_type}/capabilities", response_model=Dict[str, Any])
-async def get_agent_capabilities_v2(agent_type: str):
-    """获取指定智能体的能力配置 (V2)"""
+async def get_agent_capabilities(agent_type: str):
+    """获取指定智能体的能力配置"""
     capabilities = AgentRouterV2.get_capabilities(agent_type)
     if not capabilities:
         raise HTTPException(status_code=404, detail=f"智能体不存在: {agent_type}")

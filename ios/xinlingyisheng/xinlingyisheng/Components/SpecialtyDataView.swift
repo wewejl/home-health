@@ -1,10 +1,10 @@
 import SwiftUI
 
 // MARK: - 专科数据渲染视图
-// 根据 AgentResponseV2 的 specialtyData 动态渲染专科特有的 UI 组件
+// 根据 AgentResponse 的 specialtyData 动态渲染专科特有的 UI 组件
 
 struct SpecialtyDataView: View {
-    let specialtyData: SpecialtyDataV2
+    let specialtyData: SpecialtyData
     let agentType: AgentType
     
     var body: some View {
@@ -31,16 +31,16 @@ struct SpecialtyDataView: View {
         
         // 诊断卡
         if let diagnosisCard = specialtyData.diagnosisCard {
-            DiagnosisCardViewV2(card: diagnosisCard)
+            DiagnosisCardView(card: diagnosisCard)
         }
     }
-    
+
     // MARK: - 心内科视图
     @ViewBuilder
     private var cardiologyView: some View {
         // 诊断卡（如果有）
         if let diagnosisCard = specialtyData.diagnosisCard {
-            DiagnosisCardViewV2(card: diagnosisCard)
+            DiagnosisCardView(card: diagnosisCard)
         }
         
         // 症状列表
@@ -57,7 +57,7 @@ struct SpecialtyDataView: View {
         }
         
         if let diagnosisCard = specialtyData.diagnosisCard {
-            DiagnosisCardViewV2(card: diagnosisCard)
+            DiagnosisCardView(card: diagnosisCard)
         }
     }
 }
@@ -73,7 +73,7 @@ struct SymptomsTagView: View {
                 .fontWeight(.medium)
                 .foregroundColor(.secondary)
             
-            FlowLayoutV2(spacing: 8) {
+            FlowLayout(spacing: 8) {
                 ForEach(symptoms, id: \.self) { symptom in
                     Text(symptom)
                         .font(.system(size: UnifiedFont.caption1))
@@ -91,9 +91,9 @@ struct SymptomsTagView: View {
     }
 }
 
-// MARK: - 诊断卡视图 V2
-struct DiagnosisCardViewV2: View {
-    let card: DiagnosisCardV2
+// MARK: - 诊断卡视图
+struct DiagnosisCardView: View {
+    let card: DiagnosisCard
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -206,8 +206,8 @@ struct ConsultationProgressView: View {
     }
 }
 
-// MARK: - 风险等级徽章 V2
-struct RiskLevelBadgeV2: View {
+// MARK: - 风险等级徽章
+struct RiskLevelBadge: View {
     let riskLevel: RiskLevel
     
     var backgroundColor: Color {
@@ -244,23 +244,23 @@ struct RiskLevelBadgeV2: View {
     }
 }
 
-// MARK: - Flow Layout V2 (自动换行布局)
-struct FlowLayoutV2: Layout {
+// MARK: - Flow Layout (自动换行布局)
+struct FlowLayout: Layout {
     var spacing: CGFloat = 8
-    
+
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = FlowResultV2(in: proposal.replacingUnspecifiedDimensions().width, subviews: subviews, spacing: spacing)
+        let result = FlowResult(in: proposal.replacingUnspecifiedDimensions().width, subviews: subviews, spacing: spacing)
         return result.size
     }
-    
+
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = FlowResultV2(in: bounds.width, subviews: subviews, spacing: spacing)
+        let result = FlowResult(in: bounds.width, subviews: subviews, spacing: spacing)
         for (index, subview) in subviews.enumerated() {
             subview.place(at: CGPoint(x: bounds.minX + result.positions[index].x, y: bounds.minY + result.positions[index].y), proposal: .unspecified)
         }
     }
     
-    struct FlowResultV2 {
+    struct FlowResult {
         var size: CGSize = .zero
         var positions: [CGPoint] = []
         
@@ -296,12 +296,12 @@ struct FlowLayoutV2: Layout {
         SymptomsTagView(symptoms: ["红疹", "瘙痒", "脱皮", "肿胀"])
         
         ConsultationProgressView(stage: .diagnosing, progress: 80)
-        
+
         HStack {
-            RiskLevelBadgeV2(riskLevel: .low)
-            RiskLevelBadgeV2(riskLevel: .medium)
-            RiskLevelBadgeV2(riskLevel: .high)
-            RiskLevelBadgeV2(riskLevel: .emergency)
+            RiskLevelBadge(riskLevel: .low)
+            RiskLevelBadge(riskLevel: .medium)
+            RiskLevelBadge(riskLevel: .high)
+            RiskLevelBadge(riskLevel: .emergency)
         }
     }
     .padding()

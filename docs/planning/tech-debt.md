@@ -133,6 +133,20 @@
 
 ## 🟡 中优先级（有空就做）- P1
 
+### API V1/V2 统一 (已完成)
+- **状态**: ✅ 已完成 (2026-02-12)
+- **位置**: 后端 `backend/app/routes/` + iOS `ios/xinlingyisheng/xinlingyisheng/Services/` + `ios/xinlingyisheng/xinlingyisheng/Models/`
+- **问题**: V2 后缀命名混乱，V1 文件已删除但 V2 后缀仍保留
+- **解决方案**:
+  - 后端：`sessions_v2.py` → `sessions.py`，移除 V2 相关注释
+  - iOS：`UnifiedChatAPIServiceV2.swift` → `UnifiedChatAPIService.swift`
+  - iOS：`AgentResponseV2.swift` → `AgentResponse.swift`
+  - iOS：更新 `SpecialtyDataView.swift` 中的类型引用
+  - iOS：函数名移除 V2 后缀（`createSessionV2` → `createSession` 等）
+  - API 端点统一使用 `/sessions`（不再使用 `/v2/sessions`）
+- **验证**: 后端已使用 `sessions.py`，iOS 已完成重命名和引用更新
+- **关联任务**: BE-P1-001, IOS-P2-API
+
 ### 硬编码配置
 - **状态**: ✅ 已完成 (2026-02-11)
 - **位置**: `backend/app/config.py`, `docker-compose.yml`, `.env.example`
@@ -146,11 +160,16 @@
 - **关联任务**: BE-P1-003
 
 ### API V1/V2 并存
-- **状态**: ❌ 待处理
-- **位置**: 后端 `backend/app/routes/sessions.py` vs `sessions_v2.py`
+- **状态**: ✅ 已完成 (2026-02-12)
+- **位置**: 后端 `backend/app/routes/sessions.py`, iOS `ios/xinlingyisheng/xinlingyisheng/Services/`
 - **问题**: 存在 V1 和 V2 两套 API
 - **影响**: 维护成本高
-- **预估工作量**: 16 小时
+- **解决方案**:
+  - 后端：`sessions_v2.py` 重命名为 `sessions.py`，移除 V2 后缀
+  - iOS：`UnifiedChatAPIServiceV2.swift` 重命名为 `UnifiedChatAPIService.swift`，移除 V2 后缀
+  - iOS：`AgentResponseV2.swift` 重命名为 `AgentResponse.swift`，移除 V2 后缀
+  - iOS：更新 `SpecialtyDataView.swift` 中的 V2 类型引用
+  - API 端点保持 `/sessions`（已移除 `/v2/` 前缀）
 - **关联任务**: BE-P1-001
 
 ### N+1 查询风险
@@ -327,14 +346,13 @@
 - **关联任务**: FE-P2-SIDEBAR
 
 ### iOS V1/V2 API 并存
-- **状态**: ✅ 已完成 (2026-02-11) - 虚假问题
+- **状态**: ✅ 已完成 (2026-02-12)
 - **位置**: `ios/xinlingyisheng/xinlingyisheng/Services/`
-- **审核结果**: V1 和 V2 API 各有用途，非重复代码
-- **说明**:
-  - `UnifiedChatAPIService.swift`: 处理 V1 端点（`/sessions`），单智能体架构
-  - `UnifiedChatAPIServiceV2.swift`: 处理 V2 端点（`/v2/sessions`），多智能体架构
-  - 两者响应模型不同：V1 使用 `UnifiedMessageResponse`，V2 使用 `AgentResponseV2`
-  - 后端也有对应的 `sessions.py` 和 `sessions_v2.py` 路由，属于版本演进，非重复
+- **问题**: V2 后缀造成命名混乱
+- **解决方案**:
+  - 移除 `UnifiedChatAPIServiceV2.swift`，统一使用 `UnifiedChatAPIService.swift`
+  - 移除 `AgentResponseV2.swift`，统一使用 `AgentResponse.swift`
+  - 更新所有引用，移除 V2 后缀
 - **关联任务**: IOS-P2-API
 
 ### 服务层循环依赖风险
@@ -434,6 +452,7 @@
 | **iOS Token 存储安全修复（Keychain）** | **v2.0** | **2026-02-11** |
 | **iOS UnifiedChatViewModel 拆分（服务类架构）** | **v2.0** | **2026-02-11** |
 | **自定义侧边栏优化（虚假问题）** | **v2.0** | **2026-02-11** |
+| **API V1/V2 并存（后端 + iOS）** | **v2.0** | **2026-02-12** |
 | **iOS V1/V2 API 并存（虚假问题）** | **v2.0** | **2026-02-11** |
 | **服务层循环依赖风险（虚假问题）** | **v2.0** | **2026-02-11** |
 

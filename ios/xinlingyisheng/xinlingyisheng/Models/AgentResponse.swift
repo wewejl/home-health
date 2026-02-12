@@ -1,10 +1,10 @@
 import Foundation
 
-// MARK: - AgentResponse V2 统一响应格式
+// MARK: - AgentResponse 统一响应格式
 // 与后端 AgentResponse schema 完全对应
 
 /// 统一智能体响应格式
-struct AgentResponseV2: Codable {
+struct AgentResponse: Codable {
     // MARK: - 基础字段（必填）
     let message: String
     let stage: String
@@ -20,7 +20,7 @@ struct AgentResponseV2: Codable {
     let shouldShowDossierPrompt: Bool
     
     // MARK: - 专科扩展数据
-    let specialtyData: SpecialtyDataV2?
+    let specialtyData: SpecialtyData?
     
     // MARK: - 状态持久化
     let nextState: [String: AnyCodable]
@@ -48,7 +48,7 @@ struct AgentResponseV2: Codable {
         eventId = try container.decodeIfPresent(String.self, forKey: .eventId)
         isNewEvent = try container.decodeIfPresent(Bool.self, forKey: .isNewEvent) ?? false
         shouldShowDossierPrompt = try container.decodeIfPresent(Bool.self, forKey: .shouldShowDossierPrompt) ?? false
-        specialtyData = try container.decodeIfPresent(SpecialtyDataV2.self, forKey: .specialtyData)
+        specialtyData = try container.decodeIfPresent(SpecialtyData.self, forKey: .specialtyData)
         nextState = try container.decodeIfPresent([String: AnyCodable].self, forKey: .nextState) ?? [:]
     }
     
@@ -125,9 +125,9 @@ enum RiskLevel: String, Codable {
 }
 
 // MARK: - 专科扩展数据
-struct SpecialtyDataV2: Codable {
+struct SpecialtyData: Codable {
     // 皮肤科相关
-    let diagnosisCard: DiagnosisCardV2?
+    let diagnosisCard: DiagnosisCard?
     let symptoms: [String]?
     
     // 通用字段 - 使用 AnyCodable 支持任意数据
@@ -140,7 +140,7 @@ struct SpecialtyDataV2: Codable {
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        diagnosisCard = try container.decodeIfPresent(DiagnosisCardV2.self, forKey: .diagnosisCard)
+        diagnosisCard = try container.decodeIfPresent(DiagnosisCard.self, forKey: .diagnosisCard)
         symptoms = try container.decodeIfPresent([String].self, forKey: .symptoms)
         
         // 解析所有原始数据
@@ -155,15 +155,15 @@ struct SpecialtyDataV2: Codable {
     }
 }
 
-// MARK: - 诊断卡 V2
-struct DiagnosisCardV2: Codable {
+// MARK: - 诊断卡
+struct DiagnosisCard: Codable {
     let summary: String
-    let conditions: [DiagnosisConditionV2]?
+    let conditions: [DiagnosisCondition]?
     let riskLevel: String?
     let needOfflineVisit: Bool?
     let urgency: String?
     let carePlan: [String]?
-    let references: [KnowledgeReferenceV2]?
+    let references: [KnowledgeReference]?
     let reasoningSteps: [String]?
     
     enum CodingKeys: String, CodingKey {
@@ -180,18 +180,18 @@ struct DiagnosisCardV2: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         summary = try container.decode(String.self, forKey: .summary)
-        conditions = try container.decodeIfPresent([DiagnosisConditionV2].self, forKey: .conditions)
+        conditions = try container.decodeIfPresent([DiagnosisCondition].self, forKey: .conditions)
         riskLevel = try container.decodeIfPresent(String.self, forKey: .riskLevel)
         needOfflineVisit = try container.decodeIfPresent(Bool.self, forKey: .needOfflineVisit)
         urgency = try container.decodeIfPresent(String.self, forKey: .urgency)
         carePlan = try container.decodeIfPresent([String].self, forKey: .carePlan)
-        references = try container.decodeIfPresent([KnowledgeReferenceV2].self, forKey: .references)
+        references = try container.decodeIfPresent([KnowledgeReference].self, forKey: .references)
         reasoningSteps = try container.decodeIfPresent([String].self, forKey: .reasoningSteps)
     }
 }
 
-// MARK: - 诊断条目 V2
-struct DiagnosisConditionV2: Codable {
+// MARK: - 诊断条目
+struct DiagnosisCondition: Codable {
     let name: String
     let confidence: Double
     let rationale: [String]?
@@ -209,8 +209,8 @@ struct DiagnosisConditionV2: Codable {
     }
 }
 
-// MARK: - 知识引用 V2
-struct KnowledgeReferenceV2: Codable {
+// MARK: - 知识引用
+struct KnowledgeReference: Codable {
     let id: String
     let title: String
     let snippet: String
@@ -227,7 +227,7 @@ struct KnowledgeReferenceV2: Codable {
 }
 
 // MARK: - SSE 事件类型
-enum SSEEventTypeV2: String {
+enum SSEEventType: String {
     case meta = "meta"
     case chunk = "chunk"
     case complete = "complete"
@@ -235,7 +235,7 @@ enum SSEEventTypeV2: String {
 }
 
 // MARK: - SSE Meta 事件
-struct SSEMetaEventV2: Codable {
+struct SSEMetaEvent: Codable {
     let sessionId: String
     let agentType: String
     
@@ -246,11 +246,11 @@ struct SSEMetaEventV2: Codable {
 }
 
 // MARK: - SSE Chunk 事件
-struct SSEChunkEventV2: Codable {
+struct SSEChunkEvent: Codable {
     let text: String
 }
 
 // MARK: - SSE Error 事件
-struct SSEErrorEventV2: Codable {
+struct SSEErrorEvent: Codable {
     let error: String
 }
