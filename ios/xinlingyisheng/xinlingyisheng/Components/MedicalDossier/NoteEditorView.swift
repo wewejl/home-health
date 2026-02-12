@@ -8,7 +8,8 @@ struct NoteEditorView: View {
 
     @State private var content: String
     @State private var isImportant: Bool
-    @Environment(\.dismiss) private var dismiss
+ ;
+  @Environment(\.dismiss) private var dismiss
 
     init(eventId: String, initialContent: String, viewModel: MedicalDossierViewModel, onSave: @escaping () -> Void) {
         self.eventId = eventId
