@@ -24,6 +24,8 @@ from ..models.medical_order import (
     MedicalOrder, TaskInstance, OrderStatus, OrderType,
     ScheduleType, TaskStatus
 )
+from ..models.drug import Drug
+from ..models.medical_order import OrderTemplate
 from .admin_auth import get_current_doctor
 from ..schemas.admin import (
     PatientListItem, PatientDetailResponse,
@@ -35,8 +37,10 @@ from ..schemas.admin import (
 )
 from ..schemas.medical_order import (
     MedicalOrderCreateRequest, MedicalOrderResponse,
-    TaskInstanceResponse, TaskListResponse, ActivateOrderRequest
+    TaskInstanceResponse, TaskListResponse, ActivateOrderRequest,
+    OrderItemCreate, DrugSearchResponse, OrderTemplateCreate, OrderTemplateResponse
 )
+from ..schemas.medical_order import DrugSearchResponse, OrderTemplateCreate, OrderTemplateResponse
 from ..services.medical_order_service import MedicalOrderService
 
 router = APIRouter(prefix="/api/doctor", tags=["doctor-workstation"])
@@ -877,3 +881,215 @@ def get_patient_tasks(
         overdue=[build_response(t) for t in overdue],
         summary=summary
     )
+
+
+# ============= 药品管理 =============
+
+@router.get("/drugs/search", response_model=List[DrugSearchResponse])
+def search_drugs(
+    search: Optional[str] = Query(None, description="搜索关键词（药品名称/拼音/商品名）"),
+    limit: int = Query(20, ge=1, le=100, description="返回数量限制"),
+    doctor: AdminUser = Depends(get_current_doctor),
+    db: Session = Depends(get_db)
+):
+    """
+    搜索药品
+
+    支持按药品名称、拼音、商品名进行模糊搜索
+    返回活跃状态的药品列表
+    """
+    query = db.query(Drug).filter(Drug.is_active == True)
+
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.filter(
+            (Drug.name.ilike(search_pattern)) |
+            (Drug.pinyin.ilike(search_pattern)) |
+            (Drug.pinyin_abbr.ilike(search_pattern)) |
+            (Drug.common_brands.ilike(search_pattern)) |
+            (Drug.aliases.ilike(search_pattern))
+        )
+
+    drugs = query.order_by(Drug.sort_order, Drug.name).limit(limit).all()
+
+    return [
+        DrugSearchResponse(
+            id=drug.id,
+            name=drug.name,
+            generic_name=drug.name,
+            specification=None,
+            manufacturer=None,
+            category=None,
+            unit=None,
+            stock_count=None
+        )
+        for drug in drugs
+    ]
+
+
+# ============= 医嘱模板管理 =============
+
+@router.get("/orders/templates", response_model=List[OrderTemplateResponse])
+def get_order_templates(
+    order_type: Optional[str] = Query(None, description="按医嘱类型筛选"),
+    doctor: AdminUser = Depends(get_current_doctor),
+    db: Session = Depends(get_db)
+):
+    """
+    获取医嘱模板列表
+
+    返回：
+    - 当前医生创建的模板
+    - 系统级模板（is_system=True）
+    """
+    query = db.query(OrderTemplate).filter(
+        (OrderTemplate.doctor_id == doctor.id) | (OrderTemplate.is_system == True),
+        OrderTemplate.is_active == True
+    )
+
+    if order_type:
+        try:
+            query = query.filter(OrderTemplate.order_type == OrderType(order_type))
+        except ValueError:
+            pass  # 忽略无效的类型
+
+    templates = query.order_by(OrderTemplate.use_count.desc(), OrderTemplate.created_at.desc()).all()
+
+    return [
+        OrderTemplateResponse(
+            id=template.id,
+            name=template.name,
+            description=template.description,
+            order_type=template.order_type.value,
+            template_data=template.template_data,
+            is_active=template.is_active,
+            created_at=template.created_at
+        )
+        for template in templates
+    ]
+
+
+@router.post("/orders/templates", response_model=OrderTemplateResponse, status_code=201)
+def create_order_template(
+    request: OrderTemplateCreate,
+    doctor: AdminUser = Depends(get_current_doctor),
+    db: Session = Depends(get_db)
+):
+    """
+    创建医嘱模板
+
+    医生可以保存常用处方为模板，方便下次快速创建
+    """
+    template = OrderTemplate(
+        doctor_id=doctor.id,
+        name=request.name,
+        description=request.description,
+        order_type=OrderType(request.order_type),
+        template_data=request.template_data,
+        is_active=True,
+        is_system=False,
+        use_count=0
+    )
+
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+
+    return OrderTemplateResponse(
+        id=template.id,
+        name=template.name,
+        description=template.description,
+        order_type=template.order_type.value,
+        template_data=template.template_data,
+        is_active=template.is_active,
+        created_at=template.created_at
+    )
+
+
+@router.delete("/orders/templates/{template_id}", status_code=204)
+def delete_order_template(
+    template_id: int,
+    doctor: AdminUser = Depends(get_current_doctor),
+    db: Session = Depends(get_db)
+):
+    """
+    删除医嘱模板
+
+    只能删除自己创建的模板，不能删除系统模板
+    """
+    template = db.query(OrderTemplate).filter(
+        OrderTemplate.id == template_id
+    ).first()
+
+    if not template:
+        raise HTTPException(status_code=404, detail="模板不存在")
+
+    # 验证权限：只能删除自己创建的模板
+    if template.doctor_id != doctor.id:
+        raise HTTPException(status_code=403, detail="无权删除此模板")
+
+    # 不能删除系统模板
+    if template.is_system:
+        raise HTTPException(status_code=403, detail="系统模板不能删除")
+
+    # 软删除：标记为非活跃
+    template.is_active = False
+    db.commit()
+
+    return None
+
+
+@router.post("/orders/{order_id}/copy", response_model=MedicalOrderResponse, status_code=201)
+def copy_order(
+    order_id: int,
+    patient_id: Optional[int] = Query(None, description="新患者ID（可选，不填则复制到同一患者）"),
+    doctor: AdminUser = Depends(get_current_doctor),
+    db: Session = Depends(get_db)
+):
+    """
+    复制医嘱
+
+    复制现有医嘱的所有内容，可指定新的患者
+    常用于批量创建相似医嘱
+    """
+    # 获取原医嘱
+    original_order = db.query(MedicalOrder).filter(
+        MedicalOrder.id == order_id
+    ).first()
+
+    if not original_order:
+        raise HTTPException(status_code=404, detail="医嘱不存在")
+
+    # 验证访问权限
+    target_patient_id = patient_id if patient_id is not None else original_order.patient_id
+    if not _verify_patient_access(doctor.id, target_patient_id, db):
+        raise HTTPException(status_code=403, detail="无权为目标患者创建医嘱")
+
+    # 验证目标患者存在
+    target_patient = db.query(User).filter(User.id == target_patient_id).first()
+    if not target_patient:
+        raise HTTPException(status_code=404, detail="目标患者不存在")
+
+    # 创建新医嘱（复制内容）
+    new_order = MedicalOrder(
+        patient_id=target_patient_id,
+        doctor_id=doctor.id,
+        order_type=original_order.order_type,
+        title=f"{original_order.title} (副本)",
+        description=original_order.description,
+        schedule_type=original_order.schedule_type,
+        start_date=original_order.start_date,
+        end_date=original_order.end_date,
+        frequency=original_order.frequency,
+        reminder_times=original_order.reminder_times,
+        weekdays=original_order.weekdays,
+        ai_generated=False,
+        status=OrderStatus.DRAFT,
+        # 不复制任务实例
+    )
+
+    db.add(new_order)
+    db.commit()
+    db.refresh(new_order)
+
+    return MedicalOrderResponse.model_validate(new_order)

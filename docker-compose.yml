@@ -42,6 +42,13 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: home-health-backend
+    # 开发模式：挂载本地代码，修改后无需重新构建
+    volumes:
+      - ./backend:/app
+      # 排除不需要挂载的目录
+      - /app/venv
+      - /app/__pycache__
+      - /app/.pytest_cache
     environment:
       # 数据库配置
       DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD}@postgres:5432/home_health?options=-c%20timezone%3DUTC

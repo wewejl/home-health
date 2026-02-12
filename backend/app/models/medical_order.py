@@ -114,6 +114,9 @@ class MedicalOrder(Base):
     reminder_times = Column(JSON, nullable=True, default=list)  # ["08:00", "12:00", "18:00"]
     weekdays = Column(JSON, nullable=True, default=list)  # 每周调度：[0, 1, 2, 3, 4, 5, 6] (0=周日, 1=周一...)
 
+    # 医嘱项目（药品、检查等）
+    items = Column(JSON, nullable=True, default=list)  # [{"item_type": "drug", "name": "阿奇霉素", ...}]
+
     # AI 生成标记
     ai_generated = Column(Boolean, default=False)
     ai_session_id = Column(String(100), nullable=True, index=True)  # 关联的问诊会话
@@ -224,3 +227,33 @@ class Alert(Base):
     patient = relationship("User", foreign_keys=[patient_id])
     task_instance = relationship("TaskInstance")
     completion_record = relationship("CompletionRecord")
+
+
+class OrderTemplate(Base):
+    """医嘱模板表 - 医生常用处方模板"""
+    __tablename__ = "order_templates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    doctor_id = Column(Integer, ForeignKey("admin_users.id"), nullable=False, index=True)
+
+    # 模板信息
+    name = Column(String(100), nullable=False)  # 模板名称
+    description = Column(Text, nullable=True)  # 模板说明
+    order_type = Column(SQLEnum(OrderType), nullable=False)  # 医嘱类型
+
+    # 模板数据（JSON格式存储完整配置）
+    template_data = Column(JSON, nullable=False, default=dict)
+
+    # 状态
+    is_active = Column(Boolean, default=True)  # 是否启用
+    is_system = Column(Boolean, default=False)  # 是否系统模板
+
+    # 使用统计
+    use_count = Column(Integer, default=0)
+
+    # 时间戳
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # 关系
+    doctor = relationship("AdminUser", foreign_keys=[doctor_id])

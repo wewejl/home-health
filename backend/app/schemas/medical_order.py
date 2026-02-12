@@ -8,6 +8,18 @@ from datetime import date, time, datetime
 
 # ========== 请求 Schemas ==========
 
+class OrderItemCreate(BaseModel):
+    """医嘱项目创建（药品/检查）"""
+    item_type: str = Field(..., description="项目类型: drug/examination")
+    drug_id: Optional[int] = Field(None, description="药品ID（药品类型时必填）")
+    name: str = Field(..., description="药品/检查名称")
+    dosage: Optional[str] = Field(None, max_length=50, description="用法用量")
+    frequency: Optional[str] = Field(None, max_length=50, description="用药频率")
+    duration: Optional[str] = Field(None, max_length=50, description="用药时长")
+    notes: Optional[str] = Field(None, description="备注")
+    sort_order: int = Field(0, ge=0, description="排序")
+
+
 class MedicalOrderCreateRequest(BaseModel):
     """创建医嘱请求"""
     patient_id: int = Field(..., description="患者ID")
@@ -22,6 +34,7 @@ class MedicalOrderCreateRequest(BaseModel):
     weekdays: Optional[List[int]] = Field(default_factory=list, description="每周调度：星期几 [0-6]，0=周日")
     ai_generated: bool = Field(False, description="是否AI生成")
     ai_session_id: Optional[str] = Field(None, description="关联的问诊会话ID")
+    items: Optional[List[OrderItemCreate]] = Field(None, description="医嘱项目列表（药品、检查等）")
 
 
 class MedicalOrderUpdateRequest(BaseModel):
@@ -29,6 +42,7 @@ class MedicalOrderUpdateRequest(BaseModel):
     title: Optional[str] = Field(None, max_length=200)
     description: Optional[str] = None
     end_date: Optional[date] = None
+    items: Optional[List[OrderItemCreate]] = Field(None, description="医嘱项目列表")
     frequency: Optional[str] = None
     reminder_times: Optional[List[str]] = None
 
@@ -138,6 +152,54 @@ class FamilyBondCreateRequest(BaseModel):
     family_member_phone: str = Field(..., description="家属手机号")
     relationship: str = Field(..., max_length=50, description="关系")
     notification_level: str = Field("all", description="通知级别")
+
+
+# ============================================================================
+# 药品相关 Schema
+# ============================================================================
+
+class DrugSearchResponse(BaseModel):
+    """药品搜索响应"""
+    id: int
+    name: str
+    generic_name: Optional[str] = None
+    specification: Optional[str] = None
+    manufacturer: Optional[str] = None
+    category: Optional[str] = None
+    unit: Optional[str] = None
+    stock_count: Optional[int] = None
+
+
+# ============================================================================
+# 医嘱模板 Schema
+# ============================================================================
+
+class OrderTemplate(BaseModel):
+    """医嘱模板"""
+    id: int
+    name: str
+    description: Optional[str] = None
+    order_type: str
+    template_data: Dict[str, Any]  # 包含 items 和其他字段
+
+
+class OrderTemplateCreate(BaseModel):
+    """创建医嘱模板"""
+    name: str = Field(..., max_length=100, description="模板名称")
+    description: Optional[str] = Field(None, description="模板说明")
+    order_type: str = Field(..., description="医嘱类型")
+    template_data: Dict[str, Any] = Field(..., description="模板数据")
+
+
+class OrderTemplateResponse(BaseModel):
+    """医嘱模板响应"""
+    id: int
+    name: str
+    description: Optional[str]
+    order_type: str
+    template_data: Dict[str, Any]
+    is_active: bool
+    created_at: datetime
 
 
 class FamilyBondResponse(BaseModel):

@@ -8,10 +8,11 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from .database import engine, Base, SessionLocal
+from sqlalchemy import text
 from .config import get_settings
 from .routes import (
     auth_router, departments_router,
-    sessions_v2_router,  # V2 多智能体架构 (V1 已废弃)
+    sessions_router,  # 多智能体架构
     feedbacks_router, diseases_router, drugs_router,
     medical_events_router, ai_router, persona_chat_router, record_analysis_router,
     medical_orders_router,  # 医嘱执行监督系统
@@ -66,9 +67,8 @@ app.add_middleware(
 # 用户端路由
 app.include_router(auth_router)
 app.include_router(departments_router)
-# V1 API 已废弃，统一使用 V2
-# app.include_router(sessions_router)
-app.include_router(sessions_v2_router)  # V2 多智能体架构
+# 会话管理路由
+app.include_router(sessions_router)  # 多智能体架构
 app.include_router(feedbacks_router)
 app.include_router(diseases_router)
 app.include_router(drugs_router)
@@ -161,7 +161,7 @@ async def health_detailed():
     db_status = {"status": "unknown"}
     try:
         db = SessionLocal()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
         db_status = {"status": "healthy"}
     except Exception as e:
@@ -199,7 +199,7 @@ async def readiness():
     """就绪检查 - 用于 Kubernetes 等容器编排"""
     try:
         db = SessionLocal()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
         return {"status": "ready"}
     except Exception as e:
