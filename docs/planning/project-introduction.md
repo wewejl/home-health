@@ -1,6 +1,6 @@
 # 灵犀健康 - 项目介绍
 
-> 最后更新：2026-02-07
+> 最后更新：2026-02-12
 
 ---
 
@@ -72,7 +72,7 @@
 | 模块 | 技术栈 |
 |------|--------|
 | **用户端 (iOS)** | Swift + SwiftUI |
-| **管理后台 (Web)** | React + TypeScript + Ant Design |
+| **管理后台 (Web)** | React + TypeScript + Vite + shadcn/ui |
 | **后端 API** | Python + FastAPI |
 | **AI 引擎** | LangGraph + CrewAI |
 | **语音识别** | FunASR / GLM-ASR |

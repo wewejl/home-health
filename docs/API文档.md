@@ -7,12 +7,12 @@
 | 项目 | 说明 |
 |------|------|
 | **Base URL** | `http://localhost:8100` |
-| **API 版本** | v1（兼容保留）, v2（推荐使用） |
+| **API 版本** | 统一版本（`/sessions` 等核心路由已完成 V1/V2 合并） |
 | **认证方式** | JWT Bearer Token |
 | **数据格式** | JSON |
 | **字符编码** | UTF-8 |
 
-> **v2 API 推荐**：V2 API 提供了统一的响应格式（AgentResponse）和完整的端点支持，是新开发的推荐版本。V1 API 保留用于兼容性。
+> **说明**：历史上的 `sessions_v2` 路由已合并为 `sessions`，请统一使用 `/sessions`。
 
 ### 认证方式
 
@@ -182,14 +182,12 @@ POST /auth/password/reset
 
 ---
 
-### 会话管理 (`/sessions`, `/v2/sessions`)
+### 会话管理 (`/sessions`)
 
-> **注意**：V2 API 是当前推荐使用的版本，新增了完整的端点支持和统一响应格式。
-
-#### V2 创建会话
+#### 创建会话
 
 ```http
-POST /v2/sessions
+POST /sessions
 Authorization: Bearer <token>
 ```
 
@@ -221,19 +219,19 @@ Authorization: Bearer <token>
 }
 ```
 
-#### V2 获取会话列表（新增）
+#### 获取会话列表
 
 ```http
-GET /v2/sessions
+GET /sessions
 Authorization: Bearer <token>
 ```
 
 **响应：** 返回当前用户的所有会话列表
 
-#### V2 获取会话消息（新增）
+#### 获取会话消息
 
 ```http
-GET /v2/sessions/{session_id}/messages?limit=20&before=100
+GET /sessions/{session_id}/messages?limit=20&before=100
 Authorization: Bearer <token>
 ```
 
@@ -245,10 +243,10 @@ Authorization: Bearer <token>
 }
 ```
 
-#### V2 发送消息（流式）
+#### 发送消息（流式）
 
 ```http
-POST /v2/sessions/{session_id}/messages
+POST /sessions/{session_id}/messages
 Authorization: Bearer <token>
 Accept: text/event-stream
 ```
@@ -267,7 +265,7 @@ Accept: text/event-stream
 }
 ```
 
-**V2 SSE 响应流（统一 AgentResponse 格式）：**
+**SSE 响应流（统一 AgentResponse 格式）：**
 ```
 event: meta
 data: {"session_id": "uuid", "agent_type": "general"}
@@ -289,39 +287,16 @@ data: {
 }
 ```
 
-#### V2 获取智能体列表
+#### 获取智能体列表
 
 ```http
-GET /v2/sessions/agents
+GET /sessions/agents
 ```
 
-#### V2 获取智能体能力
+#### 获取智能体能力
 
 ```http
-GET /v2/sessions/agents/{agent_type}/capabilities
-```
-
----
-
-#### V1 创建会话（保留兼容）
-
-```http
-POST /sessions
-Authorization: Bearer <token>
-```
-
-#### V1 获取会话列表（保留兼容）
-
-```http
-GET /sessions
-Authorization: Bearer <token>
-```
-
-#### V1 获取会话消息（保留兼容）
-
-```http
-GET /sessions/{session_id}/messages?limit=20
-Authorization: Bearer <token>
+GET /sessions/agents/{agent_type}/capabilities
 ```
 
 ---
@@ -487,32 +462,6 @@ ws://localhost:8100/ws/voice/asr?token=<access_token>&language=auto
 {"event": "error", "message": "错误信息"}
 ```
 
-#### 获取语音服务状态
-
-```http
-GET /ws/voice/status
-```
-
-**响应：**
-```json
-{
-  "service": "voice_asr",
-  "provider": "glm",
-  "asr_connections": 2,
-  "glm_configured": true,
-  "endpoints": {
-    "asr": "/ws/voice/asr"
-  },
-  "config": {
-    "asr_sample_rate": 16000,
-    "asr_format": "pcm",
-    "glm_asr_model": "glm-asr-2512",
-    "supported_languages": ["auto", "zh", "en", "yue", "sichuanese", "ja", "ko"]
-  }
-}
-```
-
----
 
 ### 科室与医生 (`/departments`)
 
