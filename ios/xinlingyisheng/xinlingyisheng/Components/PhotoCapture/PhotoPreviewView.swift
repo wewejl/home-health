@@ -54,14 +54,14 @@ struct PhotoPreviewView: View {
                 VStack(alignment: .leading, spacing: ScaleFactor.spacing(8)) {
                     Text("添加备注（可选）")
                         .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                        .foregroundColor(DXYColors.textSecondary)
+                        .foregroundColor(DossierColors.textSecondary)
                     
                     TextField("描述症状、持续时间等...", text: $note)
                         .font(.system(size: AdaptiveFont.body))
-                        .foregroundColor(DXYColors.textPrimary)
+                        .foregroundColor(DossierColors.textPrimary)
                         .padding(.horizontal, ScaleFactor.padding(16))
                         .padding(.vertical, ScaleFactor.padding(12))
-                        .background(DXYColors.searchBackground)
+                        .background(DossierColors.searchBackground)
                         .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(12)))
                 }
                 .padding(.horizontal, ScaleFactor.padding(16))
@@ -76,10 +76,10 @@ struct PhotoPreviewView: View {
                     }) {
                         Text("重拍")
                             .font(.system(size: AdaptiveFont.body, weight: .medium))
-                            .foregroundColor(DXYColors.textPrimary)
+                            .foregroundColor(DossierColors.textPrimary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, ScaleFactor.padding(14))
-                            .background(DXYColors.tagBackground)
+                            .background(DossierColors.tagBackground)
                             .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(12)))
                     }
                     .disabled(isUploading)
@@ -98,7 +98,7 @@ struct PhotoPreviewView: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, ScaleFactor.padding(14))
-                        .background(isUploading ? DXYColors.primaryPurple.opacity(0.7) : DXYColors.primaryPurple)
+                        .background(isUploading ? DossierColors.primaryPurple.opacity(0.7) : DossierColors.primaryPurple)
                         .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(12)))
                     }
                     .disabled(isUploading)
@@ -107,7 +107,7 @@ struct PhotoPreviewView: View {
                 .padding(.top, ScaleFactor.padding(16))
                 .padding(.bottom, ScaleFactor.padding(34))
             }
-            .background(DXYColors.cardBackground)
+            .background(DossierColors.cardBackground)
         }
         .ignoresSafeArea(edges: .top)
     }
@@ -149,14 +149,14 @@ struct PhotoPreviewNavigationView: View {
                     Button(action: { dismiss() }) {
                         Image(systemName: "xmark")
                             .font(.system(size: AdaptiveFont.body, weight: .medium))
-                            .foregroundColor(DXYColors.textPrimary)
+                            .foregroundColor(DossierColors.textPrimary)
                     }
                 }
                 
                 ToolbarItem(placement: .principal) {
                     Text("照片预览")
                         .font(.system(size: AdaptiveFont.body, weight: .semibold))
-                        .foregroundColor(DXYColors.textPrimary)
+                        .foregroundColor(DossierColors.textPrimary)
                 }
             }
         }
@@ -173,17 +173,17 @@ struct UploadSuccessToast: View {
             HStack(spacing: ScaleFactor.spacing(12)) {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: AdaptiveFont.title2))
-                    .foregroundColor(DXYColors.teal)
+                    .foregroundColor(DossierColors.teal)
                 
                 Text(message)
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
             }
             .padding(.horizontal, ScaleFactor.padding(20))
             .padding(.vertical, ScaleFactor.padding(14))
             .background(
                 RoundedRectangle(cornerRadius: ScaleFactor.size(12))
-                    .fill(DXYColors.cardBackground)
+                    .fill(DossierColors.cardBackground)
                     .shadow(color: Color.black.opacity(0.1), radius: 12, x: 0, y: 4)
             )
             .transition(.move(edge: .top).combined(with: .opacity))

@@ -45,7 +45,7 @@ struct EventLinkBanner: View {
                 if case .linked = status {
                     Image(systemName: "chevron.right")
                         .font(.system(size: AdaptiveFont.caption1, weight: .medium))
-                        .foregroundColor(DXYColors.textTertiary)
+                        .foregroundColor(DossierColors.textTertiary)
                 }
 
                 if case .completed = status {
@@ -82,22 +82,22 @@ struct EventLinkBanner: View {
 
         case .creating:
             Circle()
-                .fill(DXYColors.teal.opacity(0.15))
+                .fill(DossierColors.teal.opacity(0.15))
                 .frame(width: ScaleFactor.size(32), height: ScaleFactor.size(32))
                 .overlay(
                     ProgressView()
                         .scaleEffect(0.7)
-                        .tint(DXYColors.teal)
+                        .tint(DossierColors.teal)
                 )
 
         case .linked(_, _, let isNew):
             Circle()
-                .fill(isNew ? DXYColors.teal.opacity(0.15) : Color.orange.opacity(0.15))
+                .fill(isNew ? DossierColors.teal.opacity(0.15) : Color.orange.opacity(0.15))
                 .frame(width: ScaleFactor.size(32), height: ScaleFactor.size(32))
                 .overlay(
                     Image(systemName: isNew ? "doc.badge.plus" : "doc.badge.arrow.up")
                         .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                        .foregroundColor(isNew ? DXYColors.teal : .orange)
+                        .foregroundColor(isNew ? DossierColors.teal : .orange)
                 )
 
         case .completed:
@@ -131,12 +131,12 @@ struct EventLinkBanner: View {
             case .creating:
                 Text("正在创建病历记录...")
                     .font(.system(size: AdaptiveFont.footnote, weight: .medium))
-                    .foregroundColor(DXYColors.textSecondary)
+                    .foregroundColor(DossierColors.textSecondary)
 
             case .linked(_, _, let isNew):
                 Text(isNew ? "已创建病历记录" : "已关联病历记录")
                     .font(.system(size: AdaptiveFont.footnote, weight: .medium))
-                    .foregroundColor(isNew ? DXYColors.teal : .orange)
+                    .foregroundColor(isNew ? DossierColors.teal : .orange)
 
             case .completed:
                 Text("病历记录已完成")
@@ -160,24 +160,24 @@ struct EventLinkBanner: View {
             case .creating:
                 Text("问诊内容将自动保存")
                     .font(.system(size: AdaptiveFont.caption1))
-                    .foregroundColor(DXYColors.textTertiary)
+                    .foregroundColor(DossierColors.textTertiary)
 
             case .linked(_, let title, _):
                 Text(title)
                     .font(.system(size: AdaptiveFont.caption1))
-                    .foregroundColor(DXYColors.textTertiary)
+                    .foregroundColor(DossierColors.textTertiary)
                     .lineLimit(1)
 
             case .completed(_, let title):
                 Text(title)
                     .font(.system(size: AdaptiveFont.caption1))
-                    .foregroundColor(DXYColors.textTertiary)
+                    .foregroundColor(DossierColors.textTertiary)
                     .lineLimit(1)
 
             case .error(let message):
                 Text(message)
                     .font(.system(size: AdaptiveFont.caption1))
-                    .foregroundColor(DXYColors.textTertiary)
+                    .foregroundColor(DossierColors.textTertiary)
                     .lineLimit(1)
             }
         }
@@ -186,8 +186,8 @@ struct EventLinkBanner: View {
     private var backgroundColor: Color {
         switch status {
         case .none: return .clear
-        case .creating: return DXYColors.teal.opacity(0.05)
-        case .linked(_, _, let isNew): return isNew ? DXYColors.teal.opacity(0.05) : Color.orange.opacity(0.05)
+        case .creating: return DossierColors.teal.opacity(0.05)
+        case .linked(_, _, let isNew): return isNew ? DossierColors.teal.opacity(0.05) : Color.orange.opacity(0.05)
         case .completed: return DossierColors.riskLow.opacity(0.05)
         case .error: return Color.red.opacity(0.05)
         }
@@ -196,8 +196,8 @@ struct EventLinkBanner: View {
     private var borderColor: Color {
         switch status {
         case .none: return .clear
-        case .creating: return DXYColors.teal.opacity(0.2)
-        case .linked(_, _, let isNew): return isNew ? DXYColors.teal.opacity(0.2) : Color.orange.opacity(0.2)
+        case .creating: return DossierColors.teal.opacity(0.2)
+        case .linked(_, _, let isNew): return isNew ? DossierColors.teal.opacity(0.2) : Color.orange.opacity(0.2)
         case .completed: return DossierColors.riskLow.opacity(0.2)
         case .error: return Color.red.opacity(0.2)
         }
@@ -228,11 +228,11 @@ struct ConsultationCompleteCard: View {
             VStack(spacing: ScaleFactor.spacing(4)) {
                 Text("问诊已完成")
                     .font(.system(size: AdaptiveFont.title3, weight: .semibold))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
 
                 Text("本次问诊记录已自动保存到病历资料夹")
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(DXYColors.textSecondary)
+                    .foregroundColor(DossierColors.textSecondary)
                     .multilineTextAlignment(.center)
             }
 
@@ -250,19 +250,19 @@ struct ConsultationCompleteCard: View {
                 VStack(alignment: .leading, spacing: ScaleFactor.spacing(2)) {
                     Text(eventTitle)
                         .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                        .foregroundColor(DXYColors.textPrimary)
+                        .foregroundColor(DossierColors.textPrimary)
                         .lineLimit(1)
 
                     Text("皮肤科 · 刚刚完成")
                         .font(.system(size: AdaptiveFont.caption1))
-                        .foregroundColor(DXYColors.textTertiary)
+                        .foregroundColor(DossierColors.textTertiary)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: AdaptiveFont.caption1, weight: .medium))
-                    .foregroundColor(DXYColors.textTertiary)
+                    .foregroundColor(DossierColors.textTertiary)
             }
             .padding(ScaleFactor.padding(12))
             .background(Color.white)
@@ -279,10 +279,10 @@ struct ConsultationCompleteCard: View {
                         Text("新问诊")
                             .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
                     }
-                    .foregroundColor(DXYColors.teal)
+                    .foregroundColor(DossierColors.teal)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, ScaleFactor.padding(12))
-                    .background(DXYColors.teal.opacity(0.1))
+                    .background(DossierColors.teal.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(10)))
                 }
 
@@ -296,13 +296,13 @@ struct ConsultationCompleteCard: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, ScaleFactor.padding(12))
-                    .background(DXYColors.teal)
+                    .background(DossierColors.teal)
                     .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(10)))
                 }
             }
         }
         .padding(ScaleFactor.padding(20))
-        .background(DXYColors.background)
+        .background(DossierColors.background)
         .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadius, style: .continuous))
     }
 }

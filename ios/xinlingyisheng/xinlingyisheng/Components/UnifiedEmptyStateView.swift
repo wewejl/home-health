@@ -14,16 +14,16 @@ struct UnifiedEmptyStateView: View {
 
             Image(systemName: icon)
                 .font(.system(size: AdaptiveFont.custom(48)))
-                .foregroundColor(DXYColors.textTertiary)
+                .foregroundColor(DossierColors.textTertiary)
 
             VStack(spacing: ScaleFactor.spacing(4)) {
                 Text(title)
                     .font(.system(size: AdaptiveFont.body, weight: .medium))
-                    .foregroundColor(DXYColors.textSecondary)
+                    .foregroundColor(DossierColors.textSecondary)
 
                 Text(message)
                     .font(.system(size: AdaptiveFont.subheadline))
-                    .foregroundColor(DXYColors.textTertiary)
+                    .foregroundColor(DossierColors.textTertiary)
                     .multilineTextAlignment(.center)
             }
 
@@ -34,7 +34,7 @@ struct UnifiedEmptyStateView: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, ScaleFactor.padding(20))
                         .padding(.vertical, ScaleFactor.padding(10))
-                        .background(DXYColors.primaryPurple)
+                        .background(DossierColors.primaryPurple)
                         .clipShape(Capsule())
                 }
                 .padding(.top, ScaleFactor.spacing(4))
@@ -101,20 +101,20 @@ extension UnifiedEmptyStateView {
         title: "暂无内容",
         message: "暂时没有数据"
     )
-    .background(DXYColors.background)
+    .background(DossierColors.background)
 }
 
 #Preview("搜索为空") {
     UnifiedEmptyStateView.searchEmpty(query: "测试")
-        .background(DXYColors.background)
+        .background(DossierColors.background)
 }
 
 #Preview("加载失败") {
     UnifiedEmptyStateView.loadFailed(retryAction: {})
-        .background(DXYColors.background)
+        .background(DossierColors.background)
 }
 
 #Preview("无数据") {
     UnifiedEmptyStateView.noData()
-        .background(DXYColors.background)
+        .background(DossierColors.background)
 }

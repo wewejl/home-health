@@ -9,20 +9,20 @@ struct DossierColors {
     static let riskEmergency = Color(red: 0.80, green: 0.15, blue: 0.15)  // #CC2626 深红
     
     // 事件状态颜色
-    static let statusInProgress = DXYColors.teal                          // 进行中 - 青绿
+    static let statusInProgress = DossierColors.riskLow                          // 进行中 - 青绿
     static let statusCompleted = Color(red: 0.60, green: 0.60, blue: 0.65) // 已完成 - 灰色
-    static let statusExported = DXYColors.primaryPurple                   // 已导出 - 紫色
+    static let statusExported = Color(red: 0.55, green: 0.20, blue: 0.65)  // 已导出 - 紫色
     
     // 时间轴颜色
     static let timelineConnector = Color(red: 0.90, green: 0.90, blue: 0.92) // 连接线
-    static let timelineNodeActive = DXYColors.teal                         // 活跃节点
+    static let timelineNodeActive = DossierColors.riskLow                         // 活跃节点 - 青绿
     static let timelineNodeInactive = Color(red: 0.80, green: 0.80, blue: 0.82) // 非活跃节点
     
     // 卡片背景渐变
     static let analysisCardGradient = LinearGradient(
         colors: [
-            DXYColors.teal.opacity(0.08),
-            DXYColors.primaryPurple.opacity(0.04)
+            DossierColors.riskLow.opacity(0.08),
+            DossierColors.statusExported.opacity(0.04)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing

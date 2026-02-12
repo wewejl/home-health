@@ -80,10 +80,10 @@ struct AttachmentCountBadge: View {
             Text("\(count)")
                 .font(.system(size: AdaptiveFont.caption1, weight: .medium))
         }
-        .foregroundColor(DXYColors.textSecondary)
+        .foregroundColor(DossierColors.textSecondary)
         .padding(.horizontal, ScaleFactor.padding(8))
         .padding(.vertical, ScaleFactor.padding(4))
-        .background(DXYColors.tagBackground)
+        .background(DossierColors.tagBackground)
         .clipShape(Capsule())
     }
 }

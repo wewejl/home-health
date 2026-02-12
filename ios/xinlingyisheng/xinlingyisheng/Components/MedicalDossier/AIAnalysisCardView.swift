@@ -10,7 +10,7 @@ struct AIAnalysisCardView: View {
             
             if isExpanded {
                 Divider()
-                    .background(DXYColors.teal.opacity(0.2))
+                    .background(DossierColors.teal.opacity(0.2))
                 
                 chiefComplaintSection
                 
@@ -32,7 +32,7 @@ struct AIAnalysisCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusLarge, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusLarge, style: .continuous)
-                .stroke(DXYColors.teal.opacity(0.2), lineWidth: 1)
+                .stroke(DossierColors.teal.opacity(0.2), lineWidth: 1)
         )
     }
     
@@ -46,10 +46,10 @@ struct AIAnalysisCardView: View {
                 HStack(spacing: ScaleFactor.spacing(6)) {
                     Image(systemName: "brain.head.profile")
                         .font(.system(size: AdaptiveFont.body))
-                        .foregroundColor(DXYColors.teal)
+                        .foregroundColor(DossierColors.teal)
                     Text("AI 分析报告")
                         .font(.system(size: AdaptiveFont.body, weight: .semibold))
-                        .foregroundColor(DXYColors.textPrimary)
+                        .foregroundColor(DossierColors.textPrimary)
                 }
                 
                 Spacer()
@@ -58,7 +58,7 @@ struct AIAnalysisCardView: View {
                 
                 Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                     .font(.system(size: AdaptiveFont.footnote, weight: .medium))
-                    .foregroundColor(DXYColors.textTertiary)
+                    .foregroundColor(DossierColors.textTertiary)
                     .padding(.leading, ScaleFactor.padding(8))
             }
         }
@@ -78,17 +78,17 @@ struct AIAnalysisCardView: View {
             HStack(spacing: ScaleFactor.spacing(6)) {
                 Image(systemName: "list.bullet")
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(DXYColors.teal)
+                    .foregroundColor(DossierColors.teal)
                 Text("症状列表")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
             }
             
             FlowLayout(spacing: ScaleFactor.spacing(8)) {
                 ForEach(analysis.symptoms, id: \.self) { symptom in
                     Text(symptom)
                         .font(.system(size: AdaptiveFont.footnote))
-                        .foregroundColor(DXYColors.textSecondary)
+                        .foregroundColor(DossierColors.textSecondary)
                         .padding(.horizontal, ScaleFactor.padding(10))
                         .padding(.vertical, ScaleFactor.padding(6))
                         .background(Color.white.opacity(0.8))
@@ -103,10 +103,10 @@ struct AIAnalysisCardView: View {
             HStack(spacing: ScaleFactor.spacing(6)) {
                 Image(systemName: "stethoscope")
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(DXYColors.teal)
+                    .foregroundColor(DossierColors.teal)
                 Text("可能诊断")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
             }
             
             VStack(spacing: ScaleFactor.spacing(10)) {
@@ -125,10 +125,10 @@ struct AIAnalysisCardView: View {
             HStack(spacing: ScaleFactor.spacing(6)) {
                 Image(systemName: "lightbulb")
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(DXYColors.teal)
+                    .foregroundColor(DossierColors.teal)
                 Text("处理建议")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
             }
             
             VStack(alignment: .leading, spacing: ScaleFactor.spacing(6)) {
@@ -136,10 +136,10 @@ struct AIAnalysisCardView: View {
                     HStack(alignment: .top, spacing: ScaleFactor.spacing(8)) {
                         Text("\(index + 1).")
                             .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                            .foregroundColor(DXYColors.teal)
+                            .foregroundColor(DossierColors.teal)
                         Text(recommendation)
                             .font(.system(size: AdaptiveFont.subheadline))
-                            .foregroundColor(DXYColors.textSecondary)
+                            .foregroundColor(DossierColors.textSecondary)
                     }
                 }
             }
@@ -169,7 +169,7 @@ struct AIAnalysisCardView: View {
             Text("AI 分析仅供参考，不构成医疗诊断建议")
                 .font(.system(size: AdaptiveFont.caption1))
         }
-        .foregroundColor(DXYColors.textTertiary)
+        .foregroundColor(DossierColors.textTertiary)
         .padding(.top, ScaleFactor.padding(4))
     }
 }
@@ -184,15 +184,15 @@ struct AnalysisSectionView: View {
             HStack(spacing: ScaleFactor.spacing(6)) {
                 Image(systemName: icon)
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(DXYColors.teal)
+                    .foregroundColor(DossierColors.teal)
                 Text(title)
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
             }
             
             Text(content)
                 .font(.system(size: AdaptiveFont.subheadline))
-                .foregroundColor(DXYColors.textSecondary)
+                .foregroundColor(DossierColors.textSecondary)
                 .lineSpacing(4)
         }
     }
@@ -213,7 +213,7 @@ struct DiagnosisProgressBar: View {
             HStack {
                 Text(name)
                     .font(.system(size: AdaptiveFont.subheadline))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
                 
                 Spacer()
                 
@@ -308,5 +308,5 @@ struct FlowLayout: Layout {
         AIAnalysisCardView(analysis: mockAnalysis)
             .padding()
     }
-    .background(DXYColors.background)
+    .background(DossierColors.background)
 }

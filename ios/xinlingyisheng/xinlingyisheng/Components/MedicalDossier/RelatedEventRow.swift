@@ -14,7 +14,7 @@ struct RelatedEventRow: View {
                 HStack {
                     Text(relatedEvent.event_id.prefix(8) + "...")
                         .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                        .foregroundColor(DXYColors.textPrimary)
+                        .foregroundColor(DossierColors.textPrimary)
 
                     if let relationType = relatedEvent.relation_type {
                         Text(relationDisplayName(relationType))
@@ -30,7 +30,7 @@ struct RelatedEventRow: View {
                 if let reasoning = relatedEvent.reasoning {
                     Text(reasoning)
                         .font(.system(size: AdaptiveFont.footnote))
-                        .foregroundColor(DXYColors.textSecondary)
+                        .foregroundColor(DossierColors.textSecondary)
                         .lineLimit(2)
                 }
 
@@ -41,7 +41,7 @@ struct RelatedEventRow: View {
                         Text("置信度: \(Int(confidence * 100))%")
                             .font(.system(size: AdaptiveFont.caption1))
                     }
-                    .foregroundColor(DXYColors.textTertiary)
+                    .foregroundColor(DossierColors.textTertiary)
                 }
             }
 
@@ -49,29 +49,29 @@ struct RelatedEventRow: View {
 
             Image(systemName: "chevron.right")
                 .font(.system(size: AdaptiveFont.footnote))
-                .foregroundColor(DXYColors.textTertiary)
+                .foregroundColor(DossierColors.textTertiary)
         }
         .padding(ScaleFactor.padding(12))
-        .background(DXYColors.background)
+        .background(DossierColors.background)
         .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall))
     }
     
     private var relationColor: Color {
         guard let relationType = relatedEvent.relation_type else {
-            return DXYColors.textTertiary
+            return DossierColors.textTertiary
         }
         
         switch relationType {
         case "same_condition":
-            return DXYColors.primaryPurple
+            return DossierColors.primaryPurple
         case "follow_up":
-            return DXYColors.teal
+            return DossierColors.teal
         case "complication":
             return Color.orange
         case "unrelated":
-            return DXYColors.textTertiary
+            return DossierColors.textTertiary
         default:
-            return DXYColors.textSecondary
+            return DossierColors.textSecondary
         }
     }
     

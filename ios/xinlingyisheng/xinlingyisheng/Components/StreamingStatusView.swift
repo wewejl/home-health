@@ -22,14 +22,14 @@ struct StreamingStatusView: View {
                         if !thinkingMessage.isEmpty {
                             Text(thinkingMessage)
                                 .font(Font.system(size: AdaptiveFont.footnote, weight: .medium))
-                                .foregroundColor(DXYColors.textPrimary)
+                                .foregroundColor(DossierColors.textPrimary)
                         }
 
                         // 工具调用进度
                         if !activeToolCalls.isEmpty {
                             Text(formatToolProgress())
                                 .font(Font.system(size: AdaptiveFont.caption1))
-                                .foregroundColor(DXYColors.textSecondary)
+                                .foregroundColor(DossierColors.textSecondary)
                         }
                     }
 
@@ -37,7 +37,7 @@ struct StreamingStatusView: View {
                 }
                 .padding(.horizontal, ScaleFactor.padding(16))
                 .padding(.vertical, ScaleFactor.padding(12))
-                .background(DXYColors.lightPurple.opacity(0.5))
+                .background(DossierColors.lightPurple.opacity(0.5))
                 .cornerRadius(AdaptiveSize.cornerRadiusSmall)
             }
 
@@ -52,7 +52,7 @@ struct StreamingStatusView: View {
 
                             Text(getToolDisplayName(tool))
                                 .font(Font.system(size: AdaptiveFont.caption1))
-                                .foregroundColor(DXYColors.textSecondary)
+                                .foregroundColor(DossierColors.textSecondary)
                         }
                         .padding(.horizontal, ScaleFactor.padding(12))
                         .padding(.vertical, ScaleFactor.padding(6))
@@ -70,7 +70,7 @@ struct StreamingStatusView: View {
         HStack(spacing: ScaleFactor.spacing(4)) {
             ForEach(0..<3) { index in
                 Circle()
-                    .fill(DXYColors.primaryPurple)
+                    .fill(DossierColors.primaryPurple)
                     .frame(width: ScaleFactor.size(8), height: ScaleFactor.size(8))
                     .scaleEffect(thinkingScale(for: index))
                     .animation(
@@ -112,7 +112,7 @@ struct StreamingStatusIndicator: View {
                 HStack(spacing: ScaleFactor.spacing(3)) {
                     ForEach(0..<3) { index in
                         Circle()
-                            .fill(DXYColors.primaryPurple)
+                            .fill(DossierColors.primaryPurple)
                             .frame(width: ScaleFactor.size(6), height: ScaleFactor.size(6))
                             .scaleEffect(thinkingScale(for: index))
                             .animation(
@@ -129,7 +129,7 @@ struct StreamingStatusIndicator: View {
                 HStack(spacing: ScaleFactor.spacing(4)) {
                     Image(systemName: "gear")
                         .font(.system(size: AdaptiveFont.caption1))
-                        .foregroundColor(DXYColors.primaryPurple)
+                        .foregroundColor(DossierColors.primaryPurple)
                         .rotationEffect(.degrees(rotationAngle))
                         .animation(
                             Animation.linear(duration: 1)
@@ -139,13 +139,13 @@ struct StreamingStatusIndicator: View {
 
                     Text(activeToolCalls.first ?? "")
                         .font(.system(size: AdaptiveFont.caption1, weight: .medium))
-                        .foregroundColor(DXYColors.textSecondary)
+                        .foregroundColor(DossierColors.textSecondary)
                 }
             }
         }
         .padding(.horizontal, ScaleFactor.padding(10))
         .padding(.vertical, ScaleFactor.padding(6))
-        .background(DXYColors.lightPurple.opacity(0.3))
+        .background(DossierColors.lightPurple.opacity(0.3))
         .cornerRadius(AdaptiveSize.cornerRadiusSmall)
     }
 
@@ -187,17 +187,17 @@ struct ToolCallStatusCard: View {
             VStack(alignment: .leading, spacing: ScaleFactor.spacing(2)) {
                 Text(getToolDisplayName(tool))
                     .font(Font.system(size: AdaptiveFont.subheadline, weight: .semibold))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
 
                 Text(statusText)
                     .font(Font.system(size: AdaptiveFont.caption1))
-                    .foregroundColor(DXYColors.textSecondary)
+                    .foregroundColor(DossierColors.textSecondary)
             }
 
             Spacer()
         }
         .padding(ScaleFactor.padding(12))
-        .background(DXYColors.cardBackground)
+        .background(DossierColors.cardBackground)
         .cornerRadius(AdaptiveSize.cornerRadiusSmall)
         .shadow(color: Color.black.opacity(0.04), radius: ScaleFactor.size(8), y: ScaleFactor.size(2))
     }
@@ -218,13 +218,13 @@ struct ToolCallStatusCard: View {
     private var statusBackgroundColor: Color {
         switch status {
         case "calling", "executing":
-            return DXYColors.primaryPurple
+            return DossierColors.primaryPurple
         case "success":
             return DossierColors.riskLow
         case "error":
             return Color.red
         default:
-            return DXYColors.textTertiary
+            return DossierColors.textTertiary
         }
     }
 
@@ -295,6 +295,6 @@ struct StreamingStatusView_Previews: PreviewProvider {
             )
         }
         .padding()
-        .background(DXYColors.background)
+        .background(DossierColors.background)
     }
 }

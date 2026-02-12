@@ -152,5 +152,5 @@ struct LoadingListView: View {
         LoadingListView(count: 3)
     }
     .padding()
-    .background(DXYColors.background)
+    .background(DossierColors.background)
 }

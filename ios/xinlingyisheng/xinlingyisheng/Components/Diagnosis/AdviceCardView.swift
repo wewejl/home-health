@@ -11,23 +11,23 @@ struct AdviceCardView: View {
             HStack {
                 Text("💡 \(advice.title)")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .semibold))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
                 
                 Spacer()
                 
                 Text("初步建议")
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(DXYColors.teal)
+                    .foregroundColor(DossierColors.teal)
                     .padding(.horizontal, ScaleFactor.padding(8))
                     .padding(.vertical, ScaleFactor.padding(4))
-                    .background(DXYColors.teal.opacity(0.1))
+                    .background(DossierColors.teal.opacity(0.1))
                     .cornerRadius(AdaptiveSize.cornerRadiusSmall)
             }
             
             // 内容
             Text(advice.content)
                 .font(.system(size: AdaptiveFont.subheadline))
-                .foregroundColor(DXYColors.textPrimary)
+                .foregroundColor(DossierColors.textPrimary)
                 .lineSpacing(4)
             
             // 依据标签
@@ -36,10 +36,10 @@ struct AdviceCardView: View {
                     ForEach(advice.evidence, id: \.self) { evidence in
                         Text(evidence)
                             .font(.system(size: AdaptiveFont.footnote))
-                            .foregroundColor(DXYColors.textSecondary)
+                            .foregroundColor(DossierColors.textSecondary)
                             .padding(.horizontal, ScaleFactor.padding(8))
                             .padding(.vertical, ScaleFactor.padding(4))
-                            .background(DXYColors.background)
+                            .background(DossierColors.background)
                             .cornerRadius(AdaptiveSize.cornerRadiusSmall)
                     }
                 }
@@ -49,12 +49,12 @@ struct AdviceCardView: View {
             Button(action: onAccept) {
                 Text("好的，知道了")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(DXYColors.teal)
+                    .foregroundColor(DossierColors.teal)
             }
             .padding(.top, ScaleFactor.padding(4))
         }
         .padding(ScaleFactor.padding(16))
-        .background(DXYColors.teal.opacity(0.05))
+        .background(DossierColors.teal.opacity(0.05))
         .cornerRadius(AdaptiveSize.cornerRadius)
     }
 }

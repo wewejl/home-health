@@ -12,7 +12,7 @@ struct GlassmorphicCard<Content: View>: View {
             .background(
                 ZStack {
                     RoundedRectangle(cornerRadius: LayoutConstants.cornerRadiusLarge, style: .continuous)
-                        .fill(DXYColors.cardBackground.opacity(0.75))
+                        .fill(DossierColors.cardBackground.opacity(0.75))
                         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
                         .shadow(color: Color.black.opacity(0.03), radius: 20, x: 0, y: 10)
 

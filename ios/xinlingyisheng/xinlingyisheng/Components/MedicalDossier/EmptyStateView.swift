@@ -9,16 +9,16 @@ struct DossierEmptyStateView: View {
             
             Image(systemName: "doc.text.magnifyingglass")
                 .font(.system(size: ScaleFactor.font(64)))
-                .foregroundColor(DXYColors.textTertiary)
+                .foregroundColor(DossierColors.textTertiary)
             
             VStack(spacing: ScaleFactor.spacing(8)) {
                 Text("还没有病历记录")
                     .font(.system(size: AdaptiveFont.title3, weight: .medium))
-                    .foregroundColor(DXYColors.textSecondary)
+                    .foregroundColor(DossierColors.textSecondary)
                 
                 Text("与 AI 医生对话后，病历会自动生成")
                     .font(.system(size: AdaptiveFont.subheadline))
-                    .foregroundColor(DXYColors.textTertiary)
+                    .foregroundColor(DossierColors.textTertiary)
                     .multilineTextAlignment(.center)
             }
             
@@ -33,7 +33,7 @@ struct DossierEmptyStateView: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, ScaleFactor.padding(24))
                     .padding(.vertical, ScaleFactor.padding(14))
-                    .background(DXYColors.primaryPurple)
+                    .background(DossierColors.primaryPurple)
                     .clipShape(Capsule())
                 }
                 .padding(.top, ScaleFactor.padding(8))
@@ -53,15 +53,15 @@ struct SearchEmptyStateView: View {
         VStack(spacing: ScaleFactor.spacing(16)) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: ScaleFactor.font(48)))
-                .foregroundColor(DXYColors.textTertiary)
+                .foregroundColor(DossierColors.textTertiary)
             
             Text("未找到相关病历")
                 .font(.system(size: AdaptiveFont.body, weight: .medium))
-                .foregroundColor(DXYColors.textSecondary)
+                .foregroundColor(DossierColors.textSecondary)
             
             Text("尝试搜索其他关键词")
                 .font(.system(size: AdaptiveFont.subheadline))
-                .foregroundColor(DXYColors.textTertiary)
+                .foregroundColor(DossierColors.textTertiary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, ScaleFactor.padding(60))
@@ -76,5 +76,5 @@ struct SearchEmptyStateView: View {
         
         SearchEmptyStateView(searchText: "test")
     }
-    .background(DXYColors.background)
+    .background(DossierColors.background)
 }

@@ -17,10 +17,10 @@ struct TimelineItemView: View {
             VStack(spacing: ScaleFactor.spacing(2)) {
                 Text(item.date.formatted(.dateTime.month().day()))
                     .font(.system(size: AdaptiveFont.footnote, weight: .medium))
-                    .foregroundColor(DXYColors.textSecondary)
+                    .foregroundColor(DossierColors.textSecondary)
                 Text(formatTime(item.contents.first?.message?.timestamp ?? item.date))
                     .font(.system(size: AdaptiveFont.caption1))
-                    .foregroundColor(DXYColors.textTertiary)
+                    .foregroundColor(DossierColors.textTertiary)
             }
             .frame(width: ScaleFactor.size(50))
             
@@ -89,19 +89,19 @@ struct MessageBubble: View {
             if !isUser {
                 Image(systemName: "brain.head.profile")
                     .font(.system(size: AdaptiveFont.subheadline))
-                    .foregroundColor(DXYColors.teal)
+                    .foregroundColor(DossierColors.teal)
                     .frame(width: ScaleFactor.size(24), height: ScaleFactor.size(24))
-                    .background(DXYColors.teal.opacity(0.15))
+                    .background(DossierColors.teal.opacity(0.15))
                     .clipShape(Circle())
             }
             
             VStack(alignment: isUser ? .trailing : .leading, spacing: ScaleFactor.spacing(4)) {
                 Text(message.content)
                     .font(.system(size: AdaptiveFont.subheadline))
-                    .foregroundColor(isUser ? .white : DXYColors.textPrimary)
+                    .foregroundColor(isUser ? .white : DossierColors.textPrimary)
                     .padding(.horizontal, ScaleFactor.padding(12))
                     .padding(.vertical, ScaleFactor.padding(10))
-                    .background(isUser ? DXYColors.primaryPurple : Color(UIColor.systemGray6))
+                    .background(isUser ? DossierColors.primaryPurple : Color(UIColor.systemGray6))
                     .clipShape(RoundedRectangle(cornerRadius: AdaptiveSize.cornerRadiusSmall, style: .continuous))
                 
                 if message.isImportant {
@@ -118,9 +118,9 @@ struct MessageBubble: View {
             if isUser {
                 Image(systemName: "person.fill")
                     .font(.system(size: AdaptiveFont.subheadline))
-                    .foregroundColor(DXYColors.primaryPurple)
+                    .foregroundColor(DossierColors.primaryPurple)
                     .frame(width: ScaleFactor.size(24), height: ScaleFactor.size(24))
-                    .background(DXYColors.primaryPurple.opacity(0.15))
+                    .background(DossierColors.primaryPurple.opacity(0.15))
                     .clipShape(Circle())
             }
         }
@@ -172,7 +172,7 @@ struct AttachmentPreview: View {
                 .overlay(
                     Image(systemName: "photo")
                         .font(.system(size: AdaptiveFont.largeTitle))
-                        .foregroundColor(DXYColors.textTertiary)
+                        .foregroundColor(DossierColors.textTertiary)
                 )
             
             HStack(spacing: ScaleFactor.spacing(4)) {
@@ -194,24 +194,24 @@ struct AttachmentPreview: View {
         HStack(spacing: ScaleFactor.spacing(12)) {
             Image(systemName: "doc.text.fill")
                 .font(.system(size: AdaptiveFont.title2))
-                .foregroundColor(DXYColors.primaryPurple)
+                .foregroundColor(DossierColors.primaryPurple)
             
             VStack(alignment: .leading, spacing: ScaleFactor.spacing(2)) {
                 Text(attachment.fileName ?? "报告文件")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
                     .lineLimit(1)
                 
                 Text("\(formatDate(attachment.createdAt))")
                     .font(.system(size: AdaptiveFont.caption1))
-                    .foregroundColor(DXYColors.textTertiary)
+                    .foregroundColor(DossierColors.textTertiary)
             }
             
             Spacer()
             
             Text("查看")
                 .font(.system(size: AdaptiveFont.footnote))
-                .foregroundColor(DXYColors.primaryPurple)
+                .foregroundColor(DossierColors.primaryPurple)
         }
         .padding(ScaleFactor.padding(12))
         .background(Color.white)
@@ -226,11 +226,11 @@ struct AttachmentPreview: View {
         HStack(spacing: ScaleFactor.spacing(12)) {
             Image(systemName: "waveform")
                 .font(.system(size: AdaptiveFont.title2))
-                .foregroundColor(DXYColors.teal)
+                .foregroundColor(DossierColors.teal)
             
             Text("语音记录")
                 .font(.system(size: AdaptiveFont.subheadline))
-                .foregroundColor(DXYColors.textPrimary)
+                .foregroundColor(DossierColors.textPrimary)
             
             Spacer()
         }
@@ -309,7 +309,7 @@ struct SessionMarker: View {
             
             Text(type == .sessionStart ? "对话开始" : "对话结束")
                 .font(.system(size: AdaptiveFont.caption1))
-                .foregroundColor(DXYColors.textTertiary)
+                .foregroundColor(DossierColors.textTertiary)
             
             Rectangle()
                 .fill(DossierColors.divider)
@@ -356,5 +356,5 @@ struct SessionMarker: View {
         }
         .padding()
     }
-    .background(DXYColors.background)
+    .background(DossierColors.background)
 }

@@ -13,7 +13,7 @@ struct DiagnosisSummaryCard: View {
             // 症状总结
             Text(card.summary)
                 .font(.system(size: AdaptiveFont.body))
-                .foregroundColor(DXYColors.textPrimary)
+                .foregroundColor(DossierColors.textPrimary)
                 .lineSpacing(4)
             
             // 鉴别诊断
@@ -43,7 +43,7 @@ struct DiagnosisSummaryCard: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, ScaleFactor.padding(12))
-                    .background(DXYColors.teal)
+                    .background(DossierColors.teal)
                     .cornerRadius(AdaptiveSize.cornerRadiusSmall)
             }
             .padding(.top, ScaleFactor.padding(4))
@@ -77,10 +77,10 @@ struct DiagnosisSummaryCard: View {
             HStack(spacing: ScaleFactor.spacing(6)) {
                 Image(systemName: "stethoscope")
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(DXYColors.teal)
+                    .foregroundColor(DossierColors.teal)
                 Text("可能的诊断")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .semibold))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
             }
             
             ForEach(Array(card.conditions.enumerated()), id: \.offset) { _, condition in
@@ -95,10 +95,10 @@ struct DiagnosisSummaryCard: View {
             HStack(spacing: ScaleFactor.spacing(6)) {
                 Image(systemName: "brain")
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(DXYColors.teal)
+                    .foregroundColor(DossierColors.teal)
                 Text("推理过程")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .semibold))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
             }
             
             ReasoningTimelineView(steps: card.reasoningSteps)
@@ -111,20 +111,20 @@ struct DiagnosisSummaryCard: View {
             HStack(spacing: ScaleFactor.spacing(6)) {
                 Image(systemName: "heart.text.square")
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(DXYColors.teal)
+                    .foregroundColor(DossierColors.teal)
                 Text("护理建议")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .semibold))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
             }
             
             VStack(alignment: .leading, spacing: ScaleFactor.spacing(4)) {
                 ForEach(card.carePlan, id: \.self) { tip in
                     HStack(alignment: .top, spacing: ScaleFactor.spacing(6)) {
                         Text("•")
-                            .foregroundColor(DXYColors.teal)
+                            .foregroundColor(DossierColors.teal)
                         Text(tip)
                             .font(.system(size: AdaptiveFont.subheadline))
-                            .foregroundColor(DXYColors.textSecondary)
+                            .foregroundColor(DossierColors.textSecondary)
                     }
                 }
             }
@@ -139,13 +139,13 @@ struct DiagnosisSummaryCard: View {
             HStack(spacing: ScaleFactor.spacing(6)) {
                 Image(systemName: "book")
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(DXYColors.teal)
+                    .foregroundColor(DossierColors.teal)
                 Text("引用证据 (\(card.references.count))")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
             }
         }
-        .tint(DXYColors.teal)
+        .tint(DossierColors.teal)
     }
 }
 
@@ -197,7 +197,7 @@ struct ConditionRowView: View {
             HStack {
                 Text(condition.name)
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
                 Spacer()
                 Text("\(Int(condition.confidence * 100))%")
                     .font(.system(size: AdaptiveFont.footnote, weight: .medium))
@@ -224,17 +224,17 @@ struct ConditionRowView: View {
                     ForEach(condition.rationale, id: \.self) { reason in
                         Text(reason)
                             .font(.system(size: AdaptiveFont.caption1))
-                            .foregroundColor(DXYColors.textTertiary)
+                            .foregroundColor(DossierColors.textTertiary)
                             .padding(.horizontal, ScaleFactor.padding(6))
                             .padding(.vertical, ScaleFactor.padding(2))
-                            .background(DXYColors.tagBackground)
+                            .background(DossierColors.tagBackground)
                             .cornerRadius(4)
                     }
                 }
             }
         }
         .padding(ScaleFactor.padding(12))
-        .background(DXYColors.background)
+        .background(DossierColors.background)
         .cornerRadius(AdaptiveSize.cornerRadiusSmall)
     }
 }
@@ -250,19 +250,19 @@ struct ReasoningTimelineView: View {
                     // 时间线圆点和线
                     VStack(spacing: ScaleFactor.spacing(0)) {
                         Circle()
-                            .fill(DXYColors.teal)
+                            .fill(DossierColors.teal)
                             .frame(width: ScaleFactor.size(8), height: ScaleFactor.size(8))
 
                         if index < steps.count - 1 {
                             Rectangle()
-                                .fill(DXYColors.teal.opacity(0.3))
+                                .fill(DossierColors.teal.opacity(0.3))
                                 .frame(width: ScaleFactor.size(2), height: ScaleFactor.size(24))
                         }
                     }
                     
                     Text(step)
                         .font(.system(size: AdaptiveFont.subheadline))
-                        .foregroundColor(DXYColors.textSecondary)
+                        .foregroundColor(DossierColors.textSecondary)
                         .padding(.bottom, index < steps.count - 1 ? ScaleFactor.padding(16) : 0)
                 }
             }
@@ -280,21 +280,21 @@ struct EvidenceListView: View {
                 VStack(alignment: .leading, spacing: ScaleFactor.spacing(4)) {
                     Text(ref.title)
                         .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                        .foregroundColor(DXYColors.textPrimary)
+                        .foregroundColor(DossierColors.textPrimary)
                     
                     Text(ref.snippet)
                         .font(.system(size: AdaptiveFont.footnote))
-                        .foregroundColor(DXYColors.textSecondary)
+                        .foregroundColor(DossierColors.textSecondary)
                         .lineLimit(2)
                     
                     if let source = ref.source {
                         Text("来源: \(source)")
                             .font(.system(size: AdaptiveFont.caption1))
-                            .foregroundColor(DXYColors.teal)
+                            .foregroundColor(DossierColors.teal)
                     }
                 }
                 .padding(ScaleFactor.padding(10))
-                .background(DXYColors.background)
+                .background(DossierColors.background)
                 .cornerRadius(AdaptiveSize.cornerRadiusSmall)
             }
         }
@@ -325,5 +325,5 @@ struct EvidenceListView: View {
         )
         .padding()
     }
-    .background(DXYColors.background)
+    .background(DossierColors.background)
 }

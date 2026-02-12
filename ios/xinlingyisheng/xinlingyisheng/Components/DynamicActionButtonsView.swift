@@ -80,11 +80,11 @@ extension AgentAction {
     var buttonColor: Color {
         switch self {
         case .conversation:
-            return DXYColors.blue
+            return DossierColors.blue
         case .analyzeSkin:
-            return DXYColors.teal
+            return DossierColors.teal
         case .interpretReport:
-            return DXYColors.primaryPurple
+            return DossierColors.primaryPurple
         case .interpretECG:
             return HealingColorTheme.errorRed
         }
@@ -106,8 +106,8 @@ struct UnifiedQuickOptionsView: View {
                                 .font(.system(size: AdaptiveFont.footnote))
                                 .padding(.horizontal, ScaleFactor.padding(12))
                                 .padding(.vertical, ScaleFactor.padding(8))
-                                .background(DXYColors.blue.opacity(0.1))
-                                .foregroundColor(DXYColors.blue)
+                                .background(DossierColors.blue.opacity(0.1))
+                                .foregroundColor(DossierColors.blue)
                                 .cornerRadius(ScaleFactor.size(16))
                         }
                     }

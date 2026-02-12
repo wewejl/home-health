@@ -95,7 +95,7 @@ struct QuickAction: Identifiable, Equatable {
         id: "photo_analysis",
         icon: "camera.fill",
         title: "拍照分析",
-        color: DXYColors.blue,
+        color: DossierColors.blue,
         actionType: .photoAnalysis
     )
 
@@ -103,7 +103,7 @@ struct QuickAction: Identifiable, Equatable {
         id: "medical_dossier",
         icon: "folder.fill",
         title: "病历资料夹",
-        color: DXYColors.primaryPurple,
+        color: DossierColors.primaryPurple,
         actionType: .medicalDossier
     )
 
@@ -111,7 +111,7 @@ struct QuickAction: Identifiable, Equatable {
         id: "symptom_assessment",
         icon: "list.clipboard.fill",
         title: "症状评估",
-        color: DXYColors.teal,
+        color: DossierColors.teal,
         actionType: .symptomAssessment
     )
 
@@ -119,7 +119,7 @@ struct QuickAction: Identifiable, Equatable {
         id: "appointment",
         icon: "calendar.badge.plus",
         title: "预约转诊",
-        color: DXYColors.orange,
+        color: DossierColors.orange,
         actionType: .appointment
     )
     
@@ -180,7 +180,7 @@ struct QuickActionSection: View {
             if let title = title {
                 Text(title)
                     .font(.system(size: AdaptiveFont.footnote, weight: .medium))
-                    .foregroundColor(DXYColors.textSecondary)
+                    .foregroundColor(DossierColors.textSecondary)
                     .padding(.horizontal, ScaleFactor.padding(16))
             }
             

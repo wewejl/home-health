@@ -31,7 +31,7 @@ struct EnhancedChatInputBarV2: View {
             // 输入区域
             inputArea
         }
-        .background(DXYColors.cardBackground)
+        .background(DossierColors.cardBackground)
         .onChangeCompat(of: speechService.recognizedText) { newValue in
             if !newValue.isEmpty {
                 messageText = newValue
@@ -89,7 +89,7 @@ struct EnhancedChatInputBarV2: View {
                     .font(.system(size: AdaptiveFont.footnote))
             }
         }
-        .foregroundColor(DXYColors.textTertiary)
+        .foregroundColor(DossierColors.textTertiary)
         .padding(.vertical, ScaleFactor.padding(8))
     }
     
@@ -104,7 +104,7 @@ struct EnhancedChatInputBarV2: View {
             }) {
                 Image(systemName: speechService.isRecording ? "waveform.circle.fill" : "waveform.circle")
                     .font(.system(size: ScaleFactor.font(28)))
-                    .foregroundColor(speechService.isRecording ? .red : DXYColors.textTertiary)
+                    .foregroundColor(speechService.isRecording ? .red : DossierColors.textTertiary)
             }
             .disabled(isDisabled || isSending)
             
@@ -112,12 +112,12 @@ struct EnhancedChatInputBarV2: View {
             HStack {
                 TextField("请描述您的问题...", text: $messageText)
                     .font(.system(size: AdaptiveFont.subheadline))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
                     .disabled(isDisabled || isSending)
             }
             .padding(.horizontal, ScaleFactor.padding(16))
             .padding(.vertical, ScaleFactor.padding(10))
-            .background(DXYColors.searchBackground)
+            .background(DossierColors.searchBackground)
             .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(20), style: .continuous))
             
             // 发送按钮
@@ -127,7 +127,7 @@ struct EnhancedChatInputBarV2: View {
                 }
             }) {
                 Circle()
-                    .fill(canSend ? DXYColors.primaryPurple : DXYColors.textTertiary)
+                    .fill(canSend ? DossierColors.primaryPurple : DossierColors.textTertiary)
                     .frame(width: ScaleFactor.size(44), height: ScaleFactor.size(44))
                     .overlay(
                         Group {
@@ -199,7 +199,7 @@ struct UploadActionButtonsViewV2: View {
         }
         .padding(.horizontal, ScaleFactor.padding(16))
         .padding(.vertical, ScaleFactor.padding(12))
-        .background(DXYColors.blue.opacity(0.08))
+        .background(DossierColors.blue.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(12)))
     }
     
@@ -212,11 +212,11 @@ struct UploadActionButtonsViewV2: View {
             VStack(alignment: .leading, spacing: ScaleFactor.spacing(4)) {
                 Text("正在上传图片...")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
                 
                 Text("图片将保存到本地")
                     .font(.system(size: AdaptiveFont.caption1))
-                    .foregroundColor(DXYColors.textSecondary)
+                    .foregroundColor(DossierColors.textSecondary)
             }
             
             Spacer()
@@ -232,11 +232,11 @@ struct UploadActionButtonsViewV2: View {
             VStack(alignment: .leading, spacing: ScaleFactor.spacing(4)) {
                 Text("AI正在分析中...")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
                 
                 Text("请稍候，分析结果即将呈现")
                     .font(.system(size: AdaptiveFont.caption1))
-                    .foregroundColor(DXYColors.textSecondary)
+                    .foregroundColor(DossierColors.textSecondary)
             }
             
             Spacer()
@@ -250,11 +250,11 @@ struct UploadActionButtonsViewV2: View {
             HStack(spacing: ScaleFactor.spacing(6)) {
                 Image(systemName: "camera.viewfinder")
                     .font(.system(size: AdaptiveFont.subheadline))
-                    .foregroundColor(DXYColors.blue)
+                    .foregroundColor(DossierColors.blue)
                 
                 Text("选择照片进行AI分析")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
                 
                 Spacer()
                 
@@ -262,7 +262,7 @@ struct UploadActionButtonsViewV2: View {
                 Button(action: onCancel) {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: AdaptiveFont.title3))
-                        .foregroundColor(DXYColors.textTertiary)
+                        .foregroundColor(DossierColors.textTertiary)
                 }
             }
             
@@ -279,7 +279,7 @@ struct UploadActionButtonsViewV2: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, ScaleFactor.padding(12))
-                    .background(DXYColors.blue)
+                    .background(DossierColors.blue)
                     .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(10)))
                 }
                 .disabled(isDisabled)
@@ -292,12 +292,12 @@ struct UploadActionButtonsViewV2: View {
                         Text("从相册选择")
                             .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
                     }
-                    .foregroundColor(DXYColors.blue)
+                    .foregroundColor(DossierColors.blue)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, ScaleFactor.padding(12))
                     .background(
                         RoundedRectangle(cornerRadius: ScaleFactor.size(10))
-                            .stroke(DXYColors.blue, lineWidth: 1.5)
+                            .stroke(DossierColors.blue, lineWidth: 1.5)
                     )
                 }
                 .disabled(isDisabled)

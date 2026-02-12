@@ -29,15 +29,15 @@ struct NoteEditorView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "note.text")
                                     .font(.system(size: AdaptiveFont.body))
-                                    .foregroundColor(DXYColors.primaryPurple)
+                                    .foregroundColor(DossierColors.primaryPurple)
                                 Text("病历备注")
                                     .font(.system(size: AdaptiveFont.title3, weight: .bold))
-                                    .foregroundColor(DXYColors.textPrimary)
+                                    .foregroundColor(DossierColors.textPrimary)
                             }
 
                             Text("添加您的个人备注、医嘱提醒或其他重要信息。")
                                 .font(.system(size: AdaptiveFont.subheadline))
-                                .foregroundColor(DXYColors.textSecondary)
+                                .foregroundColor(DossierColors.textSecondary)
                         }
                         .padding(.horizontal, LayoutConstants.horizontalPadding)
                         .padding(.top, ScaleFactor.padding(16))
@@ -46,26 +46,26 @@ struct NoteEditorView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("备注内容")
                                 .font(.system(size: AdaptiveFont.footnote, weight: .medium))
-                                .foregroundColor(DXYColors.textTertiary)
+                                .foregroundColor(DossierColors.textTertiary)
 
                             ZStack(alignment: .topLeading) {
                                 if content.isEmpty {
                                     Text("输入备注内容...")
                                         .font(.system(size: AdaptiveFont.body))
-                                        .foregroundColor(DXYColors.textTertiary)
+                                        .foregroundColor(DossierColors.textTertiary)
                                         .padding(ScaleFactor.padding(12))
                                 }
 
                                 TextEditor(text: $content)
                                     .font(.system(size: AdaptiveFont.body))
-                                    .foregroundColor(DXYColors.textPrimary)
+                                    .foregroundColor(DossierColors.textPrimary)
                                     .padding(ScaleFactor.padding(8))
                                     .scrollContentBackground(.hidden)
                                     .background(Color.clear)
                             }
                             .frame(minHeight: ScaleFactor.size(150))
                             .padding(ScaleFactor.padding(4))
-                            .background(DXYColors.background)
+                            .background(DossierColors.background)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                         .padding(.horizontal, LayoutConstants.horizontalPadding)
@@ -79,16 +79,16 @@ struct NoteEditorView: View {
                             HStack(spacing: ScaleFactor.spacing(12)) {
                                 Image(systemName: isImportant ? "star.fill" : "star")
                                     .font(.system(size: AdaptiveFont.body))
-                                    .foregroundColor(isImportant ? Color.orange : DXYColors.textTertiary)
+                                    .foregroundColor(isImportant ? Color.orange : DossierColors.textTertiary)
 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("标记为重要")
                                         .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                                        .foregroundColor(DXYColors.textPrimary)
+                                        .foregroundColor(DossierColors.textPrimary)
 
                                     Text("重要备注会在列表中突出显示")
                                         .font(.system(size: AdaptiveFont.footnote))
-                                        .foregroundColor(DXYColors.textSecondary)
+                                        .foregroundColor(DossierColors.textSecondary)
                                 }
 
                                 Spacer()
@@ -96,11 +96,11 @@ struct NoteEditorView: View {
                                 if isImportant {
                                     Image(systemName: "checkmark")
                                         .font(.system(size: AdaptiveFont.body, weight: .semibold))
-                                        .foregroundColor(DXYColors.primaryPurple)
+                                        .foregroundColor(DossierColors.primaryPurple)
                                 }
                             }
                             .padding(ScaleFactor.padding(12))
-                            .background(isImportant ? Color.orange.opacity(0.05) : DXYColors.background)
+                            .background(isImportant ? Color.orange.opacity(0.05) : DossierColors.background)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
@@ -114,7 +114,7 @@ struct NoteEditorView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("快捷输入")
                                 .font(.system(size: AdaptiveFont.footnote, weight: .medium))
-                                .foregroundColor(DXYColors.textTertiary)
+                                .foregroundColor(DossierColors.textTertiary)
 
                             LazyVGrid(columns: [
                                 GridItem(.flexible()),
@@ -162,10 +162,10 @@ struct NoteEditorView: View {
                         }) {
                             Text(initialContent.isEmpty ? "取消" : "删除")
                                 .font(.system(size: AdaptiveFont.body, weight: .medium))
-                                .foregroundColor(initialContent.isEmpty ? DXYColors.textSecondary : .red)
+                                .foregroundColor(initialContent.isEmpty ? DossierColors.textSecondary : .red)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, ScaleFactor.padding(14))
-                                .background(DXYColors.background)
+                                .background(DossierColors.background)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
 
@@ -192,7 +192,7 @@ struct NoteEditorView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, ScaleFactor.padding(14))
-                            .background(content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? DXYColors.textTertiary : DXYColors.primaryPurple)
+                            .background(content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? DossierColors.textTertiary : DossierColors.primaryPurple)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                         .disabled(content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || viewModel.isSavingNote)
@@ -202,13 +202,13 @@ struct NoteEditorView: View {
                     .background(Color.white)
                 }
             }
-            .background(DXYColors.background)
+            .background(DossierColors.background)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { dismiss() }) {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(DXYColors.textTertiary)
+                            .foregroundColor(DossierColors.textTertiary)
                     }
                 }
             }
@@ -235,11 +235,11 @@ struct QuickInputButton: View {
             VStack(spacing: 6) {
                 Image(systemName: icon)
                     .font(.system(size: AdaptiveFont.title3))
-                    .foregroundColor(DXYColors.primaryPurple)
+                    .foregroundColor(DossierColors.primaryPurple)
 
                 Text(title)
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, ScaleFactor.padding(12))
@@ -247,7 +247,7 @@ struct QuickInputButton: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(DXYColors.primaryPurple.opacity(0.2), lineWidth: 1)
+                    .stroke(DossierColors.primaryPurple.opacity(0.2), lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())

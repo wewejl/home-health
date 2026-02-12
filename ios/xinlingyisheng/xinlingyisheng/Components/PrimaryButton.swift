@@ -32,7 +32,7 @@ struct PrimaryButton: View {
                     )
                 )
                 .clipShape(RoundedRectangle(cornerRadius: LayoutConstants.cornerRadius, style: .continuous))
-                .shadow(color: DXYColors.primaryPurple.opacity(0.35), radius: 12, x: 0, y: 6)
+                .shadow(color: DossierColors.primaryPurple.opacity(0.35), radius: 12, x: 0, y: 6)
                 .scaleEffect(isPressed ? 0.96 : 1.0)
         }
     }

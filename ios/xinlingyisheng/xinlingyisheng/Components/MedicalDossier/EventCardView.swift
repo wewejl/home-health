@@ -40,12 +40,12 @@ struct EventCardView: View {
             VStack(alignment: .leading, spacing: ScaleFactor.spacing(2)) {
                 Text(event.title)
                     .font(.system(size: AdaptiveFont.body, weight: .semibold))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
                     .lineLimit(1)
                 
                 Text("\(event.department.displayName) · \(event.dateRangeText)")
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(DXYColors.textTertiary)
+                    .foregroundColor(DossierColors.textTertiary)
             }
             
             Spacer()
@@ -68,7 +68,7 @@ struct EventCardView: View {
     private var summarySection: some View {
         Text(event.summary)
             .font(.system(size: AdaptiveFont.subheadline))
-            .foregroundColor(DXYColors.textSecondary)
+            .foregroundColor(DossierColors.textSecondary)
             .lineLimit(2)
             .lineSpacing(4)
     }
@@ -196,5 +196,5 @@ struct SwipeableEventCard: View {
         SwipeableEventCard(event: mockEvent)
     }
     .padding()
-    .background(DXYColors.background)
+    .background(DossierColors.background)
 }

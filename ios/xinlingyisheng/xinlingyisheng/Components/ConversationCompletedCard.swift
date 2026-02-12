@@ -19,11 +19,11 @@ struct ConversationCompletedCard: View {
                 VStack(alignment: .leading, spacing: ScaleFactor.spacing(4)) {
                     Text("对话已结束")
                         .font(.headline)
-                        .foregroundColor(DXYColors.textPrimary)
+                        .foregroundColor(DossierColors.textPrimary)
 
                     Text(isNewEvent ? "已自动生成病历资料夹" : "已更新病历资料夹")
                         .font(.subheadline)
-                        .foregroundColor(DXYColors.textSecondary)
+                        .foregroundColor(DossierColors.textSecondary)
                 }
 
                 Spacer()
@@ -41,7 +41,7 @@ struct ConversationCompletedCard: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, ScaleFactor.padding(12))
-                    .background(DXYColors.primaryPurple)
+                    .background(DossierColors.primaryPurple)
                     .cornerRadius(ScaleFactor.size(10))
                 }
 
@@ -52,10 +52,10 @@ struct ConversationCompletedCard: View {
                         Text("继续对话")
                             .font(.system(size: AdaptiveFont.body, weight: .medium))
                     }
-                    .foregroundColor(DXYColors.primaryPurple)
+                    .foregroundColor(DossierColors.primaryPurple)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, ScaleFactor.padding(12))
-                    .background(DXYColors.primaryPurple.opacity(0.1))
+                    .background(DossierColors.primaryPurple.opacity(0.1))
                     .cornerRadius(ScaleFactor.size(10))
                 }
             }
@@ -63,10 +63,10 @@ struct ConversationCompletedCard: View {
         .padding(ScaleFactor.padding(16))
         .background(
             RoundedRectangle(cornerRadius: ScaleFactor.size(12))
-                .fill(DXYColors.blue.opacity(0.05))
+                .fill(DossierColors.blue.opacity(0.05))
                 .overlay(
                     RoundedRectangle(cornerRadius: ScaleFactor.size(12))
-                        .stroke(DXYColors.blue.opacity(0.2), lineWidth: 1)
+                        .stroke(DossierColors.blue.opacity(0.2), lineWidth: 1)
                 )
         )
         .padding(.horizontal, ScaleFactor.padding(16))
@@ -93,6 +93,6 @@ struct ConversationCompletedCard_Previews: PreviewProvider {
             )
         }
         .padding()
-        .background(DXYColors.background)
+        .background(DossierColors.background)
     }
 }

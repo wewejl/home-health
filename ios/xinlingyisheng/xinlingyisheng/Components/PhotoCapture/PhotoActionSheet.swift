@@ -13,7 +13,7 @@ struct PhotoActionSheet: View {
             HStack {
                 Text("上传照片")
                     .font(.system(size: AdaptiveFont.title2, weight: .semibold))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
                 
                 Spacer()
                 
@@ -24,7 +24,7 @@ struct PhotoActionSheet: View {
                 }) {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: ScaleFactor.font(24)))
-                        .foregroundColor(DXYColors.textTertiary)
+                        .foregroundColor(DossierColors.textTertiary)
                 }
             }
             .padding(.horizontal, ScaleFactor.padding(16))
@@ -37,7 +37,7 @@ struct PhotoActionSheet: View {
                 // 拍照选项
                 PhotoActionItem(
                     icon: "camera.fill",
-                    iconColor: DXYColors.blue,
+                    iconColor: DossierColors.blue,
                     title: "拍照",
                     subtitle: "拍摄皮肤照片进行分析",
                     action: {
@@ -54,7 +54,7 @@ struct PhotoActionSheet: View {
                 // 从相册选择
                 PhotoActionItem(
                     icon: "photo.fill",
-                    iconColor: DXYColors.teal,
+                    iconColor: DossierColors.teal,
                     title: "从相册选择",
                     subtitle: "选择已有照片",
                     action: {
@@ -70,20 +70,20 @@ struct PhotoActionSheet: View {
             HStack(spacing: ScaleFactor.spacing(8)) {
                 Image(systemName: "info.circle")
                     .font(.system(size: AdaptiveFont.footnote))
-                    .foregroundColor(DXYColors.orange)
+                    .foregroundColor(DossierColors.orange)
                 
                 Text("照片仅保存在您的手机本地，不会上传到服务器")
                     .font(.system(size: AdaptiveFont.caption1))
-                    .foregroundColor(DXYColors.textSecondary)
+                    .foregroundColor(DossierColors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(ScaleFactor.padding(12))
-            .background(DXYColors.orange.opacity(0.1))
+            .background(DossierColors.orange.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(8)))
             .padding(.horizontal, ScaleFactor.padding(16))
             .padding(.vertical, ScaleFactor.padding(16))
         }
-        .background(DXYColors.cardBackground)
+        .background(DossierColors.cardBackground)
         .clipShape(UnevenRoundedRectangle(topLeadingRadius: ScaleFactor.size(16), topTrailingRadius: ScaleFactor.size(16)))
     }
 }
@@ -116,11 +116,11 @@ struct PhotoActionItem: View {
                 VStack(alignment: .leading, spacing: ScaleFactor.spacing(4)) {
                     Text(title)
                         .font(.system(size: AdaptiveFont.body, weight: .medium))
-                        .foregroundColor(DXYColors.textPrimary)
+                        .foregroundColor(DossierColors.textPrimary)
                     
                     Text(subtitle)
                         .font(.system(size: AdaptiveFont.footnote))
-                        .foregroundColor(DXYColors.textSecondary)
+                        .foregroundColor(DossierColors.textSecondary)
                 }
                 
                 Spacer()
@@ -128,11 +128,11 @@ struct PhotoActionItem: View {
                 // 箭头
                 Image(systemName: "chevron.right")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                    .foregroundColor(DXYColors.textTertiary)
+                    .foregroundColor(DossierColors.textTertiary)
             }
             .padding(.horizontal, ScaleFactor.padding(16))
             .padding(.vertical, ScaleFactor.padding(16))
-            .background(isPressed ? DXYColors.background : Color.clear)
+            .background(isPressed ? DossierColors.background : Color.clear)
         }
         .buttonStyle(PlainButtonStyle())
         .simultaneousGesture(

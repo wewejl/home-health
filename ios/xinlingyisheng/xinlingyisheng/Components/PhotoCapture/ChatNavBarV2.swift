@@ -31,7 +31,7 @@ struct ChatNavBarV2: View {
         }
         .padding(.horizontal, ScaleFactor.padding(16))
         .padding(.vertical, ScaleFactor.padding(12))
-        .background(DXYColors.cardBackground)
+        .background(DossierColors.cardBackground)
     }
     
     // MARK: - 返回按钮
@@ -39,7 +39,7 @@ struct ChatNavBarV2: View {
         Button(action: { dismiss() }) {
             Image(systemName: "chevron.left")
                 .font(.system(size: AdaptiveFont.title3, weight: .medium))
-                .foregroundColor(DXYColors.textPrimary)
+                .foregroundColor(DossierColors.textPrimary)
                 .frame(width: ScaleFactor.size(44), height: ScaleFactor.size(44))
                 .contentShape(Rectangle())
         }
@@ -50,19 +50,19 @@ struct ChatNavBarV2: View {
         HStack(spacing: ScaleFactor.spacing(8)) {
             // 头像
             Circle()
-                .fill(DXYColors.primaryPurple.opacity(0.2))
+                .fill(DossierColors.primaryPurple.opacity(0.2))
                 .frame(width: ScaleFactor.size(32), height: ScaleFactor.size(32))
                 .overlay(
                     Image(systemName: "person.fill")
                         .font(.system(size: AdaptiveFont.subheadline))
-                        .foregroundColor(DXYColors.primaryPurple)
+                        .foregroundColor(DossierColors.primaryPurple)
                 )
             
             // 名称和标签
             VStack(alignment: .leading, spacing: ScaleFactor.spacing(2)) {
                 Text("\(doctorName)医生")
                     .font(.system(size: AdaptiveFont.body, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
                     .lineLimit(1)
                 
                 HStack(spacing: ScaleFactor.spacing(4)) {
@@ -71,7 +71,7 @@ struct ChatNavBarV2: View {
                     Text("AI分身")
                         .font(.system(size: AdaptiveFont.caption1))
                 }
-                .foregroundColor(DXYColors.primaryPurple)
+                .foregroundColor(DossierColors.primaryPurple)
             }
         }
         .frame(maxWidth: ScaleFactor.size(140), alignment: .leading)
@@ -87,7 +87,7 @@ struct ChatNavBarV2: View {
                 }) {
                     Image(systemName: "doc.text.fill")
                         .font(.system(size: AdaptiveFont.title3))
-                        .foregroundColor(canGenerateDossier ? DXYColors.primaryPurple : DXYColors.textTertiary)
+                        .foregroundColor(canGenerateDossier ? DossierColors.primaryPurple : DossierColors.textTertiary)
                         .frame(width: ScaleFactor.size(44), height: ScaleFactor.size(44))
                         .contentShape(Rectangle())
                 }
@@ -119,7 +119,7 @@ struct ChatNavBarV2: View {
             } label: {
                 Image(systemName: "ellipsis.circle")
                     .font(.system(size: AdaptiveFont.title3))
-                    .foregroundColor(DXYColors.textSecondary)
+                    .foregroundColor(DossierColors.textSecondary)
                     .frame(width: ScaleFactor.size(44), height: ScaleFactor.size(44))
                     .contentShape(Rectangle())
             }
@@ -140,7 +140,7 @@ struct SimpleChatNavBar: View {
             Button(action: { dismiss() }) {
                 Image(systemName: "chevron.left")
                     .font(.system(size: AdaptiveFont.title3, weight: .medium))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
                     .frame(width: ScaleFactor.size(44), height: ScaleFactor.size(44))
             }
             
@@ -148,12 +148,12 @@ struct SimpleChatNavBar: View {
             VStack(alignment: .leading, spacing: ScaleFactor.spacing(2)) {
                 Text(title)
                     .font(.system(size: AdaptiveFont.body, weight: .semibold))
-                    .foregroundColor(DXYColors.textPrimary)
+                    .foregroundColor(DossierColors.textPrimary)
                 
                 if let subtitle = subtitle {
                     Text(subtitle)
                         .font(.system(size: AdaptiveFont.caption1))
-                        .foregroundColor(DXYColors.textSecondary)
+                        .foregroundColor(DossierColors.textSecondary)
                 }
             }
             
@@ -161,7 +161,7 @@ struct SimpleChatNavBar: View {
         }
         .padding(.horizontal, ScaleFactor.padding(16))
         .padding(.vertical, ScaleFactor.padding(12))
-        .background(DXYColors.cardBackground)
+        .background(DossierColors.cardBackground)
     }
 }
 
@@ -205,23 +205,23 @@ struct DossierGenerationAlert: View {
             // 图标
             ZStack {
                 Circle()
-                    .fill(DXYColors.primaryPurple.opacity(0.15))
+                    .fill(DossierColors.primaryPurple.opacity(0.15))
                     .frame(width: ScaleFactor.size(64), height: ScaleFactor.size(64))
                 
                 Image(systemName: "doc.text.fill")
                     .font(.system(size: ScaleFactor.font(28)))
-                    .foregroundColor(DXYColors.primaryPurple)
+                    .foregroundColor(DossierColors.primaryPurple)
             }
             
             // 标题
             Text("是否生成本次问诊病历？")
                 .font(.system(size: AdaptiveFont.title2, weight: .semibold))
-                .foregroundColor(DXYColors.textPrimary)
+                .foregroundColor(DossierColors.textPrimary)
             
             // 描述
             Text("系统将根据本次对话内容自动生成结构化病历，方便您后续查看和管理。")
                 .font(.system(size: AdaptiveFont.subheadline))
-                .foregroundColor(DXYColors.textSecondary)
+                .foregroundColor(DossierColors.textSecondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(ScaleFactor.spacing(4))
             
@@ -234,10 +234,10 @@ struct DossierGenerationAlert: View {
                 }) {
                     Text("稍后再说")
                         .font(.system(size: AdaptiveFont.body, weight: .medium))
-                        .foregroundColor(DXYColors.textPrimary)
+                        .foregroundColor(DossierColors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, ScaleFactor.padding(14))
-                        .background(DXYColors.tagBackground)
+                        .background(DossierColors.tagBackground)
                         .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(12)))
                 }
                 
@@ -251,13 +251,13 @@ struct DossierGenerationAlert: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, ScaleFactor.padding(14))
-                        .background(DXYColors.primaryPurple)
+                        .background(DossierColors.primaryPurple)
                         .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(12)))
                 }
             }
         }
         .padding(ScaleFactor.padding(24))
-        .background(DXYColors.cardBackground)
+        .background(DossierColors.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: ScaleFactor.size(20)))
         .shadow(color: Color.black.opacity(0.15), radius: 20, x: 0, y: 10)
         .padding(.horizontal, ScaleFactor.padding(32))

@@ -19,11 +19,11 @@ struct MergeEventsSheet: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("合并病历事件")
                                 .font(.system(size: AdaptiveFont.title3, weight: .bold))
-                                .foregroundColor(DXYColors.textPrimary)
+                                .foregroundColor(DossierColors.textPrimary)
                             
                             Text("选择要合并的相关病历，合并后的事件将包含所有选中事件的记录。")
                                 .font(.system(size: AdaptiveFont.subheadline))
-                                .foregroundColor(DXYColors.textSecondary)
+                                .foregroundColor(DossierColors.textSecondary)
                         }
                         .padding(.horizontal, LayoutConstants.horizontalPadding)
                         .padding(.top, ScaleFactor.padding(16))
@@ -32,25 +32,25 @@ struct MergeEventsSheet: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("当前事件")
                                 .font(.system(size: AdaptiveFont.footnote, weight: .medium))
-                                .foregroundColor(DXYColors.textTertiary)
+                                .foregroundColor(DossierColors.textTertiary)
                             
                             HStack {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(DXYColors.primaryPurple)
+                                    .foregroundColor(DossierColors.primaryPurple)
                                 Text(currentEventId.prefix(12) + "...")
                                     .font(.system(size: AdaptiveFont.subheadline))
-                                    .foregroundColor(DXYColors.textPrimary)
+                                    .foregroundColor(DossierColors.textPrimary)
                                 Spacer()
                                 Text("主事件")
                                     .font(.system(size: AdaptiveFont.caption1))
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
-                                    .background(DXYColors.primaryPurple)
+                                    .background(DossierColors.primaryPurple)
                                     .clipShape(Capsule())
                             }
                             .padding(ScaleFactor.padding(12))
-                            .background(DXYColors.primaryPurple.opacity(0.1))
+                            .background(DossierColors.primaryPurple.opacity(0.1))
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                         .padding(.horizontal, LayoutConstants.horizontalPadding)
@@ -59,7 +59,7 @@ struct MergeEventsSheet: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("选择要合并的事件")
                                 .font(.system(size: AdaptiveFont.footnote, weight: .medium))
-                                .foregroundColor(DXYColors.textTertiary)
+                                .foregroundColor(DossierColors.textTertiary)
                             
                             if relatedEvents.isEmpty {
                                 HStack {
@@ -67,10 +67,10 @@ struct MergeEventsSheet: View {
                                     VStack(spacing: 8) {
                                         Image(systemName: "doc.on.doc")
                                             .font(.system(size: UnifiedFont.largeTitle))
-                                            .foregroundColor(DXYColors.textTertiary)
+                                            .foregroundColor(DossierColors.textTertiary)
                                         Text("没有找到相关事件")
                                             .font(.system(size: AdaptiveFont.subheadline))
-                                            .foregroundColor(DXYColors.textTertiary)
+                                            .foregroundColor(DossierColors.textTertiary)
                                     }
                                     Spacer()
                                 }
@@ -97,12 +97,12 @@ struct MergeEventsSheet: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("合并后的标题（可选）")
                                 .font(.system(size: AdaptiveFont.footnote, weight: .medium))
-                                .foregroundColor(DXYColors.textTertiary)
+                                .foregroundColor(DossierColors.textTertiary)
                             
                             TextField("输入新标题...", text: $newTitle)
                                 .font(.system(size: AdaptiveFont.body))
                                 .padding(ScaleFactor.padding(12))
-                                .background(DXYColors.background)
+                                .background(DossierColors.background)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                         .padding(.horizontal, LayoutConstants.horizontalPadding)
@@ -118,10 +118,10 @@ struct MergeEventsSheet: View {
                         Button(action: { dismiss() }) {
                             Text("取消")
                                 .font(.system(size: AdaptiveFont.body, weight: .medium))
-                                .foregroundColor(DXYColors.textSecondary)
+                                .foregroundColor(DossierColors.textSecondary)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, ScaleFactor.padding(14))
-                                .background(DXYColors.background)
+                                .background(DossierColors.background)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                         
@@ -144,7 +144,7 @@ struct MergeEventsSheet: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, ScaleFactor.padding(14))
-                            .background(selectedEventIds.isEmpty ? DXYColors.textTertiary : DXYColors.primaryPurple)
+                            .background(selectedEventIds.isEmpty ? DossierColors.textTertiary : DossierColors.primaryPurple)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                         .disabled(selectedEventIds.isEmpty || viewModel.isMerging)
@@ -160,7 +160,7 @@ struct MergeEventsSheet: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { dismiss() }) {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(DXYColors.textTertiary)
+                            .foregroundColor(DossierColors.textTertiary)
                     }
                 }
             }
@@ -178,17 +178,17 @@ struct SelectableEventRow: View {
             HStack(spacing: ScaleFactor.spacing(12)) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: UnifiedFont.title1))
-                    .foregroundColor(isSelected ? DXYColors.primaryPurple : DXYColors.textTertiary)
+                    .foregroundColor(isSelected ? DossierColors.primaryPurple : DossierColors.textTertiary)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(event.event_id.prefix(12) + "...")
                         .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
-                        .foregroundColor(DXYColors.textPrimary)
+                        .foregroundColor(DossierColors.textPrimary)
                     
                     if let reasoning = event.reasoning {
                         Text(reasoning)
                             .font(.system(size: AdaptiveFont.footnote))
-                            .foregroundColor(DXYColors.textSecondary)
+                            .foregroundColor(DossierColors.textSecondary)
                             .lineLimit(1)
                     }
                 }
@@ -206,11 +206,11 @@ struct SelectableEventRow: View {
                 }
             }
             .padding(ScaleFactor.padding(12))
-            .background(isSelected ? DXYColors.primaryPurple.opacity(0.05) : DXYColors.background)
+            .background(isSelected ? DossierColors.primaryPurple.opacity(0.05) : DossierColors.background)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(isSelected ? DXYColors.primaryPurple : Color.clear, lineWidth: 1)
+                    .stroke(isSelected ? DossierColors.primaryPurple : Color.clear, lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())
@@ -227,10 +227,10 @@ struct SelectableEventRow: View {
     
     private func relationColor(_ type: String) -> Color {
         switch type {
-        case "same_condition": return DXYColors.primaryPurple
-        case "follow_up": return DXYColors.teal
+        case "same_condition": return DossierColors.primaryPurple
+        case "follow_up": return DossierColors.teal
         case "complication": return Color.orange
-        default: return DXYColors.textSecondary
+        default: return DossierColors.textSecondary
         }
     }
 }
