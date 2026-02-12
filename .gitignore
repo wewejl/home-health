@@ -77,3 +77,7 @@ frontend/.tasks/
 
 # Temporary HTML files
 *-design.html
+
+# Xcode user state
+*.xcuserstate
+xcuserdata/
