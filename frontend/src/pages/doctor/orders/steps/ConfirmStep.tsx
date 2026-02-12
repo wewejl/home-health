@@ -1,14 +1,16 @@
-import type { BasicInfoData, ScheduleData } from '../types';
+import type { BasicInfoData, ScheduleData, OrderItem } from '../types';
 import { ORDER_TYPE_OPTIONS, SCHEDULE_TYPE_OPTIONS, WEEKDAY_OPTIONS } from '../types';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 interface ConfirmStepProps {
   basicInfo: BasicInfoData;
   scheduleData: ScheduleData;
+  medications?: OrderItem[];
 }
 
-export const ConfirmStep = ({ basicInfo, scheduleData }: ConfirmStepProps) => {
+export const ConfirmStep = ({ basicInfo, scheduleData, medications = [] }: ConfirmStepProps) => {
   return (
     <div className="space-y-4">
       <Card className="bg-muted/30">
@@ -61,6 +63,35 @@ export const ConfirmStep = ({ basicInfo, scheduleData }: ConfirmStepProps) => {
           )}
         </div>
       </Card>
+
+      {/* 药品列表 */}
+      {medications && medications.length > 0 && (
+        <Card className="bg-muted/30">
+          <h3 className="font-semibold mb-4">药品列表 ({medications.length})</h3>
+          <div className="space-y-2">
+            {medications.map((item, index) => (
+              <div key={index} className="flex items-center justify-between p-3 border rounded-md bg-background">
+                <div className="flex-1">
+                  <div className="font-medium">{item.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {item.dosage && <span className="mr-2">{item.dosage}</span>}
+                    {item.frequency && <span className="mr-2">{item.frequency}</span>}
+                    {item.duration && <span>{item.duration}</span>}
+                  </div>
+                  {item.notes && (
+                    <div className="text-xs text-muted-foreground mt-1 italic">
+                      备注: {item.notes}
+                    </div>
+                  )}
+                </div>
+                <Badge variant="outline">
+                  药品
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 };

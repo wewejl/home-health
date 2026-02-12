@@ -12,6 +12,7 @@ interface BasicInfoStepProps {
   onChange: (data: BasicInfoData) => void;
   errors: FormErrors;
   isEditing?: boolean;
+  onOrderTypeChange?: (orderType: string) => void;
 }
 
 export const BasicInfoStep = ({ data, onChange, errors, isEditing = false }: BasicInfoStepProps) => {
@@ -39,7 +40,10 @@ export const BasicInfoStep = ({ data, onChange, errors, isEditing = false }: Bas
         ) : (
           <Select
             value={data.order_type}
-            onValueChange={(value) => onChange({ ...data, order_type: value })}
+            onValueChange={(value) => {
+              onChange({ ...data, order_type: value });
+              onOrderTypeChange?.(value);
+            }}
           >
             <SelectTrigger id="order_type" className={errors.order_type ? 'border-destructive' : ''}>
               <SelectValue placeholder="请选择医嘱类型" />

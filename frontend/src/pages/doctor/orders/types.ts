@@ -70,4 +70,43 @@ export interface FormErrors {
   start_date?: string;
   reminder_times?: string;
   weekdays?: string;
+  medications?: string;
 }
+
+// 药品类型
+export interface Drug {
+  id: number;
+  name: string;
+  generic_name?: string;
+  specification?: string;
+  manufacturer?: string;
+  category?: string;
+  unit?: string;
+  stock_count?: number;
+}
+
+// 医嘱项目（药品/检查）
+export interface OrderItem {
+  item_type: 'drug' | 'examination';
+  drug_id?: number;
+  name: string;
+  dosage?: string;
+  frequency?: string;
+  duration?: string;
+  notes?: string;
+  sort_order?: number;
+}
+
+// 医嘱模板类型
+export interface OrderTemplate {
+  id: number;
+  name: string;
+  description?: string;
+  order_type: string;
+  template_data: any;
+  is_active: boolean;
+  created_at: string;
+}
+
+// 步骤类型
+export type StepType = 'basic' | 'schedule' | 'medications' | 'confirm';

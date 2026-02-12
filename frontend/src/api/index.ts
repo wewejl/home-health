@@ -198,6 +198,28 @@ export const doctorApi = {
     weekdays?: number[];
   }) => api.put(`/api/doctor/orders/${orderId}`, data),
 
+  // 药品搜索
+  searchDrugs: (search: string, limit: number = 20) =>
+    api.get('/api/doctor/drugs/search', { params: { search, limit } }),
+
+  // 医嘱模板
+  getOrderTemplates: (orderType?: string) =>
+    api.get('/api/doctor/orders/templates', { params: { order_type: orderType } }),
+  createOrderTemplate: (data: {
+    name: string;
+    description?: string;
+    order_type: string;
+    template_data: any;
+  }) => api.post('/api/doctor/orders/templates', data),
+  deleteOrderTemplate: (templateId: number) =>
+    api.delete(`/api/doctor/orders/templates/${templateId}`),
+
+  // 医嘱复制
+  copyOrder: (orderId: number, patientId?: number) =>
+    api.post(`/api/doctor/orders/${orderId}/copy`, null, {
+      params: patientId ? { patient_id: patientId } : undefined
+    }),
+
   // 任务管理
   getPatientTasks: (patientId: number, taskDate: string) =>
     api.get(`/api/doctor/patients/${patientId}/tasks`, { params: { task_date: taskDate } }),

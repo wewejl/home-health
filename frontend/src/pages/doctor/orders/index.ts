@@ -19,3 +19,7 @@ export { StepIndicator } from './StepIndicator';
 export { BasicInfoStep } from './steps/BasicInfoStep';
 export { ScheduleStep } from './steps/ScheduleStep';
 export { ConfirmStep } from './steps/ConfirmStep';
+export { MedicationsStep } from './steps/MedicationsStep';
+
+// 模板组件
+export { OrderTemplates } from './OrderTemplates';
