@@ -1,13 +1,13 @@
 """
-Sessions V2 API 单元测试
+Sessions API 单元测试
 
-测试统一会话接口 V2：
-- POST /v2/sessions - 创建会话
-- GET /v2/sessions - 获取会话列表
-- POST /v2/sessions/{session_id}/messages - 发送消息（支持流式和非流式）
-- GET /v2/sessions/{session_id}/messages - 获取会话消息
-- GET /v2/sessions/agents - 获取可用智能体列表
-- GET /v2/sessions/agents/{agent_type}/capabilities - 获取智能体能力
+测试统一会话接口：
+- POST /sessions - 创建会话
+- GET /sessions - 获取会话列表
+- POST /sessions/{session_id}/messages - 发送消息（支持流式和非流式）
+- GET /sessions/{session_id}/messages - 获取会话消息
+- GET /sessions/agents - 获取可用智能体列表
+- GET /sessions/agents/{agent_type}/capabilities - 获取智能体能力
 """
 import pytest
 import json
@@ -66,12 +66,12 @@ def mock_agent_run(state, user_input, attachments=None, action="conversation", o
     return _run()
 
 
-class TestCreateSessionV2:
-    """测试创建会话 (POST /v2/sessions)"""
+class TestCreateSession:
+    """测试创建会话 (POST /sessions)"""
 
     def test_create_session_basic_success(self, test_client: TestClient, db_session: Session):
         """测试成功创建基础会话（无医生）"""
-        response = test_client.post("/v2/sessions", json={})
+        response = test_client.post("/sessions", json={})
 
         assert response.status_code == 200
         data = response.json()
@@ -82,7 +82,7 @@ class TestCreateSessionV2:
 
     def test_create_session_with_agent_type(self, test_client: TestClient, db_session: Session):
         """测试创建指定智能体类型的会话"""
-        response = test_client.post("/v2/sessions", json={
+        response = test_client.post("/sessions", json={
             "agent_type": "dermatology"
         })
 
@@ -93,7 +93,7 @@ class TestCreateSessionV2:
     def test_create_session_with_invalid_agent_type_fallback(self, test_client: TestClient, db_session: Session):
         """测试创建会话时使用无效的智能体类型会回退到 general"""
         # 注意：当前实现会将无效类型回退到 "general"，而不是报错
-        response = test_client.post("/v2/sessions", json={
+        response = test_client.post("/sessions", json={
             "agent_type": "invalid_agent"
         })
 
@@ -126,7 +126,7 @@ class TestCreateSessionV2:
         db_session.add(doctor)
         db_session.commit()
 
-        response = test_client.post("/v2/sessions", json={
+        response = test_client.post("/sessions", json={
             "doctor_id": 1
         })
 
@@ -137,7 +137,7 @@ class TestCreateSessionV2:
 
     def test_create_session_with_nonexistent_doctor(self, test_client: TestClient, db_session: Session):
         """测试创建会话时医生不存在"""
-        response = test_client.post("/v2/sessions", json={
+        response = test_client.post("/sessions", json={
             "doctor_id": 99999
         })
 
@@ -168,7 +168,7 @@ class TestCreateSessionV2:
         db_session.add(doctor)
         db_session.commit()
 
-        response = test_client.post("/v2/sessions", json={
+        response = test_client.post("/sessions", json={
             "doctor_id": 2
         })
 
@@ -200,7 +200,7 @@ class TestCreateSessionV2:
         db_session.add(doctor)
         db_session.commit()
 
-        response = test_client.post("/v2/sessions", json={
+        response = test_client.post("/sessions", json={
             "doctor_id": 3
         })
 
@@ -218,7 +218,7 @@ class TestCreateSessionV2:
         registered_types = ["general", "dermatology"]
 
         for agent_type in declared_types:
-            response = test_client.post("/v2/sessions", json={
+            response = test_client.post("/sessions", json={
                 "agent_type": agent_type
             })
             if agent_type in registered_types:
@@ -233,13 +233,12 @@ class TestCreateSessionV2:
                 assert response.status_code == 400, f"{agent_type} should fail with 400"
                 assert "不支持的智能体类型" in response.json()["detail"]
 
-
-class TestGetSessionsV2:
-    """测试获取会话列表 (GET /v2/sessions)"""
+class TestGetSessions:
+    """测试获取会话列表 (GET /sessions)"""
 
     def test_get_sessions_empty_list(self, test_client: TestClient, db_session: Session):
         """测试获取空的会话列表"""
-        response = test_client.get("/v2/sessions")
+        response = test_client.get("/sessions")
 
         assert response.status_code == 200
         data = response.json()
@@ -272,7 +271,7 @@ class TestGetSessionsV2:
         db_session.add_all([session1, session2])
         db_session.commit()
 
-        response = test_client.get("/v2/sessions")
+        response = test_client.get("/sessions")
 
         assert response.status_code == 200
         data = response.json()
@@ -304,7 +303,7 @@ class TestGetSessionsV2:
         db_session.add_all([session1, session2])
         db_session.commit()
 
-        response = test_client.get("/v2/sessions")
+        response = test_client.get("/sessions")
 
         assert response.status_code == 200
         data = response.json()
@@ -312,13 +311,13 @@ class TestGetSessionsV2:
         assert isinstance(data, list)
 
 
-class TestSendMessageV2:
-    """测试发送消息 (POST /v2/sessions/{session_id}/messages)"""
+class TestSendMessage:
+    """测试发送消息 (POST /sessions/{session_id}/messages)"""
 
     def test_send_message_session_not_found(self, test_client: TestClient, db_session: Session):
         """测试向不存在的会话发送消息"""
         response = test_client.post(
-            "/v2/sessions/nonexistent_session/messages",
+            "/sessions/nonexistent_session/messages",
             json={"content": "测试消息"}
         )
 
@@ -348,9 +347,9 @@ class TestSendMessageV2:
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(return_value=create_mock_agent_response("你好，我是AI助手"))
 
-        with patch('app.routes.sessions_v2.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
             response = test_client.post(
-                "/v2/sessions/test_msg_sess_1/messages",
+                "/sessions/test_msg_sess_1/messages",
                 json={"content": "你好"}
             )
 
@@ -380,9 +379,9 @@ class TestSendMessageV2:
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(return_value=create_mock_agent_response("收到图片"))
 
-        with patch('app.routes.sessions_v2.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
             response = test_client.post(
-                "/v2/sessions/test_msg_sess_2/messages",
+                "/sessions/test_msg_sess_2/messages",
                 json={
                     "content": "看这张照片",
                     "attachments": [
@@ -416,9 +415,9 @@ class TestSendMessageV2:
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(return_value=create_mock_agent_response("分析中..."))
 
-        with patch('app.routes.sessions_v2.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
             response = test_client.post(
-                "/v2/sessions/test_msg_sess_3/messages",
+                "/sessions/test_msg_sess_3/messages",
                 json={
                     "content": "帮我分析",
                     "action": "analyze_skin"
@@ -455,9 +454,9 @@ class TestSendMessageV2:
         mock_agent = MagicMock()
         mock_agent.run = mock_run_with_chunks
 
-        with patch('app.routes.sessions_v2.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
             response = test_client.post(
-                "/v2/sessions/test_stream_sess_1/messages",
+                "/sessions/test_stream_sess_1/messages",
                 json={"content": "你好"},
                 headers={"Accept": "text/event-stream"}
             )
@@ -484,9 +483,9 @@ class TestSendMessageV2:
         db_session.add(session)
         db_session.commit()
 
-        with patch('app.routes.sessions_v2.AgentRouterV2.get_agent', side_effect=ValueError("Unknown agent")):
+        with patch('app.routes.sessions.AgentRouterV2.get_agent', side_effect=ValueError("Unknown agent")):
             response = test_client.post(
-                "/v2/sessions/test_invalid_agent/messages",
+                "/sessions/test_invalid_agent/messages",
                 json={"content": "测试"}
             )
 
@@ -513,9 +512,9 @@ class TestSendMessageV2:
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(return_value=create_mock_agent_response("已保存"))
 
-        with patch('app.routes.sessions_v2.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
             response = test_client.post(
-                "/v2/sessions/test_save_sess/messages",
+                "/sessions/test_save_sess/messages",
                 json={"content": "保存这条消息"}
             )
 
@@ -537,12 +536,12 @@ class TestSendMessageV2:
         assert len(ai_messages) > 0
 
 
-class TestGetSessionMessagesV2:
-    """测试获取会话消息列表 (GET /v2/sessions/{session_id}/messages)"""
+class TestGetSessionMessages:
+    """测试获取会话消息列表 (GET /sessions/{session_id}/messages)"""
 
     def test_get_messages_session_not_found(self, test_client: TestClient, db_session: Session):
         """测试获取不存在会话的消息"""
-        response = test_client.get("/v2/sessions/nonexistent/messages")
+        response = test_client.get("/sessions/nonexistent/messages")
 
         assert response.status_code == 404
         assert "会话不存在" in response.json()["detail"]
@@ -564,7 +563,7 @@ class TestGetSessionMessagesV2:
         db_session.add(session)
         db_session.commit()
 
-        response = test_client.get("/v2/sessions/test_empty_msg_sess/messages")
+        response = test_client.get("/sessions/test_empty_msg_sess/messages")
 
         assert response.status_code == 200
         data = response.json()
@@ -604,7 +603,7 @@ class TestGetSessionMessagesV2:
         db_session.add_all([msg1, msg2])
         db_session.commit()
 
-        response = test_client.get("/v2/sessions/test_msg_data_sess/messages")
+        response = test_client.get("/sessions/test_msg_data_sess/messages")
 
         assert response.status_code == 200
         data = response.json()
@@ -637,7 +636,7 @@ class TestGetSessionMessagesV2:
             db_session.add(msg)
         db_session.commit()
 
-        response = test_client.get("/v2/sessions/test_limit_sess/messages?limit=3")
+        response = test_client.get("/sessions/test_limit_sess/messages?limit=3")
 
         assert response.status_code == 200
         data = response.json()
@@ -671,14 +670,14 @@ class TestGetSessionMessagesV2:
         db_session.commit()
 
         # 第一次请求
-        response1 = test_client.get("/v2/sessions/test_before_sess/messages?limit=2")
+        response1 = test_client.get("/sessions/test_before_sess/messages?limit=2")
         assert response1.status_code == 200
         data1 = response1.json()
 
         # 获取最后一条消息的 ID 作为 before 参数
         if len(data1["messages"]) > 0:
             last_msg_id = data1["messages"][-1]["id"]
-            response2 = test_client.get(f"/v2/sessions/test_before_sess/messages?limit=2&before={last_msg_id}")
+            response2 = test_client.get(f"/sessions/test_before_sess/messages?limit=2&before={last_msg_id}")
             assert response2.status_code == 200
 
     def test_get_messages_has_more_flag(self, test_client: TestClient, db_session: Session):
@@ -708,7 +707,7 @@ class TestGetSessionMessagesV2:
             db_session.add(msg)
         db_session.commit()
 
-        response = test_client.get("/v2/sessions/test_has_more_sess/messages?limit=20")
+        response = test_client.get("/sessions/test_has_more_sess/messages?limit=20")
 
         assert response.status_code == 200
         data = response.json()
@@ -716,12 +715,12 @@ class TestGetSessionMessagesV2:
         assert "has_more" in data
 
 
-class TestListAgentsV2:
-    """测试获取智能体列表 (GET /v2/sessions/agents)"""
+class TestListAgents:
+    """测试获取智能体列表 (GET /sessions/agents)"""
 
     def test_list_agents_success(self, test_client: TestClient):
         """测试成功获取智能体列表"""
-        response = test_client.get("/v2/sessions/agents")
+        response = test_client.get("/sessions/agents")
 
         assert response.status_code == 200
         data = response.json()
@@ -729,7 +728,7 @@ class TestListAgentsV2:
 
     def test_list_agents_contains_general(self, test_client: TestClient):
         """测试智能体列表包含 general"""
-        response = test_client.get("/v2/sessions/agents")
+        response = test_client.get("/sessions/agents")
 
         assert response.status_code == 200
         data = response.json()
@@ -737,7 +736,7 @@ class TestListAgentsV2:
 
     def test_list_agents_contains_dermatology(self, test_client: TestClient):
         """测试智能体列表包含 dermatology"""
-        response = test_client.get("/v2/sessions/agents")
+        response = test_client.get("/sessions/agents")
 
         assert response.status_code == 200
         data = response.json()
@@ -745,7 +744,7 @@ class TestListAgentsV2:
 
     def test_list_agents_structure(self, test_client: TestClient):
         """测试智能体数据结构正确"""
-        response = test_client.get("/v2/sessions/agents")
+        response = test_client.get("/sessions/agents")
 
         assert response.status_code == 200
         data = response.json()
@@ -757,13 +756,12 @@ class TestListAgentsV2:
             # 验证字段存在
             assert "display_name" in agent_info or "description" in agent_info or "actions" in agent_info
 
-
-class TestGetAgentCapabilitiesV2:
-    """测试获取智能体能力 (GET /v2/sessions/agents/{agent_type}/capabilities)"""
+class TestGetAgentCapabilities:
+    """测试获取智能体能力 (GET /sessions/agents/{agent_type}/capabilities)"""
 
     def test_get_capabilities_general(self, test_client: TestClient):
         """测试获取 general 智能体能力"""
-        response = test_client.get("/v2/sessions/agents/general/capabilities")
+        response = test_client.get("/sessions/agents/general/capabilities")
 
         assert response.status_code == 200
         data = response.json()
@@ -771,7 +769,7 @@ class TestGetAgentCapabilitiesV2:
 
     def test_get_capabilities_dermatology(self, test_client: TestClient):
         """测试获取 dermatology 智能体能力"""
-        response = test_client.get("/v2/sessions/agents/dermatology/capabilities")
+        response = test_client.get("/sessions/agents/dermatology/capabilities")
 
         assert response.status_code == 200
         data = response.json()
@@ -779,14 +777,14 @@ class TestGetAgentCapabilitiesV2:
 
     def test_get_capabilities_not_found(self, test_client: TestClient):
         """测试获取不存在智能体的能力"""
-        response = test_client.get("/v2/sessions/agents/nonexistent/capabilities")
+        response = test_client.get("/sessions/agents/nonexistent/capabilities")
 
         assert response.status_code == 404
         assert "智能体不存在" in response.json()["detail"]
 
     def test_get_capabilities_dermatology_actions(self, test_client: TestClient):
         """测试皮肤科智能体包含预期动作"""
-        response = test_client.get("/v2/sessions/agents/dermatology/capabilities")
+        response = test_client.get("/sessions/agents/dermatology/capabilities")
 
         assert response.status_code == 200
         data = response.json()
@@ -795,31 +793,30 @@ class TestGetAgentCapabilitiesV2:
             actions = data["actions"]
             assert isinstance(actions, list)
 
+class TestStateMigration:
+    """测试旧状态迁移"""
 
-class TestStateMigrationV2:
-    """测试 V1 到 V2 状态迁移"""
-
-    def test_migrate_v1_state_empty(self, test_client: TestClient):
+    def test_migrate_legacy_state_empty(self, test_client: TestClient):
         """测试空状态迁移"""
-        from app.routes.sessions_v2 import migrate_v1_state_to_v2
+        from app.routes.sessions import migrate_legacy_state
 
-        result = migrate_v1_state_to_v2(None)
+        result = migrate_legacy_state(None)
         assert result == {}
 
-    def test_migrate_v1_state_valid_fields(self, test_client: TestClient):
+    def test_migrate_legacy_state_valid_fields(self, test_client: TestClient):
         """测试有效字段迁移"""
-        from app.routes.sessions_v2 import migrate_v1_state_to_v2
+        from app.routes.sessions import migrate_legacy_state
 
-        v1_state = {
+        legacy_state = {
             "stage": "collecting",
             "chief_complaint": "头痛",
             "symptoms": ["发热", "咳嗽"],
-            "questions_asked": 3,  # V1 字段，应该被过滤
-            "session_id": "123",  # V1 字段，应该被过滤
-            "user_id": 1  # V1 字段，应该被过滤
+            "questions_asked": 3,  # 旧字段，应该被过滤
+            "session_id": "123",  # 旧字段，应该被过滤
+            "user_id": 1  # 旧字段，应该被过滤
         }
 
-        result = migrate_v1_state_to_v2(v1_state)
+        result = migrate_legacy_state(legacy_state)
 
         assert result["stage"] == "collecting"
         assert result["chief_complaint"] == "头痛"
@@ -828,22 +825,22 @@ class TestStateMigrationV2:
         assert "session_id" not in result
         assert "user_id" not in result
 
-    def test_migrate_v1_state_json_string(self, test_client: TestClient):
+    def test_migrate_legacy_state_json_string(self, test_client: TestClient):
         """测试 JSON 字符串状态迁移"""
-        from app.routes.sessions_v2 import migrate_v1_state_to_v2
+        from app.routes.sessions import migrate_legacy_state
 
-        v1_state_str = '{"stage": "analyzing", "diagnosis_card": {"test": "value"}}'
+        legacy_state_str = '{"stage": "analyzing", "diagnosis_card": {"test": "value"}}'
 
-        result = migrate_v1_state_to_v2(v1_state_str)
+        result = migrate_legacy_state(legacy_state_str)
 
         assert result["stage"] == "analyzing"
         assert "diagnosis_card" in result
 
-    def test_migrate_v1_state_invalid_json_string(self, test_client: TestClient):
+    def test_migrate_legacy_state_invalid_json_string(self, test_client: TestClient):
         """测试无效 JSON 字符串返回空字典"""
-        from app.routes.sessions_v2 import migrate_v1_state_to_v2
+        from app.routes.sessions import migrate_legacy_state
 
-        result = migrate_v1_state_to_v2("invalid json")
+        result = migrate_legacy_state("invalid json")
         assert result == {}
 
 
@@ -876,9 +873,9 @@ class TestStreamingResponse:
         mock_agent = MagicMock()
         mock_agent.run = mock_run
 
-        with patch('app.routes.sessions_v2.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
             response = test_client.post(
-                "/v2/sessions/test_sse_sess/messages",
+                "/sessions/test_sse_sess/messages",
                 json={"content": "测试"},
                 headers={"Accept": "text/event-stream"}
             )
@@ -908,9 +905,9 @@ class TestStreamingResponse:
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(return_value=create_mock_agent_response("非流式"))
 
-        with patch('app.routes.sessions_v2.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
             response = test_client.post(
-                "/v2/sessions/test_no_stream_sess/messages",
+                "/sessions/test_no_stream_sess/messages",
                 json={"content": "测试"}
                 # 不带 Accept: text/event-stream 头
             )
@@ -919,7 +916,6 @@ class TestStreamingResponse:
         # 应该返回 JSON，不是 SSE
         content_type = response.headers.get("content-type", "")
         assert "application/json" in content_type
-
 
 class TestSessionUpdate:
     """测试会话状态更新"""
@@ -947,9 +943,9 @@ class TestSessionUpdate:
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(return_value=mock_response)
 
-        with patch('app.routes.sessions_v2.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
             response = test_client.post(
-                "/v2/sessions/test_update_sess/messages",
+                "/sessions/test_update_sess/messages",
                 json={"content": "测试"}
             )
 
@@ -966,7 +962,7 @@ class TestSessionUpdate:
         assert updated_session.agent_state is not None
 
 
-class TestAgentRouterV2Integration:
+class TestAgentRouterIntegration:
     """测试与 AgentRouterV2 的集成"""
 
     def test_agent_router_is_valid_agent_type(self, test_client: TestClient):

@@ -1,304 +1,286 @@
 """
-Feedbacks API 单元测试
+用户反馈 API 测试
 
-测试反馈接口：
-- POST /sessions/{session_id}/feedback 创建会话反馈
-- POST /sessions/messages/{message_id}/feedback 创建消息反馈
+测试 /sessions 端点下的反馈功能：
+- POST /sessions/{session_id}/feedback - 创建会话反馈
+- POST /sessions/messages/{message_id}/feedback - 创建消息反馈
 """
 import pytest
+import uuid
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-# 导入必要的模块
 try:
-    from app.main import app
+    from app.database import get_db
+    from app.models.user import User
     from app.models.session import Session as SessionModel
     from app.models.message import Message
     from app.models.feedback import SessionFeedback
-    from app.models.user import User
-    from app.database import get_db
-    from app.dependencies import TEST_MODE
+    from app.dependencies import get_current_user, TEST_MODE
+    from app.schemas.feedback import FeedbackCreate
+    from app.main import app
 except ImportError:
-    from backend.app.main import app
+    from backend.app.database import get_db
+    from backend.app.models.user import User
     from backend.app.models.session import Session as SessionModel
     from backend.app.models.message import Message
     from backend.app.models.feedback import SessionFeedback
-    from backend.app.models.user import User
-    from backend.app.database import get_db
-    from backend.app.dependencies import TEST_MODE
+    from backend.app.dependencies import get_current_user, TEST_MODE
+    from backend.app.schemas.feedback import FeedbackCreate
+    from backend.app.main import app
 
 
-class TestCreateSessionFeedback:
-    """测试创建会话反馈"""
+# ============================================================================
+# 用户反馈 API 测试
+# ============================================================================
 
-    def test_create_feedback_success(self, test_client: TestClient, db_session: Session):
-        """测试成功创建反馈"""
-        # 创建测试用户和会话
-        user = User(id=5001, phone="13800002001", nickname="测试用户1")
+class TestSessionFeedbackAPI:
+    """测试会话反馈 API (POST /sessions/{session_id}/feedback)"""
+
+    def test_create_session_feedback_success(self, test_client: TestClient, db_session: Session):
+        """测试成功创建会话反馈"""
+        user = User(
+            phone="13800001",
+            nickname="反馈用户",
+            is_active=True
+        )
         db_session.add(user)
+        db_session.commit()
 
-        session = SessionModel(id="sess_feedback_001", user_id=5001, department="皮肤科")
+        # 创建会话
+        session = SessionModel(
+            id=str(uuid.uuid4()),
+            user_id=user.id,
+            agent_type="general",
+            status="active"
+        )
         db_session.add(session)
         db_session.commit()
 
-        # 设置测试模式
-        import app.dependencies
-        original_test_mode = app.dependencies.TEST_MODE
-        app.dependencies.TEST_MODE = True
-
-        try:
-            response = test_client.post(
-                f"/sessions/sess_feedback_001/feedback",
-                json={
-                    "message_id": None,
-                    "rating": 5,
-                    "feedback_type": "helpful",
-                    "feedback_text": "非常有帮助"
-                }
-            )
-
-            # 测试模式下可能返回200或201
-            assert response.status_code in [200, 201]
-
-        finally:
-            app.dependencies.TEST_MODE = original_test_mode
-
-    def test_create_feedback_session_not_found(self, test_client: TestClient, db_session: Session):
-        """测试会话不存在"""
-        user = User(id=5002, phone="13800002002", nickname="测试用户2")
-        db_session.add(user)
-        db_session.commit()
-
-        import app.dependencies
-        original_test_mode = app.dependencies.TEST_MODE
-        app.dependencies.TEST_MODE = True
-
-        try:
-            response = test_client.post(
-                "/sessions/nonexistent_session/feedback",
-                json={
-                    "message_id": None,
-                    "rating": 5,
-                    "feedback_type": "helpful",
-                    "feedback_text": "测试"
-                }
-            )
-
-            assert response.status_code == 404
-
-        finally:
-            app.dependencies.TEST_MODE = original_test_mode
-
-    def test_create_feedback_rating_range(self, test_client: TestClient, db_session: Session):
-        """测试评分范围"""
-        user = User(id=5003, phone="13800002003", nickname="测试用户3")
-        db_session.add(user)
-
-        session = SessionModel(id="sess_feedback_003", user_id=5003, department="皮肤科")
-        db_session.add(session)
-        db_session.commit()
-
-        import app.dependencies
-        original_test_mode = app.dependencies.TEST_MODE
-        app.dependencies.TEST_MODE = True
-
-        try:
-            # 测试最低评分
-            response = test_client.post(
-                "/sessions/sess_feedback_003/feedback",
-                json={
-                    "message_id": None,
-                    "rating": 1,
-                    "feedback_type": "not_helpful",
-                    "feedback_text": "不太有用"
-                }
-            )
-            assert response.status_code in [200, 201]
-
-            # 测试最高评分
-            response = test_client.post(
-                "/sessions/sess_feedback_004/feedback",
-                json={
-                    "message_id": None,
-                    "rating": 5,
-                    "feedback_type": "helpful",
-                    "feedback_text": "非常有用"
-                }
-            )
-            # 不同session会404
-            assert response.status_code in [200, 201, 404]
-
-        finally:
-            app.dependencies.TEST_MODE = original_test_mode
-
-
-class TestCreateMessageFeedback:
-    """测试创建消息反馈"""
-
-    def test_create_message_feedback_success(self, test_client: TestClient, db_session: Session):
-        """测试成功创建消息反馈"""
-        user = User(id=5004, phone="13800002004", nickname="测试用户4")
-        db_session.add(user)
-
-        session = SessionModel(id="sess_feedback_005", user_id=5004, department="皮肤科")
-        db_session.add(session)
-        db_session.commit()
-        db_session.refresh(session)
-
+        # 创建消息
         message = Message(
-            id=6001,
             session_id=session.id,
-            content="测试消息",
-            sender="ai"
+            sender="ai",
+            content="AI 回复内容"
         )
         db_session.add(message)
         db_session.commit()
 
-        import app.dependencies
-        original_test_mode = app.dependencies.TEST_MODE
-        app.dependencies.TEST_MODE = True
+        # 登录获取 token
+        login_response = test_client.post("/auth/login", json={
+            "phone": "13800001"
+        })
+        token = login_response.json()["access_token"]
 
-        try:
-            response = test_client.post(
-                "/sessions/messages/6001/feedback",
-                json={
-                    "message_id": 6001,
-                    "rating": 4,
-                    "feedback_type": "helpful",
-                    "feedback_text": "回答准确"
-                }
-            )
+        response = test_client.post(
+            f"/sessions/{session.id}/feedback",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "message_id": message.id,
+                "rating": 5,
+                "feedback_type": "helpful",
+                "feedback_text": "非常有帮助"
+            }
+        )
 
-            assert response.status_code in [200, 201]
+        assert response.status_code == 200
+        data = response.json()
+        assert data["rating"] == 5
 
-        finally:
-            app.dependencies.TEST_MODE = original_test_mode
-
-    def test_create_message_feedback_message_not_found(self, test_client: TestClient, db_session: Session):
-        """测试消息不存在"""
-        user = User(id=5005, phone="13800002005", nickname="测试用户5")
+    def test_create_session_feedback_invalid_session(self, test_client: TestClient, db_session: Session):
+        """测试会话不存在时创建反馈"""
+        user = User(
+            phone="13800002",
+            nickname="反馈用户2",
+            is_active=True
+        )
         db_session.add(user)
         db_session.commit()
 
-        import app.dependencies
-        original_test_mode = app.dependencies.TEST_MODE
-        app.dependencies.TEST_MODE = True
+        login_response = test_client.post("/auth/login", json={
+            "phone": "13800002"
+        })
+        token = login_response.json()["access_token"]
 
-        try:
-            response = test_client.post(
-                "/sessions/messages/99999/feedback",
-                json={
-                    "message_id": 99999,
-                    "rating": 5,
-                    "feedback_type": "helpful",
-                    "feedback_text": "测试"
-                }
-            )
+        # 使用不存在的会话ID
+        fake_session_id = str(uuid.uuid4())
+        response = test_client.post(
+            f"/sessions/{fake_session_id}/feedback",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "message_id": 1,
+                "rating": 5,
+                "feedback_type": "helpful"
+            }
+        )
 
-            assert response.status_code == 404
-
-        finally:
-            app.dependencies.TEST_MODE = original_test_mode
+        assert response.status_code == 404
+        assert "会话不存在" in response.json()["detail"]
 
 
-class TestFeedbackTypes:
-    """测试反馈类型"""
+class TestMessageFeedbackAPI:
+    """测试消息反馈 API (POST /sessions/messages/{message_id}/feedback)"""
 
-    def test_feedback_type_helpful(self, test_client: TestClient, db_session: Session):
-        """测试'有帮助'反馈类型"""
-        user = User(id=5006, phone="13800002006", nickname="测试用户6")
+    def test_create_message_feedback_success(self, test_client: TestClient, db_session: Session):
+        """测试成功创建消息反馈"""
+        user = User(
+            phone="13800003",
+            nickname="消息反馈用户",
+            is_active=True
+        )
         db_session.add(user)
+        db_session.commit()
 
-        session = SessionModel(id="sess_feedback_006", user_id=5006, department="皮肤科")
+        # 创建会话和消息
+        session = SessionModel(
+            id=str(uuid.uuid4()),
+            user_id=user.id,
+            agent_type="general",
+            status="active"
+        )
         db_session.add(session)
         db_session.commit()
 
-        import app.dependencies
-        original_test_mode = app.dependencies.TEST_MODE
-        app.dependencies.TEST_MODE = True
+        message = Message(
+            session_id=session.id,
+            sender="ai",
+            content="这是AI消息"
+        )
+        db_session.add(message)
+        db_session.commit()
 
-        try:
-            response = test_client.post(
-                "/sessions/sess_feedback_006/feedback",
-                json={
-                    "message_id": None,
-                    "rating": 5,
-                    "feedback_type": "helpful",
-                    "feedback_text": "很有帮助"
-                }
-            )
+        # 登录获取 token
+        login_response = test_client.post("/auth/login", json={
+            "phone": "13800003"
+        })
+        token = login_response.json()["access_token"]
 
-            assert response.status_code in [200, 201]
+        response = test_client.post(
+            f"/sessions/messages/{message.id}/feedback",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "rating": 4,
+                "feedback_type": "unhelpful",
+                "feedback_text": "不够清楚"
+            }
+        )
 
-        finally:
-            app.dependencies.TEST_MODE = original_test_mode
+        assert response.status_code == 200
 
-    def test_feedback_type_not_helpful(self, test_client: TestClient, db_session: Session):
-        """测试'没帮助'反馈类型"""
-        user = User(id=5007, phone="13800002007", nickname="测试用户7")
+    def test_create_message_feedback_invalid_message(self, test_client: TestClient, db_session: Session):
+        """测试消息不存在时创建反馈"""
+        user = User(
+            phone="13800004",
+            nickname="消息反馈用户2",
+            is_active=True
+        )
         db_session.add(user)
+        db_session.commit()
 
-        session = SessionModel(id="sess_feedback_007", user_id=5007, department="皮肤科")
+        login_response = test_client.post("/auth/login", json={
+            "phone": "13800004"
+        })
+        token = login_response.json()["access_token"]
+
+        # 使用不存在的消息ID
+        response = test_client.post(
+            "/sessions/messages/99999/feedback",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "rating": 5,
+                "feedback_type": "helpful"
+            }
+        )
+
+        assert response.status_code == 404
+        assert "消息不存在" in response.json()["detail"]
+
+    def test_create_feedback_invalid_rating(self, test_client: TestClient, db_session: Session):
+        """测试无效评分"""
+        user = User(
+            phone="13800005",
+            nickname="评分测试用户",
+            is_active=True
+        )
+        db_session.add(user)
+        db_session.commit()
+
+        session = SessionModel(
+            id=str(uuid.uuid4()),
+            user_id=user.id,
+            agent_type="general",
+            status="active"
+        )
         db_session.add(session)
         db_session.commit()
 
-        import app.dependencies
-        original_test_mode = app.dependencies.TEST_MODE
-        app.dependencies.TEST_MODE = True
+        message = Message(
+            session_id=session.id,
+            sender="ai",
+            content="AI消息"
+        )
+        db_session.add(message)
+        db_session.commit()
 
-        try:
-            response = test_client.post(
-                "/sessions/sess_feedback_007/feedback",
-                json={
-                    "message_id": None,
-                    "rating": 1,
-                    "feedback_type": "not_helpful",
-                    "feedback_text": "没有解决问题"
-                }
-            )
+        login_response = test_client.post("/auth/login", json={
+            "phone": "13800005"
+        })
+        token = login_response.json()["access_token"]
 
-            assert response.status_code in [200, 201]
+        # 评分超出范围（1-5）
+        response = test_client.post(
+            f"/sessions/messages/{message.id}/feedback",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "rating": 6,  # 无效评分
+                "feedback_type": "helpful"
+            }
+        )
 
-        finally:
-            app.dependencies.TEST_MODE = original_test_mode
+        # 应该返回验证错误
+        assert response.status_code in [400, 422]
 
-
-class TestFeedbackPersistence:
-    """测试反馈持久化"""
-
-    def test_feedback_saved_to_database(self, test_client: TestClient, db_session: Session):
-        """测试反馈保存到数据库"""
-        user = User(id=5008, phone="13800002008", nickname="测试用户8")
+    def test_create_feedback_missing_fields(self, test_client: TestClient, db_session: Session):
+        """测试缺少必填字段"""
+        user = User(
+            phone="13800006",
+            nickname="字段测试用户",
+            is_active=True
+        )
         db_session.add(user)
+        db_session.commit()
 
-        session = SessionModel(id="sess_feedback_008", user_id=5008, department="皮肤科")
+        session = SessionModel(
+            id=str(uuid.uuid4()),
+            user_id=user.id,
+            agent_type="general",
+            status="active"
+        )
         db_session.add(session)
         db_session.commit()
 
-        import app.dependencies
-        original_test_mode = app.dependencies.TEST_MODE
-        app.dependencies.TEST_MODE = True
+        message = Message(
+            session_id=session.id,
+            sender="ai",
+            content="AI消息"
+        )
+        db_session.add(message)
+        db_session.commit()
 
-        try:
-            test_client.post(
-                "/sessions/sess_feedback_008/feedback",
-                json={
-                    "message_id": None,
-                    "rating": 5,
-                    "feedback_type": "helpful",
-                    "feedback_text": "测试反馈文本"
-                }
-            )
+        login_response = test_client.post("/auth/login", json={
+            "phone": "13800006"
+        })
+        token = login_response.json()["access_token"]
 
-            # 验证数据库中存在该反馈
-            feedback = db_session.query(SessionFeedback).filter(
-                SessionFeedback.session_id == "sess_feedback_008"
-            ).first()
+        # 缺少 rating
+        response = test_client.post(
+            f"/sessions/messages/{message.id}/feedback",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "feedback_type": "helpful"
+                # 缺少 rating
+            }
+        )
 
-            assert feedback is not None
-            assert feedback.rating == 5
-            assert feedback.feedback_type == "helpful"
-            assert feedback.feedback_text == "测试反馈文本"
-
-        finally:
-            app.dependencies.TEST_MODE = original_test_mode
+        # 应该返回验证错误
+        assert response.status_code in [400, 422]
