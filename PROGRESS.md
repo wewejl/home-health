@@ -17,6 +17,20 @@
 | 2026-02-11 | 创建进度追踪文档 PROGRESS.md | ✅ 完成 | Team Lead |
 | 2026-02-11 | 更新 CLAUDE.md 添加入职文档优先级 | ✅ 完成 | Team Lead |
 | 2026-02-11 | 组建测试团队并新增6个API测试文件 | ✅ 完成 | Team Lead + 团队 |
+| 2026-02-11 | 修复 medical_events API 测试失败问题 | ✅ 完成 | Team Lead + 团队 |
+
+### 修复内容 (medical-events-fix 团队)
+
+| 问题 | 修复内容 |
+|------|----------|
+| **类型转换错误** | `attachment_id`, `note_id`, `export_id` 字符串转整数 |
+| **AI摘要响应类型** | `event_id` 转字符串返回 |
+| **测试数据问题** | 关键词搜索显式设置 department，排序测试使用不同时间戳 |
+
+### 修改文件
+
+- `backend/app/routes/medical_events.py` - 8处类型转换修复
+- `backend/test/test_medical_events_api.py` - 2个测试修复
 
 ### 新增文件
 

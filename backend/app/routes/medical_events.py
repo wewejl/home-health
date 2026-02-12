@@ -47,7 +47,13 @@ def get_event_with_permission(
     allow_archived: bool = True
 ) -> MedicalEvent:
     """获取事件并验证权限"""
-    event = db.query(MedicalEvent).filter(MedicalEvent.id == event_id).first()
+    # 转换 event_id 为整数
+    try:
+        event_id_int = int(event_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="无效的事件ID")
+
+    event = db.query(MedicalEvent).filter(MedicalEvent.id == event_id_int).first()
     
     if not event:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="病历事件不存在")
@@ -256,9 +262,9 @@ def add_attachment(
 ):
     """添加附件到病历事件"""
     event = get_event_with_permission(event_id, current_user, db, allow_archived=False)
-    
+
     attachment = EventAttachment(
-        event_id=event_id,
+        event_id=event.id,  # 使用 event.id (整数) 而不是 event_id (字符串)
         type=AttachmentType(request.type),
         url=request.url,
         thumbnail_url=request.thumbnail_url,
@@ -273,8 +279,21 @@ def add_attachment(
     event.attachment_count += 1
     db.commit()
     db.refresh(attachment)
-    
-    return AttachmentSchema.model_validate(attachment)
+
+    # 手动构建响应，处理 id 类型转换
+    return AttachmentSchema(
+        id=str(attachment.id),
+        type=attachment.type.value,
+        url=attachment.url,
+        thumbnail_url=attachment.thumbnail_url,
+        filename=attachment.filename,
+        file_size=attachment.file_size,
+        mime_type=attachment.mime_type,
+        metadata=attachment.file_metadata or {},
+        description=attachment.description,
+        is_important=attachment.is_important,
+        upload_time=attachment.upload_time
+    )
 
 
 @router.delete("/{event_id}/attachments/{attachment_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -286,10 +305,16 @@ def delete_attachment(
 ):
     """删除附件"""
     event = get_event_with_permission(event_id, current_user, db, allow_archived=False)
-    
+
+    # 转换 attachment_id 为整数
+    try:
+        attachment_id_int = int(attachment_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="无效的附件ID")
+
     attachment = db.query(EventAttachment).filter(
-        EventAttachment.id == attachment_id,
-        EventAttachment.event_id == event_id
+        EventAttachment.id == attachment_id_int,
+        EventAttachment.event_id == event.id
     ).first()
     
     if not attachment:
@@ -311,18 +336,24 @@ def add_note(
 ):
     """添加备注"""
     event = get_event_with_permission(event_id, current_user, db)
-    
+
     note = EventNote(
-        event_id=event_id,
+        event_id=event.id,  # 使用 event.id (整数) 而不是 event_id (字符串)
         content=request.content,
         is_important=request.is_important
     )
-    
+
     db.add(note)
     db.commit()
     db.refresh(note)
-    
-    return NoteSchema.model_validate(note)
+
+    return NoteSchema(
+        id=str(note.id),
+        content=note.content,
+        is_important=note.is_important,
+        created_at=note.created_at,
+        updated_at=note.updated_at
+    )
 
 
 @router.put("/{event_id}/notes/{note_id}", response_model=NoteSchema)
@@ -334,11 +365,17 @@ def update_note(
     db: Session = Depends(get_db)
 ):
     """更新备注"""
-    get_event_with_permission(event_id, current_user, db)
-    
+    event = get_event_with_permission(event_id, current_user, db)
+
+    # 转换 note_id 为整数
+    try:
+        note_id_int = int(note_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="无效的备注ID")
+
     note = db.query(EventNote).filter(
-        EventNote.id == note_id,
-        EventNote.event_id == event_id
+        EventNote.id == note_id_int,
+        EventNote.event_id == event.id
     ).first()
     
     if not note:
@@ -347,11 +384,17 @@ def update_note(
     update_data = request.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(note, key, value)
-    
+
     db.commit()
     db.refresh(note)
-    
-    return NoteSchema.model_validate(note)
+
+    return NoteSchema(
+        id=str(note.id),
+        content=note.content,
+        is_important=note.is_important,
+        created_at=note.created_at,
+        updated_at=note.updated_at
+    )
 
 
 @router.delete("/{event_id}/notes/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -362,11 +405,17 @@ def delete_note(
     db: Session = Depends(get_db)
 ):
     """删除备注"""
-    get_event_with_permission(event_id, current_user, db)
-    
+    event = get_event_with_permission(event_id, current_user, db)
+
+    # 转换 note_id 为整数
+    try:
+        note_id_int = int(note_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="无效的备注ID")
+
     note = db.query(EventNote).filter(
-        EventNote.id == note_id,
-        EventNote.event_id == event_id
+        EventNote.id == note_id_int,
+        EventNote.event_id == event.id
     ).first()
     
     if not note:
@@ -687,7 +736,7 @@ async def generate_summary(
         logger.info(f"Generated AI summary for event {event_id}")
         
         return GenerateSummaryResponse(
-            event_id=event.id,
+            event_id=str(event.id),
             summary=result.summary,
             ai_analysis=AIAnalysisSchema(**ai_analysis),
             message="摘要生成成功"
@@ -718,7 +767,7 @@ async def generate_summary(
         db.refresh(event)
         
         return GenerateSummaryResponse(
-            event_id=event.id,
+            event_id=str(event.id),
             summary=summary,
             ai_analysis=AIAnalysisSchema(**ai_analysis),
             message="摘要生成成功（降级模式）"
@@ -793,7 +842,7 @@ def create_export(
         share_url = f"{base_url}/api/medical-events/share/{export_record.share_token}"
     
     return ExportResponse(
-        export_id=export_record.id,
+        export_id=str(export_record.id),
         export_type=export_record.export_type,
         file_url=export_record.file_url,
         share_url=share_url,
@@ -823,8 +872,14 @@ def delete_export(
     db: Session = Depends(get_db)
 ):
     """删除/失效导出记录"""
+    # 转换 export_id 为整数
+    try:
+        export_id_int = int(export_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="无效的导出ID")
+
     export = db.query(ExportRecord).filter(
-        ExportRecord.id == export_id,
+        ExportRecord.id == export_id_int,
         ExportRecord.user_id == current_user.id
     ).first()
     
@@ -1011,7 +1066,7 @@ def _build_event_detail(event: MedicalEvent) -> MedicalEventDetailSchema:
 def _build_export_record(export: ExportRecord) -> ExportRecordSchema:
     """构建导出记录"""
     return ExportRecordSchema(
-        id=export.id,
+        id=str(export.id),
         export_type=export.export_type,
         file_url=export.file_url,
         share_token=export.share_token,
@@ -1021,5 +1076,5 @@ def _build_export_record(export: ExportRecord) -> ExportRecordSchema:
         max_views=export.max_views,
         is_active=export.is_active,
         created_at=export.created_at,
-        event_ids=export.event_ids or []
+        event_ids=[str(eid) for eid in (export.event_ids or [])]
     )
