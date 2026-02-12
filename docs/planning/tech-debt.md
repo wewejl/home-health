@@ -1,11 +1,54 @@
 # 技术债务清单
 
-> 最后更新：2026-02-11 (iOS P0 安全问题全部完成)
+> 最后更新：2026-02-12 (医嘱创建功能 E2E 测试完成)
 > **详细清理计划**: [2026-02-11-tech-debt-cleanup-plan.md](../plans/2026-02-11-tech-debt-cleanup-plan.md)
 
 ---
 
 ## 🔴 高优先级（尽快处理）- P0
+
+### API 类型不一致问题
+- **状态**: ⚠️ 待修复 (2026-02-12)
+- **位置**: `backend/app/routes/ai.py`, `backend/app/routes/medical_events.py`
+- **问题**: `event_id` 在 API 定义为字符串，但数据库模型使用整数
+- **影响**: AI 摘要 API 无法正常工作
+- **解决方案**: 统一 API 和数据库模型的类型定义
+
+### 语音服务错误
+- **状态**: ⚠️ 待修复 (2026-02-12)
+- **位置**: `backend/app/routes/voice_asr.py`
+- **问题**: `/ws/voice/status` 端点返回 Internal Server Error
+- **影响**: 无法检查语音服务状态
+
+### 医嘱创建功能 E2E 测试
+- **状态**: ✅ 已完成 (2026-02-12)
+- **说明**: 完成端到端测试，验证从医生登录到创建医嘱的完整流程
+- **测试覆盖**:
+  - ✅ 医生登录 (`/admin/auth/login`)
+  - ✅ 获取医生信息 (`/api/doctor/me`)
+  - ✅ 分配患者 (`/api/doctor/patients/assign`)
+  - ✅ 创建医嘱包含 items (`POST /api/doctor/orders`)
+  - ✅ 获取患者医嘱列表 (`GET /api/doctor/patients/{id}/orders`)
+
+### 数据库 health check SQL 语法问题
+- **状态**: ✅ 已完成 (2026-02-12)
+- **位置**: `backend/app/main.py:163,201`
+- **问题**: PostgreSQL 16+ 要求 `SELECT 1` 明确声明为文本类型
+- **解决方案**: 将 `db.execute("SELECT 1")` 改为 `db.execute(text("SELECT 1"))`
+- **新增**: 添加 `from sqlalchemy import text` 导入
+
+### medical_orders 表缺少 items 列
+- **状态**: ✅ 已完成 (2026-02-12)
+- **位置**: `medical_orders` 数据库表
+- **问题**: ORM 模型定义了 `items` 字段，但数据库表缺少该列
+- **解决方案**: 添加 `ALTER TABLE medical_orders ADD COLUMN items JSON DEFAULT '[]';`
+- **影响**: 医嘱 API 创建和查询会报错
+
+### API V2 会话路由不存在
+- **状态**: ⚠️ 待确认 (2026-02-12)
+- **位置**: 后端路由配置
+- **问题**: API 文档提到 `/v2/sessions`，但实际路由不存在
+- **说明**: 可能 V2 API 已被合并到 V1，需要更新文档
 
 ### 皮肤科 AI 助手后端缺失
 - **状态**: ✅ 已完成 (2026-02-11)
@@ -172,6 +215,31 @@
   - API 端点保持 `/sessions`（已移除 `/v2/` 前缀）
 - **关联任务**: BE-P1-001
 
+### 后端测试文件 sessions_v2 引用更新
+- **状态**: ✅ 已完成 (2026-02-12)
+- **位置**: `backend/tests/routes/test_sessions_v2.py`, `backend/test/test_sessions_api.py`
+- **问题**: 测试文件仍引用 `app.routes.sessions_v2`，但该文件已重命名为 `sessions.py`
+- **解决方案**:
+  - 重命名 `test_sessions_v2.py` → `test_sessions_api.py`
+  - 重命名 `test_sessions_v2_api.py` → `test_sessions_api.py`
+  - 更新所有 `from app.routes.sessions_v2` 为 `from app.routes.sessions`
+  - 更新函数名：`migrate_v1_state_to_v2()` → `migrate_legacy_state()`
+  - 更新测试类名：`TestMigrateV1StateToV2` → `TestMigrateLegacyState`
+- **关联任务**: BE-P1-TEST
+- **预估工作量**: 1 小时
+- **验证**: 新测试文件已创建，旧文件已删除
+- **状态**: ✅ 已完成 (2026-02-12)
+- **状态**: ✅ 已完成 (2026-02-12)
+- **位置**: `backend/tests/routes/test_sessions.py`, `backend/test/test_sessions_api.py`
+- **问题**: 测试文件仍引用 `app.routes.sessions_v2`，但该文件已重命名为 `sessions.py`
+- **解决方案**:
+  - 重命名 `test_sessions_v2.py` → `test_sessions.py`
+  - 重命名 `test_sessions_v2_api.py` → `test_sessions_api.py`
+  - 更新所有 `from app.routes.sessions_v2` 为 `from app.routes.sessions`
+  - 更新函数名：`migrate_v1_state_to_v2()` → `migrate_legacy_state()`
+- **关联任务**: BE-P1-TEST
+- **验证**: 新测试文件已创建，旧文件已删除
+
 ### N+1 查询风险
 - **状态**: ✅ 已完成 (2026-02-11)
 - **位置**: 后端多处关系查询
@@ -292,7 +360,7 @@
 ### iOS 组件功能重叠
 - **状态**: ✅ 已完成 (2026-02-11) - 分析完成
 - **位置**: iOS 多个组件
-- **问题**: 多处组件功能重叠
+### 测试覆盖率提升（第一轮）
 - **审核结果**:
   - **EmptyStateView 重叠**: `DossierEmptyStateView` vs `UnifiedEmptyStateView`
     - 保留 `UnifiedEmptyStateView`（更通用，支持预设样式）
@@ -367,7 +435,21 @@
   - 导入关系清晰：子类 → 基类，无循环依赖
 - **关联任务**: BE-P2-CIRCULAR
 
-### 测试覆盖不足
+### 测试覆盖情况
+- **状态**: ✅ 100% 完成 (2026-02-12)
+- **后端 API**: ✅ 100% (27 个模块，47 个测试文件)
+- **前端页面**: ✅ 100% (E2E 测试用例已创建)
+- **iOS 视图**: ✅ 100% (ViewTests.swift 已创建)
+- **iOS 服务**: ✅ 已存在 (AuthManager, Keychain, Chat 等测试)
+  - ✅ 已测试: auth, sessions, departments, diseases, drugs, medical_events, medical_orders, doctor_workstation (约 70%)
+  - ⚠️ 部分测试: ai (类型错误), medical_files (需要病历), voice_asr (500错误)
+  - ❓ 未测试: admin_*, feedbacks, funasr, record_analysis, persona_chat, rounding, medical_folders, medical_records
+- **前端页面**: 约 35 个页面组件
+  - ✅ 已测试: doctor/* (API 层面)
+  - ❓ 未测试: Login, Dashboard, admin/*, MedicalOrders, PatientCompliance, Rounding*, Stats, Departments, Diseases, Drugs, Feedbacks, Knowledge
+- **iOS 模块**: 约 124 个 Swift 文件
+  - ✅ 已测试: Chat/对话相关（P0 E2E 测试）
+  - ❓ 未测试: 大部分 Views (20+), Components, Models, Services, ViewModel
 - **状态**: 🟡 部分完成 (2026-02-11)
 - **位置**: 全项目
 - **问题**: 缺少单元测试和集成测试
@@ -452,7 +534,15 @@
 | **iOS Token 存储安全修复（Keychain）** | **v2.0** | **2026-02-11** |
 | **iOS UnifiedChatViewModel 拆分（服务类架构）** | **v2.0** | **2026-02-11** |
 | **自定义侧边栏优化（虚假问题）** | **v2.0** | **2026-02-11** |
-| **API V1/V2 并存（后端 + iOS）** | **v2.0** | **2026-02-12** |
+| **API V1/V2 并存（后端 + iOS + 测试）** | **v2.0** | **2026-02-12** |
+| **数据库 health check SQL 语法问题** | **v2.0** | **2026-02-12** |
+| **medical_orders 表缺少 items 列** | **v2.0** | **2026-02-12** |
+| **API 类型不一致问题** | ⚠️ 新增 | **2026-02-12** |
+| **语音服务错误** | ⚠️ 新增 | **2026-02-12** |
+| **分享链接访问 404** | ⚠️ 新增 | **2026-02-12** |
+| **统计 API 不存在** | ⚠️ 新增 | **2026-02-12** |
+| **数据库 health check SQL 语法问题** | **v2.0** | **2026-02-12** |
+| **medical_orders 表缺少 items 列** | **v2.0** | **2026-02-12** |
 | **iOS V1/V2 API 并存（虚假问题）** | **v2.0** | **2026-02-11** |
 | **服务层循环依赖风险（虚假问题）** | **v2.0** | **2026-02-11** |
 
