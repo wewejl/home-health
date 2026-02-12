@@ -306,7 +306,7 @@ struct EvidenceListView: View {
 #Preview {
     ScrollView {
         DiagnosisSummaryCard(
-            card: DiagnosisCard(
+            card: AgentDiagnosisCard(
                 summary: "手臂出现红色皮疹，伴有瘙痒，已持续3天。皮损呈对称分布，边界较清楚。",
                 conditions: [
                     DiagnosisCondition(name: "湿疹", confidence: 0.8, rationale: ["红疹", "瘙痒", "对称分布"]),
