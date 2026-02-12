@@ -469,3 +469,28 @@ struct PasswordResetRequest: Encodable {
     let code: String
     let new_password: String
 }
+
+// MARK: - Unified Chat API Extension
+// 通过 extension 将 UnifiedChatAPIService 的方法暴露为 APIService 的方法
+extension APIService {
+    /// 发送流式消息（用于统一聊天）
+    func sendUnifiedMessageStreaming(
+        sessionId: String,
+        content: String,
+        attachments: [MessageAttachment] = [],
+        action: AgentAction = .conversation,
+        onChunk: @escaping (String) -> Void,
+        onComplete: @escaping (AgentResponse) -> Void,
+        onError: @escaping (Error) -> Void
+    ) async {
+        await sendMessageStreaming(
+            sessionId: sessionId,
+            content: content,
+            attachments: attachments,
+            action: action,
+            onChunk: onChunk,
+            onComplete: onComplete,
+            onError: onError
+        )
+    }
+}

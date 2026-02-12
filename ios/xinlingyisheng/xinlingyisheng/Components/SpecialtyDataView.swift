@@ -93,7 +93,7 @@ struct SymptomsTagView: View {
 
 // MARK: - 诊断卡视图
 struct DiagnosisCardView: View {
-    let card: DiagnosisCard
+    let card: AgentDiagnosisCard
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

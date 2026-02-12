@@ -191,12 +191,12 @@ extension APIService {
     }
 
     // MARK: - 获取智能体列表
-    func listAgents() async throws -> [String: AgentCapabilities] {
+    func listAgents() async throws -> [String: SessionAgentCapabilities] {
         return try await makeRequest(endpoint: SessionEndpoints.agents, method: "GET", requiresAuth: false)
     }
 
     // MARK: - 获取智能体能力
-    func getAgentCapabilities(_ agentType: AgentType) async throws -> AgentCapabilities {
+    func getAgentCapabilities(_ agentType: AgentType) async throws -> SessionAgentCapabilities {
         let endpoint = SessionEndpoints.agentCapabilities(agentType: agentType.rawValue)
         return try await makeRequest(endpoint: endpoint, method: "GET", requiresAuth: false)
     }
@@ -324,7 +324,7 @@ extension APIService {
 }
 
 // MARK: - Agent Capabilities Model
-struct AgentCapabilities: Codable {
+struct SessionAgentCapabilities: Codable {
     let displayName: String
     let description: String
     let actions: [String]

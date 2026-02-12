@@ -29,7 +29,7 @@ class ChatMessageViewModel: ObservableObject {
 
     // MARK: - 诊断展示增强状态
     @Published var adviceHistory: [AdviceEntry] = []
-    @Published var diagnosisCard: DiagnosisCard?
+    @Published var diagnosisCard: AgentDiagnosisCard?
     @Published var knowledgeRefs: [KnowledgeRef] = []
     @Published var reasoningSteps: [String] = []
 
@@ -250,7 +250,7 @@ class ChatMessageViewModel: ObservableObject {
         }
     }
 
-    private func handleComplete(_ response: UnifiedMessageResponse) {
+    private func handleComplete(_ response: AgentResponse) {
         streamingMessageId = nil
         streamingContent = ""
         isSending = false
@@ -275,7 +275,7 @@ class ChatMessageViewModel: ObservableObject {
         }
     }
 
-    private func handleAnalysisComplete(_ response: UnifiedMessageResponse) {
+    private func handleAnalysisComplete(_ response: AgentResponse) {
         // 移除加载消息
         if let messageId = streamingMessageId {
             messages.removeAll { $0.id == messageId }

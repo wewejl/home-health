@@ -9,22 +9,27 @@ struct AgentResponse: Codable {
     let message: String
     let stage: String
     let progress: Int
-    
+
     // MARK: - 可选字段
     let quickOptions: [String]
     let riskLevel: String?
-    
+
     // 病历事件相关
     let eventId: String?
     let isNewEvent: Bool
     let shouldShowDossierPrompt: Bool
-    
+
     // MARK: - 专科扩展数据
     let specialtyData: SpecialtyData?
-    
+
     // MARK: - 状态持久化
     let nextState: [String: AnyCodable]
-    
+
+    // MARK: - 兼容旧字段 (映射到 specialtyData)
+    var structuredData: StructuredData? {
+        return specialtyData
+    }
+
     enum CodingKeys: String, CodingKey {
         case message
         case stage
@@ -37,7 +42,7 @@ struct AgentResponse: Codable {
         case specialtyData = "specialty_data"
         case nextState = "next_state"
     }
-    
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         message = try container.decode(String.self, forKey: .message)
@@ -51,17 +56,17 @@ struct AgentResponse: Codable {
         specialtyData = try container.decodeIfPresent(SpecialtyData.self, forKey: .specialtyData)
         nextState = try container.decodeIfPresent([String: AnyCodable].self, forKey: .nextState) ?? [:]
     }
-    
+
     /// 将快捷选项转换为 QuickOption 数组
     var quickOptionModels: [QuickOption] {
         return quickOptions.map { QuickOption(text: $0, value: $0) }
     }
-    
+
     /// 阶段枚举
     var stageEnum: ConsultationStage {
         return ConsultationStage(rawValue: stage) ?? .collecting
     }
-    
+
     /// 风险等级枚举
     var riskLevelEnum: RiskLevel? {
         guard let level = riskLevel else { return nil }
@@ -127,7 +132,7 @@ enum RiskLevel: String, Codable {
 // MARK: - 专科扩展数据
 struct SpecialtyData: Codable {
     // 皮肤科相关
-    let diagnosisCard: DiagnosisCard?
+    let diagnosisCard: AgentDiagnosisCard?
     let symptoms: [String]?
     
     // 通用字段 - 使用 AnyCodable 支持任意数据
@@ -140,7 +145,7 @@ struct SpecialtyData: Codable {
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        diagnosisCard = try container.decodeIfPresent(DiagnosisCard.self, forKey: .diagnosisCard)
+        diagnosisCard = try container.decodeIfPresent(AgentDiagnosisCard.self, forKey: .diagnosisCard)
         symptoms = try container.decodeIfPresent([String].self, forKey: .symptoms)
         
         // 解析所有原始数据
@@ -156,9 +161,9 @@ struct SpecialtyData: Codable {
 }
 
 // MARK: - 诊断卡
-struct DiagnosisCard: Codable {
+struct AgentDiagnosisCard: Codable {
     let summary: String
-    let conditions: [DiagnosisCondition]?
+    let conditions: [AgentDiagnosisCondition]?
     let riskLevel: String?
     let needOfflineVisit: Bool?
     let urgency: String?
@@ -180,7 +185,7 @@ struct DiagnosisCard: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         summary = try container.decode(String.self, forKey: .summary)
-        conditions = try container.decodeIfPresent([DiagnosisCondition].self, forKey: .conditions)
+        conditions = try container.decodeIfPresent([AgentDiagnosisCondition].self, forKey: .conditions)
         riskLevel = try container.decodeIfPresent(String.self, forKey: .riskLevel)
         needOfflineVisit = try container.decodeIfPresent(Bool.self, forKey: .needOfflineVisit)
         urgency = try container.decodeIfPresent(String.self, forKey: .urgency)
@@ -191,7 +196,7 @@ struct DiagnosisCard: Codable {
 }
 
 // MARK: - 诊断条目
-struct DiagnosisCondition: Codable {
+struct AgentDiagnosisCondition: Codable {
     let name: String
     let confidence: Double
     let rationale: [String]?

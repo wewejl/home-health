@@ -21,7 +21,7 @@ class ChatSessionViewModel: ObservableObject {
 
     // MARK: - 诊断展示增强状态
     @Published var adviceHistory: [AdviceEntry] = []
-    @Published var diagnosisCard: DiagnosisCard?
+    @Published var diagnosisCard: AgentDiagnosisCard?
     @Published var knowledgeRefs: [KnowledgeRef] = []
     @Published var reasoningSteps: [String] = []
 

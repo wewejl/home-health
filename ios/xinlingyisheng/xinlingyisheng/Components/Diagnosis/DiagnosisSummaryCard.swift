@@ -2,7 +2,7 @@ import SwiftUI
 
 /// 诊断卡片视图
 struct DiagnosisSummaryCard: View {
-    let card: DiagnosisCard
+    let card: AgentDiagnosisCard
     let onViewDossier: () -> Void
     
     var body: some View {
@@ -184,7 +184,7 @@ struct RiskLevelBadge: View {
 
 // MARK: - Condition Row View
 struct ConditionRowView: View {
-    let condition: DiagnosisCondition
+    let condition: AgentDiagnosisCondition
     
     var barColor: Color {
         if condition.confidence >= 0.7 { return .orange }

@@ -62,15 +62,15 @@ enum APIConfig {
         static func doctors(departmentId: Int) -> String {
             return "/departments/\(departmentId)/doctors"
         }
-        // V2 Sessions endpoints - 统一使用 V2 API
-        static let sessions = "/v2/sessions"
+        // Sessions endpoints - 多智能体架构
+        static let sessions = "/sessions"
         static func messages(sessionId: String) -> String {
-            return "/v2/sessions/\(sessionId)/messages"
+            return "/sessions/\(sessionId)/messages"
         }
-        // Unified Agent endpoints - V2
-        static let agents = "/v2/sessions/agents"
+        // Unified Agent endpoints
+        static let agents = "/sessions/agents"
         static func agentCapabilities(agentType: String) -> String {
-            return "/v2/sessions/agents/\(agentType)/capabilities"
+            return "/sessions/agents/\(agentType)/capabilities"
         }
         // Diseases
         static let diseases = "/diseases"

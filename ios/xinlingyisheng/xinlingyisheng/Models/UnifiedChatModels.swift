@@ -36,27 +36,8 @@ enum AgentAction: String, Codable {
 }
 
 // MARK: - 智能体能力配置
-struct AgentCapabilities: Codable {
-    let actions: [String]
-    let acceptsMedia: [String]
-    let uiComponents: [String]
-    let description: String
-    
-    enum CodingKeys: String, CodingKey {
-        case actions
-        case acceptsMedia = "accepts_media"
-        case uiComponents = "ui_components"
-        case description
-    }
-    
-    var supportsImageUpload: Bool {
-        return acceptsMedia.contains { $0.starts(with: "image/") }
-    }
-    
-    var supportsPdfUpload: Bool {
-        return acceptsMedia.contains("application/pdf")
-    }
-}
+// 类型别名：使用 UnifiedChatAPIService 中定义的 SessionAgentCapabilities
+typealias AgentCapabilities = SessionAgentCapabilities
 
 // MARK: - 附件
 struct MessageAttachment: Codable {
