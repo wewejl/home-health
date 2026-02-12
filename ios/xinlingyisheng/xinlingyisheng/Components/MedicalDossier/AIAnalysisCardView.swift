@@ -304,7 +304,7 @@ struct FlowLayout: Layout {
         visitUrgency: "建议3天内到皮肤科门诊就诊"
     )
     
-    return ScrollView {
+    ScrollView {
         AIAnalysisCardView(analysis: mockAnalysis)
             .padding()
     }

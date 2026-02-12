@@ -261,7 +261,7 @@ struct QuickInputButton: View {
         summary: "过敏性皮炎"
     )
 
-    return NoteEditorView(
+    VStack NoteEditorView(
         eventId: mockEvent.id,
         initialContent: "这是一条已有的备注内容。",
         viewModel: MedicalDossierViewModel(),

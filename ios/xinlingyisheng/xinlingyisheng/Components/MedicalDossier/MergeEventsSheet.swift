@@ -251,7 +251,7 @@ struct SelectableEventRow: View {
         )
     ]
     
-    return MergeEventsSheet(
+    VStack MergeEventsSheet(
         currentEventId: "current-event-xyz",
         relatedEvents: mockEvents,
         viewModel: MedicalDossierViewModel(),

@@ -191,7 +191,7 @@ struct SwipeableEventCard: View {
         ]
     )
     
-    return VStack(spacing: 16) {
+    VStack VStack(spacing: 16) {
         EventCardView(event: mockEvent)
         SwipeableEventCard(event: mockEvent)
     }
