@@ -12,7 +12,7 @@
 权限控制：用户只能访问自己的病历数据
 """
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
@@ -244,7 +244,7 @@ def archive_medical_event(
     event = get_event_with_permission(event_id, current_user, db)
     
     event.status = EventStatus.archived
-    event.end_time = datetime.utcnow()
+    event.end_time = datetime.now(timezone.utc)
     db.commit()
     db.refresh(event)
     
@@ -551,7 +551,7 @@ def aggregate_session(
     session_data = {
         "session_id": session.id,
         "session_type": effective_agent_type,
-        "timestamp": session.created_at.isoformat() if session.created_at else datetime.utcnow().isoformat(),
+        "timestamp": session.created_at.isoformat() if session.created_at else datetime.now(timezone.utc).isoformat(),
         "summary": f"{department}问诊 - {chief_complaint}" if chief_complaint else f"{department}问诊",
         "chief_complaint": chief_complaint,
         "symptoms": symptoms,
@@ -577,7 +577,7 @@ def aggregate_session(
     }
     
     # 6. 查找当天同科室的现有事件
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
     existing_event = db.query(MedicalEvent).filter(
         MedicalEvent.user_id == current_user.id,
         MedicalEvent.agent_type == agent_type_enum,
@@ -810,7 +810,7 @@ def create_export(
         if request.share_password:
             export_record.share_password = request.share_password
         if request.expires_in_days:
-            export_record.expires_at = datetime.utcnow() + timedelta(days=request.expires_in_days)
+            export_record.expires_at = datetime.now(timezone.utc) + timedelta(days=request.expires_in_days)
         if request.max_views:
             export_record.max_views = request.max_views
     
@@ -911,7 +911,7 @@ def access_share_link(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="链接不存在或已失效")
     
     # 验证过期时间
-    if export.expires_at and export.expires_at < datetime.utcnow():
+    if export.expires_at and export.expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=status.HTTP_410_GONE, detail="链接已过期")
     
     # 验证访问次数
@@ -923,13 +923,16 @@ def access_share_link(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="密码错误")
     
     # 获取事件数据
+    # event_ids 是 JSON 字符串数组，需要转换为整数列表
+    event_ids_list = export.event_ids or []
+    event_id_ints = [int(eid) for eid in event_ids_list if eid.isdigit()]
     events = db.query(MedicalEvent).filter(
-        MedicalEvent.id.in_(export.event_ids)
+        MedicalEvent.id.in_(event_id_ints)
     ).all()
     
     # 记录访问
     export.view_count += 1
-    export.last_viewed_at = datetime.utcnow()
+    export.last_viewed_at = datetime.now(timezone.utc)
     
     access_log = ExportAccessLog(
         export_id=export.id,
@@ -942,7 +945,7 @@ def access_share_link(
     return ShareLinkResponse(
         events=[_build_event_detail(e) for e in events],
         export_info=_build_export_record(export),
-        accessed_at=datetime.utcnow()
+        accessed_at=datetime.now(timezone.utc)
     )
 
 

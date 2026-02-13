@@ -1,0 +1,51 @@
+#!/bin/bash
+# Ralph Wiggum Stop Hook
+# 在会话退出时检查是否需要继续循环
+
+RALPH_STATE_FILE=".claude/ralph-loop.local.md"
+
+# 检查 Ralph Loop 是否激活
+if [ ! -f "$RALPH_STATE_FILE" ]; then
+    # 没有 active loop，正常退出
+    exit 0
+fi
+
+# 读取 loop 状态
+ITERATION=$(grep "iteration:" "$RALPH_STATE_FILE" | head -1 | sed 's/iteration: //')
+MAX_ITERATIONS=$(grep "max_iterations:" "$RALPH_STATE_FILE" | head -1 | sed 's/max_iterations: //')
+COMPLETION_PROMISE=$(grep "completion_promise:" "$RALPH_STATE_FILE" | head -1 | sed 's/completion_promise: //' | sed 's/"//g' | sed 's/null//')
+
+# 检查是否达到最大迭代次数
+if [ "$ITERATION" -ge "$MAX_ITERATIONS" ]; then
+    echo "[Ralph Loop] 达到最大迭代次数 ($ITERATION/$MAX_ITERATIONS)，停止循环"
+    rm "$RALPH_STATE_FILE"
+    exit 0
+fi
+
+# 检查是否有完成承诺
+if [ -n "$COMPLETION_PROMISE" ]; then
+    echo "[Ralph Loop] 检测到完成承诺: $COMPLETION_PROMISE"
+    # 检查用户消息中是否包含承诺（由 Claude 在最终响应中输出）
+    # 这个检查在 Claude 输出后进行，这里只是准备环境
+fi
+
+# 增加迭代计数
+NEW_ITERATION=$((ITERATION + 1))
+sed -i.bak "s/iteration: $ITERATION/iteration: $NEW_ITERATION/" "$RALPH_STATE_FILE"
+rm -f "${RALPH_STATE_FILE}.bak"
+
+# 读取原始 PROMPT
+ORIGINAL_PROMPT=$(grep "prompt:" "$RALPH_STATE_FILE" | head -1 | sed 's/prompt: //' | sed 's/^"//; s/"$//')
+
+echo "[Ralph Loop] ========================================"
+echo "[Ralph Loop] 迭代 $NEW_ITERATION/$MAX_ITERATIONS"
+echo "[Ralph Loop] 重新开始会话，继续任务..."
+echo "[Ralph Loop] ========================================"
+echo ""
+
+# 重新执行 ralph-wiggum:ralph-loop 命令
+# 这里我们输出命令让系统执行
+echo "/ralph-wiggum:ralph-loop \"$ORIGINAL_PROMPT\" --max-iterations $MAX_ITERATIONS"
+
+# 阻止正常退出
+exit 1

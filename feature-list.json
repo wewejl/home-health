@@ -2,10 +2,10 @@
   "metadata": {
     "version": "1.0",
     "last_updated": "2026-02-13",
-    "total_features": 247,
-    "passing": 187,
+    "total_features": 249,
+    "passing": 188,
     "failing": 0,
-    "pending": 60
+    "pending": 61
   },
   "features": {
     "backend": {
@@ -400,7 +400,8 @@
         },
         "share_link_404": {
           "name": "分享链接访问404",
-          "status": "failing"
+          "status": "passing",
+          "description": "已修复 timezone 比较问题和 event_ids 类型转换问题"
         },
         "stats_api": {
           "name": "统计API不存在",
@@ -417,6 +418,16 @@
         "medical_files_implementation": {
           "name": "医疗文件管理实现",
           "status": "pending"
+        },
+        "install_pytest": {
+          "name": "安装pytest测试依赖",
+          "status": "pending",
+          "description": "在后端Docker容器中安装pytest以支持自动化测试"
+        },
+        "code_analysis": {
+          "name": "代码分析工具配置",
+          "status": "pending",
+          "description": "配置代码静态分析、安全扫描等工具"
         }
       },
       "frontend": {
