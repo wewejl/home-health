@@ -3,9 +3,9 @@
     "version": "1.0",
     "last_updated": "2026-02-13",
     "total_features": 249,
-    "passing": 189,
+    "passing": 190,
     "failing": 0,
-    "pending": 60
+    "pending": 59
   },
   "features": {
     "backend": {
@@ -426,10 +426,9 @@
         },
         "code_analysis": {
           "name": "代码分析工具配置",
-          "status": "pending",
-          "description": "配置代码静态分析、安全扫描等工具"
-        }
-      },
+          "status": "passing",
+          "description": "已添加 flake8, mypy, bandit 到 Dockerfile 和 pyproject.toml"
+        },
       "frontend": {
         "stats_implementation": {
           "name": "统计分析页面实现",

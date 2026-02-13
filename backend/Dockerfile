@@ -22,7 +22,7 @@ COPY requirements.txt .
 # 安装Python依赖
 RUN pip install --no-cache-dir psycopg2-binary && \
     pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir pytest pytest-asyncio
+    pip install --no-cache-dir pytest pytest-asyncio flake8 mypy bandit
 
 # 复制应用代码
 COPY . .

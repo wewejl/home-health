@@ -23,4 +23,23 @@ line_length = 100
 python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
-ignore_missing_imports = true
+warn_unused_ignores = true
+disallow_untyped_defs = false
+disallow_any_unimported = false
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.bandit]
+exclude_dirs = [
+    "venv",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "test",
+    "migrations"
+]
+skips = ["B101", "B601"]
