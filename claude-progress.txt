@@ -1,134 +1,90 @@
-# Claude 进度日志
+# Claude 会话日志
 # 用法: 每次会话开始时读取此文件，结束时更新此文件
 
+## 标准会话开始流程（Getting Up to Speed）
+
+```bash
+# 1. 确认工作目录
+pwd
+
+# 2. 阅读项目状态
+cat STATUS.md
+
+# 3. 查看功能状态
+cat feature-list.json | jq '.metadata'
+
+# 4. 查看最近提交
+git log --oneline -5
+
+# 5. 检查工作区状态
+git status
+
+# 6. 阅读上次会话记录（向下滚动查看）
+```
+
+---
+
 ## 会话记录
+
+### 2026-02-13 Session: 文档重构
+- **状态**: ✅ 完成
+- **任务**: 重构项目文档，使其符合长期 Agent 工作流
+- **完成内容**:
+  - 创建 STATUS.md（替代过大的 PROGRESS.md）
+  - 更新 claude-progress.txt（添加标准流程）
+  - PROGRESS.md 归档（太大，不再使用）
+- **提交**: 待提交
+
+### 2026-02-13 Session: 长期 Agent 管理工具创建
+- **状态**: ✅ 完成
+- **任务**: 根据 Anthropic 文章创建长期 Agent 管理工具
+- **提交**: 27967aff, d5aaadd4
 
 ### 2026-02-13 Session: iOS 安全修复完成
 - **状态**: ✅ 完成
 - **任务**: Tasks 7-15 - iOS 安全架构重构
-- **完成内容**:
-  - TokenRefreshHandler - 401 统一处理
-  - SecureWebSocketService - Header 认证
-  - APIConfig - 移除硬编码 Token
-  - PressAndHoldVoiceService - 使用 Header 认证
-  - APIService - 集成 TokenRefreshHandler
-  - ErrorBanner - 统一错误提示
-  - verify-security.sh - 安全验证脚本
-  - security-guide.md - 安全指南
-- **验证**: 安全验证脚本通过 (8/8)
 - **提交**: d84f9c75, 158cde21, 9b49119e
 
-### 2026-02-13 Session: 长期 Agent 管理工具创建
-- **状态**: 🔄 进行中
-- **任务**: 根据 Anthropic 文章创建长期 Agent 管理工具
-- **进行中**:
-  - ✅ feature-list.json - 功能清单 (247 项功能)
-  - 🔄 claude-progress.txt - 进度日志
-  - ⏳ init.sh - 统一启动脚本
-  - ⏳ 工作流文档
-
-## 工作规范
-
-### 每次会话开始时
-1. 阅读 README.md 了解项目全貌
-2. 阅读 PROGRESS.md 了解当前进度
-3. 阅读 claude-progress.txt 了解上次会话内容
-4. 阅读 feature-list.json 了解功能状态
-5. 运行 pwd 确认工作目录
-6. 运行 git log --oneline -5 查看最近提交
-7. 运行 init.sh 启动所有服务（如需要）
-
-### 每次会话结束时
-1. 更新 claude-progress.txt 记录本次会话工作
-2. 更新 feature-list.json 状态（如有变化）
-3. 更新 PROGRESS.md（官方进度文件）
-4. 运行 git commit 提交代码（如有修改）
-5. 记录下次会话需要继续的工作
-
-## 技术栈
-
-### 后端
-- **语言**: Python 3.11+
-- **框架**: FastAPI
-- **数据库**: PostgreSQL (Docker)
-- **ORM**: SQLAlchemy
-- **启动**: docker-compose up -d backend
-
-### 前端
-- **语言**: TypeScript
-- **框架**: React 18 + Vite
-- **UI库**: shadcn/ui + Radix UI
-- **启动**: cd frontend && npm run dev
-
-### iOS
-- **语言**: Swift 5.0+
-- **框架**: SwiftUI
-- **架构**: MVVM
-- **启动**: 打开 Xcode 项目，选择模拟器运行
+---
 
 ## 快捷命令
 
-### Docker
 ```bash
-# 启动所有服务
-docker-compose up -d
+# 启动服务
+./init.sh                    # 所有服务
+./init.sh --backend-only     # 仅后端
 
-# 启动后端
-docker-compose up -d backend
-
-# 查看日志
+# 后端
 docker-compose logs -f backend
-
-# 停止所有服务
-docker-compose down
-```
-
-### 后端测试
-```bash
-# 运行所有测试
 docker exec home_health-backend pytest
 
-# 运行特定测试
-docker exec home_health-backend pytest backend/tests/routes/test_sessions.py -v
-```
+# 前端
+cd frontend && npm run dev
+cd frontend && npm run build
 
-### 前端
-```bash
-# 安装依赖
-cd frontend && npm install
-
-# 启动开发服务器
-npm run dev
-
-# 构建生产版本
-npm run build
-```
-
-### iOS 安全验证
-```bash
-# 运行安全检查脚本
+# iOS
 bash scripts/ios/verify-security.sh
 ```
 
-## 待办事项
+---
 
-### 高优先级 (P0)
-- [ ] 修复 API 类型不一致问题 (event_id)
-- [ ] 修复语音服务错误 (/ws/voice/status)
+## 待办事项（从 feature-list.json 同步）
 
-### 中优先级 (P1)
-- [ ] 更新 Xcode 项目文件（添加 Core/ 和 Features/）
-- [ ] 实现统计分析 API
-- [ ] 实现前端统计分析页面
+### 🔴 Failing（优先修复）
+- [ ] 语音服务错误 (`/ws/voice/status` 返回 500)
+- [ ] API 类型不一致 (`event_id` 字符串 vs 整数)
 
-### 低优先级 (P2)
-- [ ] 病历夹管理实现
-- [ ] 病历记录管理实现
-- [ ] 医疗文件管理实现
+### 🟡 Pending P0
+- [ ] Xcode 项目文件更新（添加 Core/ 和 Features/）
+
+### 🟢 Pending P1/P2
+详见 `feature-list.json`
+
+---
 
 ## 备注
 
-- 项目使用 Docker 运行后端服务
-- iOS 开发需要 Xcode 和模拟器
-- 前端开发服务器默认运行在 http://localhost:5173
-- 后端 API 默认运行在 http://localhost:8100
+- 项目根目录: `/Users/zhuxinye/Desktop/project/home-health`
+- 后端 API: http://localhost:8100
+- 前端: http://localhost:5173
+- 详细工作流: `docs/long-running-agent-workflow.md`
