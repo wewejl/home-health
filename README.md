@@ -19,7 +19,8 @@
 | 我要运行测试 | → [测试指南](#测试指南) |
 | 我要提交代码 | → [代码提交规范](#代码提交规范) |
 | 遇到问题了 | → [常见问题](#常见问题) |
-| 查看工作进度 | → [PROGRESS.md](./PROGRESS.md) |
+| 查看项目状态 | → [STATUS.md](./STATUS.md) ⭐ |
+| 查看功能清单 | → [feature-list.json](./feature-list.json) |
 
 ---
 
@@ -84,8 +85,11 @@ home-health/
 ├── docs/                   # 核心文档 ⭐
 │   ├── *.md               # 启动、架构、API、配置
 │   ├── planning/          # 技术债务、路线图
-│   └── plans/             # 设计报告 (66份)
-├── PROGRESS.md            # ⭐ 工作进度追踪
+│   └── plans/             # 设计报告
+├── STATUS.md              # ⭐ 项目状态（轻量级）
+├── feature-list.json      # ⭐ 功能清单（247项）
+├── claude-progress.txt    # 会话日志
+├── init.sh                # 统一启动脚本
 └── README.md              # 本文档
 ```
 
@@ -349,18 +353,29 @@ xcodebuild clean build                              # 重新构建
 
 ### ⭐ 每个 Agent 必须维护文档
 
-1. **工作前**: 阅读 README.md 和相关文档
-2. **工作中**: 更新 PROGRESS.md 记录进度
-3. **完成后**: 创建/更新报告文档到 `docs/plans/`
+1. **工作前**:
+   - 阅读 `STATUS.md` 了解项目状态
+   - 阅读 `claude-progress.txt` 了解上次会话内容
+   - 查看 `feature-list.json` 选择任务
+
+2. **工作中**: 更新 `claude-progress.txt` 记录进度
+
+3. **完成后**:
+   - 更新 `feature-list.json` 状态
+   - Git commit 提交代码
+   - 更新 `claude-progress.txt` 会话记录
 
 ### 文档位置
 
 | 文档 | 位置 |
 |------|------|
 | 入职手册 | `README.md` |
-| 工作进度 | `PROGRESS.md` |
+| 项目状态 | `STATUS.md` ⭐ |
+| 功能清单 | `feature-list.json` ⭐ |
+| 会话日志 | `claude-progress.txt` |
 | 核心文档 | `docs/*.md` |
 | 设计报告 | `docs/plans/*.md` |
+| 归档进度 | `docs/archive/PROGRESS.md.old` |
 
 ---
 
