@@ -1,8 +1,8 @@
 # 灵犀健康 - 项目状态
 
-> **更新日期**: 2026-02-13
-> **功能总数**: 247
-> **通过**: 185 | **失败**: 2 | **待实现**: 60
+> **更新日期**: 2026-02-14
+> **功能总数**: 249
+> **通过**: 193 | **失败**: 0 | **待实现**: 56
 
 ---
 
@@ -36,14 +36,16 @@ git status        # 检查工作区状态
 
 ## 当前待办
 
-### 🔴 高优先级（Failing）
-- [ ] 语音服务错误 (`/ws/voice/status` 返回 500)
-- [ ] API 类型不一致 (`event_id` 字符串 vs 整数)
+### 🟡 待实现 (56项)
 
-### 🟡 中优先级（Pending P0）
-- [ ] Xcode 项目文件更新（添加 Core/ 和 Features/）
+**后端 (3项)**:
+- 病历夹管理 (`medical_folders`)
+- 病历记录管理 (`medical_records`)
+- 医疗文件管理 (`medical_files`)
 
-### 🟢 低优先级（Pending P1/P2）
+**iOS (1项)**:
+- Xcode 项目文件更新（添加 Core/ 和 Features/）
+
 详见 `feature-list.json`
 
 ---
@@ -107,6 +109,7 @@ cd ios/xinlingyisheng && xcodebuild build  # 编译
 | 旧文档 | 状态 | 替代方案 |
 |--------|------|----------|
 | PROGRESS.md | ❌ 太大 | 归档，使用 STATUS.md |
+| docs/功能清单.md | ❌ 已删除 | 使用 feature-list.json |
 | feature-list.json | ✅ 保留 | 核心功能清单 |
 | claude-progress.txt | ✅ 保留 | 会话级别日志 |
 | README.md | ✅ 保留 | 项目概览 |

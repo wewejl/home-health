@@ -1,11 +1,11 @@
 {
   "metadata": {
-    "version": "1.0",
-    "last_updated": "2026-02-13",
+    "version": "1.1",
+    "last_updated": "2026-02-14",
     "total_features": 249,
-    "passing": 191,
+    "passing": 193,
     "failing": 0,
-    "pending": 58
+    "pending": 56
   },
   "features": {
     "backend": {
@@ -119,7 +119,7 @@
       },
       "admin_stats": {
         "name": "统计分析",
-        "status": "pending"
+        "status": "passing"
       },
       "rounding": {
         "name": "远程查房模块",
@@ -200,7 +200,7 @@
       },
       "stats": {
         "name": "统计分析",
-        "status": "pending",
+        "status": "passing",
         "components": ["Stats.tsx"]
       },
       "medical_orders": {
@@ -389,60 +389,11 @@
           "v1_v2_unification": "passing",
           "test_file_updates": "passing"
         }
-      }
-    },
-    "pending": {
-      "backend": {
-        "api_type_consistency": {
-          "name": "API类型不一致问题",
-          "status": "passing",
-          "description": "已修复：所有响应中的 event_id 现在统一返回字符串"
-        },
-        "share_link_404": {
-          "name": "分享链接访问404",
-          "status": "passing",
-          "description": "已修复 timezone 比较问题和 event_ids 类型转换问题"
-        },
-        "stats_api": {
-          "name": "统计API",
-          "status": "passing",
-          "description": "后端和前端均已实现"
-        },
-        "medical_folders_implementation": {
-          "name": "病历夹管理实现",
-          "status": "pending"
-        },
-        "medical_records_implementation": {
-          "name": "病历记录管理实现",
-          "status": "pending"
-        },
-        "medical_files_implementation": {
-          "name": "医疗文件管理实现",
-          "status": "pending"
-        },
-        "install_pytest": {
-          "name": "安装pytest测试依赖",
-          "status": "passing",
-          "description": "已添加 pytest 和 pytest-asyncio 到 requirements.txt 和 Dockerfile"
-        },
-        "code_analysis": {
-          "name": "代码分析工具配置",
-          "status": "passing",
-          "description": "已添加 flake8, mypy, bandit 到 Dockerfile 和 pyproject.toml"
-        },
-      "frontend": {
-        "stats_implementation": {
-          "name": "统计分析页面实现",
-          "status": "passing",
-          "description": "后端 API 和前端 Stats.tsx 页面已实现"
-        }
       },
-      "ios": {
-        "xcode_project_update": {
-          "name": "Xcode项目文件更新",
-          "status": "pending",
-          "description": "将新创建的Core/和Features/目录文件添加到Xcode项目"
-        }
+      "xcode_project_update": {
+        "name": "Xcode项目文件更新",
+        "status": "pending",
+        "description": "将新创建的Core/和Features/目录文件添加到Xcode项目"
       }
     }
   }
