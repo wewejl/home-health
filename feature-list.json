@@ -3,9 +3,9 @@
     "version": "1.0",
     "last_updated": "2026-02-13",
     "total_features": 249,
-    "passing": 190,
+    "passing": 191,
     "failing": 0,
-    "pending": 59
+    "pending": 58
   },
   "features": {
     "backend": {
@@ -404,8 +404,9 @@
           "description": "已修复 timezone 比较问题和 event_ids 类型转换问题"
         },
         "stats_api": {
-          "name": "统计API不存在",
-          "status": "pending"
+          "name": "统计API",
+          "status": "passing",
+          "description": "后端和前端均已实现"
         },
         "medical_folders_implementation": {
           "name": "病历夹管理实现",
@@ -432,7 +433,8 @@
       "frontend": {
         "stats_implementation": {
           "name": "统计分析页面实现",
-          "status": "pending"
+          "status": "passing",
+          "description": "后端 API 和前端 Stats.tsx 页面已实现"
         }
       },
       "ios": {
