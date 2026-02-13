@@ -1,0 +1,437 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2026-02-13",
+    "total_features": 247,
+    "passing": 185,
+    "failing": 2,
+    "pending": 60
+  },
+  "features": {
+    "backend": {
+      "auth_module": {
+        "name": "用户认证模块",
+        "status": "passing",
+        "endpoints": [
+          "POST /auth/send-code",
+          "POST /auth/login",
+          "POST /auth/login-password",
+          "POST /auth/register-password",
+          "POST /auth/refresh",
+          "GET /auth/check-phone",
+          "GET /auth/me",
+          "PUT/POST /auth/profile",
+          "POST /auth/password/set",
+          "POST /auth/password/reset"
+        ]
+      },
+      "sessions_module": {
+        "name": "AI问诊会话模块",
+        "status": "passing",
+        "endpoints": [
+          "POST /sessions",
+          "GET /sessions",
+          "POST /sessions/{id}/messages",
+          "GET /sessions/{id}/messages",
+          "GET /sessions/agents",
+          "GET /sessions/agents/{type}/capabilities"
+        ]
+      },
+      "doctor_workstation": {
+        "name": "医生工作台模块",
+        "status": "passing",
+        "endpoints": [
+          "GET /api/doctor/me",
+          "GET /api/doctor/patient-stats",
+          "GET /api/doctor/patients",
+          "GET /api/doctor/patients/assignable",
+          "POST /api/doctor/patients/assign",
+          "GET /api/doctor/patients/{id}",
+          "GET /api/doctor/patients/{id}/consultations",
+          "DELETE /api/doctor/patients/{id}/unassign"
+        ]
+      },
+      "medical_orders": {
+        "name": "医嘱执行监督模块",
+        "status": "passing",
+        "endpoints": [
+          "POST /medical-orders",
+          "GET /medical-orders",
+          "POST/GET /medical-orders/family-bonds",
+          "GET /medical-orders/{id}",
+          "PUT /medical-orders/{id}",
+          "DELETE /medical-orders/{id}",
+          "POST /medical-orders/{id}/activate",
+          "GET /medical-orders/{id}/tasks",
+          "POST /medical-orders/{id}/tasks/{task_id}/complete",
+          "GET /medical-orders/{id}/compliance"
+        ]
+      },
+      "medical_events": {
+        "name": "医疗事件模块",
+        "status": "passing",
+        "endpoints": [
+          "POST /medical-events",
+          "GET /medical-events",
+          "GET /medical-events/{id}",
+          "PUT /medical-events/{id}",
+          "DELETE /medical-events/{id}",
+          "POST /medical-events/{id}/attachments",
+          "POST/GET /medical-events/{id}/notes",
+          "POST /medical-events/{id}/aggregate",
+          "GET /medical-events/{id}/ai-summary",
+          "POST /medical-events/{id}/export",
+          "GET /medical-events/export/{export_id}"
+        ]
+      },
+      "voice_asr": {
+        "name": "语音识别模块",
+        "status": "failing",
+        "endpoints": [
+          "POST /voice-asr/transcribe",
+          "WebSocket /voice-asr/ws"
+        ],
+        "issue": "/ws/voice/status 端点返回 Internal Server Error"
+      },
+      "admin_departments": {
+        "name": "科室管理",
+        "status": "passing"
+      },
+      "admin_doctors": {
+        "name": "医生/AI分身管理",
+        "status": "passing"
+      },
+      "admin_diseases": {
+        "name": "疾病管理",
+        "status": "passing"
+      },
+      "admin_drugs": {
+        "name": "药品管理",
+        "status": "passing"
+      },
+      "admin_knowledge": {
+        "name": "知识库管理",
+        "status": "passing"
+      },
+      "admin_feedbacks": {
+        "name": "反馈管理",
+        "status": "passing"
+      },
+      "admin_stats": {
+        "name": "统计分析",
+        "status": "pending"
+      },
+      "rounding": {
+        "name": "远程查房模块",
+        "status": "passing"
+      },
+      "medical_folders": {
+        "name": "病历夹管理",
+        "status": "pending"
+      },
+      "medical_records": {
+        "name": "病历记录管理",
+        "status": "pending"
+      },
+      "medical_files": {
+        "name": "医疗文件管理",
+        "status": "pending"
+      },
+      "security": {
+        "name": "安全配置",
+        "status": "passing",
+        "items": {
+          "jwt_secret_validation": "passing",
+          "test_mode_defaults": "passing",
+          "database_password_env": "passing",
+          "admin_test_mode_control": "passing"
+        }
+      },
+      "performance": {
+        "name": "性能优化",
+        "status": "passing",
+        "items": {
+          "n_plus_1_doctor_workstation": "passing",
+          "n_plus_1_departments": "passing",
+          "n_plus_1_medical_orders": "passing"
+        }
+      }
+    },
+    "frontend": {
+      "authentication": {
+        "name": "用户认证",
+        "status": "passing",
+        "components": ["Login.tsx"]
+      },
+      "dashboard": {
+        "name": "系统概览",
+        "status": "passing",
+        "components": ["Dashboard.tsx"]
+      },
+      "departments": {
+        "name": "科室管理",
+        "status": "passing",
+        "components": ["Departments.tsx"]
+      },
+      "doctors": {
+        "name": "医生管理",
+        "status": "passing",
+        "components": ["Doctors.tsx"]
+      },
+      "diseases": {
+        "name": "疾病百科",
+        "status": "passing",
+        "components": ["Diseases.tsx"]
+      },
+      "drugs": {
+        "name": "药品百科",
+        "status": "passing",
+        "components": ["Drugs.tsx"]
+      },
+      "knowledge": {
+        "name": "知识库管理",
+        "status": "passing",
+        "components": ["Knowledge.tsx"]
+      },
+      "feedbacks": {
+        "name": "反馈管理",
+        "status": "passing",
+        "components": ["Feedbacks.tsx"]
+      },
+      "stats": {
+        "name": "统计分析",
+        "status": "pending",
+        "components": ["Stats.tsx"]
+      },
+      "medical_orders": {
+        "name": "医嘱执行监督",
+        "status": "passing",
+        "components": ["MedicalOrders.tsx"]
+      },
+      "patient_compliance": {
+        "name": "患者依从性",
+        "status": "passing",
+        "components": ["PatientCompliance.tsx"]
+      },
+      "rounding": {
+        "name": "远程查房",
+        "status": "passing",
+        "components": ["Rounding.tsx", "RoundingDetail.tsx"]
+      },
+      "doctor_workstation": {
+        "name": "医生工作台",
+        "status": "passing",
+        "components": [
+          "PatientList.tsx",
+          "PatientDetail.tsx",
+          "AssignPatientDialog.tsx",
+          "CreateOrderDialog.tsx"
+        ]
+      },
+      "persona_chat": {
+        "name": "医生分身对话采集",
+        "status": "passing",
+        "components": ["DoctorPersonaChat.tsx"]
+      },
+      "record_analysis": {
+        "name": "病历分析",
+        "status": "passing",
+        "components": ["DoctorRecordAnalysis.tsx"]
+      },
+      "security": {
+        "name": "安全配置",
+        "status": "passing",
+        "items": {
+          "remove_hardcoded_credentials": "passing",
+          "fix_xss_risks": "passing",
+          "fix_eventsource_auth": "passing",
+          "add_error_boundary": "passing",
+          "test_mode_control": "passing"
+        }
+      },
+      "ui_components": {
+        "name": "UI组件库",
+        "status": "passing",
+        "items": {
+          "shadcn_ui_complete": "passing",
+          "custom_charts": "passing",
+          "protected_routes": "passing",
+          "patient_components": "passing"
+        }
+      },
+      "types": {
+        "name": "类型定义",
+        "status": "passing"
+      }
+    },
+    "ios": {
+      "authentication": {
+        "name": "用户认证",
+        "status": "passing",
+        "views": [
+          "SplashView.swift",
+          "LoginView.swift",
+          "ProfileSetupView.swift"
+        ]
+      },
+      "home": {
+        "name": "首页",
+        "status": "passing",
+        "views": ["HomeView.swift"]
+      },
+      "consultation": {
+        "name": "问诊",
+        "status": "passing",
+        "views": [
+          "AskDoctorView.swift",
+          "ModernConsultationView.swift",
+          "SessionHistoryView.swift"
+        ]
+      },
+      "medical_orders": {
+        "name": "医嘱",
+        "status": "passing",
+        "views": [
+          "MedicalOrderListView.swift",
+          "TaskCheckInView.swift"
+        ]
+      },
+      "medical_dossier": {
+        "name": "病历夹",
+        "status": "passing",
+        "views": [
+          "MedicalDossierView.swift",
+          "MedicalFoldersView.swift",
+          "EventDetailView.swift",
+          "CreateRecordSheet.swift",
+          "RecordDetailView.swift"
+        ]
+      },
+      "profile": {
+        "name": "我的",
+        "status": "passing",
+        "views": ["ProfileView.swift"]
+      },
+      "knowledge": {
+        "name": "知识库",
+        "status": "passing",
+        "views": [
+          "DepartmentDetailView.swift",
+          "DiseaseListView.swift",
+          "DiseaseDetailView.swift",
+          "MedLiveDiseaseDetailView.swift",
+          "DrugListView.swift",
+          "DrugDetailView.swift"
+        ]
+      },
+      "voice_input": {
+        "name": "语音输入",
+        "status": "passing",
+        "components": [
+          "VoiceInputView.swift",
+          "WeChatStyleInputBar.swift",
+          "PressAndHoldVoiceService.swift"
+        ]
+      },
+      "camera": {
+        "name": "相机拍照",
+        "status": "passing",
+        "components": [
+          "FullScreenCamera.swift",
+          "ImagePreviewSheet.swift"
+        ]
+      },
+      "pdf_export": {
+        "name": "PDF导出",
+        "status": "passing",
+        "components": [
+          "PDFGenerator.swift",
+          "ConversationPDFGenerator.swift"
+        ]
+      },
+      "security": {
+        "name": "安全配置",
+        "status": "passing",
+        "items": {
+          "keychain_token_storage": "passing",
+          "security_config": "passing",
+          "cert_validator": "passing",
+          "token_refresh_handler": "passing",
+          "secure_websocket": "passing",
+          "remove_hardcoded_tokens": "passing",
+          "header_auth": "passing",
+          "user_friendly_errors": "passing"
+        }
+      },
+      "architecture": {
+        "name": "架构优化",
+        "status": "passing",
+        "items": {
+          "core_infrastructure": "passing",
+          "component_library": "passing",
+          "service_layer_refactor": "passing",
+          "unified_chat_vm_split": "passing"
+        }
+      },
+      "ui_fixes": {
+        "name": "UI修复",
+        "status": "passing",
+        "items": {
+          "input_opacity_fix": "passing",
+          "deprecated_api_cleanup": "passing",
+          "appicon_completion": "passing"
+        }
+      },
+      "api_migration": {
+        "name": "API迁移",
+        "status": "passing",
+        "items": {
+          "v1_v2_unification": "passing",
+          "test_file_updates": "passing"
+        }
+      }
+    },
+    "pending": {
+      "backend": {
+        "api_type_consistency": {
+          "name": "API类型不一致问题",
+          "status": "failing",
+          "description": "event_id 在 API 定义为字符串，但数据库模型使用整数"
+        },
+        "share_link_404": {
+          "name": "分享链接访问404",
+          "status": "failing"
+        },
+        "stats_api": {
+          "name": "统计API不存在",
+          "status": "pending"
+        },
+        "medical_folders_implementation": {
+          "name": "病历夹管理实现",
+          "status": "pending"
+        },
+        "medical_records_implementation": {
+          "name": "病历记录管理实现",
+          "status": "pending"
+        },
+        "medical_files_implementation": {
+          "name": "医疗文件管理实现",
+          "status": "pending"
+        }
+      },
+      "frontend": {
+        "stats_implementation": {
+          "name": "统计分析页面实现",
+          "status": "pending"
+        }
+      },
+      "ios": {
+        "xcode_project_update": {
+          "name": "Xcode项目文件更新",
+          "status": "pending",
+          "description": "将新创建的Core/和Features/目录文件添加到Xcode项目"
+        }
+      }
+    }
+  }
+}
