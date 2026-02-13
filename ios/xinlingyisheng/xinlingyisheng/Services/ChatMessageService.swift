@@ -227,11 +227,12 @@ class ChatMessageService: ObservableObject {
 
         if let lastIndex = messages.indices.last,
            !messages[lastIndex].isFromUser {
+            let quickOpts = (response.quickOptions ?? []).map { QuickOption(text: $0, value: $0) }
             messages[lastIndex] = UnifiedChatMessage(
                 content: response.message,
                 isFromUser: false,
                 messageType: .text,
-                quickOptions: response.quickOptions ?? []
+                quickOptions: quickOpts
             )
         }
 
@@ -248,13 +249,14 @@ class ChatMessageService: ObservableObject {
         isAnalyzing = false
         currentActionMode = nil
 
+        let quickOpts = (response.quickOptions ?? []).map { QuickOption(text: $0, value: $0) }
         let resultMessage = UnifiedChatMessage(
             content: response.message,
             isFromUser: false,
             messageType: response.structuredData != nil
                 ? .structuredResult(response.structuredData!)
                 : .text,
-            quickOptions: response.quickOptions ?? []
+            quickOptions: quickOpts
         )
         messages.append(resultMessage)
 
@@ -284,7 +286,19 @@ class ChatMessageService: ObservableObject {
             adviceHistory = history
         }
         if let card = response.diagnosisCard {
-            diagnosisCard = card
+            // 转换 DiagnosisCard 到 AgentDiagnosisCard
+            diagnosisCard = AgentDiagnosisCard(
+                summary: card.summary,
+                conditions: card.conditions.map { condition in
+                    AgentDiagnosisCondition(name: condition.name, confidence: condition.confidence, rationale: condition.rationale)
+                },
+                riskLevel: card.riskLevel,
+                needOfflineVisit: card.needOfflineVisit,
+                urgency: card.urgency,
+                carePlan: card.carePlan,
+                references: card.references,
+                reasoningSteps: card.reasoningSteps
+            )
         }
         if let refs = response.knowledgeRefs {
             knowledgeRefs = refs

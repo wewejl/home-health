@@ -225,25 +225,25 @@ struct DynamicActionButtonsView_Previews: PreviewProvider {
             // 皮肤科能力
             DynamicActionButtonsView(
                 capabilities: AgentCapabilities(
+                    displayName: "皮肤科",
+                    description: "皮肤科智能体",
                     actions: ["conversation", "analyze_skin", "interpret_report"],
-                    acceptsMedia: ["image/jpeg"],
-                    uiComponents: ["TextBubble"],
-                    description: "皮肤科"
+                    acceptsMedia: ["image/jpeg"]
                 ),
                 onActionTap: { _ in }
             )
-            
+
             // 心内科能力
             DynamicActionButtonsView(
                 capabilities: AgentCapabilities(
+                    displayName: "心内科",
+                    description: "心内科智能体",
                     actions: ["conversation", "interpret_ecg"],
-                    acceptsMedia: ["image/jpeg"],
-                    uiComponents: ["TextBubble"],
-                    description: "心内科"
+                    acceptsMedia: ["image/jpeg"]
                 ),
                 onActionTap: { _ in }
             )
-            
+
             // 上传按钮示例
             UploadActionButtonsView(
                 action: .analyzeSkin,

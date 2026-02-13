@@ -473,49 +473,27 @@ struct SelectableEventRow: View {
 
 
 #Preview {
-
     let mockEvents = [
-
         FindRelatedResponse.RelatedEvent(
-
             event_id: "event-001-abc",
-
             relation_type: "same_condition",
-
             confidence: 0.92,
-
             reasoning: "同一天的皮肤科问诊"
-
         ),
-
         FindRelatedResponse.RelatedEvent(
-
             event_id: "event-002-def",
-
             relation_type: "follow_up",
-
             confidence: 0.85,
-
             reasoning: "3天后的复诊记录"
-
         )
-
     ]
 
-    ;
-
-
-
-    VStack MergeEventsSheet(;
-
-        currentEventId: "current-event-xyz",
-
-        relatedEvents: mockEvents,
-
-        viewModel: MedicalDossierViewModel(),
-
-        onMerge: { _, _ in }
-
-    )
-
+    VStack {
+        MergeEventsSheet(
+            currentEventId: "current-event-xyz",
+            relatedEvents: mockEvents,
+            viewModel: MedicalDossierViewModel(),
+            onMerge: { _, _ in }
+        )
+    }
 }

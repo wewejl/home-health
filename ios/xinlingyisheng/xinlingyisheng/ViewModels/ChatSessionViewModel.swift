@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import SwiftUI
 
 /// 会话管理 ViewModel
 /// 负责：会话创建、恢复、状态管理、智能体能力管理
@@ -100,8 +101,8 @@ class ChatSessionViewModel: ObservableObject {
             // 推断智能体类型
             let inferredAgentType = inferAgentType(from: department)
 
-            // 创建会话
-            let session = try await apiService.createUnifiedSession(
+            // 创建会话 - 使用 apiService
+            let session = try await apiService.createSession(
                 doctorId: doctorId,
                 agentType: inferredAgentType
             )

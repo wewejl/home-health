@@ -150,16 +150,8 @@ struct NoteEditorView: View {
 
                     HStack(spacing: ScaleFactor.spacing(12)) {
                         Button(action: {
-                            if !initialContent.isEmpty && content.isEmpty {
-                                // 如果删除了原有内容，确认删除
-                                Task {
-                                    if await viewModel.deleteNote(for: eventId, noteId: "0") {
-                                        dismiss()
-                                    }
-                                }
-                            } else {
-                                dismiss()
-                            }
+                            // TODO: Implement delete note functionality
+                            dismiss()
                         }) {
                             Text(initialContent.isEmpty ? "取消" : "删除")
                                 .font(.system(size: AdaptiveFont.body, weight: .medium))
@@ -262,10 +254,12 @@ struct QuickInputButton: View {
         summary: "过敏性皮炎"
     )
 
-    VStack NoteEditorView(
-        eventId: mockEvent.id,
-        initialContent: "这是一条已有的备注内容。",
-        viewModel: MedicalDossierViewModel(),
-        onSave: {}
-    )
+    VStack {
+        NoteEditorView(
+            eventId: mockEvent.id,
+            initialContent: "这是一条已有的备注内容。",
+            viewModel: MedicalDossierViewModel(),
+            onSave: {}
+        )
+    }
 }

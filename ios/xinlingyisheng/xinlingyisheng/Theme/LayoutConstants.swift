@@ -50,7 +50,12 @@ struct LayoutConstants {
 struct ResponsiveLayout: ViewModifier {
     var maxWidth: CGFloat = LayoutConstants.maxContentWidth
     var horizontalPadding: CGFloat = LayoutConstants.horizontalPadding
-    
+
+    // MARK: - 静态布局常量（兼容 AdaptiveLayout）
+    static var cardSpacing: CGFloat { 16 }
+    static var cardInnerPadding: CGFloat { 16 }
+    static var iconLargeSize: CGFloat { 32 }
+
     func body(content: Content) -> some View {
         content
             .frame(maxWidth: maxWidth)
@@ -375,3 +380,57 @@ extension Color {
         })
     }
 }
+
+// MARK: - AdaptiveLayout 别名兼容
+// 注意: ViewModifier 使用 ResponsiveLayout
+// 自适应布局助手结构体，用于页面布局计算
+struct AdaptiveLayoutHelper {
+    public let screenWidth: CGFloat
+
+    public init(screenWidth: CGFloat) {
+        self.screenWidth = screenWidth
+    }
+
+    // 屏幕尺寸分类
+    public var isCompact: Bool { screenWidth < 380 }
+    public var isRegular: Bool { screenWidth >= 380 && screenWidth < 400 }
+    public var isLarge: Bool { screenWidth >= 400 }
+
+    // 相对尺寸
+    public var iconScale: CGFloat { 1.0 }
+    public var paddingScale: CGFloat { 1.0 }
+
+    // 间距
+    public var cardSpacing: CGFloat { 16 }
+    public var cardInnerPadding: CGFloat { 16 }
+
+    // 卡片高度
+    public var todayCardHeight: CGFloat { 120 }
+    public var quickCardLargeHeight: CGFloat { 150 }
+    public var quickCardSmallHeight: CGFloat { 66 }
+
+    // 图标尺寸
+    public var iconLargeSize: CGFloat { 48 }
+    public var iconSmallSize: CGFloat { 38 }
+
+    // 装饰光晕尺寸
+    public var decorativeCircleSize: CGFloat { 200 }
+
+    // 装饰光晕偏移量
+    public var topRightOffsetX: CGFloat { 100 }
+    public var topRightOffsetY: CGFloat { -50 }
+    public var bottomLeftOffsetX: CGFloat { -60 }
+    public var bottomLeftOffsetY: CGFloat { 100 }
+
+    // 水平内边距
+    public var horizontalPadding: CGFloat { 16 }
+
+    // 字体尺寸
+    public var titleFontSize: CGFloat { UnifiedFont.body }
+    public var bodyFontSize: CGFloat { UnifiedFont.body }
+    public var captionFontSize: CGFloat { UnifiedFont.caption1 }
+}
+
+// 兼容旧代码的别名
+typealias AdaptiveLayout = AdaptiveLayoutHelper
+typealias ResponsiveLayoutModifier = ResponsiveLayout

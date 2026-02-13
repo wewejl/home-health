@@ -191,9 +191,9 @@ struct SwipeableEventCard: View {
         ]
     )
     
-    VStack VStack(spacing: 16) {
-        EventCardView(event: mockEvent);
-        SwipeableEventCard(event: mockEvent);
+    VStack(spacing: 16) {
+        EventCardView(event: mockEvent)
+        SwipeableEventCard(event: mockEvent)
     }
     .padding()
     .background(DossierColors.background)

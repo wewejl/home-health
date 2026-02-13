@@ -120,3 +120,27 @@ struct HealingColorTheme {
     /// 次色半透明背景
     static let secondaryBackground = softSage.opacity(0.08)
 }
+
+// MARK: - 别名兼容（代码中使用 HealingColors）
+typealias HealingColors = HealingColorTheme
+
+// MARK: - DXYColors 兼容层
+struct DXYColors {
+    static let primaryPurple = HealingColorTheme.forestMist
+    static let lightPurple = HealingColorTheme.softSage.opacity(0.3)
+    static let teal = HealingColorTheme.deepSage
+    static let blue = HealingColorTheme.dustyBlue
+    static let orange = HealingColorTheme.terracotta
+    static let background = HealingColorTheme.background
+    static let cardBackground = Color.white
+    static let searchBackground = HealingColorTheme.warmSand
+    static let tagBackground = HealingColorTheme.warmSand.opacity(0.6)
+    static let textPrimary = Color(red: 0.22, green: 0.22, blue: 0.20)
+    static let textSecondary = Color(red: 0.42, green: 0.42, blue: 0.40)
+    static let textTertiary = Color(red: 0.62, green: 0.62, blue: 0.60)
+    static let promotionPurple = HealingColorTheme.softSage.opacity(0.25)
+    static let promotionOrange = HealingColorTheme.mutedCoral.opacity(0.25)
+    static let errorRed = HealingColorTheme.errorRed
+    static let successGreen = HealingColorTheme.successGreen
+    static let borderLight = Color(red: 0.85, green: 0.80, blue: 0.75)
+}

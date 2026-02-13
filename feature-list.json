@@ -3,8 +3,8 @@
     "version": "1.0",
     "last_updated": "2026-02-13",
     "total_features": 247,
-    "passing": 185,
-    "failing": 2,
+    "passing": 187,
+    "failing": 0,
     "pending": 60
   },
   "features": {
@@ -86,12 +86,12 @@
       },
       "voice_asr": {
         "name": "语音识别模块",
-        "status": "failing",
+        "status": "passing",
         "endpoints": [
           "POST /voice-asr/transcribe",
-          "WebSocket /voice-asr/ws"
-        ],
-        "issue": "/ws/voice/status 端点返回 Internal Server Error"
+          "WebSocket /voice-asr/ws",
+          "GET /ws/voice/status"
+        ]
       },
       "admin_departments": {
         "name": "科室管理",
@@ -395,8 +395,8 @@
       "backend": {
         "api_type_consistency": {
           "name": "API类型不一致问题",
-          "status": "failing",
-          "description": "event_id 在 API 定义为字符串，但数据库模型使用整数"
+          "status": "passing",
+          "description": "已修复：所有响应中的 event_id 现在统一返回字符串"
         },
         "share_link_404": {
           "name": "分享链接访问404",

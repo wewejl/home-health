@@ -70,9 +70,9 @@ bash scripts/ios/verify-security.sh
 
 ## 待办事项（从 feature-list.json 同步）
 
-### 🔴 Failing（优先修复）
-- [ ] 语音服务错误 (`/ws/voice/status` 返回 500)
-- [ ] API 类型不一致 (`event_id` 字符串 vs 整数)
+### ✅ 已完成
+- [x] 语音服务错误 (`/ws/voice/status` 返回 500) - 2026-02-13
+- [x] API 类型不一致 (`event_id` 字符串 vs 整数) - 2026-02-13
 
 ### 🟡 Pending P0
 - [ ] Xcode 项目文件更新（添加 Core/ 和 Features/）

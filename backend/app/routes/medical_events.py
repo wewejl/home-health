@@ -676,7 +676,7 @@ async def generate_summary(
     
     if event.summary and event.ai_analysis and not force_regenerate:
         return GenerateSummaryResponse(
-            event_id=event.id,
+            event_id=str(event.id),
             summary=event.summary,
             ai_analysis=AIAnalysisSchema(**event.ai_analysis) if event.ai_analysis else AIAnalysisSchema(),
             message="已有摘要，无需重新生成"

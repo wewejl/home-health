@@ -250,7 +250,7 @@ class ChatMessageViewModel: ObservableObject {
         }
     }
 
-    private func handleComplete(_ response: AgentResponse) {
+    private func handleComplete(_ response: UnifiedMessageResponse) {
         streamingMessageId = nil
         streamingContent = ""
         isSending = false
@@ -258,11 +258,12 @@ class ChatMessageViewModel: ObservableObject {
         // 替换为最终消息
         if let lastIndex = messages.indices.last,
            !messages[lastIndex].isFromUser {
+            let quickOpts = (response.quickOptions ?? []).map { QuickOption(text: $0, value: $0) }
             messages[lastIndex] = UnifiedChatMessage(
                 content: response.message,
                 isFromUser: false,
                 messageType: .text,
-                quickOptions: response.quickOptions ?? []
+                quickOptions: quickOpts
             )
         }
 
@@ -275,7 +276,7 @@ class ChatMessageViewModel: ObservableObject {
         }
     }
 
-    private func handleAnalysisComplete(_ response: AgentResponse) {
+    private func handleAnalysisComplete(_ response: UnifiedMessageResponse) {
         // 移除加载消息
         if let messageId = streamingMessageId {
             messages.removeAll { $0.id == messageId }
@@ -287,13 +288,14 @@ class ChatMessageViewModel: ObservableObject {
         currentActionMode = nil
 
         // 添加结果消息
+        let quickOpts = (response.quickOptions ?? []).map { QuickOption(text: $0, value: $0) }
         let resultMessage = UnifiedChatMessage(
             content: response.message,
             isFromUser: false,
             messageType: response.structuredData != nil
                 ? .structuredResult(response.structuredData!)
                 : .text,
-            quickOptions: response.quickOptions ?? []
+            quickOptions: quickOpts
         )
         messages.append(resultMessage)
 
@@ -326,7 +328,19 @@ class ChatMessageViewModel: ObservableObject {
             adviceHistory = history
         }
         if let card = response.diagnosisCard {
-            diagnosisCard = card
+            // 转换 DiagnosisCard 到 AgentDiagnosisCard
+            diagnosisCard = AgentDiagnosisCard(
+                summary: card.summary,
+                conditions: card.conditions.map { condition in
+                    AgentDiagnosisCondition(name: condition.name, confidence: condition.confidence, rationale: condition.rationale)
+                },
+                riskLevel: card.riskLevel,
+                needOfflineVisit: card.needOfflineVisit,
+                urgency: card.urgency,
+                carePlan: card.carePlan,
+                references: card.references,
+                reasoningSteps: card.reasoningSteps
+            )
         }
         if let refs = response.knowledgeRefs {
             knowledgeRefs = refs

@@ -67,7 +67,7 @@ class ChatSessionService {
         do {
             let inferredAgentType = inferAgentType(from: department)
 
-            let session = try await apiService.createUnifiedSession(
+            let session = try await apiService.createSession(
                 doctorId: doctorId,
                 agentType: inferredAgentType
             )

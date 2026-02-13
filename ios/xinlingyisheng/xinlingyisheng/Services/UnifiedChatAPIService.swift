@@ -38,7 +38,7 @@ extension APIService {
         attachments: [MessageAttachment] = [],
         action: AgentAction = .conversation,
         onChunk: @escaping (String) -> Void,
-        onComplete: @escaping (AgentResponse) -> Void,
+        onComplete: @escaping (UnifiedMessageResponse) -> Void,
         onError: @escaping (Error) -> Void,
         isRetry: Bool = false
     ) async {
@@ -282,7 +282,7 @@ extension APIService {
         event: String,
         data: String,
         onChunk: @escaping (String) -> Void,
-        onComplete: @escaping (AgentResponse) -> Void,
+        onComplete: @escaping (UnifiedMessageResponse) -> Void,
         onError: @escaping (Error) -> Void
     ) {
         switch event {
@@ -291,21 +291,21 @@ extension APIService {
                let chunkObj = try? JSONDecoder().decode(SSEChunkEvent.self, from: jsonData) {
                 onChunk(chunkObj.text)
             }
-            
+
         case "complete":
             if let jsonData = data.data(using: .utf8) {
                 do {
                     let decoder = JSONDecoder()
                     decoder.dateDecodingStrategy = .iso8601
-                    let response = try decoder.decode(AgentResponse.self, from: jsonData)
-                    print("[API] ✅ SSE complete - stage: \(response.stage), progress: \(response.progress)")
-                    onComplete(response)
+                    let messageResponse = try decoder.decode(UnifiedMessageResponse.self, from: jsonData)
+                    print("[API] ✅ SSE complete - stage: \(messageResponse.stage ?? "nil"), progress: \(messageResponse.progress ?? 0)")
+                    onComplete(messageResponse)
                 } catch {
                     print("[API] ❌ SSE complete decode error: \(error)")
                     onError(APIError.decodingError(error))
                 }
             }
-            
+
         case "error":
             if let jsonData = data.data(using: .utf8),
                let errorObj = try? JSONDecoder().decode(SSEErrorEvent.self, from: jsonData) {
@@ -313,10 +313,10 @@ extension APIService {
             } else {
                 onError(APIError.serverError("未知错误"))
             }
-            
+
         case "meta":
             print("[API] SSE meta: \(data)")
-            
+
         default:
             break
         }
@@ -329,18 +329,38 @@ struct SessionAgentCapabilities: Codable {
     let description: String
     let actions: [String]
     let acceptsMedia: [String]
-    
+
     enum CodingKeys: String, CodingKey {
         case displayName = "display_name"
         case description
         case actions
         case acceptsMedia = "accepts_media"
     }
-    
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        displayName = try container.decode(String.self, forKey: .displayName)
+        description = try container.decode(String.self, forKey: .description)
+        actions = try container.decode([String].self, forKey: .actions)
+        acceptsMedia = try container.decode([String].self, forKey: .acceptsMedia)
+    }
+
+    init(
+        displayName: String = "",
+        description: String = "",
+        actions: [String] = [],
+        acceptsMedia: [String] = []
+    ) {
+        self.displayName = displayName
+        self.description = description
+        self.actions = actions
+        self.acceptsMedia = acceptsMedia
+    }
+
     var supportsImageUpload: Bool {
         return acceptsMedia.contains { $0.starts(with: "image/") }
     }
-    
+
     var supportsPdfUpload: Bool {
         return acceptsMedia.contains("application/pdf")
     }

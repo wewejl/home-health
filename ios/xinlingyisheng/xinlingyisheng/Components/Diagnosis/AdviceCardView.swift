@@ -4,17 +4,17 @@ import SwiftUI
 struct AdviceCardView: View {
     let advice: AdviceEntry
     let onAccept: () -> Void
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: ScaleFactor.spacing(8)) {
             // 标题 + 标签
             HStack {
-                Text("💡 \(advice.title)")
+                Text("💡 \(advice.category ?? "建议")")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .semibold))
                     .foregroundColor(DossierColors.textPrimary)
-                
+
                 Spacer()
-                
+
                 Text("初步建议")
                     .font(.system(size: AdaptiveFont.footnote))
                     .foregroundColor(DossierColors.teal)
@@ -23,18 +23,18 @@ struct AdviceCardView: View {
                     .background(DossierColors.teal.opacity(0.1))
                     .cornerRadius(AdaptiveSize.cornerRadiusSmall)
             }
-            
+
             // 内容
-            Text(advice.content)
+            Text(advice.advice)
                 .font(.system(size: AdaptiveFont.subheadline))
                 .foregroundColor(DossierColors.textPrimary)
                 .lineSpacing(4)
-            
-            // 依据标签
-            if !advice.evidence.isEmpty {
+
+            // 推理依据
+            if let symptoms = advice.relatedSymptoms, !symptoms.isEmpty {
                 FlowLayout(spacing: ScaleFactor.spacing(4)) {
-                    ForEach(advice.evidence, id: \.self) { evidence in
-                        Text(evidence)
+                    ForEach(symptoms, id: \.self) { symptom in
+                        Text(symptom)
                             .font(.system(size: AdaptiveFont.footnote))
                             .foregroundColor(DossierColors.textSecondary)
                             .padding(.horizontal, ScaleFactor.padding(8))
@@ -44,7 +44,7 @@ struct AdviceCardView: View {
                     }
                 }
             }
-            
+
             // 采纳按钮
             Button(action: onAccept) {
                 Text("好的，知道了")
@@ -64,22 +64,22 @@ struct AdviceCardView: View {
     VStack(spacing: 16) {
         AdviceCardView(
             advice: AdviceEntry(
-                id: "adv-001",
-                title: "初步护理建议",
-                content: "根据您描述的症状，建议您先保持皮肤清洁干燥，避免抓挠患处。可以适当使用温和的保湿霜。",
-                evidence: ["湿疹护理指南", "皮肤科临床手册"],
-                timestamp: "2026-01-16T10:00:00"
+                advice: "根据您描述的症状，建议您先保持皮肤清洁干燥，避免抓挠患处。可以适当使用温和的保湿霜。",
+                reasoning: "收集症状信息，分析皮损特征，检索医学文献，生成鉴别诊断",
+                category: "皮肤护理",
+                relatedSymptoms: ["红斑", "丘疹", "瘙痒"],
+                timestamp: Date()
             ),
             onAccept: {}
         )
-        
+
         AdviceCardView(
             advice: AdviceEntry(
-                id: "adv-002",
-                title: "观察建议",
-                content: "请注意观察皮疹的变化情况，如果出现扩散或加重，请及时就医。",
-                evidence: [],
-                timestamp: "2026-01-16T10:05:00"
+                advice: "请注意观察皮疹的变化情况，如果出现扩散或加重，请及时就医。",
+                reasoning: "分析皮损分布，评估疾病进展",
+                category: "病情观察",
+                relatedSymptoms: ["颜色变化", "面积扩大"],
+                timestamp: Date()
             ),
             onAccept: {}
         )

@@ -27,7 +27,12 @@ struct AgentResponse: Codable {
 
     // MARK: - 兼容旧字段 (映射到 specialtyData)
     var structuredData: StructuredData? {
-        return specialtyData
+        guard let sd = specialtyData else { return nil }
+        let dataDict: [String: AnyCodable]? = sd.symptoms.map { ["symptoms": AnyCodable($0)] }
+        return StructuredData(
+            type: sd.diagnosisCard != nil ? "diagnosis" : "other",
+            data: dataDict
+        )
     }
 
     enum CodingKeys: String, CodingKey {
@@ -134,29 +139,30 @@ struct SpecialtyData: Codable {
     // 皮肤科相关
     let diagnosisCard: AgentDiagnosisCard?
     let symptoms: [String]?
-    
+
     // 通用字段 - 使用 AnyCodable 支持任意数据
     let rawData: [String: AnyCodable]?
-    
+
     enum CodingKeys: String, CodingKey {
         case diagnosisCard = "diagnosis_card"
         case symptoms
+        case rawData = "raw_data"
     }
-    
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         diagnosisCard = try container.decodeIfPresent(AgentDiagnosisCard.self, forKey: .diagnosisCard)
         symptoms = try container.decodeIfPresent([String].self, forKey: .symptoms)
-        
-        // 解析所有原始数据
-        let rawContainer = try decoder.singleValueContainer()
-        rawData = try? rawContainer.decode([String: AnyCodable].self)
+
+        // 同时解析所有原始数据
+        rawData = try container.decodeIfPresent([String: AnyCodable].self, forKey: .rawData)
     }
-    
+
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(diagnosisCard, forKey: .diagnosisCard)
         try container.encodeIfPresent(symptoms, forKey: .symptoms)
+        try container.encodeIfPresent(rawData, forKey: .rawData)
     }
 }
 
@@ -168,9 +174,9 @@ struct AgentDiagnosisCard: Codable {
     let needOfflineVisit: Bool?
     let urgency: String?
     let carePlan: [String]?
-    let references: [KnowledgeReference]?
+    let references: [KnowledgeRef]?
     let reasoningSteps: [String]?
-    
+
     enum CodingKeys: String, CodingKey {
         case summary
         case conditions
@@ -181,7 +187,7 @@ struct AgentDiagnosisCard: Codable {
         case references
         case reasoningSteps = "reasoning_steps"
     }
-    
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         summary = try container.decode(String.self, forKey: .summary)
@@ -190,8 +196,28 @@ struct AgentDiagnosisCard: Codable {
         needOfflineVisit = try container.decodeIfPresent(Bool.self, forKey: .needOfflineVisit)
         urgency = try container.decodeIfPresent(String.self, forKey: .urgency)
         carePlan = try container.decodeIfPresent([String].self, forKey: .carePlan)
-        references = try container.decodeIfPresent([KnowledgeReference].self, forKey: .references)
+        references = try container.decodeIfPresent([KnowledgeRef].self, forKey: .references)
         reasoningSteps = try container.decodeIfPresent([String].self, forKey: .reasoningSteps)
+    }
+
+    init(
+        summary: String,
+        conditions: [AgentDiagnosisCondition]? = nil,
+        riskLevel: String? = nil,
+        needOfflineVisit: Bool? = nil,
+        urgency: String? = nil,
+        carePlan: [String]? = nil,
+        references: [KnowledgeRef]? = nil,
+        reasoningSteps: [String]? = nil
+    ) {
+        self.summary = summary
+        self.conditions = conditions
+        self.riskLevel = riskLevel
+        self.needOfflineVisit = needOfflineVisit
+        self.urgency = urgency
+        self.carePlan = carePlan
+        self.references = references
+        self.reasoningSteps = reasoningSteps
     }
 }
 
@@ -211,23 +237,6 @@ struct AgentDiagnosisCondition: Codable {
         self.name = name
         self.confidence = confidence
         self.rationale = rationale
-    }
-}
-
-// MARK: - 知识引用
-struct KnowledgeReference: Codable {
-    let id: String
-    let title: String
-    let snippet: String
-    let source: String?
-    let link: String?
-    
-    enum CodingKeys: String, CodingKey {
-        case id
-        case title
-        case snippet
-        case source
-        case link
     }
 }
 

@@ -313,10 +313,10 @@ struct UploadActionButtonsViewV2: View {
         EnhancedChatInputBarV2(
             messageText: .constant(""),
             capabilities: AgentCapabilities(
+                displayName: "皮肤科智能体",
+                description: "皮肤科智能体",
                 actions: ["analyze_skin", "medical_dossier", "symptom_assessment"],
-                acceptsMedia: ["image/jpeg", "image/png"],
-                uiComponents: ["photo_upload", "quick_actions"],
-                description: "皮肤科智能体"
+                acceptsMedia: ["image/jpeg", "image/png"]
             ),
             onSend: { print("Send") },
             onPhotoTap: { print("Photo") },

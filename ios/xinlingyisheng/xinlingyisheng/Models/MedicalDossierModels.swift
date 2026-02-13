@@ -40,9 +40,9 @@ enum DepartmentType: String, Codable, CaseIterable {
     
     var color: Color {
         switch self {
-        case .dermatology: return DXYColors.teal
+        case .dermatology: return DossierColors.teal
         case .cardiology: return Color.red
-        case .general: return DXYColors.primaryPurple
+        case .general: return DossierColors.primaryPurple
         case .pediatrics: return Color.orange
         case .gynecology: return Color.pink
         case .neurology: return Color.purple
@@ -111,7 +111,7 @@ enum EventStatus: String, Codable, CaseIterable {
         case .inProgress: return DossierColors.statusInProgress
         case .completed: return DossierColors.statusCompleted
         case .exported: return DossierColors.statusExported
-        case .archived: return DXYColors.textTertiary
+        case .archived: return DossierColors.textTertiary
         }
     }
 }

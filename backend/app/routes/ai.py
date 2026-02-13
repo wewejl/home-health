@@ -199,7 +199,7 @@ async def generate_ai_summary(
     # 检查是否已有摘要且不强制重新生成
     if event.summary and event.ai_analysis and not request.force_regenerate:
         return SummaryResponse(
-            event_id=event.id,
+            event_id=str(event.id),
             summary=event.summary,
             key_points=event.ai_analysis.get("key_points", []),
             symptoms=event.ai_analysis.get("symptoms", []),
@@ -254,7 +254,7 @@ async def generate_ai_summary(
         logger.info(f"Generated AI summary for event {event.id}")
         
         return SummaryResponse(
-            event_id=event.id,
+            event_id=str(event.id),
             summary=result.summary,
             key_points=result.key_points,
             symptoms=result.symptoms,
@@ -313,7 +313,7 @@ async def get_ai_summary(
     analysis = event.ai_analysis or {}
     
     return SummaryResponse(
-        event_id=event.id,
+        event_id=str(event.id),
         summary=event.summary,
         key_points=analysis.get("key_points", []),
         symptoms=analysis.get("symptoms", []),
@@ -662,7 +662,7 @@ async def merge_events(
         logger.info(f"Merged events {request.event_ids} into {main_event.id}")
         
         return MergeEventsResponse(
-            merged_event_id=main_event.id,
+            merged_event_id=str(main_event.id),
             merged_title=main_event.title,
             summary=merge_result.summary,
             disease_progression=merge_result.disease_progression,

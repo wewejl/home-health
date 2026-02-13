@@ -4,38 +4,38 @@ import SwiftUI
 struct DiagnosisSummaryCard: View {
     let card: AgentDiagnosisCard
     let onViewDossier: () -> Void
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: ScaleFactor.spacing(12)) {
             // 顶部：风险徽章
             headerSection
-            
+
             // 症状总结
             Text(card.summary)
                 .font(.system(size: AdaptiveFont.body))
                 .foregroundColor(DossierColors.textPrimary)
                 .lineSpacing(4)
-            
+
             // 鉴别诊断
-            if !card.conditions.isEmpty {
+            if let conditions = card.conditions, !conditions.isEmpty {
                 conditionsSection
             }
-            
+
             // 推理步骤
-            if !card.reasoningSteps.isEmpty {
+            if let reasoningSteps = card.reasoningSteps, !reasoningSteps.isEmpty {
                 reasoningSection
             }
-            
+
             // 护理建议
-            if !card.carePlan.isEmpty {
+            if let carePlan = card.carePlan, !carePlan.isEmpty {
                 carePlanSection
             }
-            
+
             // 引用证据（可折叠）
-            if !card.references.isEmpty {
+            if let references = card.references, !references.isEmpty {
                 referencesSection
             }
-            
+
             // CTA 按钮
             Button(action: onViewDossier) {
                 Text("查看/生成病历")
@@ -53,13 +53,15 @@ struct DiagnosisSummaryCard: View {
         .cornerRadius(AdaptiveSize.cornerRadiusLarge)
         .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
     }
-    
+
     // MARK: - Header Section
     private var headerSection: some View {
         HStack {
-            RiskLevelBadge(level: card.riskLevel)
+            if let riskLevel = card.riskLevel {
+                RiskLevelBadge(level: riskLevel)
+            }
             Spacer()
-            if card.needOfflineVisit {
+            if let needOfflineVisit = card.needOfflineVisit, needOfflineVisit {
                 HStack(spacing: ScaleFactor.spacing(4)) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: AdaptiveFont.footnote))
@@ -70,7 +72,7 @@ struct DiagnosisSummaryCard: View {
             }
         }
     }
-    
+
     // MARK: - Conditions Section
     private var conditionsSection: some View {
         VStack(alignment: .leading, spacing: ScaleFactor.spacing(8)) {
@@ -82,13 +84,13 @@ struct DiagnosisSummaryCard: View {
                     .font(.system(size: AdaptiveFont.subheadline, weight: .semibold))
                     .foregroundColor(DossierColors.textPrimary)
             }
-            
-            ForEach(Array(card.conditions.enumerated()), id: \.offset) { _, condition in
+
+            ForEach(Array(card.conditions!.enumerated()), id: \.offset) { _, condition in
                 ConditionRowView(condition: condition)
             }
         }
     }
-    
+
     // MARK: - Reasoning Section
     private var reasoningSection: some View {
         VStack(alignment: .leading, spacing: ScaleFactor.spacing(8)) {
@@ -101,10 +103,10 @@ struct DiagnosisSummaryCard: View {
                     .foregroundColor(DossierColors.textPrimary)
             }
             
-            ReasoningTimelineView(steps: card.reasoningSteps)
+            ReasoningTimelineView(steps: card.reasoningSteps!)
         }
     }
-    
+
     // MARK: - Care Plan Section
     private var carePlanSection: some View {
         VStack(alignment: .leading, spacing: ScaleFactor.spacing(8)) {
@@ -116,9 +118,9 @@ struct DiagnosisSummaryCard: View {
                     .font(.system(size: AdaptiveFont.subheadline, weight: .semibold))
                     .foregroundColor(DossierColors.textPrimary)
             }
-            
+
             VStack(alignment: .leading, spacing: ScaleFactor.spacing(4)) {
-                ForEach(card.carePlan, id: \.self) { tip in
+                ForEach(card.carePlan!, id: \.self) { tip in
                     HStack(alignment: .top, spacing: ScaleFactor.spacing(6)) {
                         Text("•")
                             .foregroundColor(DossierColors.teal)
@@ -130,17 +132,17 @@ struct DiagnosisSummaryCard: View {
             }
         }
     }
-    
+
     // MARK: - References Section
     private var referencesSection: some View {
         DisclosureGroup {
-            EvidenceListView(refs: card.references)
+            EvidenceListView(refs: card.references!)
         } label: {
             HStack(spacing: ScaleFactor.spacing(6)) {
                 Image(systemName: "book")
                     .font(.system(size: AdaptiveFont.footnote))
                     .foregroundColor(DossierColors.teal)
-                Text("引用证据 (\(card.references.count))")
+                Text("引用证据 (\(card.references!.count))")
                     .font(.system(size: AdaptiveFont.subheadline, weight: .medium))
                     .foregroundColor(DossierColors.textPrimary)
             }
@@ -155,10 +157,10 @@ struct RiskLevelBadge: View {
     
     var badgeColor: Color {
         switch level.lowercased() {
-        case "emergency": return .red
-        case "high": return .orange
-        case "medium": return .yellow
-        default: return .green
+        case "emergency": return DossierColors.riskEmergency
+        case "high": return DossierColors.riskHigh
+        case "medium": return DossierColors.riskMedium
+        default: return DossierColors.riskLow
         }
     }
     
@@ -219,9 +221,9 @@ struct ConditionRowView: View {
             .frame(height: ScaleFactor.size(6))
             
             // 依据
-            if !condition.rationale.isEmpty {
+            if let rationale = condition.rationale, !rationale.isEmpty {
                 FlowLayout(spacing: ScaleFactor.spacing(4)) {
-                    ForEach(condition.rationale, id: \.self) { reason in
+                    ForEach(rationale, id: \.self) { reason in
                         Text(reason)
                             .font(.system(size: AdaptiveFont.caption1))
                             .foregroundColor(DossierColors.textTertiary)
@@ -287,11 +289,9 @@ struct EvidenceListView: View {
                         .foregroundColor(DossierColors.textSecondary)
                         .lineLimit(2)
                     
-                    if let source = ref.source {
-                        Text("来源: \(source)")
-                            .font(.system(size: AdaptiveFont.caption1))
-                            .foregroundColor(DossierColors.teal)
-                    }
+                    Text("来源: \(ref.source)")
+                        .font(.system(size: AdaptiveFont.caption1))
+                        .foregroundColor(DossierColors.teal)
                 }
                 .padding(ScaleFactor.padding(10))
                 .background(DossierColors.background)
@@ -309,15 +309,19 @@ struct EvidenceListView: View {
             card: AgentDiagnosisCard(
                 summary: "手臂出现红色皮疹，伴有瘙痒，已持续3天。皮损呈对称分布，边界较清楚。",
                 conditions: [
-                    DiagnosisCondition(name: "湿疹", confidence: 0.8, rationale: ["红疹", "瘙痒", "对称分布"]),
-                    DiagnosisCondition(name: "接触性皮炎", confidence: 0.5, rationale: ["外露部位", "边界清楚"])
+                    AgentDiagnosisCondition(name: "湿疹", confidence: 0.8, rationale: ["红疹", "瘙痒", "对称分布"]),
+                    AgentDiagnosisCondition(name: "接触性皮炎", confidence: 0.5, rationale: ["外露部位", "边界清楚"])
                 ],
                 riskLevel: "low",
                 needOfflineVisit: false,
-                urgency: nil,
                 carePlan: ["保持皮肤清洁干燥", "避免抓挠患处", "可使用温和保湿霜"],
                 references: [
-                    KnowledgeRef(id: "ref-001", title: "湿疹诊疗指南", snippet: "湿疹是一种常见的皮肤炎症...", source: "中华皮肤科杂志")
+                    KnowledgeRef(
+                        id: "ref-001",
+                        title: "湿疹诊疗指南",
+                        snippet: "湿疹是一种常见的皮肤炎症...",
+                        source: "中华皮肤科杂志"
+                    )
                 ],
                 reasoningSteps: ["收集症状信息", "分析皮损特征", "检索医学文献", "生成鉴别诊断"]
             ),

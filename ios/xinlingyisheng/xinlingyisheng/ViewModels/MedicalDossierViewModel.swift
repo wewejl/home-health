@@ -26,6 +26,9 @@ class MedicalDossierViewModel: ObservableObject {
     @Published var isMerging: Bool = false
     @Published var mergeResult: MergeEventsResponse?
 
+    // MARK: - Note State
+    @Published var isSavingNote: Bool = false
+
     // MARK: - Private Properties
     private var cancellables = Set<AnyCancellable>()
 
@@ -123,6 +126,131 @@ class MedicalDossierViewModel: ObservableObject {
                 events[index].status = .archived
                 applyFilters(searchText: searchText, filter: selectedFilter)
             }
+        }
+    }
+
+    // MARK: - Note Management
+    func saveNote(for eventId: String, content: String, isImportant: Bool = false) async -> Bool {
+        isSavingNote = true
+        defer { isSavingNote = false }
+
+        do {
+            try await MedicalEventAPIService.shared.addNote(
+                eventId: eventId,
+                content: content,
+                isImportant: isImportant
+            )
+            await refresh()
+            return true
+        } catch {
+            errorMessage = "保存备注失败: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    func deleteNote(for eventId: String, noteId: String) async -> Bool {
+        do {
+            try await MedicalEventAPIService.shared.deleteNote(
+                eventId: eventId,
+                noteId: noteId
+            )
+            await refresh()
+            return true
+        } catch {
+            errorMessage = "删除备注失败: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    // MARK: - Event Detail Methods
+    func loadEventDetail(eventId: String) async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            // 这里的实现取决于 API
+        } catch {
+            errorMessage = "加载详情失败: \(error.localizedDescription)"
+        }
+    }
+
+    func fetchAISummary(for eventId: String) async {
+        isGeneratingSummary = true
+        summaryError = nil
+
+        do {
+            let summary = try await AIService.shared.getSummary(eventId: eventId)
+            currentSummary = summary
+            isGeneratingSummary = false
+        } catch {
+            isGeneratingSummary = false
+            summaryError = "生成摘要失败: \(error.localizedDescription)"
+        }
+    }
+
+    func generateAISummary(for eventId: String, forceRegenerate: Bool = false) async {
+        isGeneratingSummary = true
+        summaryError = nil
+
+        do {
+            let summary = try await AIService.shared.generateSummary(
+                eventId: eventId,
+                forceRegenerate: forceRegenerate
+            )
+            currentSummary = summary
+            isGeneratingSummary = false
+        } catch {
+            isGeneratingSummary = false
+            summaryError = "生成摘要失败: \(error.localizedDescription)"
+        }
+    }
+
+    // MARK: - Merge Methods
+    func mergeEvents(eventIds: [String], newTitle: String? = nil) async {
+        isMerging = true
+
+        do {
+            let result = try await AIService.shared.mergeEvents(
+                eventIds: eventIds,
+                newTitle: newTitle
+            )
+            mergeResult = result
+            isMerging = false
+            await refresh()
+        } catch {
+            isMerging = false
+            errorMessage = "合并失败: \(error.localizedDescription)"
+        }
+    }
+
+    // MARK: - Export Methods
+    func markAsExported(_ event: MedicalEvent) {
+        if let index = events.firstIndex(where: { $0.id == event.id }) {
+            events[index].status = .exported
+            applyFilters(searchText: searchText, filter: selectedFilter)
+        }
+    }
+
+    // MARK: - Utility Methods
+    func clearError() {
+        errorMessage = nil
+    }
+
+    func generateTimelineItems(for event: MedicalEvent) -> [TimelineItem] {
+        // 生成时间线项目的实现
+        return []
+    }
+
+    func findRelatedEvents(for eventId: String) async {
+        isLoadingRelated = true
+
+        do {
+            let response = try await AIService.shared.findRelatedEvents(eventId: eventId)
+            relatedEvents = response.related_events
+            isLoadingRelated = false
+        } catch {
+            isLoadingRelated = false
+            print("[MedicalDossier] Failed to find related events: \(error)")
         }
     }
 }

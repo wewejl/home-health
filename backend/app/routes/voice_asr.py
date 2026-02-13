@@ -324,16 +324,15 @@ async def voice_status():
 
     return {
         "service": "voice_asr",
-        "provider": "glm",
+        "provider": "dashscope",  # 使用阿里云 DashScope ASR
         "asr_connections": len(_active_asr_connections),
-        "glm_configured": bool(settings.GLM_API_KEY),
+        "asr_configured": bool(settings.DASHSCOPE_API_KEY),
         "endpoints": {
             "asr": "/ws/voice/asr"
         },
         "config": {
             "asr_sample_rate": VoiceConfig.ASR_SAMPLE_RATE,
             "asr_format": "pcm",
-            "glm_asr_model": settings.GLM_ASR_MODEL,
             "supported_languages": ["auto", "zh", "en", "yue", "sichuanese", "ja", "ko"]
         }
     }

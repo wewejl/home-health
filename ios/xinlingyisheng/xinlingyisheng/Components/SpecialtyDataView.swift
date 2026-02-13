@@ -73,7 +73,7 @@ struct SymptomsTagView: View {
                 .fontWeight(.medium)
                 .foregroundColor(.secondary)
             
-            FlowLayout(spacing: 8) {
+            FlowLayoutSpecialty(spacing: 8) {
                 ForEach(symptoms, id: \.self) { symptom in
                     Text(symptom)
                         .font(.system(size: UnifiedFont.caption1))
@@ -207,7 +207,7 @@ struct ConsultationProgressView: View {
 }
 
 // MARK: - 风险等级徽章
-struct RiskLevelBadge: View {
+struct RiskLevelBadgeView: View {
     let riskLevel: RiskLevel
     
     var backgroundColor: Color {
@@ -245,7 +245,7 @@ struct RiskLevelBadge: View {
 }
 
 // MARK: - Flow Layout (自动换行布局)
-struct FlowLayout: Layout {
+struct FlowLayoutSpecialty: Layout {
     var spacing: CGFloat = 8
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
@@ -298,10 +298,10 @@ struct FlowLayout: Layout {
         ConsultationProgressView(stage: .diagnosing, progress: 80)
 
         HStack {
-            RiskLevelBadge(riskLevel: .low)
-            RiskLevelBadge(riskLevel: .medium)
-            RiskLevelBadge(riskLevel: .high)
-            RiskLevelBadge(riskLevel: .emergency)
+            RiskLevelBadgeView(riskLevel: .low)
+            RiskLevelBadgeView(riskLevel: .medium)
+            RiskLevelBadgeView(riskLevel: .high)
+            RiskLevelBadgeView(riskLevel: .emergency)
         }
     }
     .padding()
