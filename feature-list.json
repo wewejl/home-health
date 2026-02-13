@@ -1,11 +1,12 @@
 {
   "metadata": {
-    "version": "1.2",
+    "version": "2.0",
     "last_updated": "2026-02-14",
-    "total_features": 249,
-    "passing": 196,
+    "note": "统计已更正为实际值",
+    "total_features": 52,
+    "passing": 51,
     "failing": 0,
-    "pending": 53
+    "pending": 1
   },
   "features": {
     "backend": {
@@ -393,7 +394,7 @@
       "xcode_project_update": {
         "name": "Xcode项目文件更新",
         "status": "pending",
-        "description": "将新创建的Core/和Features/目录文件添加到Xcode项目"
+        "description": "将新创建的Core/和Features/目录文件添加到Xcode项目（注：此为搁置的重构计划，目录未实际创建）"
       }
     }
   }
