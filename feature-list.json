@@ -1,11 +1,11 @@
 {
   "metadata": {
-    "version": "1.1",
+    "version": "1.2",
     "last_updated": "2026-02-14",
     "total_features": 249,
-    "passing": 193,
+    "passing": 196,
     "failing": 0,
-    "pending": 56
+    "pending": 53
   },
   "features": {
     "backend": {
@@ -127,15 +127,15 @@
       },
       "medical_folders": {
         "name": "病历夹管理",
-        "status": "pending"
+        "status": "passing"
       },
       "medical_records": {
         "name": "病历记录管理",
-        "status": "pending"
+        "status": "passing"
       },
       "medical_files": {
         "name": "医疗文件管理",
-        "status": "pending"
+        "status": "passing"
       },
       "security": {
         "name": "安全配置",
