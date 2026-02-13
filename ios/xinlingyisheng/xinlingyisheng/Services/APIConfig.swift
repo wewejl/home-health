@@ -1,77 +1,64 @@
 import Foundation
 
+// MARK: - API Configuration
+/// API 配置（使用 SecurityConfig 获取值）
 enum APIConfig {
-    // MARK: - Environment Configuration
-    enum Environment {
-        case development
-        case production
 
-        var baseURL: String {
-            switch self {
-            case .development:
-                // 开发环境：使用本地服务器或测试服务器
-                // 优先从环境变量读取，否则使用默认值
-                // 注意：iOS 模拟器需要使用 127.0.0.1 而非 localhost
-                return ProcessInfo.processInfo.environment["API_BASE_URL"]
-                    ?? "http://127.0.0.1:8100"
-            case .production:
-                // 生产环境：使用生产服务器
-                return ProcessInfo.processInfo.environment["API_BASE_URL"]
-                    ?? "http://123.206.232.231/api"
-            }
-        }
+    // MARK: - Base URLs
 
-        var isDebug: Bool {
-            switch self {
-            case .development: return true
-            case .production: return false
-            }
-        }
-    }
-
-    // 当前环境配置 - 开发环境使用本地服务器
-    static let currentEnvironment: Environment = .development
-
-    // 基础 URL
+    /// 基础 URL（从 SecurityConfig 获取）
     static var baseURL: String {
-        return currentEnvironment.baseURL
+        return SecurityConfig.apiBaseURL
     }
 
-    // 请求超时时间
+    /// WebSocket 基础 URL（从 SecurityConfig 获取）
+    static var websocketBaseURL: String {
+        return SecurityConfig.websocketBaseURL
+    }
+
+    // MARK: - Timeouts
+
+    /// 请求超时时间
     static let requestTimeout: TimeInterval = 30
 
-    // 流式响应超时时间（AI 对话可能需要更长时间）
+    /// 流式响应超时时间（AI 对话可能需要更长时间）
     static let streamTimeout: TimeInterval = 300
 
     // MARK: - Environment Info
+
     static let environmentName: String = "Production"
 
+    // MARK: - Endpoints
+
     enum Endpoints {
+        // Auth
         static let login = "/auth/login"
         static let sendCode = "/auth/send-code"
         static let me = "/auth/me"
         static let profile = "/auth/profile"
         static let refresh = "/auth/refresh"
-        // 密码认证
         static let checkPhone = "/auth/check-phone"
         static let loginPassword = "/auth/login-password"
         static let registerPassword = "/auth/register-password"
         static let setPassword = "/auth/password/set"
         static let resetPassword = "/auth/password/reset"
+
+        // Departments & Doctors
         static let departments = "/departments"
         static func doctors(departmentId: Int) -> String {
             return "/departments/\(departmentId)/doctors"
         }
-        // Sessions endpoints - 多智能体架构
+
+        // Sessions (多智能体架构)
         static let sessions = "/sessions"
         static func messages(sessionId: String) -> String {
             return "/sessions/\(sessionId)/messages"
         }
-        // Unified Agent endpoints
         static let agents = "/sessions/agents"
         static func agentCapabilities(agentType: String) -> String {
             return "/sessions/agents/\(agentType)/capabilities"
         }
+
         // Diseases
         static let diseases = "/diseases"
         static let diseasesSearch = "/diseases/search"
@@ -80,7 +67,6 @@ enum APIConfig {
         static func diseaseDetail(diseaseId: Int) -> String {
             return "/diseases/\(diseaseId)"
         }
-        // MedLive 格式
         static func diseaseDetailMedLive(diseaseId: Int) -> String {
             return "/diseases/\(diseaseId)/medlive"
         }
@@ -96,7 +82,7 @@ enum APIConfig {
             return "/drugs/\(drugId)"
         }
 
-        // Medical Events (病历资料夹)
+        // Medical Events
         static let medicalEvents = "/medical-events"
         static func medicalEventDetail(eventId: String) -> String {
             return "/medical-events/\(eventId)"
@@ -123,7 +109,7 @@ enum APIConfig {
             return "/ai/transcribe/\(taskId)"
         }
 
-        // Medical Orders (医嘱执行监督)
+        // Medical Orders
         static let medicalOrders = "/medical-orders"
         static let medicalTasks = "/medical-orders/tasks"
         static let compliance = "/medical-orders/compliance"
@@ -132,41 +118,29 @@ enum APIConfig {
     }
 }
 
-// MARK: - Backend Voice Configuration
-/// 后端语音服务配置 (统一的后端转发服务)
-/// 注: TTS (Text-to-Speech) 功能已移除
+// MARK: - Backend Voice Configuration (已弃用 - 使用 SecureWebSocketService)
+@available(*, deprecated, message: "Use SecureWebSocketService instead")
 enum BackendVoiceConfig {
-    /// 后端 WebSocket 基础地址
-    static var baseURL: String {
-        return ProcessInfo.processInfo.environment["BACKEND_URL"]
-            ?? APIConfig.baseURL
-    }
-
-    /// 默认认证 token
+    @available(*, deprecated, message: "Hardcoded tokens removed. Use AuthManager.")
     static var defaultToken: String {
-        return ProcessInfo.processInfo.environment["AUTH_TOKEN"]
-            ?? "test_1"
+        fatalError("BackendVoiceConfig.defaultToken is deprecated. Use AuthManager.shared.token")
     }
 
-    /// ASR WebSocket 端点路径
     static let asrPath = "/ws/voice/asr"
 
-    /// 完整 ASR WebSocket URL
+    @available(*, deprecated, message: "Use SecureWebSocketService.connect instead")
     static var asrURL: String {
-        var components = URLComponents(string: baseURL)!
-        components.path = asrPath
-        components.queryItems = [
-            URLQueryItem(name: "token", value: defaultToken)
-        ]
-        return components.url!.absoluteString.replacingOccurrences(of: "http", with: "ws")
+        fatalError("BackendVoiceConfig.asrURL is deprecated. Use SecureWebSocketService")
     }
 
-    // TTS WebSocket 配置已移除 (ttsPath, ttsURL 已废弃)
+    @available(*, deprecated, message: "Use SecurityConfig.apiBaseURL instead")
+    static var baseURL: String {
+        return SecurityConfig.apiBaseURL
+    }
 }
 
 // MARK: - Aliyun Configuration
 /// 阿里云服务配置
-/// 注: CosyVoice TTS 相关配置已移除
 enum AliyunConfig {
     /// FSMN-VAD 模型路径（在应用包内）
     static let fsmnVADModelPath = "Models/damo/speech_fsmn_vad_zh-cn-16k-common-onnx/model_quant.onnx"
@@ -176,44 +150,4 @@ enum AliyunConfig {
         return ProcessInfo.processInfo.environment["ENABLE_FSMN_VAD"] == "true"
             || true  // 默认启用
     }
-
-    // TTS 相关配置已移除 (cosyVoiceAPIKey, cosyVoiceEndpoint, defaultCosyVoiceModel,
-    // defaultCosyVoiceVoice, enableCosyVoiceTTS 已废弃)
-}
-
-// MARK: - Backend ASR Configuration (Legacy)
-/// 后端 ASR 服务配置 (FunASR) - 已废弃，请使用 BackendVoiceConfig
-enum BackendASRConfig {
-    /// 后端 WebSocket 基础地址
-    static var baseURL: String {
-        return ProcessInfo.processInfo.environment["BACKEND_URL"]
-            ?? APIConfig.baseURL
-    }
-
-    /// 阿里云 DashScope API Key (已移至后端，前端不需要)
-    static var apiKey: String {
-        // 不再在前端存储 API Key
-        return ""
-    }
-
-    /// WebSocket 端点路径 (已废弃)
-    static let webSocketPath = "/funasr/ws"
-
-    /// 完整 WebSocket URL (已废弃)
-    static var webSocketURL: String {
-        var components = URLComponents(string: baseURL)!
-        components.path = webSocketPath
-        components.queryItems = [
-            URLQueryItem(name: "api_key", value: ""),
-            URLQueryItem(name: "sample_rate", value: "16000"),
-            URLQueryItem(name: "format", value: "pcm")
-        ]
-        return components.url!.absoluteString.replacingOccurrences(of: "http", with: "ws")
-    }
-
-    /// 采样率
-    static let sampleRate: Int = 16000
-
-    /// 音频格式
-    static let format: String = "pcm"
 }

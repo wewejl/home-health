@@ -67,8 +67,13 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
     var onError: ((String) -> Void)?
 
     // MARK: - Configuration
-    private let baseURL: String
-    private let token: String
+    private var baseURL: String {
+        return SecurityConfig.apiBaseURL
+    }
+
+    private var token: String? {
+        return AuthManager.shared.token
+    }
 
     // MARK: - ASR Components
     private var asrWebSocket: Starscream.WebSocket?
@@ -102,9 +107,6 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
 
     // MARK: - Init (private for singleton)
     private override init() {
-        self.baseURL = BackendVoiceConfig.baseURL
-        self.token = BackendVoiceConfig.defaultToken
-
         super.init()
         #if DEBUG
         print("[PressAndHoldVoiceService] 单例初始化完成")
@@ -366,19 +368,16 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
     // MARK: - Private Methods - ASR
 
     private func connectASR() async throws {
-        var components = URLComponents(string: baseURL)!
-        components.path = "/ws/voice/asr"
-        components.queryItems = [
-            URLQueryItem(name: "token", value: token),
-            URLQueryItem(name: "language", value: currentLanguage.rawValue)
-        ]
-
-        guard let url = components.url else {
-            throw WebSocketVoiceError.invalidURL
+        // ⚡ 安全改进：从 AuthManager 获取 Token
+        guard let authToken = token else {
+            throw WebSocketVoiceError.unauthorized
         }
 
+        // 构建带语言参数的 URL
+        let urlString = baseURL + "/ws/voice/asr?language=\(currentLanguage.rawValue)"
+
         // 转换为 ws:// 协议
-        let wsURLString = url.absoluteString
+        let wsURLString = urlString
             .replacingOccurrences(of: "http://", with: "ws://")
             .replacingOccurrences(of: "https://", with: "wss://")
 
@@ -386,13 +385,18 @@ class PressAndHoldVoiceService: NSObject, ObservableObject {
             throw WebSocketVoiceError.invalidURL
         }
 
+        // 创建 URLRequest，将 Token 放在 Header 中
+        var request = URLRequest(url: wsURL)
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+
         #if DEBUG
         print("[PressAndHoldVoiceService] ASR 连接: \(wsURL.absoluteString)")
+        print("[PressAndHoldVoiceService] 使用 Header 认证 (Bearer Token)")
         #endif
 
         try await withCheckedThrowingContinuation { continuation in
             asrContinuation = continuation
-            asrWebSocket = Starscream.WebSocket(request: URLRequest(url: wsURL))
+            asrWebSocket = Starscream.WebSocket(request: request)
             asrWebSocketDelegate = PressAndHoldASRWebSocketDelegate(voiceService: self)
             asrWebSocket?.delegate = asrWebSocketDelegate
             asrWebSocket?.connect()
