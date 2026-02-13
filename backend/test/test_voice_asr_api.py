@@ -34,9 +34,9 @@ class TestVoiceStatusAPI:
         assert response.status_code == 200
         data = response.json()
         assert data["service"] == "voice_asr"
-        assert data["provider"] == "glm"
+        assert data["provider"] == "dashscope"
         assert "asr_connections" in data
-        assert "glm_configured" in data
+        assert "asr_configured" in data
         assert "endpoints" in data
         assert "config" in data
 

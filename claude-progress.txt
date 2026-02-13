@@ -97,3 +97,14 @@ bash scripts/ios/verify-security.sh
   - 修复 event_ids JSON 字符串数组与整数 ID 比较问题
 - **提交**: 待提交
 
+
+### 2026-02-13 Session: Ralph Loop 迭代 2
+- **状态**: ✅ 完成
+- **任务**: 安装pytest测试依赖
+- **完成内容**:
+  - 添加 pytest>=7.4.0 到 requirements.txt
+  - 更新 Dockerfile 安装 pytest 和 pytest-asyncio
+  - 修复测试断言（provider: glm -> dashscope, glm_configured -> asr_configured）
+  - 验证测试通过
+- **提交**: 待提交
+

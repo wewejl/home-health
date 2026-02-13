@@ -34,18 +34,11 @@ NEW_ITERATION=$((ITERATION + 1))
 sed -i.bak "s/iteration: $ITERATION/iteration: $NEW_ITERATION/" "$RALPH_STATE_FILE"
 rm -f "${RALPH_STATE_FILE}.bak"
 
-# 读取原始 PROMPT
-ORIGINAL_PROMPT=$(grep "prompt:" "$RALPH_STATE_FILE" | head -1 | sed 's/prompt: //' | sed 's/^"//; s/"$//')
-
-echo "[Ralph Loop] ========================================"
-echo "[Ralph Loop] 迭代 $NEW_ITERATION/$MAX_ITERATIONS"
-echo "[Ralph Loop] 重新开始会话，继续任务..."
-echo "[Ralph Loop] ========================================"
+echo ""
+echo "============================================"
+echo "🔄 RALPH LOOP - 迭代 $NEW_ITERATION/$MAX_ITERATIONS"
+echo "============================================"
 echo ""
 
-# 重新执行 ralph-wiggum:ralph-loop 命令
-# 这里我们输出命令让系统执行
-echo "/ralph-wiggum:ralph-loop \"$ORIGINAL_PROMPT\" --max-iterations $MAX_ITERATIONS"
-
-# 阻止正常退出
+# 阻止正常退出，触发会话重启
 exit 1

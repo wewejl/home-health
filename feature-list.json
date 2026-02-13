@@ -3,9 +3,9 @@
     "version": "1.0",
     "last_updated": "2026-02-13",
     "total_features": 249,
-    "passing": 188,
+    "passing": 189,
     "failing": 0,
-    "pending": 61
+    "pending": 60
   },
   "features": {
     "backend": {
@@ -421,8 +421,8 @@
         },
         "install_pytest": {
           "name": "安装pytest测试依赖",
-          "status": "pending",
-          "description": "在后端Docker容器中安装pytest以支持自动化测试"
+          "status": "passing",
+          "description": "已添加 pytest 和 pytest-asyncio 到 requirements.txt 和 Dockerfile"
         },
         "code_analysis": {
           "name": "代码分析工具配置",
