@@ -1,0 +1,17 @@
+// Development Environment Configuration
+// 开发环境配置 - 使用本地服务器
+
+#include? "../../../../tmp/ios-local.xcconfig"
+// 允许本地覆盖配置（不提交到 git）
+
+// API 配置
+API_BASE_URL = https://127.0.0.1:8100
+API_ENVIRONMENT = development
+
+// 认证配置（本地开发时从 tmp/ios-local.xcconfig 获取）
+// AUTH_TOKEN = your_dev_token_here
+
+// 功能开关
+DEBUG_MODE = YES
+ENABLE_SSL_PINNING = NO
+ENABLE_NETWORK_LOGGING = YES

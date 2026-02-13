@@ -1,0 +1,16 @@
+// Production Environment Configuration
+// 生产环境配置 - 敏感信息由 CI/CD 注入
+
+// API 配置 - 必须从构建环境注入
+API_BASE_URL = $(API_BASE_URL)
+API_ENVIRONMENT = production
+
+// 功能开关
+DEBUG_MODE = NO
+ENABLE_SSL_PINNING = YES
+ENABLE_NETWORK_LOGGING = NO
+
+// 安全检查（编译时验证）
+#ifndef API_BASE_URL
+#error "API_BASE_URL must be set for production builds"
+#endif

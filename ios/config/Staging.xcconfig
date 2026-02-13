@@ -1,0 +1,14 @@
+// Staging Environment Configuration
+// 预发布环境配置
+
+// API 配置 - 从构建环境注入
+API_BASE_URL = $(API_BASE_URL)
+API_ENVIRONMENT = staging
+
+// 认证配置 - 从构建环境注入
+// AUTH_TOKEN 由构建系统提供
+
+// 功能开关
+DEBUG_MODE = NO
+ENABLE_SSL_PINNING = YES
+ENABLE_NETWORK_LOGGING = NO
