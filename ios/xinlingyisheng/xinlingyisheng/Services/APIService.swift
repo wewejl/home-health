@@ -68,11 +68,24 @@ class APIService {
             }
             
             if let httpResponse = response as? HTTPURLResponse {
-                if httpResponse.statusCode == 401 {
-                    print("[API] ❌ 401 Unauthorized")
-                    DispatchQueue.main.async {
-                        NotificationCenter.default.post(name: AuthManager.unauthorizedNotification, object: nil)
+                if httpResponse.statusCode == 401 && requiresAuth {
+                    print("[API] ❌ 401 Unauthorized - 尝试刷新 Token")
+                    // 使用 TokenRefreshHandler 处理 401
+                    let refreshed = await TokenRefreshHandler.shared.handleUnauthorized()
+                    if refreshed {
+                        print("[API] ✅ Token 刷新成功，重试请求")
+                        // 重试请求（递归调用一次，避免无限循环）
+                        return try await makeRequest(
+                            endpoint: endpoint,
+                            method: method,
+                            body: body,
+                            requiresAuth: requiresAuth
+                        )
+                    } else {
+                        print("[API] ❌ Token 刷新失败")
+                        throw APIError.unauthorized
                     }
+                } else if httpResponse.statusCode == 401 {
                     throw APIError.unauthorized
                 }
                 
@@ -480,7 +493,7 @@ extension APIService {
         attachments: [MessageAttachment] = [],
         action: AgentAction = .conversation,
         onChunk: @escaping (String) -> Void,
-        onComplete: @escaping (AgentResponse) -> Void,
+        onComplete: @escaping (UnifiedMessageResponse) -> Void,
         onError: @escaping (Error) -> Void
     ) async {
         await sendMessageStreaming(
