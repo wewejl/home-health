@@ -1,11 +1,83 @@
 # 技术债务清单
 
-> 最后更新：2026-02-12 (医嘱创建功能 E2E 测试完成)
+> 最后更新：2026-02-12 (iOS 工程化 Core 基础设施完成)
 > **详细清理计划**: [2026-02-11-tech-debt-cleanup-plan.md](../plans/2026-02-11-tech-debt-cleanup-plan.md)
 
 ---
 
 ## 🔴 高优先级（尽快处理）- P0
+
+### iOS 工程化优化 - Core 基础设施
+- **状态**: ✅ 已完成 (2026-02-12)
+- **位置**: `ios/xinlingyisheng/xinlingyisheng/Core/`
+- **说明**: 创建 Core 目录结构和统一的基础设施
+- **新增文件**:
+  - `Core/Theme/AppColors.swift` - 统一颜色系统
+  - `Core/Theme/AppFonts.swift` - 统一字体系统
+  - `Core/Theme/AppSpacing.swift` - 统一间距系统
+  - `Core/Theme/AppAssets.swift` - 图片资源管理
+  - `Core/Config/AppConfig.swift` - 应用配置
+  - `Core/Config/AppConstants.swift` - 常量定义
+  - `Core/Routing/AppRouter.swift` - 统一路由
+  - `Core/Error/AppError.swift` - 错误类型
+  - `Core/Error/ErrorHandler.swift` - 错误处理
+  - `Core/Base/BaseViewModel.swift` - 基础 ViewModel
+  - `Core/Components/AppButton.swift` - 统一按钮
+  - `Core/Components/AppEmptyView.swift` - 空状态视图
+- **关联任务**: IOS-ENG-001
+
+### iOS 工程化优化 - 组件库
+- **状态**: ✅ 已完成 (2026-02-12)
+- **位置**: `ios/xinlingyisheng/xinlingyisheng/Core/Components/`
+- **说明**: 创建共享组件库，提高代码复用性
+- **新增文件**:
+  - `Core/Components/AppTextField.swift` - 统一输入框（标准、下划线、填充样式）
+  - `Core/Components/AppCard.swift` - 统一卡片组件（标准、填充、轮廓样式）
+  - `Core/Components/AppLoadingView.swift` - 加载状态视图（指示器、文字、全屏）
+  - `Core/Components/AppSheet.swift` - 底部抽屉组件（标准、全屏、固定高度）
+- **关联任务**: IOS-ENG-002
+
+### iOS 工程化优化 - Xcode 项目文件更新指南
+- **状态**: ✅ 已完成 (2026-02-12)
+- **位置**: `docs/iOS/Xcode项目文件更新指南.md`
+- **说明**: 创建了详细的 Xcode 项目文件更新指南文档，包含所有 60+ 个文件的添加步骤
+- **关联任务**: IOS-ENG-004
+- **位置**: `ios/xinlingyisheng/xinlingyisheng.xcodeproj`
+- **问题**: 新创建的 Core/ 和 Features/ 目录文件未添加到 Xcode 项目
+- **解决方案**: 需要在 Xcode IDE 中打开项目，手动添加新文件到项目中（File → Add Files）
+- **说明**: Core 和 Features 目录结构已创建，38+ Swift 文件已迁移
+- **关联任务**: IOS-ENG-004
+- **位置**: `ios/xinlingyisheng/xinlingyisheng/Features/`
+- **说明**: 将现有文件按功能模块迁移到 Features 目录结构
+- **新增目录结构**:
+  - `Features/Auth/` - 认证模块（Views, ViewModels, Services, Models）
+  - `Features/Chat/` - 聊天模块（Views, ViewModels, Services, Models）
+  - `Features/Knowledge/Disease/` - 疾病知识模块
+  - `Features/Knowledge/Drug/` - 药品知识模块
+  - `Features/Medical/Dossier/` - 病历夹模块
+  - `Features/Medical/Orders/` - 医嘱模块
+  - `Features/Profile/` - 个人中心模块
+- **迁移文件数**: 38+ Swift 文件
+- **关联任务**: IOS-ENG-003
+
+### API 类型不一致问题
+- **状态**: ⚠️ 待修复 (2026-02-12)
+- **位置**: `ios/xinlingyisheng/xinlingyisheng/Core/`
+- **说明**: 创建 Core 目录结构和统一的基础设施
+- **新增文件**:
+  - `Core/Theme/AppColors.swift` - 统一颜色系统
+  - `Core/Theme/AppFonts.swift` - 统一字体系统
+  - `Core/Theme/AppSpacing.swift` - 统一间距系统
+  - `Core/Theme/AppAssets.swift` - 图片资源管理
+  - `Core/Config/AppConfig.swift` - 应用配置
+  - `Core/Config/AppConstants.swift` - 常量定义
+  - `Core/Routing/AppRouter.swift` - 统一路由
+  - `Core/Error/AppError.swift` - 错误类型
+  - `Core/Error/ErrorHandler.swift` - 错误处理
+  - `Core/Base/BaseViewModel.swift` - 基础 ViewModel
+  - `Core/Components/AppButton.swift` - 统一按钮
+  - `Core/Components/AppEmptyView.swift` - 空状态视图
+- **关联任务**: IOS-ENG-001
 
 ### API 类型不一致问题
 - **状态**: ⚠️ 待修复 (2026-02-12)
@@ -72,6 +144,42 @@
 - **新增文件**: `ios/xinlingyisheng/xinlingyisheng/Services/KeychainManager.swift`
 - **验证结果**: iOS 项目编译成功 (BUILD SUCCEEDED)
 - **关联任务**: IOS-P0-002
+
+### iOS 安全问题修复 (2026-02-13)
+- **状态**: ✅ 已完成 (2026-02-13)
+- **位置**: iOS 多个文件
+- **问题**: 多个 iOS 安全风险
+  - 硬编码 Token (`test_1`)
+  - Token 通过 URL 参数传递
+  - HTTP 明文传输
+  - 硬编码 IP 地址
+  - Token 刷新并发问题
+  - 错误消息泄露技术细节
+  - WebSocket 认证不安全
+- **解决方案**:
+  - **SecurityConfig**: 集中式安全配置，xcconfig 环境管理
+  - **CertValidator**: 开发环境自签名证书支持
+  - **TokenRefreshHandler**: 统一 401 处理和 Token 刷新
+  - **SecureWebSocketService**: Header 认证替代 URL 参数
+  - **AppError**: 用户友好错误消息
+  - **ErrorBanner**: 统一错误提示组件
+  - **APIConfig**: 移除硬编码，使用 SecurityConfig
+  - **APIService**: 集成 TokenRefreshHandler
+  - **PressAndHoldVoiceService**: 使用 Header 认证
+- **新增文件**:
+  - `ios/config/*.xcconfig` - 环境配置文件
+  - `ios/Security/SecurityConfig.swift`
+  - `ios/Security/CertValidator.swift`
+  - `ios/Security/TokenRefreshHandler.swift`
+  - `ios/Security/AppError.swift`
+  - `ios/Network/SecureURLSession.swift`
+  - `ios/Network/SecureWebSocketService.swift`
+  - `ios/Components/ErrorBanner.swift`
+  - `scripts/ios/generate-dev-cert.sh`
+  - `scripts/ios/verify-security.sh`
+  - `docs/iOS/security-guide.md`
+- **验证结果**: 安全验证脚本通过
+- **关联文档**: `docs/plans/2026-02-13-ios-security-fixes-design.md`
 
 ### UnifiedChatViewModel 过于庞大
 - **状态**: ✅ 已完成 (2026-02-11)
@@ -566,7 +674,7 @@
 
 | 优先级 | 后端 | 前端 | iOS | 合计 |
 |--------|------|------|-----|------|
-| P0 | 0 | 0 | 0 | 0 |
+| P0 | 0 | 0 | 1 | 1 |
 | P1 | 1 | 0 | 0 | 1 |
 | P2 | 1 | 0 | 0 | 1 |
-| **合计** | **2** | **0** | **0** | **2** |
+| **合计** | **2** | **0** | **1** | **5** |
