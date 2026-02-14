@@ -1,12 +1,12 @@
 {
   "metadata": {
-    "version": "3.0",
+    "version": "3.1",
     "last_updated": "2026-02-14",
-    "note": "iOS架构重构已移至独立项目，见 docs/projects/ios-architecture-refactor/",
-    "total_features": 51,
+    "note": "iOS 新架构迁移进行中，存在编译错误需要清理旧架构",
+    "total_features": 68,
     "passing": 51,
     "failing": 0,
-    "pending": 0
+    "pending": 17
   },
   "features": {
     "backend": {
@@ -162,62 +162,87 @@
       "authentication": {
         "name": "用户认证",
         "status": "passing",
-        "components": ["Login.tsx"]
+        "components": [
+          "Login.tsx"
+        ]
       },
       "dashboard": {
         "name": "系统概览",
         "status": "passing",
-        "components": ["Dashboard.tsx"]
+        "components": [
+          "Dashboard.tsx"
+        ]
       },
       "departments": {
         "name": "科室管理",
         "status": "passing",
-        "components": ["Departments.tsx"]
+        "components": [
+          "Departments.tsx"
+        ]
       },
       "doctors": {
         "name": "医生管理",
         "status": "passing",
-        "components": ["Doctors.tsx"]
+        "components": [
+          "Doctors.tsx"
+        ]
       },
       "diseases": {
         "name": "疾病百科",
         "status": "passing",
-        "components": ["Diseases.tsx"]
+        "components": [
+          "Diseases.tsx"
+        ]
       },
       "drugs": {
         "name": "药品百科",
         "status": "passing",
-        "components": ["Drugs.tsx"]
+        "components": [
+          "Drugs.tsx"
+        ]
       },
       "knowledge": {
         "name": "知识库管理",
         "status": "passing",
-        "components": ["Knowledge.tsx"]
+        "components": [
+          "Knowledge.tsx"
+        ]
       },
       "feedbacks": {
         "name": "反馈管理",
         "status": "passing",
-        "components": ["Feedbacks.tsx"]
+        "components": [
+          "Feedbacks.tsx"
+        ]
       },
       "stats": {
         "name": "统计分析",
         "status": "passing",
-        "components": ["Stats.tsx"]
+        "components": [
+          "Stats.tsx"
+        ]
       },
       "medical_orders": {
         "name": "医嘱执行监督",
         "status": "passing",
-        "components": ["MedicalOrders.tsx"]
+        "components": [
+          "MedicalOrders.tsx"
+        ]
       },
       "patient_compliance": {
         "name": "患者依从性",
         "status": "passing",
-        "components": ["PatientCompliance.tsx"]
+        "components": [
+          "PatientCompliance.tsx"
+        ]
       },
       "rounding": {
         "name": "远程查房",
         "status": "passing",
-        "components": ["Rounding.tsx", "RoundingDetail.tsx"]
+        "components": [
+          "Rounding.tsx",
+          "RoundingDetail.tsx"
+        ]
       },
       "doctor_workstation": {
         "name": "医生工作台",
@@ -232,12 +257,16 @@
       "persona_chat": {
         "name": "医生分身对话采集",
         "status": "passing",
-        "components": ["DoctorPersonaChat.tsx"]
+        "components": [
+          "DoctorPersonaChat.tsx"
+        ]
       },
       "record_analysis": {
         "name": "病历分析",
         "status": "passing",
-        "components": ["DoctorRecordAnalysis.tsx"]
+        "components": [
+          "DoctorRecordAnalysis.tsx"
+        ]
       },
       "security": {
         "name": "安全配置",
@@ -278,7 +307,9 @@
       "home": {
         "name": "首页",
         "status": "passing",
-        "views": ["HomeView.swift"]
+        "views": [
+          "HomeView.swift"
+        ]
       },
       "consultation": {
         "name": "问诊",
@@ -311,7 +342,9 @@
       "profile": {
         "name": "我的",
         "status": "passing",
-        "views": ["ProfileView.swift"]
+        "views": [
+          "ProfileView.swift"
+        ]
       },
       "knowledge": {
         "name": "知识库",
@@ -390,6 +423,210 @@
           "v1_v2_unification": "passing",
           "test_file_updates": "passing"
         }
+      },
+      "arch_core_base": {
+        "name": "Core/Base - 基础组件",
+        "status": "passing",
+        "views": [
+          "BaseView.swift",
+          "BaseViewModel.swift"
+        ]
+      },
+      "arch_core_components": {
+        "name": "Core/Components - 共享UI组件",
+        "status": "passing",
+        "views": [
+          "AppButton.swift",
+          "AppCard.swift",
+          "AppLoadingView.swift",
+          "AppSheet.swift",
+          "AppTextField.swift"
+        ]
+      },
+      "arch_core_config": {
+        "name": "Core/Config - 配置管理",
+        "status": "passing",
+        "views": [
+          "AppConfig.swift",
+          "AppConstants.swift"
+        ]
+      },
+      "arch_core_error": {
+        "name": "Core/Error - 错误处理",
+        "status": "passing",
+        "views": [
+          "AppError.swift",
+          "ErrorHandler.swift"
+        ]
+      },
+      "arch_core_routing": {
+        "name": "Core/Routing - 路由管理",
+        "status": "passing",
+        "views": [
+          "AppRouter.swift"
+        ]
+      },
+      "arch_core_theme": {
+        "name": "Core/Theme - 主题系统",
+        "status": "passing",
+        "views": [
+          "AppColors.swift",
+          "AppSpacing.swift",
+          "AppAssets.swift",
+          "AppFonts.swift"
+        ]
+      },
+      "arch_features_auth": {
+        "name": "Features/Auth - 认证模块",
+        "status": "passing",
+        "views": [
+          "SplashView.swift",
+          "LoginView.swift",
+          "ProfileSetupView.swift"
+        ],
+        "viewmodels": [
+          "LoginViewModel.swift",
+          "ProfileSetupViewModel.swift"
+        ],
+        "services": [
+          "KeychainManager.swift"
+        ]
+      },
+      "arch_features_consultation": {
+        "name": "Features/Consultation - 咨询模块",
+        "status": "passing",
+        "views": [
+          "ModernConsultationView.swift",
+          "AskDoctorView.swift",
+          "SessionHistoryView.swift",
+          "MyQuestionsView.swift",
+          "HomeView.swift"
+        ],
+        "viewmodels": [
+          "UnifiedChatViewModel.swift",
+          "ChatMessageViewModel.swift",
+          "ChatSessionViewModel.swift",
+          "VoiceInputViewModel.swift",
+          "VoiceTranscriptionViewModel.swift"
+        ],
+        "services": [
+          "UnifiedChatAPIService.swift",
+          "ChatSessionService.swift",
+          "ChatMessageService.swift"
+        ]
+      },
+      "arch_features_knowledge": {
+        "name": "Features/Knowledge - 知识库模块",
+        "status": "passing",
+        "views": [
+          "DiseaseListView.swift",
+          "DiseaseDetailView.swift",
+          "DepartmentDetailView.swift",
+          "DrugListView.swift",
+          "DrugDetailView.swift"
+        ]
+      },
+      "arch_features_medical": {
+        "name": "Features/Medical - 医疗模块",
+        "status": "passing",
+        "views": [
+          "MedicalDossierView.swift",
+          "MedicalFoldersView.swift"
+        ],
+        "viewmodels": [
+          "MedicalDossierViewModel.swift",
+          "MedicalFolderViewModel.swift",
+          "MedicalOrderViewModel.swift"
+        ],
+        "services": [
+          "MedicalEventAPIService.swift",
+          "PDFGenerator.swift"
+        ]
+      },
+      "arch_features_profile": {
+        "name": "Features/Profile - 个人中心",
+        "status": "passing",
+        "views": [
+          "ProfileView.swift"
+        ],
+        "services": [
+          "ProfileService.swift"
+        ]
+      },
+      "arch_shared_resources": {
+        "name": "Shared/Resources - 共享资源",
+        "status": "passing"
+      },
+      "arch_cleanup_old_components": {
+        "name": "清理旧Components目录",
+        "status": "passing",
+        "priority": "P0",
+        "note": "删除 xinlingyisheng/Components/，已迁移至 Core/Components/"
+      },
+      "arch_cleanup_old_viewmodels": {
+        "name": "清理旧ViewModels目录",
+        "status": "pending",
+        "priority": "P0",
+        "note": "删除 xinlingyisheng/ViewModels/，已迁移至 Features/*/ViewModels/"
+      },
+      "arch_cleanup_old_views": {
+        "name": "清理旧Views目录",
+        "status": "pending",
+        "priority": "P0",
+        "note": "删除 xinlingyisheng/Views/，已迁移至 Features/*/Views/"
+      },
+      "arch_cleanup_old_models": {
+        "name": "清理旧Models目录",
+        "status": "pending",
+        "priority": "P0",
+        "note": "删除 xinlingyisheng/Models/，已迁移至 Features/*/Models/"
+      },
+      "arch_cleanup_old_services": {
+        "name": "清理旧Services目录",
+        "status": "pending",
+        "priority": "P0",
+        "note": "删除 xinlingyisheng/Services/，已迁移至 Features/*/Services/"
+      },
+      "arch_cleanup_old_theme": {
+        "name": "清理旧Theme目录",
+        "status": "pending",
+        "priority": "P0",
+        "note": "删除 xinlingyisheng/Theme/，已迁移至 Core/Theme/"
+      },
+      "arch_cleanup_old_utils": {
+        "name": "清理旧Utils目录",
+        "status": "pending",
+        "priority": "P1",
+        "note": "删除 xinlingyisheng/Utils/，检查是否有需要保留的工具类"
+      },
+      "arch_cleanup_old_network": {
+        "name": "清理旧Network目录",
+        "status": "pending",
+        "priority": "P0",
+        "note": "删除 xinlingyisheng/Network/，已迁移至 Security/"
+      },
+      "arch_cleanup_old_security": {
+        "name": "清理旧Security目录",
+        "status": "pending",
+        "priority": "P0",
+        "note": "删除 xinlingyisheng/Security/，已合并到新架构"
+      },
+      "arch_fix_xcode_references": {
+        "name": "修复Xcode项目引用",
+        "status": "pending",
+        "priority": "P0",
+        "note": "确保删除后Xcode能正确编译"
+      },
+      "arch_verify_build": {
+        "name": "验证编译",
+        "status": "pending",
+        "priority": "P0",
+        "note": "运行 xcodebuild 确保项目能成功编译"
+      },
+      "arch_update_documentation": {
+        "name": "更新文档",
+        "status": "passing",
+        "note": "docs/iOS架构设计.md 已创建"
       }
     }
   }
