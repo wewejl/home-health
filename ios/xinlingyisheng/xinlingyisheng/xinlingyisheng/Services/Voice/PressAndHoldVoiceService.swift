@@ -27,13 +27,14 @@ enum PressAndHoldVoiceState: Equatable {
     case processing
     /// 错误状态
     case error(String)
-
+    case unauthorized
     var displayText: String {
         switch self {
         case .idle: return "按住说话"
         case .listening: return "松开发送"
         case .processing: return "正在处理..."
         case .error(let msg): return msg
+        case .unauthorized: return "未授权"
         }
     }
 

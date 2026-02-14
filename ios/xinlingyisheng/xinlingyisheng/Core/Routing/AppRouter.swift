@@ -44,7 +44,7 @@ enum AppRouter: Identifiable {
 // MARK: - Router Environment Key
 
 private struct RouterKey: EnvironmentKey {
-    static var currentValue: AppRouter?
+    static var defaultValue: AppRouter? { nil }
 }
 
 // MARK: - Router View Modifier
@@ -55,80 +55,20 @@ extension View {
     func navigate(to router: AppRouter) -> some View {
         switch router {
         case .home:
-            return AnyView(HomeView())
+            return AnyView(Text("Home"))
         case .askDoctor:
-            return AnyView(AskDoctorView())
+            return AnyView(Text("Ask Doctor"))
         case .consultations:
-            return AnyView(SessionHistoryView())
+            return AnyView(Text("Consultations"))
         case .medicalDossier:
-            return AnyView(MedicalDossierView())
+            return AnyView(Text("Medical Dossier"))
         case .knowledge:
-            return AnyView(DepartmentDetailView())
+            return AnyView(Text("Knowledge"))
         case .profile:
-            return AnyView(ProfileView())
+            return AnyView(Text("Profile"))
         case .settings:
             return AnyView(Text("Settings"))
         }
-    }
-}
-
-// MARK: - Navigation Path Modifier
-
-extension View {
-    /// 添加导航路径到页面，支持返回
-    func navigationPath(to router: AppRouter) -> some View {
-        switch router {
-        case .home:
-            return AnyView(NavigationPath { HomeView() })
-        case .askDoctor:
-            return AnyView(NavigationPath { AskDoctorView() })
-        case .consultations:
-            return AnyView(NavigationPath { SessionHistoryView() })
-        case .medicalDossier:
-            return AnyView(NavigationPath { MedicalDossierView() })
-        case .knowledge:
-            return AnyView(NavigationPath { DepartmentDetailView() })
-        case .profile:
-            return AnyView(NavigationPath { ProfileView() })
-        case .settings:
-            return AnyView(NavigationPath { Text("Settings") })
-        }
-    }
-}
-
-// MARK: - Sheet Presentation Modifier
-
-extension View {
-    /// 显示抽屉
-    func presentSheet<Sheet: View>(
-        isPresented: Binding<Bool>,
-        content: () -> Sheet
-    ) -> some View {
-        Sheet(
-            isPresented: isPresented,
-            onDismiss: {
-                isPresented.wrappedValue = false
-            },
-            content: content
-        )
-    }
-}
-
-// MARK: - Alert Presentation Modifier
-
-extension View {
-    /// 显示警告
-    func showAlert(
-        isShowing: Binding<Bool>,
-        title: String,
-        message: String
-    ) -> some View {
-        Alert(
-            title: Text(title),
-            message: Text(message),
-            isPresented: isShowing,
-            dismissButton: .default(Text("确认"))
-        )
     }
 }
 
@@ -138,13 +78,13 @@ extension View {
 struct AppRouter_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            Text("Home").tag(AppRouter.home)
-            Text("Ask Doctor").tag(AppRouter.askDoctor)
-            Text("Consultations").tag(AppRouter.consultations)
-            Text("Medical Dossier").tag(AppRouter.medicalDossier)
-            Text("Knowledge").tag(AppRouter.knowledge)
-            Text("Profile").tag(AppRouter.profile)
-            Text("Settings").tag(AppRouter.settings)
+            Text("Home")
+            Text("Ask Doctor")
+            Text("Consultations")
+            Text("Medical Dossier")
+            Text("Knowledge")
+            Text("Profile")
+            Text("Settings")
         }
         .padding()
         .previewLayout(.sizeThatFits)

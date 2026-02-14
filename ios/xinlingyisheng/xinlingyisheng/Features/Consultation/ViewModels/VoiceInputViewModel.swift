@@ -96,6 +96,8 @@ class VoiceInputViewModel: ObservableObject {
                     self.voiceState = .listening
                 case .processing:
                     self.voiceState = .processing
+                case .unauthorized:
+                    self.voiceState = .error(VoiceError.unauthorized)
                 case .error(let msg):
                     self.voiceState = .error(VoiceError.recognitionFailed(underlying: NSError(domain: "Voice", code: -1, userInfo: [NSLocalizedDescriptionKey: msg])))
                 }

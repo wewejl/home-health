@@ -2,7 +2,7 @@
 //  VoiceConfig.swift
 //  灵犀医生
 //
-//  语音服务配置常量
+// 语音服务配置常量
 //
 //  注: TTS (Text-to-Speech) 功能已移除
 //
@@ -27,9 +27,6 @@ struct VoiceConfig {
     /// 音频缓冲区大小
     static let asrBufferSize: AVAudioFrameCount = 1024
 
-    // MARK: - TTS 配置已移除
-    // TTS 采样率、声道数、缓冲区限制、默认语音 等配置已废弃
-
     // MARK: - 超时配置
     /// 心跳间隔 (秒)
     static let heartbeatInterval: TimeInterval = 0.1
@@ -42,10 +39,6 @@ struct VoiceConfig {
 
     /// 停止录音后的等待时间 (纳秒)
     static let stopRecordingWaitTime: UInt64 = 300_000_000 // 300ms
-
-    // MARK: - 音频缓冲区限制已移除（TTS 相关）
-    // maxPendingTTSBuffers 已废弃
-    // defaultVoice 已废弃
 }
 
 // MARK: - WebSocket 语音事件
@@ -57,8 +50,6 @@ enum VoiceEvent {
     case asrRoundComplete
     case asrRoundReady
     case error(String)
-
-    // TTS 事件已移除 (ttsReady, ttsFinished 已废弃)
 
     var eventName: String {
         switch self {
@@ -84,8 +75,7 @@ enum WebSocketVoiceError: Error {
     case recognitionFailed(underlying: Error)
     case disconnected
     case timeout
-
-    // synthesisFailed 已移除（TTS 相关）
+    case unauthorized
 
     var localizedDescription: String {
         switch self {
@@ -107,6 +97,12 @@ enum WebSocketVoiceError: Error {
             return "连接已断开"
         case .timeout:
             return "请求超时"
+        case .unauthorized:
+            return "未授权"
         }
+    }
+
+    var errorDescription: String? {
+        localizedDescription
     }
 }

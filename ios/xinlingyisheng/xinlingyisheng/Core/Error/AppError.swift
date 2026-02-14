@@ -6,6 +6,7 @@
 //  用途: 统一错误类型定义
 
 import Foundation
+import SwiftUI
 
 /// 应用错误类型
 ///
@@ -33,7 +34,7 @@ enum AppError: LocalizedError {
     case notAuthenticated
 
     /// Token 过期
-    case tokenExpire
+    case tokenExpired
 
     /// 登录失败
     case loginFailed(String)
@@ -93,7 +94,7 @@ enum AppError: LocalizedError {
             return "服务器错误(\(code)): \(message ?? "未知错误")"
         case .notAuthenticated:
             return "请先登录"
-        case .tokenExpire:
+        case .tokenExpired:
             return "登录已过期，请重新登录"
         case .loginFailed(let message):
             return "登录失败: \(message)"
@@ -126,7 +127,7 @@ enum AppError: LocalizedError {
         switch self {
         case .noNetworkConnection, .networkTimeout, .networkRequestFailed:
             return "请检查网络连接后重试"
-        case .notAuthenticated, .tokenExpire:
+        case .notAuthenticated, .tokenExpired:
             return "请重新登录"
         case .serverError:
             return "请稍后重试或联系客服"

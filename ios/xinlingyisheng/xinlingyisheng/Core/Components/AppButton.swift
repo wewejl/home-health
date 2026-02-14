@@ -31,53 +31,53 @@ struct AppButton: View {
 
     // MARK: - Properties
 
-    var buttonType: ButtonType = .primary
-    var buttonSize: ButtonSize = .medium
-    var isEnabled: Bool = true
-
-    var action: () -> Void = {}
-    var isLoading: Bool = false
+    let title: String
+    let buttonType: ButtonType
+    let buttonSize: ButtonSize
+    let isEnabled: Bool
+    let isLoading: Bool
+    let action: () -> Void
 
     // MARK: - Body
 
     var body: some View {
         Button(action: action) {
-            ZStack {
+            HStack {
                 if isLoading {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         .scaleEffect(0.8)
                 } else {
-                    title
+                    Text(title)
                 }
             }
-        } label: {
-            Text(title)
-                .font(.body)
         }
-        .buttonStyle(AppButton.buttonStyle(for: buttonType))
+        .buttonStyle(PlainButtonStyle())
         .disabled(!isEnabled)
-        .controlSize(AppButton.controlSize(for: buttonSize))
+        .controlSize(controlSize(for: buttonSize))
+    }
+
+    // MARK: - Initializer
+
+    init(
+        title: String,
+        type buttonType: ButtonType = .primary,
+        size buttonSize: ButtonSize = .medium,
+        isEnabled: Bool = true,
+        isLoading: Bool = false,
+        action: @escaping () -> Void
+    ) {
+        self.title = title
+        self.buttonType = buttonType
+        self.buttonSize = buttonSize
+        self.isEnabled = isEnabled
+        self.isLoading = isLoading
+        self.action = action
     }
 
     // MARK: - Helper Methods
 
-    private static func buttonStyle(for type: ButtonType) -> some PrimitiveButtonStyle {
-        switch type {
-        case .primary:
-            return .bordered
-        case .secondary:
-            return .bordered
-        case .tertiary:
-            return .bordered
-        case .danger:
-            return .bordered
-        case .success:
-            return .bordered
-        }
-    }
-
-    private static func controlSize(for size: ButtonSize) -> ControlSize {
+    private func controlSize(for size: ButtonSize) -> ControlSize {
         switch size {
         case .small:
             return .small
@@ -89,53 +89,15 @@ struct AppButton: View {
     }
 }
 
-// MARK: - Button Styles
-
-extension AppButton {
-
-    /// 主按钮样式
-    static func primaryStyle() -> some PrimitiveButtonStyle {
-        var configuration = PrimitiveButtonStyleConfiguration.bordered
-        configuration.base.backgroundColor = .white
-        configuration.base.foregroundColor = AppColors.primary
-
-        let title = PrimitiveButtonStyleConfiguration.Label.Title("title")
-        configuration.base.title = AttributedString(title)
-
-        return PrimitiveButtonStyle(style: configuration)
-    }
-
-    /// 次要按钮样式
-    static func secondaryStyle() -> some PrimitiveButtonStyle {
-        var configuration = PrimitiveButtonStyleConfiguration.bordered
-        configuration.base.backgroundColor = AppColors.cardBackground
-        configuration.base.foregroundColor = AppColors.textPrimary
-
-        let title = PrimitiveButtonStyleConfiguration.Label.Title("title")
-        configuration.base.title = AttributedString(title)
-
-        return PrimitiveButtonStyle(style: configuration)
-    }
-}
-
 // MARK: - Preview
 
 #if DEBUG
 struct AppButton_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            AppButton(title: "主按钮", type: .primary) {
-                Text("Primary")
-            }
-            AppButton(title: "次按钮", type: .secondary) {
-                Text("Secondary")
-            }
-            AppButton(title: "危险按钮", type: .danger) {
-                Text("Danger")
-            }
-            AppButton(title: "成功按钮", type: .success) {
-                Text("Success")
-            }
+            AppButton(title: "主按钮") {}
+            AppButton(title: "次按钮") {}
+            AppButton(title: "危险按钮") {}
         }
         .padding()
         .previewLayout(.sizeThatFits)

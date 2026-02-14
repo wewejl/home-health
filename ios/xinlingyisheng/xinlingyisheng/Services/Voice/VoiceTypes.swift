@@ -58,6 +58,7 @@ enum VoiceError: LocalizedError {
     case vadInitializationFailed              // VAD 初始化失败
     case audioEngineFailed                     // 音频引擎失败
     case microphoneUnavailable                 // 麦克风不可用
+    case unauthorized                           // 未授权
 
     var errorDescription: String? {
         switch self {
@@ -73,6 +74,8 @@ enum VoiceError: LocalizedError {
             return "音频引擎启动失败"
         case .microphoneUnavailable:
             return "麦克风不可用，请检查设备连接"
+        case .unauthorized:
+            return "未授权"
         }
     }
 }

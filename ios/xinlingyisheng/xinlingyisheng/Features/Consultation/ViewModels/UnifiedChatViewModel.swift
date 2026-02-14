@@ -32,14 +32,11 @@ class UnifiedChatViewModel: ObservableObject {
     // MARK: - 内部服务（不对外暴露为 @Published）
     private let sessionService: ChatSessionService
     private let messageService: ChatMessageService
-    private let voiceService: ChatVoiceInputService
-
     // MARK: - 初始化
 
     init() {
         sessionService = ChatSessionService()
         messageService = ChatMessageService()
-        voiceService = ChatVoiceInputService()
 
         setupVoiceBindings()
 
@@ -53,13 +50,12 @@ class UnifiedChatViewModel: ObservableObject {
 
     /// 主动清理语音绑定（在视图消失时调用）
     func cleanupVoiceBindings() {
-        voiceService.cleanupVoiceBindings()
+        // 语音绑定清理已移至 VoiceInputViewModel
         AppLogger.cleanup("[UnifiedChatVM] 语音绑定已清理")
     }
 
     /// 完整清理资源（在视图完全消失时调用）
     func cleanup() {
-        voiceService.cleanup()
         messageService.clearMessages()
         inputMode = .text
         isVoiceMode = false
@@ -97,10 +93,6 @@ class UnifiedChatViewModel: ObservableObject {
         messageService.$diagnosisCard.assign(to: &$diagnosisCard)
         messageService.$knowledgeRefs.assign(to: &$knowledgeRefs)
         messageService.$reasoningSteps.assign(to: &$reasoningSteps)
-
-        // 监听 voiceService 的变化
-        voiceService.$voiceState.assign(to: &$voiceState)
-        voiceService.$recognizedText.assign(to: &$recognizedText)
     }
 
     // MARK: - 会话状态（对外接口）
@@ -298,21 +290,25 @@ class UnifiedChatViewModel: ObservableObject {
     // MARK: - 语音输入方法
 
     func startPressAndHoldRecording() async {
-        await voiceService.startPressAndHoldRecording()
+        do {
+            try await pressAndHoldVoiceService.startRecording()
+        } catch {
+            print("[UnifiedChatVM] 开始录音失败: \(error)")
+        }
     }
 
     func stopPressAndHoldRecording() async {
-        if let text = await voiceService.stopPressAndHoldRecording() {
+        if let text = await pressAndHoldVoiceService.stopRecording() {
             await sendMessage(content: text)
         }
     }
 
     func cancelPressAndHoldRecording() {
-        voiceService.cancelPressAndHoldRecording()
+        pressAndHoldVoiceService.cancelRecording()
     }
 
     func toggleVoiceMute(_ muted: Bool) {
-        voiceService.toggleVoiceMute(muted)
+        // 已移除 TTS 功能，静音功能不再需要
     }
 
     // MARK: - 智能体能力方法
@@ -358,11 +354,6 @@ class UnifiedChatViewModel: ObservableObject {
     // MARK: - 语音绑定设置（保留原有代码）
 
     private func setupVoiceBindings() {
-        // 设置 voiceService 回调
-        voiceService.onFinalResult = { [weak self] text in
-            await self?.handleVoiceFinalResult(text)
-        }
-
         // 保留原有的绑定设置（用于兼容）
         pressAndHoldVoiceService.onPartialResult = { [weak self] text in
             Task { @MainActor in
@@ -396,13 +387,11 @@ class UnifiedChatViewModel: ObservableObject {
                     self.voiceState = .processing
                 case .error(let msg):
                     self.voiceState = .error(VoiceError.recognitionFailed(underlying: NSError(domain: "Voice", code: -1, userInfo: [NSLocalizedDescriptionKey: msg])))
+                case .unauthorized:
+                    self.voiceState = .error(VoiceError.unauthorized)
                 }
             }
             .store(in: &voiceCancellables)
-    }
-
-    private func handleVoiceFinalResult(_ text: String) async {
-        print("[UnifiedChatVM] 语音识别完成: \(text)")
     }
 
     private func handleFinalRecognition(_ text: String) async {

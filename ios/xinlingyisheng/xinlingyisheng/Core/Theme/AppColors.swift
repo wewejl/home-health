@@ -90,6 +90,12 @@ enum AppColors {
 
     /// 分割线
     static let divider = Color(red: 0xF0 / 255, green: 0xF0 / 255, blue: 0xF0 / 255)
+
+    /// 阴影色
+    static let shadow = Color.black.opacity(0.1)
+
+    /// 边框色
+    static let border = Color(red: 0xE0 / 255, green: 0xE0 / 255, blue: 0xE0 / 255)
 }
 
 // MARK: - Preview Provider
@@ -109,8 +115,8 @@ struct AppColors_Previews: PreviewProvider {
             Text("Accent").foregroundColor(AppColors.accent)
             Text("Link").foregroundColor(AppColors.link)
         }
-        }
         .padding()
         .previewLayout(.sizeThatFits)
+    }
 }
 #endif

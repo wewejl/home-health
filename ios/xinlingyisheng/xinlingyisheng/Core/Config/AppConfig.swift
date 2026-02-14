@@ -6,6 +6,7 @@
 //  用途: 统一应用配置管理
 
 import Foundation
+import SwiftUI
 
 /// 应用配置管理
 ///
@@ -47,10 +48,10 @@ enum AppConfig {
     }()
 
     /// 是否启用测试模式
-    static let isTestMode: Bool = false
+    static let isTestMode = false
 
     /// 是否启用日志
-    static let isLoggingEnabled: Bool = true
+    static let isLoggingEnabled = true
 
     // MARK: - Storage Keys
 
@@ -73,9 +74,9 @@ enum AppConfig {
 struct AppConfig_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            Text("API Base URL").render(AppConfig.apiBaseURL)
-            Text("Is Debug").render(AppConfig.isDebug.description)
-            Text("Is Test Mode").render(AppConfig.isTestMode.description)
+            Text("API Base URL: \(AppConfig.apiBaseURL)")
+            Text("Is Debug: \(AppConfig.isDebug.description)")
+            Text("Is Test Mode: \(AppConfig.isTestMode.description)")
         }
         .padding()
         .previewLayout(.sizeThatFits)

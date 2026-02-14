@@ -22,14 +22,15 @@ extension AppColors {
     /// 从Assets 加载可着色图片
     static func tintableImage(named name: String) -> some View {
         let bundle = Bundle.main
-        if let path = bundle.path(forResource: name, ofType: "png") {
-            return AnyView(Image(uiImage: .init(named: name))
-                    .renderingMode(.original)
+        if let path = bundle.path(forResource: name, ofType: "png"),
+           let image = UIImage(named: name) {
+            return AnyView(Image(uiImage: image)
+                    .renderingMode(.template)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
             )
         } else {
-            return Image(systemName: "photo")
+            return AnyView(Image(systemName: "photo"))
         }
     }
 }

@@ -24,48 +24,36 @@ struct AppCard<Content: View>: View {
 
     // MARK: - Properties
 
-    var cardType: CardType = .standard
-    var cornerRadius: CGFloat = AppSpacing.cardCornerRadius
-    var shadowRadius: CGFloat = 8
-    var padding: CGFloat = AppSpacing.standard
+    let cardType: CardType
+    let cornerRadius: CGFloat
+    let shadowRadius: CGFloat
+    let padding: CGFloat
+    let content: Content
 
     // MARK: - Body
 
     var body: some View {
         content
+            .background(AppColors.cardBackground)
+            .cornerRadius(cornerRadius)
+            .shadow(color: AppColors.shadow, radius: shadowRadius)
+            .padding(padding)
     }
 
-    // MARK: - Rendering
+    // MARK: - Initializer
 
-    var body: some View {
-        Group {
-            switch cardType {
-            case .standard:
-                content
-                    .background(AppColors.cardBackground)
-                    .cornerRadius(cornerRadius)
-                    .shadow(color: AppColors.shadow, radius: shadowRadius)
-            case .elevated:
-                content
-                    .background(AppColors.cardBackground)
-                    .cornerRadius(cornerRadius)
-                    .shadow(color: AppColors.shadow, radius: shadowRadius * 1.5)
-            case .outlined:
-                content
-                    .background(AppColors.cardBackground)
-                    .cornerRadius(cornerRadius)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: cornerRadius)
-                            .strokeBorder(AppColors.border, lineWidth: 1)
-                    )
-            case .filled:
-                content
-                    .background(AppColors.primary)
-                    .cornerRadius(cornerRadius)
-                    .foregroundColor(.white)
-            }
-        }
-        .padding(padding)
+    init(
+        cardType: CardType = .standard,
+        cornerRadius: CGFloat = AppSpacing.cardCornerRadius,
+        shadowRadius: CGFloat = 8,
+        padding: CGFloat = AppSpacing.standard,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.cardType = cardType
+        self.cornerRadius = cornerRadius
+        self.shadowRadius = shadowRadius
+        self.padding = padding
+        self.content = content()
     }
 }
 
@@ -99,14 +87,13 @@ struct AppCard_Previews: PreviewProvider {
                 Text("卡片内容")
             }
 
-            AppCard {
-                Text("填允卡片")
-                    .cardType(.filled)
+            AppCard(filled: true) {
+                Text("填充卡片")
+                    .foregroundColor(.white)
             }
 
-            AppCard {
+            AppCard(outlined: true) {
                 Text("描边卡片")
-                    .cardType(.outlined)
             }
         }
         .padding()

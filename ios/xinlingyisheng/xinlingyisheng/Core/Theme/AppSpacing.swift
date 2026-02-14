@@ -4,7 +4,6 @@
 //
 //  创建日期: 2026-02-14
 //  用途: 统一间距系统
-//
 
 import SwiftUI
 
@@ -66,6 +65,17 @@ enum AppSpacing {
 
     /// 区块间距 - 24pt
     static let sectionSpacing: CGFloat = large
+
+    // MARK: - Corner Radius
+
+    /// 卡片圆角 - 12pt
+    static let cardCornerRadius: CGFloat = 12
+
+    /// 按钮圆角 - 8pt
+    static let buttonCornerRadius: CGFloat = 8
+
+    /// 小圆角 - 4pt
+    static let smallCornerRadius: CGFloat = 4
 }
 
 // MARK: - Preview Provider

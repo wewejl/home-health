@@ -50,25 +50,6 @@ enum AppAssets {
 
     /// 日历图标
     static let iconCalendar = Image(systemName: "calendar")
-
-    // MARK: - Illustrations
-
-    /// 问诊插图
-    static let illustrationChat = Image("illustration_chat")
-
-    /// 医生插图
-    static let illustrationDoctor = Image("illustration_doctor")
-
-    /// 空状态插图
-    static let illustrationEmpty = Image("illustration_empty")
-
-    // MARK: - Placeholder Images
-
-    /// 头像占位符
-    static let avatarPlaceholder = Image("avatar_placeholder")
-
-    /// 医疗记录占位符
-    static let recordPlaceholder = Image("record_placeholder")
 }
 
 // MARK: - Preview Provider
@@ -77,18 +58,11 @@ enum AppAssets {
 struct AppAssets_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            Image("Logo").render(AppAssets.logo)
-            Image("Logo Small").render(AppAssets.logoSmall)
-            Image("Icon Success").render(AppAssets.iconSuccess)
-            Image("Icon Warning").render(AppAssets.iconWarning)
-            Image("Icon Error").render(AppAssets.iconError)
-            Image("Icon Info").render(AppAssets.iconInfo)
-            Image("Icon Doctor").render(AppAssets.iconDoctor)
-            Image("Icon Pill").render(AppAssets.iconPill)
-            Image("Icon Chat").render(AppAssets.iconChat)
-            Image("Icon Time").render(AppAssets.iconTime)
-            Image("Icon Calendar").render(AppAssets.iconCalendar)
+            Image(systemName: "heart.fill")
+            Image(systemName: "person.fill")
+            Image(systemName: "calendar")
         }
+        .padding()
         .previewLayout(.sizeThatFits)
     }
 }
