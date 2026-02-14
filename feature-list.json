@@ -4,9 +4,9 @@
     "last_updated": "2026-02-14",
     "note": "iOS 新架构迁移进行中，存在编译错误需要清理旧架构",
     "total_features": 68,
-    "passing": 51,
+    "passing": 52,
     "failing": 0,
-    "pending": 17
+    "pending": 16
   },
   "features": {
     "backend": {
@@ -565,7 +565,7 @@
       },
       "arch_cleanup_old_viewmodels": {
         "name": "清理旧ViewModels目录",
-        "status": "pending",
+        "status": "passing",
         "priority": "P0",
         "note": "删除 xinlingyisheng/ViewModels/，已迁移至 Features/*/ViewModels/"
       },
