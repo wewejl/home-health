@@ -318,7 +318,9 @@
         "views": [
           "AskDoctorView.swift",
           "ModernConsultationView.swift",
-          "SessionHistoryView.swift"
+          "SessionHistoryView.swift",
+          "VirtualDoctorSelectionView.swift",
+          "VirtualDoctorDetailView.swift"
         ]
       },
       "medical_orders": {
