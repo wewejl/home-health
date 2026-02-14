@@ -4,9 +4,9 @@
     "last_updated": "2026-02-14",
     "note": "iOS 新架构迁移进行中，存在编译错误需要清理旧架构",
     "total_features": 68,
-    "passing": 52,
+    "passing": 53,
     "failing": 0,
-    "pending": 16
+    "pending": 15
   },
   "features": {
     "backend": {
@@ -571,7 +571,7 @@
       },
       "arch_cleanup_old_views": {
         "name": "清理旧Views目录",
-        "status": "pending",
+        "status": "passing",
         "priority": "P0",
         "note": "删除 xinlingyisheng/Views/，已迁移至 Features/*/Views/"
       },
