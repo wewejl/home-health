@@ -293,3 +293,35 @@ A: 只关注相关部分：
 3. **更新 feature-list.json 状态**
 4. **更新 claude-progress.txt 记录**
 5. **不要跳过验证步骤**
+
+---
+
+## ⚠️ 必须遵守的规范（2026-02-14 更新）
+
+### feature-list.json 是唯一的真相来源
+
+- **所有可追踪的任务都必须在 feature-list.json 中**
+- ❌ **不要创建独立的问题文件**（如 `ios-code-issues.md`）
+- ✅ 代码质量问题也应作为任务添加到 feature-list.json
+- ✅ 示例：`"code_quality": { "force_unwrap_fix": "pending", ... }`
+
+### 每个功能完成后立即提交
+
+- ✅ 编译成功后立即 `git commit`
+- ✅ 不要累积多个修改再提交
+- ✅ 提交后立即更新 feature-list.json 和 claude-progress.txt
+- ❌ 不要"更新了但没提交"
+
+### 验证要求
+
+- ✅ 后端：pytest 测试通过 + curl 手动测试
+- ✅ 前端：npm run build 成功 + 浏览器手动测试
+- ✅ iOS：xcodebuild 成功 + **模拟器运行测试**
+- ❌ 不要只验证编译，不运行应用
+
+### 禁止的行为
+
+- ❌ 创建独立的跟踪文件（违背"唯一真相来源"原则）
+- ❌ 一次修复多个问题再提交（违背"原子提交"原则）
+- ❌ 只编译不运行（违背"端到端验证"原则）
+- ❌ 更新文件但不提交（违背"清晰状态"原则）
