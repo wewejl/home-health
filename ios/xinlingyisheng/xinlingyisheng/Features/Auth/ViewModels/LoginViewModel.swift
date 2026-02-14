@@ -316,7 +316,6 @@ class LoginViewModel: ObservableObject {
     }
     
     private func logAuthEvent(_ event: String, extra: [String: Any] = [:]) {
-        // TODO: 接入正式埋点系统
         var data: [String: Any] = ["event": event, "phone_suffix": String(phoneNumber.suffix(4))]
         data.merge(extra) { _, new in new }
         print("[LoginEvent] \(data)")
