@@ -451,16 +451,11 @@
             "status": "pending"
           }
         },
-        "force_unwrap_fix": {
-          "status": "passing"
-        },
+        "force_unwrap_fix": null,
         "appicon_warning_fix": {
           "status": "passing"
         },
-        "memory_leak_fix": {
-          "status": "passing",
-          "note": "已检查，未发现内存泄漏警告"
-        },
+        "memory_leak_fix": null,
         "todo_cleanup": {
           "status": "passing"
         }
