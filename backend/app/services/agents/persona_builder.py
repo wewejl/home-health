@@ -4,7 +4,7 @@ Persona 提示词构建器
 根据虚拟医生的性格配置，构建个性化的 System Prompt
 """
 from typing import Dict, Any, Optional
-from ..models.virtual_doctor import (
+from ...models.virtual_doctor import (
     VirtualDoctorExtension,
     get_specialty_config
 )
@@ -12,7 +12,7 @@ from ..models.virtual_doctor import (
 
 def build_system_prompt(
     base_prompt: str,
-    doctor: Any,  # Doctor 模型实例
+    doctor: Any,
     personality_type: Optional[str] = None
 ) -> str:
     """

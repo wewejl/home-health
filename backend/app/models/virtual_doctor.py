@@ -147,6 +147,8 @@ class VirtualDoctorExtension:
                 "name": config["name"],
                 "description": config["description"],
                 "style_tags": config["style_tags"],
+                "temperature": config.get("temperature", 0.7),
+                "greeting_template": config.get("greeting_template", ""),
             }
             for code, config in cls.PERSONALITY_CONFIGS.items()
         ]

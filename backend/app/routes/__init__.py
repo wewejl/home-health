@@ -2,6 +2,7 @@ from .auth import router as auth_router
 from .departments import router as departments_router
 from .sessions import router as sessions_router  # 多智能体架构
 from .feedbacks import router as feedbacks_router
+from .virtual_doctors import router as virtual_doctors_router  # 虚拟医生
 from .diseases import router as diseases_router
 from .drugs import router as drugs_router
 from .medical_events import router as medical_events_router
@@ -30,6 +31,7 @@ from .doctor_workstation import router as doctor_workstation_router  # 医生工
 __all__ = [
     "auth_router", "departments_router",
     "sessions_router",  # 多智能体架构
+    "virtual_doctors_router",  # 虚拟医生
     "feedbacks_router", "diseases_router", "drugs_router",
     "medical_events_router", "ai_router", "persona_chat_router", "record_analysis_router",
     "medical_orders_router",  # 医嘱执行监督系统
