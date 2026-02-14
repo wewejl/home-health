@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 虚拟医生详情视图
+/// 虚拟医生详情视图（治愈系风格）
 /// 显示虚拟医生详细信息，用户确认后进入问诊
 struct VirtualDoctorDetailView: View {
     let doctor: VirtualDoctor
@@ -12,23 +12,21 @@ struct VirtualDoctorDetailView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // 背景渐变
-                LinearGradient(
-                    colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                // 背景
+                HealingColorTheme.background
+                    .ignoresSafeArea()
 
-                VStack(spacing: 20) {
-                    // 标题
+                VStack(spacing: 0) {
+                    // 标题区
                     header
 
                     // 医生详情卡片
                     if let detail = doctorDetail {
                         doctorDetailCard(detail: detail)
                     } else {
+                        Spacer()
                         ProgressView("加载中...")
+                            .tint(HealingColorTheme.forestMist)
                         Spacer()
                     }
 
@@ -48,6 +46,7 @@ struct VirtualDoctorDetailView: View {
                     Button("取消") {
                         dismiss()
                     }
+                    .foregroundColor(HealingColorTheme.textSecondary)
                 }
             }
         }
@@ -72,14 +71,15 @@ struct VirtualDoctorDetailView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("AI 医生")
-                .font(.title)
-                .fontWeight(.bold)
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(HealingColorTheme.textPrimary)
 
             Text("了解您的医生后开始问诊")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                .font(.system(size: 14))
+                .foregroundColor(HealingColorTheme.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom, 8)
     }
 
     // MARK: - Doctor Detail Card
@@ -88,66 +88,92 @@ struct VirtualDoctorDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             // 头像区域
             HStack(spacing: 16) {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+                // 圆形头像占位
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [HealingColorTheme.softSage, HealingColorTheme.deepSage],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
-                    .frame(width: 80, height: 80)
-                    .overlay {
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 40))
-                            .foregroundColor(.white)
-                    }
+                        .frame(width: 72, height: 72)
+                        .shadow(
+                            color: HealingColorTheme.forestMist.opacity(0.15),
+                            radius: 8,
+                            x: 0,
+                            y: 2
+                        )
 
-                VStack(alignment: .leading, spacing: 8) {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(HealingColorTheme.forestMist)
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
                     Text(doctor.name)
-                        .font(.title2)
-                        .fontWeight(.bold)
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(HealingColorTheme.textPrimary)
 
                     Text(doctor.title)
-                        .font(.headline)
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 16))
+                        .foregroundColor(HealingColorTheme.textSecondary)
                 }
 
                 Spacer()
             }
 
             Divider()
+                .background(HealingColorTheme.borderLight)
 
             // 基本信息
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 14) {
                 if let specialty = detail.specialty {
-                    InfoRow(icon: "star.fill", title: "科室", value: specialty)
+                    InfoRow(
+                        icon: "star.fill",
+                        title: "科室",
+                        value: specialty,
+                        color: HealingColorTheme.orange
+                    )
                 }
 
                 if let personalityType = detail.personalityType {
                     let personalityName = viewModel.getPersonalityName(code: personalityType)
-                    InfoRow(icon: "heart.fill", title: "性格", value: personalityName)
+                    InfoRow(
+                        icon: "heart.fill",
+                        title: "性格",
+                        value: personalityName,
+                        color: HealingColorTheme.teal
+                    )
                 }
 
                 if let intro = doctor.intro, !intro.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("简介")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(HealingColorTheme.textSecondary)
 
                         Text(intro)
-                            .font(.body)
+                            .font(.system(size: 15))
+                            .foregroundColor(HealingColorTheme.textPrimary)
+                            .lineLimit(nil)
                     }
                     .padding(.top, 8)
                 }
             }
             .padding(.vertical, 8)
         }
-        .padding()
+        .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+            RoundedRectangle(cornerRadius: 24)
+                .fill(HealingColorTheme.cardBackground)
+                .shadow(
+                    color: HealingColorTheme.forestMist.opacity(0.08),
+                    radius: 12,
+                    x: 0,
+                    y: 4
+                )
         )
     }
 
@@ -159,24 +185,24 @@ struct VirtualDoctorDetailView: View {
         }) {
             HStack(spacing: 12) {
                 Image(systemName: "message.fill")
-                    .font(.headline)
+                    .font(.system(size: 18, weight: .semibold))
                 Text("开始问诊")
-                    .font(.headline)
-                    .fontWeight(.semibold)
+                    .font(.system(size: 17, weight: .semibold))
             }
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .padding()
+            .padding(.vertical, 18)
             .background(
                 LinearGradient(
-                    colors: [Color.blue, Color.purple],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
+                        colors: [HealingColorTheme.deepSage, HealingColorTheme.forestMist],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
             )
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
         }
         .buttonStyle(PlainButtonStyle())
+        .padding(.horizontal, 20)
     }
 
     // MARK: - Load Doctor Detail
@@ -197,21 +223,27 @@ struct InfoRow: View {
     let icon: String
     let title: String
     let value: String
+    let color: Color
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.caption)
-                .foregroundColor(.blue)
-                .frame(width: 24)
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.15))
+                    .frame(width: 32, height: 32)
+
+                Image(systemName: icon)
+                    .font(.system(size: 15))
+                    .foregroundColor(color)
+            }
 
             Text(title)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                .font(.system(size: 14))
+                .foregroundColor(HealingColorTheme.textSecondary)
 
             Text(value)
-                .font(.subheadline)
-                .fontWeight(.semibold)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(HealingColorTheme.textPrimary)
 
             Spacer()
         }
@@ -222,17 +254,19 @@ struct InfoRow: View {
 
 struct VirtualDoctorDetailView_Previews: PreviewProvider {
     static var previews: some View {
-        VirtualDoctorDetailView(
-            doctor: VirtualDoctor(
-                id: 1,
-                name: "张医生",
-                title: "主治医师",
-                departmentId: 1,
-                specialty: "内科",
-                intro: "擅长心血管疾病的诊断和治疗",
-                personalityType: "friendly",
-                greetingTemplate: "你好 {name}"
+        NavigationView {
+            VirtualDoctorDetailView(
+                doctor: VirtualDoctor(
+                        id: 1,
+                        name: "张医生",
+                        title: "主治医师",
+                        departmentId: 1,
+                        specialty: "内科",
+                        intro: "擅长心血管疾病的诊断和治疗",
+                        personalityType: "friendly",
+                        greetingTemplate: "你好 {name}"
+                )
             )
-        )
+        }
     }
 }
