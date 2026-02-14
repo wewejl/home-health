@@ -4,9 +4,9 @@
     "last_updated": "2026-02-14",
     "note": "iOS 新架构迁移进行中，存在编译错误需要清理旧架构",
     "total_features": 68,
-    "passing": 53,
+    "passing": 54,
     "failing": 0,
-    "pending": 15
+    "pending": 14
   },
   "features": {
     "backend": {
@@ -577,7 +577,7 @@
       },
       "arch_cleanup_old_models": {
         "name": "清理旧Models目录",
-        "status": "pending",
+        "status": "passing",
         "priority": "P0",
         "note": "删除 xinlingyisheng/Models/，已迁移至 Features/*/Models/"
       },
