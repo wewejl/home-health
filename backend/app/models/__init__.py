@@ -25,6 +25,12 @@ from .medical_file import MedicalFile, FileType
 from .doctor_patient_relationship import (
     DoctorPatientRelationship, RelationshipType
 )
+from .virtual_doctor import (
+    VirtualDoctorExtension,
+    CommunicationStyle,
+    get_specialty_config,
+    list_specialties,
+)
 
 __all__ = [
     "User", "Department", "Doctor", "Session", "Message", "SenderType",

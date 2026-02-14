@@ -35,6 +35,9 @@ class SessionResponse(BaseModel):
     status: str = "active"
     created_at: datetime
     updated_at: datetime
+    # 虚拟医生分身扩展字段
+    personality_type: Optional[str] = None
+    greeting: Optional[str] = None
 
     class Config:
         from_attributes = True

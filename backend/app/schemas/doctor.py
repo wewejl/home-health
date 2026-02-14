@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, Any
+from typing import Optional, Any, List, Dict
 from datetime import datetime
 
 
@@ -19,6 +19,10 @@ class DoctorResponse(BaseModel):
     is_top_hospital: bool = False
     is_ai: bool = True
     is_active: bool = True
+    # 虚拟医生扩展字段
+    personality_type: Optional[str] = None
+    personality_tags: Optional[List[str]] = None
+    greeting_template: Optional[str] = None
 
     class Config:
         from_attributes = True
