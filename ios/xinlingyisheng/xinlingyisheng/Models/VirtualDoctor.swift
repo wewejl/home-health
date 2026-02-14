@@ -55,6 +55,19 @@ struct PersonalityConfig: Codable {
     }
 }
 
+/// 虚拟医生科室配置
+struct SpecialtyConfig: Codable {
+    let code: String
+    let name: String
+    let agentClass: String
+
+    enum CodingKeys: String, CodingKey {
+        case code
+        case name
+        case agentClass = "agent_class"
+    }
+}
+
 /// 虚拟医生列表响应
 struct VirtualDoctorListResponse: Codable {
     let doctors: [VirtualDoctor]

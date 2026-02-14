@@ -56,11 +56,11 @@ class VirtualDoctorViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            let response = try await apiService.listVirtualDoctors(
+            let fetchedDoctors = try await apiService.listVirtualDoctors(
                 departmentId: departmentId,
                 personalityType: personalityType
             )
-            doctors = response.doctors
+            doctors = fetchedDoctors
             isLoading = false
         } catch {
             isLoading = false
