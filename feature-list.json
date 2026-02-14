@@ -4,9 +4,9 @@
     "last_updated": "2026-02-14",
     "note": "iOS 新架构迁移进行中，存在编译错误需要清理旧架构",
     "total_features": 68,
-    "passing": 57,
+    "passing": 58,
     "failing": 0,
-    "pending": 11
+    "pending": 10
   },
   "features": {
     "backend": {
@@ -607,7 +607,7 @@
       },
       "arch_cleanup_old_security": {
         "name": "清理旧Security目录",
-        "status": "pending",
+        "status": "passing",
         "priority": "P0",
         "note": "删除 xinlingyisheng/Security/，已合并到新架构"
       },
