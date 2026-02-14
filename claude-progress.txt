@@ -213,3 +213,12 @@ bash scripts/ios/verify-security.sh
   - 检查未发现内存泄漏警告
   - 代码已正确处理
 - **提交**: 33658ee2
+
+### 2026-02-14 Session: 清理 TODO 标记（迭代 3）
+- **状态**: ✅ 完成
+- **任务**: todo_cleanup
+- **完成内容**:
+  - 删除 LoginViewModel.swift 第 319 行的 TODO 标记
+  - 提交 b80475a8
+  - 更新 6e5c3319
+- **提交**: b80475a8, 6e5c3319
