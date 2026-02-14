@@ -44,7 +44,6 @@ extension View {
             EmptyView()
         }
     }
-    }
 
 // MARK: - Preview Provider
 
