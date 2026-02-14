@@ -4,9 +4,9 @@
     "last_updated": "2026-02-14",
     "note": "iOS 新架构迁移进行中，存在编译错误需要清理旧架构",
     "total_features": 68,
-    "passing": 55,
+    "passing": 56,
     "failing": 0,
-    "pending": 13
+    "pending": 12
   },
   "features": {
     "backend": {
@@ -589,7 +589,7 @@
       },
       "arch_cleanup_old_theme": {
         "name": "清理旧Theme目录",
-        "status": "pending",
+        "status": "passing",
         "priority": "P0",
         "note": "删除 xinlingyisheng/Theme/，已迁移至 Core/Theme/"
       },
