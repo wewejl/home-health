@@ -4,9 +4,9 @@
     "last_updated": "2026-02-14",
     "note": "iOS 新架构迁移进行中，存在编译错误需要清理旧架构",
     "total_features": 68,
-    "passing": 59,
+    "passing": 60,
     "failing": 0,
-    "pending": 9
+    "pending": 8
   },
   "features": {
     "backend": {
@@ -613,7 +613,7 @@
       },
       "arch_fix_xcode_references": {
         "name": "修复Xcode项目引用",
-        "status": "pending",
+        "status": "passing",
         "priority": "P0",
         "note": "确保删除后Xcode能正确编译"
       },
