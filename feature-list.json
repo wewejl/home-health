@@ -462,7 +462,7 @@
           "note": "已检查，未发现内存泄漏警告"
         },
         "todo_cleanup": {
-          "status": "pending"
+          "status": "passing"
         }
       },
       "arch_core_base": {
