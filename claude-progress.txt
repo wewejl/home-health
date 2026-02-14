@@ -154,3 +154,16 @@ bash scripts/ios/verify-security.sh
   - 必须进行端到端验证（不仅是编译）
   - 一次只做一个功能
   - 更新 claude-progress.txt 和 feature-list.json
+
+### 2026-02-14 Session: 修正 feature-list.json 追踪
+- **状态**: ✅ 完成
+- **任务**: 将代码质量问题添加到 feature-list.json
+- **完成内容**:
+  - 添加 code_quality 类别
+  - 包含强制解包、TODO 清理、内存泄漏、AppIcon 警告修复
+  - 更新统计：total=75, pending=12
+- **提交**: 9db5d28f
+- **学到的教训**:
+  - feature-list.json 是唯一的真相来源
+  - 不应该创建独立的问题文件（如 ios-code-issues.md）
+  - 所有可追踪的任务都应该在 feature-list.json 中
