@@ -167,3 +167,18 @@ bash scripts/ios/verify-security.sh
   - feature-list.json 是唯一的真相来源
   - 不应该创建独立的问题文件（如 ios-code-issues.md）
   - 所有可追踪的任务都应该在 feature-list.json 中
+
+### 2026-02-14 Session: 强化规范到 CLAUDE.md
+- **状态**: ✅ 完成
+- **任务**: 将长期 Agent 规范明确写入 CLAUDE.md
+- **完成内容**:
+  - 添加 "必须遵守的规范" 章节
+  - 明确禁止创建独立跟踪文件
+  - 强调 feature-list.json 是唯一真相来源
+  - 强调每个功能完成后立即提交
+  - 强调端到端验证要求
+- **提交**: 782c69ca
+- **学到的教训**:
+  - 规范必须显式写入文档，不能"以为"懂了
+  - 禁止的行为要用 ❌ 明确标记
+  - 必须的行为要用 ✅ 明确标记
