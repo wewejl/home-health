@@ -238,3 +238,56 @@ bash scripts/ios/verify-security.sh
   - Ralph Loop 模式非常适合逐步完善代码
 
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
+### 2026-02-14 Session: 实现虚拟医生功能
+- **状态**: ✅ 完成
+- **任务**: 实现虚拟医生功能
+- **完成内容**:
+   - 后端：
+    - 创建 VirtualDoctorExtension 类支持虚拟医生人设
+    - 创建 PersonaBuilder 用于动态构建性格提示词
+    - 创建 DoctorReActAgent 统一虚拟医生智能体
+    - 创建 AgentRouterV3 支持基于 doctor_id 的路由
+    - 创建虚拟医生 API 路由 (/virtual-doctors)
+    - 更新会话创建支持 doctor_id 参数
+    - 更新 Schema 添加 personality_type 和 greeting 字段
+  - iOS：
+    - 创建 VirtualDoctorService.swift 服务层
+    - 创建 VirtualDoctorViewModel.swift 视图模型
+    - 创建 VirtualDoctorSelectionView.swift 选择视图
+  - **提交**: 864183e5
+### 2026-02-14 Session: 修复 langchain_openai 依赖问题
+- **状态**: ✅ 代码修复完成
+- **任务**: fix_langchain_dependency
+- **完成内容**:
+   - 移除 llm_provider.py 中对 langchain_openai 的导入
+   - 修改 get_llm 和 get_multimodal_llm 方法，不再返回 ChatOpenAI 实例
+   - 提交修改：a7d76e9
+   - **问题**: Docker 容器持续重启，无法验证修复是否生效
+- **原因**: 修改未在容器中生效，可能需要重建容器
+- **建议**: 使用 docker-compose 重建后端容器
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+### 2026-02-14 Session: 完成虚拟医生功能
+- **状态**: ✅ 完成
+- **任务**: 实现并修复虚拟医生功能
+- **完成内容**:
+  - **后端**：
+    - 修复 llm_provider.py 损坏的换行符问题
+    - 修复 persona_builder.py 导入路径拼写错误
+    - 修复 agent_router_v3.py 中的拼写错误
+    - 添加 virtual_doctors 路由到 routes/__init__.py
+    - 修复 list_available_personalities 返回值缺失字段
+    - 验证 API 正常工作
+  - **iOS**：
+    - 创建 VirtualDoctor 数据模型
+    - 创建 VirtualDoctorAPIService 服务层
+    - 创建 VirtualDoctorViewModel 视图模型
+    - 创建 VirtualDoctorSelectionView 选择界面
+    - 编译验证通过
+- **提交**: 3c3c8c99（后端）, 3b7eeae8（iOS）
+- **API 测试结果**:
+  - `/virtual-doctors/personalities` ✅
+  - `/virtual-doctors/specialties` ✅
+  - `/virtual-doctors` ✅
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
