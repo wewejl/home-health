@@ -34,6 +34,7 @@ extension View {
             EmptyView()
         }
     }
+}
 
     /// 条件隐藏
     @ViewBuilder func ifHide(_ condition: Bool) -> some View {

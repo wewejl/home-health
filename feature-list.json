@@ -2,9 +2,9 @@
   "metadata": {
     "version": "3.1",
     "last_updated": "2026-02-14",
-    "note": "iOS 新架构迁移完成，所有清理任务已完成",
+    "note": "iOS 新架构迁移完成，所有清理任务已完成，编译成功",
     "total_features": 68,
-    "passing": 62,
+    "passing": 63,
     "failing": 0,
     "pending": 0
   },
