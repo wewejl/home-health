@@ -4,9 +4,9 @@
     "last_updated": "2026-02-14",
     "note": "iOS 新架构迁移进行中，存在编译错误需要清理旧架构",
     "total_features": 68,
-    "passing": 54,
+    "passing": 55,
     "failing": 0,
-    "pending": 14
+    "pending": 13
   },
   "features": {
     "backend": {
@@ -583,7 +583,7 @@
       },
       "arch_cleanup_old_services": {
         "name": "清理旧Services目录",
-        "status": "pending",
+        "status": "passing",
         "priority": "P0",
         "note": "删除 xinlingyisheng/Services/，已迁移至 Features/*/Services/"
       },
