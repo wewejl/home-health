@@ -61,7 +61,7 @@ struct VirtualDoctorListResponse: Codable {
 }
 
 /// 虚拟医生摘要
-struct VirtualDoctor: Codable, Identifiable {
+struct VirtualDoctor: Codable, Identifiable, Hashable {
     let id: Int
     let name: String
     let title: String
@@ -80,6 +80,15 @@ struct VirtualDoctor: Codable, Identifiable {
         case intro
         case personalityType = "personality_type"
         case greetingTemplate = "greeting_template"
+    }
+
+    // Hashable conformance
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
+    static func == (lhs: VirtualDoctor, rhs: VirtualDoctor) -> Bool {
+        lhs.id == rhs.id
     }
 }
 

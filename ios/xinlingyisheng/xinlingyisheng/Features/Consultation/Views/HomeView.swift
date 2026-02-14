@@ -82,7 +82,7 @@ struct HomeView: View {
             }
             .tag(0)
 
-            CompatibleNavigationStack {
+            CompatibleNavigationStack(path: $tab1Path) {
                 AskDoctorView()
             }
             .tabItem {
@@ -156,6 +156,7 @@ struct HealingHomeContentView: View {
     @Binding var selectedTab: Int
     @Binding var showDrugList: Bool
     @Binding var showDiseaseList: Bool
+    @State private var showVirtualDoctors = false
     @State private var searchText = ""
     @State private var scrollOffset: CGFloat = 0
 
@@ -195,6 +196,13 @@ struct HealingHomeContentView: View {
                                 // 今日健康卡片 - 传递布局参数
                                 HealingTodayCard(selectedTab: $selectedTab, layout: layout)
                                     .fluidFadeIn(delay: 0.1)
+
+                                // AI 医生快捷入口
+                                HomeVirtualDoctorCard(layout: layout) {
+                                    showVirtualDoctors = true
+                                    selectedTab = 1  // 同时切换到问医生 Tab
+                                }
+                                .fluidFadeIn(delay: 0.15)
 
                                 // 快速功能 - 传递布局参数和导航绑定
                                 HealingQuickActions(
@@ -961,6 +969,89 @@ struct PlaceholderView: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// MARK: - 首页虚拟医生卡片
+struct HomeVirtualDoctorCard: View {
+    let layout: AdaptiveLayout
+    let onTap: () -> Void
+    @State private var isPressed = false
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: layout.cardSpacing) {
+                // 图标
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    HealingColors.deepSage.opacity(0.25),
+                                    HealingColors.forestMist.opacity(0.15)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 56, height: 56)
+                        .shadow(
+                            color: HealingColors.forestMist.opacity(0.2),
+                            radius: isPressed ? 6 : 8,
+                            x: 0,
+                            y: 3
+                        )
+
+                    Image(systemName: "heart.text.square.fill")
+                        .font(.system(size: 26, weight: .medium))
+                        .foregroundColor(.white)
+                }
+                .scaleEffect(isPressed ? 0.95 : 1.0)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("AI 智能医生")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundColor(HealingColors.textPrimary)
+
+                    Text("选择不同风格的 AI 医生问诊")
+                        .font(.system(size: 13))
+                        .foregroundColor(HealingColors.textSecondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(HealingColors.textTertiary)
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(HealingColors.cardBackground)
+                    .shadow(
+                        color: Color.black.opacity(isPressed ? 0.06 : 0.1),
+                        radius: isPressed ? 8 : 14,
+                        x: 0,
+                        y: isPressed ? 2 : 5
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(
+                                HealingColors.softSage.opacity(isPressed ? 0.3 : 0.2),
+                                lineWidth: 1
+                            )
+                    )
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.easeInOut(duration: 0.12), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
     }
 }
 

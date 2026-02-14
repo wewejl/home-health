@@ -15,7 +15,7 @@ class VirtualDoctorViewModel: ObservableObject {
     // MARK: - Dependencies
     private let apiService: VirtualDoctorAPIService
 
-    init(apiService: VirtualDoctorAPIService = .shared) {
+    init(apiService: VirtualDoctorAPIService = VirtualDoctorAPIService.shared) {
         self.apiService = apiService
     }
 

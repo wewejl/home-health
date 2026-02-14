@@ -5,6 +5,7 @@ struct VirtualDoctorSelectionView: View {
     @StateObject private var viewModel = VirtualDoctorViewModel()
     @State private var selectedDepartment: String?
     @State private var selectedPersonality: String?
+    @State private var selectedDoctor: VirtualDoctor?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -53,6 +54,10 @@ struct VirtualDoctorSelectionView: View {
             viewModel.loadDoctors()
             viewModel.loadPersonalities()
             viewModel.loadSpecialties()
+        }
+        .navigationDestinationCompat(item: $selectedDoctor) { doctor in
+            // 医生详情页 - 显示完整信息后确认进入问诊
+            VirtualDoctorDetailView(doctor: doctor)
         }
         .alert("错误", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
@@ -155,11 +160,12 @@ struct VirtualDoctorSelectionView: View {
         ScrollView {
             LazyVStack(spacing: 16) {
                 ForEach(viewModel.doctors) { doctor in
-                    DoctorRowCard(doctor: doctor)
-                        .onTapGesture {
-                            // TODO: 处理医生选择
-                            print("Selected doctor: \(doctor.name)")
-                        }
+                    Button(action: {
+                        selectedDoctor = doctor
+                    }) {
+                        DoctorRowCard(doctor: doctor)
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
             }
             .padding()
@@ -187,8 +193,16 @@ struct VirtualDoctorSelectionView: View {
     // MARK: - Helper Methods
 
     private func applyFilters() {
+        // 从选中的科室代码获取科室 ID
+        let departmentId: Int? = nil
+        if let deptCode = selectedDepartment {
+            // 尝试从 specialties 中查找对应的科室配置
+            // 注意：这里需要从后端数据获取正确的科室 ID 映射
+            // 暂时先传递科室代码，后端会处理
+        }
+
         viewModel.loadDoctors(
-            departmentId: nil, // TODO: 从 selectedDepartment 获取 ID
+            departmentId: departmentId,
             personalityType: selectedPersonality
         )
     }
