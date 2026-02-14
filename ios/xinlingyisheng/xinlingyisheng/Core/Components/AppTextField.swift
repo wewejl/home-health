@@ -41,7 +41,7 @@ struct AppTextField: View {
             placeholder: placeholder,
             isSecure: isSecure,
             keyboardType: keyboardType,
-            autocapitalizationType: autocapitalizationType
+            autocapitalizationType: autocapitalizationType,
             title: title,
             type: type,
             isError: isError,

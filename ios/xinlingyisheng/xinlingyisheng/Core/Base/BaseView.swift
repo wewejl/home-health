@@ -44,7 +44,6 @@ extension View {
         }
     }
     }
-}
 
 // MARK: - Preview Provider
 

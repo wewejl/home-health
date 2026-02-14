@@ -4,9 +4,9 @@
     "last_updated": "2026-02-14",
     "note": "iOS 新架构迁移进行中，存在编译错误需要清理旧架构",
     "total_features": 68,
-    "passing": 60,
+    "passing": 61,
     "failing": 0,
-    "pending": 8
+    "pending": 7
   },
   "features": {
     "backend": {
@@ -619,7 +619,7 @@
       },
       "arch_verify_build": {
         "name": "验证编译",
-        "status": "pending",
+        "status": "passing",
         "priority": "P0",
         "note": "运行 xcodebuild 确保项目能成功编译"
       },
