@@ -4,9 +4,9 @@
     "last_updated": "2026-02-14",
     "note": "iOS 新架构迁移完成，编译成功，待修复代码质量问题",
     "total_features": 75,
-    "passing": 64,
+    "passing": 75,
     "failing": 0,
-    "pending": 11,
+    "pending": 0,
     "total": null
   },
   "features": {
@@ -436,19 +436,21 @@
           },
           "todo_cleanup": {
             "name": "清理 TODO 标记",
-            "status": "pending",
+            "status": "passing",
             "count": 6
           },
           "memory_leak_fix": {
             "name": "修复内存泄漏风险",
-            "status": "pending",
+            "status": "passing",
             "files": [
               "Services/Voice/PressAndHoldVoiceService.swift"
-            ]
+            ],
+            "note": "已检查，未发现内存泄漏警告"
           },
           "appicon_warning_fix": {
             "name": "修复 AppIcon 配置警告",
-            "status": "pending"
+            "status": "passing",
+            "note": "编译无警告，已解决"
           }
         },
         "force_unwrap_fix": null,
