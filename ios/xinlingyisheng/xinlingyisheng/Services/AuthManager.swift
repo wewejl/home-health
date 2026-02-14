@@ -195,7 +195,10 @@ class AuthManager: ObservableObject {
     
     // MARK: - Token 验证
     var hasValidToken: Bool {
-        return token != nil && !token!.isEmpty
+        guard let unwrappedToken = token else {
+            return false
+        }
+        return !unwrappedToken.isEmpty
     }
     
     // MARK: - 日志埋点

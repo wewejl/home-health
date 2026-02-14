@@ -96,13 +96,19 @@ struct DateChip: View {
 
     private var monthDay: String {
         let components = calendar.dateComponents([.day, .month], from: date)
-        return "\(components.month!)/\(components.day!)"
+        guard let month = components.month, let day = components.day else {
+            return ""
+        }
+        return "\(month)/\(day)"
     }
 
     private var weekday: String {
         let components = calendar.dateComponents([.weekday], from: date)
         let weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
-        return weekdays[components.weekday! - 1]
+        guard let weekday = components.weekday, weekday >= 1 && weekday <= 7 else {
+            return ""
+        }
+        return weekdays[weekday - 1]
     }
 
     @ViewBuilder
