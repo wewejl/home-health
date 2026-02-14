@@ -4,9 +4,10 @@
     "last_updated": "2026-02-14",
     "note": "iOS 新架构迁移完成，编译成功，待修复代码质量问题",
     "total_features": 75,
-    "passing": 63,
+    "passing": 64,
     "failing": 0,
-    "pending": 12
+    "pending": 11,
+    "total": null
   },
   "features": {
     "backend": {
@@ -449,6 +450,18 @@
             "name": "修复 AppIcon 配置警告",
             "status": "pending"
           }
+        },
+        "force_unwrap_fix": {
+          "status": "passing"
+        },
+        "appicon_warning_fix": {
+          "status": "passing"
+        },
+        "memory_leak_fix": {
+          "status": "pending"
+        },
+        "todo_cleanup": {
+          "status": "pending"
         }
       },
       "arch_core_base": {
