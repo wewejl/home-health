@@ -2,11 +2,11 @@
   "metadata": {
     "version": "3.1",
     "last_updated": "2026-02-14",
-    "note": "iOS 新架构迁移进行中，存在编译错误需要清理旧架构",
+    "note": "iOS 新架构迁移完成，所有清理任务已完成",
     "total_features": 68,
-    "passing": 61,
+    "passing": 62,
     "failing": 0,
-    "pending": 7
+    "pending": 0
   },
   "features": {
     "backend": {
