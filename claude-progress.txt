@@ -194,3 +194,14 @@ bash scripts/ios/verify-security.sh
 - **学到的教训**:
   - 问题列表可能不准确，需要实际检查代码
   - 布尔 ! 操作符不一定是强制解包
+
+### 2026-02-14 Session: 修复 AppIcon 警告（迭代 2）
+- **状态**: ✅ 完成
+- **任务**: appicon_warning_fix
+- **完成内容**:
+  - 编译验证无警告
+  - 更新 feature-list.json 状态
+- **提交**: 2d781f1c
+- **学到的教训**:
+  - AppIcon 警告可能已经解决
+  - jq 更新 JSON 的正确方式
