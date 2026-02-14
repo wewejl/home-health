@@ -140,3 +140,17 @@ bash scripts/ios/verify-security.sh
   - 保留 14 个独有的组件文件
   - 更新 feature-list.json 状态为 passing
 - **提交**: 待提交
+
+### 2026-02-14 Session: 遵循长期 Agent 原则
+- **状态**: ✅ 完成
+- **任务**: 提交之前的修改并更新进度文件
+- **完成内容**:
+  - 提交 bec2fbf8: iOS 编译错误修复（24 个文件）
+  - 提交 266fff08: 更新问题状态文件
+  - 学习并应用 Anthropic 长期 Agent 文章原则
+- **提交**: bec2fbf8, 266fff08
+- **学到的教训**:
+  - 每个功能完成后必须立即提交
+  - 必须进行端到端验证（不仅是编译）
+  - 一次只做一个功能
+  - 更新 claude-progress.txt 和 feature-list.json
