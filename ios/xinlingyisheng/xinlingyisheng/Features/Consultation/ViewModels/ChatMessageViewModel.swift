@@ -289,14 +289,24 @@ class ChatMessageViewModel: ObservableObject {
 
         // 添加结果消息
         let quickOpts = (response.quickOptions ?? []).map { QuickOption(text: $0, value: $0) }
-        let resultMessage = UnifiedChatMessage(
-            content: response.message,
-            isFromUser: false,
-            messageType: response.structuredData != nil
-                ? .structuredResult(response.structuredData!)
-                : .text,
-            quickOptions: quickOpts
-        )
+
+        // 安全处理 structuredData - 使用 if-let 而不是三元表达式中的强制解包
+        let resultMessage: UnifiedChatMessage
+        if let structuredData = response.structuredData {
+            resultMessage = UnifiedChatMessage(
+                content: response.message,
+                isFromUser: false,
+                messageType: .structuredResult(structuredData),
+                quickOptions: quickOpts
+            )
+        } else {
+            resultMessage = UnifiedChatMessage(
+                content: response.message,
+                isFromUser: false,
+                messageType: .text,
+                quickOptions: quickOpts
+            )
+        }
         messages.append(resultMessage)
 
         // 更新诊断字段
