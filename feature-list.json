@@ -4,9 +4,9 @@
     "last_updated": "2026-02-14",
     "note": "iOS 新架构迁移进行中，存在编译错误需要清理旧架构",
     "total_features": 68,
-    "passing": 58,
+    "passing": 59,
     "failing": 0,
-    "pending": 10
+    "pending": 9
   },
   "features": {
     "backend": {
@@ -595,7 +595,7 @@
       },
       "arch_cleanup_old_utils": {
         "name": "清理旧Utils目录",
-        "status": "pending",
+        "status": "passing",
         "priority": "P1",
         "note": "删除 xinlingyisheng/Utils/，检查是否有需要保留的工具类"
       },
