@@ -114,3 +114,15 @@ struct VirtualDoctorDetail: Codable {
         case personalityConfig = "personality_config"
     }
 }
+
+// MARK: - API Response Wrappers
+
+/// 性格类型列表响应
+struct PersonalitiesResponse: Codable {
+    let personalities: [PersonalityConfig]
+}
+
+/// 科室类型列表响应
+struct SpecialtiesResponse: Codable {
+    let specialties: [SpecialtyConfig]
+}

@@ -63,7 +63,7 @@ def get_personalities():
     - 推荐温度值
     """
     personalities = list_available_personalities()
-    return [
+    return {"personalities": [
         {
             "code": p["code"],
             "name": p["name"],
@@ -73,7 +73,7 @@ def get_personalities():
             "greeting_template": p["greeting_template"],
         }
         for p in personalities
-    ]
+    ]}
 
 
 @router.get("/specialties")
@@ -87,7 +87,7 @@ def get_specialties():
     - 智能体类名
     """
     from ..models.virtual_doctor import list_specialties
-    return list_specialties()
+    return {"specialties": list_specialties()}
 
 
 @router.get("/{doctor_id}", response_model=DoctorDetailResponse)
