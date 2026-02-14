@@ -4,9 +4,9 @@
     "last_updated": "2026-02-14",
     "note": "iOS 新架构迁移进行中，存在编译错误需要清理旧架构",
     "total_features": 68,
-    "passing": 56,
+    "passing": 57,
     "failing": 0,
-    "pending": 12
+    "pending": 11
   },
   "features": {
     "backend": {
@@ -601,7 +601,7 @@
       },
       "arch_cleanup_old_network": {
         "name": "清理旧Network目录",
-        "status": "pending",
+        "status": "passing",
         "priority": "P0",
         "note": "删除 xinlingyisheng/Network/，已迁移至 Security/"
       },
