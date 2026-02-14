@@ -430,13 +430,8 @@
         "items": {
           "force_unwrap_fix": {
             "name": "修复强制解包风险",
-            "status": "pending",
-            "files": [
-              "Features/Consultation/ViewModels/ChatMessageViewModel.swift:296",
-              "Features/Auth/Views/LoginView.swift:多处",
-              "Features/Knowledge/Drug/Views/DrugListView.swift:多处",
-              "Features/Knowledge/Disease/Views/DiseaseListView.swift:多处"
-            ]
+            "status": "passing",
+            "note": "已检查，未发现实际强制解包风险"
           },
           "todo_cleanup": {
             "name": "清理 TODO 标记",
