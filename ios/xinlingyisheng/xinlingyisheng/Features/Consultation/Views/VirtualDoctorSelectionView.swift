@@ -293,11 +293,16 @@ struct VirtualDoctorSelectionView: View {
 
     private func applyFilters() {
         // 从选中的科室代码获取科室 ID
-        let departmentId: Int? = nil
+        // 需要通过 specialties 列表查找对应的科室配置来获取 department_id
+        var departmentId: Int? = nil
         if let deptCode = selectedDepartment {
-            // 尝试从 specialties 中查找对应的科室配置
-            // 注意：这里需要从后端数据获取正确的科室 ID 映射
-            // 暂时先传递科室代码，后端会处理
+            // 从 specialties 列表中查找对应的科室
+            if let specialty = viewModel.specialties.first(where: { $0.code == deptCode }) {
+                // 使用科室名称在医生列表中筛选
+                // 后端 API 不支持按科室代码筛选，所以先传 nil
+                // TODO: 后端需要添加按科室代码筛选的支持
+                departmentId = nil
+            }
         }
 
         viewModel.loadDoctors(

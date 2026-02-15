@@ -20,19 +20,22 @@ final class VirtualDoctorAPIService {
 
     /// 获取虚拟医生列表
     func listVirtualDoctors(departmentId: Int? = nil, personalityType: String? = nil) async throws -> [VirtualDoctor] {
-        var components = URLComponents(string: "\(baseURL)/virtual-doctors")
-        var queryItems: [URLQueryItem] = []
+        // 构建 URL - 使用字符串拼接方式
+        var urlString = "\(baseURL)/virtual-doctors"
 
+        var queryItems: [String] = []
         if let departmentId = departmentId {
-            queryItems.append(URLQueryItem(name: "department_id", value: "\(departmentId)"))
+            queryItems.append("department_id=\(departmentId)")
         }
         if let personalityType = personalityType {
-            queryItems.append(URLQueryItem(name: "personality_type", value: personalityType))
+            queryItems.append("personality_type=\(personalityType)")
         }
 
-        components?.queryItems = queryItems
+        if !queryItems.isEmpty {
+            urlString += "?" + queryItems.joined(separator: "&")
+        }
 
-        guard let url = components?.url else {
+        guard let url = URL(string: urlString) else {
             throw APIError.invalidURL
         }
 
@@ -45,7 +48,9 @@ final class VirtualDoctorAPIService {
 
     /// 获取所有性格类型
     func listPersonalities() async throws -> [PersonalityConfig] {
-        let url = URL(string: "\(baseURL)/virtual-doctors/personalities")!
+        guard let url = URL(string: "\(baseURL)/virtual-doctors/personalities") else {
+            throw APIError.invalidURL
+        }
 
         let data = try await performRequest(url: url)
         let response = try JSONDecoder().decode(PersonalitiesResponse.self, from: data)
@@ -56,7 +61,9 @@ final class VirtualDoctorAPIService {
 
     /// 获取所有科室类型
     func listSpecialties() async throws -> [SpecialtyConfig] {
-        let url = URL(string: "\(baseURL)/virtual-doctors/specialties")!
+        guard let url = URL(string: "\(baseURL)/virtual-doctors/specialties") else {
+            throw APIError.invalidURL
+        }
 
         let data = try await performRequest(url: url)
         let response = try JSONDecoder().decode(SpecialtiesResponse.self, from: data)
@@ -67,7 +74,9 @@ final class VirtualDoctorAPIService {
 
     /// 获取医生详情
     func getVirtualDoctorDetail(id: Int) async throws -> VirtualDoctorDetail {
-        let url = URL(string: "\(baseURL)/virtual-doctors/\(id)")!
+        guard let url = URL(string: "\(baseURL)/virtual-doctors/\(id)") else {
+            throw APIError.invalidURL
+        }
 
         let data = try await performRequest(url: url)
         return try JSONDecoder().decode(VirtualDoctorDetail.self, from: data)

@@ -64,7 +64,7 @@ class VirtualDoctorViewModel: ObservableObject {
             isLoading = false
         } catch {
             isLoading = false
-            errorMessage = "加载医生列表失败: \(error.localizedDescription)"
+            errorMessage = "加载医生列表失败"
         }
     }
 
@@ -77,7 +77,7 @@ class VirtualDoctorViewModel: ObservableObject {
             isLoading = false
         } catch {
             isLoading = false
-            errorMessage = "加载性格类型失败: \(error.localizedDescription)"
+            errorMessage = "加载性格类型失败"
         }
     }
 
@@ -90,7 +90,7 @@ class VirtualDoctorViewModel: ObservableObject {
             isLoading = false
         } catch {
             isLoading = false
-            errorMessage = "加载科室类型失败: \(error.localizedDescription)"
+            errorMessage = "加载科室类型失败"
         }
     }
 
@@ -103,7 +103,7 @@ class VirtualDoctorViewModel: ObservableObject {
             isLoading = false
         } catch {
             isLoading = false
-            errorMessage = "加载医生详情失败: \(error.localizedDescription)"
+            errorMessage = "加载医生详情失败"
         }
     }
 
