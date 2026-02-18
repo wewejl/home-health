@@ -1,11 +1,32 @@
 import Foundation
 import Security
+import os.log
 
 /// Keychain 管理器 - 安全存储敏感信息（如 Token）
 /// 使用 Keychain 而非 UserDefaults 存储 Token，防止越狱设备读取
 /// Keychain 失败时自动降级到 UserDefaults（带警告）
 actor KeychainManager {
     static let shared = KeychainManager()
+
+    // MARK: - 非隔离日志工具
+    /// 在 actor 上下文中使用的非隔离日志
+    private nonisolated func logWarning(_ message: String) {
+        os_log("⚠️ %{public}@", log: .default, type: .default, message)
+    }
+
+    /// 在 actor 上下文中使用的非隔离日志
+    private nonisolated func logSuccess(_ message: String) {
+        os_log("✅ %{public}@", log: .default, type: .info, message)
+    }
+
+    /// 在 actor 上下文中使用的非隔离日志
+    private nonisolated func logError(_ message: String, error: Error? = nil) {
+        if let error = error {
+            os_log("❌ %{public}@: %{public}@", log: .default, type: .error, message, error.localizedDescription)
+        } else {
+            os_log("❌ %{public}@", log: .default, type: .error, message)
+        }
+    }
 
     private init() {
         // 配置 UserDefaults 前缀，避免冲突
@@ -41,7 +62,7 @@ actor KeychainManager {
     private func saveToUserDefaults(_ value: String, forKey key: String) {
         let fullKey = userDefaultsPrefix + key
         UserDefaults.standard.set(value, forKey: fullKey)
-        AppLogger.warning("[Keychain] 降级到 UserDefaults 存储: \(key)")
+        logWarning("[Keychain] 降级到 UserDefaults 存储: \(key)")
     }
 
     /// 从 UserDefaults 读取（降级方案）
@@ -84,11 +105,11 @@ actor KeychainManager {
                 throw KeychainError.unexpectedStatus(status)
             }
 
-            AppLogger.success("[Keychain] 保存成功: \(key)")
+            logSuccess("[Keychain] 保存成功: \(key)")
 
         } catch {
             // Keychain 失败，降级到 UserDefaults
-            AppLogger.error("[Keychain] 保存失败，降级到 UserDefaults: \(key)", error: error)
+            logError("[Keychain] 保存失败，降级到 UserDefaults: \(key)", error: error)
             saveToUserDefaults(value, forKey: key)
         }
     }
@@ -102,7 +123,7 @@ actor KeychainManager {
         } catch {
             // Keychain 失败，尝试 UserDefaults
             if let fallbackValue = retrieveFromUserDefaults(forKey: key) {
-                AppLogger.warning("[Keychain] 从 UserDefaults 读取（降级模式）: \(key)")
+                logWarning("[Keychain] 从 UserDefaults 读取（降级模式）: \(key)")
                 return fallbackValue
             }
             throw error
@@ -142,7 +163,7 @@ actor KeychainManager {
         do {
             try deleteFromKeychain(forKey: key)
         } catch {
-            AppLogger.warning("[Keychain] 删除 Keychain 失败: \(key)")
+            logWarning("[Keychain] 删除 Keychain 失败: \(key)")
         }
 
         // 同时清除 UserDefaults 降级数据

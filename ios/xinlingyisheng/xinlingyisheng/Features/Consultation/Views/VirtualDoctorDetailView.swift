@@ -208,11 +208,10 @@ struct VirtualDoctorDetailView: View {
     // MARK: - Load Doctor Detail
 
     private func loadDoctorDetail() {
-        Task {
-            await viewModel.loadDoctorDetail(id: doctor.id)
-            await MainActor.run {
-                doctorDetail = viewModel.selectedDoctor
-            }
+        viewModel.loadDoctorDetail(id: doctor.id)
+        // loadDoctorDetail 是同步方法，实际操作在内部 Task 中
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            doctorDetail = viewModel.selectedDoctor
         }
     }
 }

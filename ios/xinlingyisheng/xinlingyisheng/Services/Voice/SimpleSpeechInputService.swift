@@ -60,48 +60,46 @@ class SimpleSpeechInputService: ObservableObject {
 
     // MARK: - 请求麦克风权限
     func requestAuthorization() async -> Bool {
-        // 检查当前权限状态（iOS 17 使用不同 API）
-        let micStatus: AVAudioSession.RecordPermission
+        // iOS 17+ 使用 AVAudioApplication API
         if #available(iOS 17.0, *) {
-            // iOS 17+ 使用 AVAudioApplication
             let appStatus = AVAudioApplication.shared.recordPermission
-            // 转换为 AVAudioSession.RecordPermission 类型
-            switch appStatus {
-            case .granted:
-                micStatus = .granted
-            case .denied:
-                micStatus = .denied
-            case .undetermined:
-                micStatus = .undetermined
-            @unknown default:
-                micStatus = .undetermined
-            }
-        } else {
-            // iOS 17 之前使用 AVAudioSession
-            micStatus = AVAudioSession.sharedInstance().recordPermission
-        }
 
-        if micStatus == .denied {
-            errorMessage = "麦克风权限被拒绝，请在设置中开启"
-            return false
-        } else if micStatus == .undetermined {
-            if #available(iOS 17.0, *) {
+            switch appStatus {
+            case .denied:
+                errorMessage = "麦克风权限被拒绝，请在设置中开启"
+                return false
+            case .undetermined:
                 let granted = await AVAudioApplication.requestRecordPermission()
                 if !granted {
                     errorMessage = "麦克风权限被拒绝"
                 }
                 return granted
-            } else {
+            case .granted:
+                return true
+            @unknown default:
+                return true
+            }
+        } else {
+            // iOS 17 之前使用 AVAudioSession API
+            let sessionStatus = AVAudioSession.sharedInstance().recordPermission
+
+            switch sessionStatus {
+            case .denied:
+                errorMessage = "麦克风权限被拒绝，请在设置中开启"
+                return false
+            case .undetermined:
                 let audioSession = AVAudioSession.sharedInstance()
-                await withCheckedContinuation { continuation in
+                return await withCheckedContinuation { continuation in
                     audioSession.requestRecordPermission { granted in
                         continuation.resume(returning: granted)
                     }
                 }
+            case .granted:
+                return true
+            @unknown default:
+                return true
             }
         }
-
-        return true
     }
 
     // MARK: - 开始录音识别

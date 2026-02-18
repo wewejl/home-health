@@ -1,4 +1,5 @@
 import Foundation
+import os.log
 
 /// 安全的 WebSocket 服务
 /// Token 通过 HTTP Header 传递，而非 URL 参数
@@ -12,6 +13,14 @@ actor SecureWebSocketService {
 
     private var activeTask: URLSessionWebSocketTask?
 
+    // 存储 Base URL 的副本（避免在非隔离上下文中访问静态属性）
+    private nonisolated static let cachedBaseURL = "ws://localhost:8100/ws"
+
+    // MARK: - 非隔离日志
+    private nonisolated func log(_ message: String) {
+        os_log("[WebSocket] %{public}@", log: .default, type: .info, message)
+    }
+
     // MARK: - Public Methods
 
     /// 创建 WebSocket 连接
@@ -20,7 +29,8 @@ actor SecureWebSocketService {
     ///   - token: 认证 Token
     /// - Returns: WebSocket 任务
     func connect(to endpoint: String, token: String) throws -> URLSessionWebSocketTask {
-        let urlString = SecurityConfig.websocketBaseURL + endpoint
+        let baseURL = Self.cachedBaseURL
+        let urlString = baseURL + endpoint
 
         guard let url = URL(string: urlString) else {
             throw WebSocketError.invalidURL(urlString)
@@ -36,7 +46,7 @@ actor SecureWebSocketService {
 
         self.activeTask = task
 
-        SecurityConfig.log("WebSocket connected to: \(endpoint)")
+        log("WebSocket connected to: \(endpoint)")
 
         return task
     }

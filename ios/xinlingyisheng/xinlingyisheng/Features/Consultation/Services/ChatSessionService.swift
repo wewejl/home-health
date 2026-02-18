@@ -157,7 +157,7 @@ class ChatSessionService {
 
     func confirmGenerateDossier() async {
         showGenerateConfirmation = false
-        await manuallyGenerateDossier()
+        _ = await manuallyGenerateDossier()
     }
 
     func cancelGenerateDossier() {

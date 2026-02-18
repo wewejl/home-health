@@ -135,7 +135,7 @@ class MedicalDossierViewModel: ObservableObject {
         defer { isSavingNote = false }
 
         do {
-            try await MedicalEventAPIService.shared.addNote(
+            _ = try await MedicalEventAPIService.shared.addNote(
                 eventId: eventId,
                 content: content,
                 isImportant: isImportant
@@ -168,7 +168,11 @@ class MedicalDossierViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            // 这里的实现取决于 API
+            let detail = try await MedicalEventAPIService.shared.fetchEventDetail(eventId: eventId)
+            if let index = events.firstIndex(where: { $0.id == eventId }) {
+                events[index] = detail.toMedicalEvent()
+                applyFilters(searchText: searchText, filter: selectedFilter)
+            }
         } catch {
             errorMessage = "加载详情失败: \(error.localizedDescription)"
         }

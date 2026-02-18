@@ -2,6 +2,7 @@ import Foundation
 import Combine
 import UIKit
 import AVFoundation
+import os.log
 
 // MARK: - 图片来源类型
 enum ImageSourceType {
@@ -45,7 +46,8 @@ class UnifiedChatViewModel: ObservableObject {
     }
 
     nonisolated deinit {
-        AppLogger.debug("[UnifiedChatVM] deinit")
+        // 使用非隔离日志
+        os_log("[UnifiedChatVM] deinit", log: .default, type: .debug)
     }
 
     /// 主动清理语音绑定（在视图消失时调用）

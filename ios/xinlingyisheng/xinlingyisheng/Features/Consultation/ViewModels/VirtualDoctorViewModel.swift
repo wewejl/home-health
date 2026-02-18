@@ -15,8 +15,14 @@ class VirtualDoctorViewModel: ObservableObject {
     // MARK: - Dependencies
     private let apiService: VirtualDoctorAPIService
 
-    init(apiService: VirtualDoctorAPIService = VirtualDoctorAPIService.shared) {
-        self.apiService = apiService
+    // 使用依赖注入，避免在 nonisolated init 中访问 MainActor 属性
+    init(apiService: VirtualDoctorAPIService? = nil) {
+        // 如果未传入，则在 MainActor 上下文中获取 shared
+        if let apiService = apiService {
+            self.apiService = apiService
+        } else {
+            self.apiService = VirtualDoctorAPIService.shared
+        }
     }
 
     // MARK: - Load Operations

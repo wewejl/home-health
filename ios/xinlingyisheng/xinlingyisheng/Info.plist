@@ -20,11 +20,28 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     
-    <!-- App Transport Security - 允许 HTTP 请求（开发环境） -->
+    <!-- App Transport Security - 安全配置 -->
     <key>NSAppTransportSecurity</key>
     <dict>
+        <!-- 生产环境禁止任意 HTTP 加载 -->
         <key>NSAllowsArbitraryLoads</key>
-        <true/>
+        <false/>
+        <!-- 仅开发环境允许 localhost 使用 HTTP -->
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>localhost</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+            </dict>
+            <key>127.0.0.1</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+            </dict>
+        </dict>
     </dict>
     
     <!-- 相机权限（如需上传图片） -->
