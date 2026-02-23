@@ -48,14 +48,22 @@ class ChatSessionService {
             let activeSessionId = sessionStateManager.getActiveSession(doctorId: doctorId)
 
             if let existingSessionId = activeSessionId {
-                print("[ChatSessionService] 发现活跃会话: \(existingSessionId)")
-                self.sessionId = existingSessionId
-                await loadCapabilities()
-                return
+                print("[ChatSessionService] 发现本地缓存会话: \(existingSessionId)")
+                // 验证会话是否真的存在
+                do {
+                    _ = try await apiService.getMessages(sessionId: existingSessionId, limit: 1)
+                    print("[ChatSessionService] 会话有效，复用")
+                    self.sessionId = existingSessionId
+                    await loadCapabilities()
+                    return
+                } catch {
+                    print("[ChatSessionService] 会话无效(404)，清除缓存并创建新会话")
+                    sessionStateManager.clearActiveSession(doctorId: doctorId)
+                }
             }
         }
 
-        print("[ChatSessionService] 没有活跃会话，创建新会话")
+        print("[ChatSessionService] 创建新会话")
         await createNewSession(doctorId: doctorId, department: department)
     }
 

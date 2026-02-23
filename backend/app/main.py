@@ -27,7 +27,6 @@ from .routes import (
     # voice_router,  # TTS 已移除，状态端点已废弃
     voice_asr_router,  # GLM-ASR 语音识别
     doctor_workstation_router,  # 医生工作台
-    virtual_doctors_router,  # 虚拟医生分身 API
 )
 from .services.admin_auth_service import AdminAuthService
 from .seed import seed_data
@@ -98,7 +97,6 @@ app.include_router(admin_stats_router)
 app.include_router(admin_diseases_router)
 app.include_router(admin_drugs_router)
 app.include_router(admin_drug_categories_router)
-app.include_router(virtual_doctors_router)  # 虚拟医生分身 API
 
 # 静态文件服务
 import os

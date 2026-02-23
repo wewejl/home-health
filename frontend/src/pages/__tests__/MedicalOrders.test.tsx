@@ -11,11 +11,11 @@
  * 7. 类型徽章测试
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom';
-import MedicalOrders from '../MedicalOrders';
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { BrowserRouter } from 'react-router-dom'
+import MedicalOrders from '../MedicalOrders'
 
 // Mock API
 vi.mock('@/api', () => ({
@@ -26,7 +26,7 @@ vi.mock('@/api', () => ({
     activate: vi.fn(),
     getDailyTasks: vi.fn(),
   },
-}));
+}))
 
 // Mock toast
 vi.mock('@/components/ui/toast', () => ({
@@ -35,7 +35,7 @@ vi.mock('@/components/ui/toast', () => ({
     error: vi.fn(),
     info: vi.fn(),
   }),
-}));
+}))
 
 // Mock icons
 vi.mock('lucide-react', () => ({
@@ -49,7 +49,7 @@ vi.mock('lucide-react', () => ({
   Pill: () => <span data-testid="pill">Pill</span>,
   FileText: () => <span data-testid="file">File</span>,
   Loader2: () => <span data-testid="loader">Loader</span>,
-}));
+}))
 
 // Mock components
 vi.mock('@/components/ui/button', () => ({
@@ -58,31 +58,29 @@ vi.mock('@/components/ui/button', () => ({
       {children}
     </button>
   ),
-}));
+}))
 
 vi.mock('@/components/ui/badge', () => ({
-  Badge: ({ children, variant }: any) => (
-    <span data-variant={variant}>{children}</span>
-  ),
-}));
+  Badge: ({ children, variant }: any) => <span data-variant={variant}>{children}</span>,
+}))
 
 vi.mock('@/components/ui/tabs', () => ({
   Tabs: ({ children, value }: any) => <div data-value={value}>{children}</div>,
   TabsList: ({ children }: any) => <div>{children}</div>,
   TabsTrigger: ({ children, value }: any) => <button data-value={value}>{children}</button>,
   TabsContent: ({ children, value }: any) => <div data-value={value}>{children}</div>,
-}));
+}))
 
 vi.mock('@/components/ui/card', () => ({
   Card: ({ children }: any) => <div data-testid="card">{children}</div>,
   CardContent: ({ children }: any) => <div>{children}</div>,
   CardHeader: ({ children }: any) => <div>{children}</div>,
   CardTitle: ({ children }: any) => <h3>{children}</h3>,
-}));
+}))
 
 vi.mock('@/components/ui/select', () => ({
   Select: ({ children, value, onValueChange }: any) => (
-    <select value={value} onChange={(e) => onValueChange?.(e.target.value)} data-testid="select">
+    <select value={value} onChange={e => onValueChange?.(e.target.value)} data-testid="select">
       {children}
     </select>
   ),
@@ -90,7 +88,7 @@ vi.mock('@/components/ui/select', () => ({
   SelectValue: ({ placeholder }: any) => <span>{placeholder}</span>,
   SelectContent: ({ children }: any) => <div>{children}</div>,
   SelectItem: ({ children, value }: any) => <option value={value}>{children}</option>,
-}));
+}))
 
 vi.mock('@/components/ui/tooltip', () => ({
   Tooltip: ({ children, content }: any) => (
@@ -99,7 +97,7 @@ vi.mock('@/components/ui/tooltip', () => ({
       <span data-tooltip={content} hidden />
     </div>
   ),
-}));
+}))
 
 vi.mock('@/components/ui/table', () => ({
   Table: ({ children }: any) => <table data-testid="table">{children}</table>,
@@ -108,7 +106,7 @@ vi.mock('@/components/ui/table', () => ({
   TableHead: ({ children }: any) => <th>{children}</th>,
   TableRow: ({ children }: any) => <tr>{children}</tr>,
   TableCell: ({ children }: any) => <td>{children}</td>,
-}));
+}))
 
 vi.mock('@/components/ui/progress', () => ({
   Progress: ({ value, max }: any) => (
@@ -116,29 +114,35 @@ vi.mock('@/components/ui/progress', () => ({
       <div style={{ width: `${(value / max) * 100}%` }}></div>
     </div>
   ),
-}));
+}))
 
 vi.mock('@/components/ui/alert', () => ({
   Alert: ({ children }: any) => <div data-testid="alert">{children}</div>,
   AlertTitle: ({ children }: any) => <h4>{children}</h4>,
   AlertDescription: ({ children }: any) => <p>{children}</p>,
-}));
+}))
 
 vi.mock('@/components/medical/stat-card', () => ({
   StatCardGrid: ({ items, cols }: any) => (
     <div data-testid="stat-grid">
       {items.map((item: any) => (
-        <div key={item.title} data-title={item.title}>{item.title}: {item.value}</div>
+        <div key={item.title} data-title={item.title}>
+          {item.title}: {item.value}
+        </div>
       ))}
     </div>
   ),
-}));
+}))
 
 vi.mock('@/components/medical/page-header', () => ({
-  PageHeader: ({ title }: any) => <div data-testid="page-header"><h1>{title}</h1></div>,
-}));
+  PageHeader: ({ title }: any) => (
+    <div data-testid="page-header">
+      <h1>{title}</h1>
+    </div>
+  ),
+}))
 
-import { medicalOrdersApi } from '@/api';
+import { medicalOrdersApi } from '@/api'
 
 describe('MedicalOrders Page', () => {
   const mockOrders = [
@@ -158,7 +162,7 @@ describe('MedicalOrders Page', () => {
       created_at: '2026-02-01T10:00:00',
       updated_at: '2026-02-01T10:00:00',
     },
-  ];
+  ]
 
   const mockTodayTasks = {
     date: '2026-02-12',
@@ -166,180 +170,182 @@ describe('MedicalOrders Page', () => {
     completed: [{ id: 2, title: '服用药物', scheduled_time: '12:00' }],
     overdue: [{ id: 3, title: '测量体温', scheduled_time: '18:00' }],
     summary: { total: 5, completed: 2, overdue: 1, pending: 2, rate: 0.6 },
-  };
+  }
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(medicalOrdersApi.list).mockResolvedValue({ data: mockOrders });
-    vi.mocked(medicalOrdersApi.create).mockResolvedValue({ success: true });
-    vi.mocked(medicalOrdersApi.update).mockResolvedValue({ success: true });
-    vi.mocked(medicalOrdersApi.activate).mockResolvedValue({ success: true });
-    vi.mocked(medicalOrdersApi.getDailyTasks).mockResolvedValue({ data: mockTodayTasks });
-  });
+    vi.clearAllMocks()
+    vi.mocked(medicalOrdersApi.list).mockResolvedValue({ data: mockOrders })
+    vi.mocked(medicalOrdersApi.create).mockResolvedValue({ success: true })
+    vi.mocked(medicalOrdersApi.update).mockResolvedValue({ success: true })
+    vi.mocked(medicalOrdersApi.activate).mockResolvedValue({ success: true })
+    vi.mocked(medicalOrdersApi.getDailyTasks).mockResolvedValue({ data: mockTodayTasks })
+  })
 
   const renderMedicalOrders = () => {
     return render(
       <BrowserRouter>
         <MedicalOrders />
       </BrowserRouter>
-    );
-  };
+    )
+  }
 
   describe('Rendering', () => {
     it('should render page title', async () => {
-      renderMedicalOrders();
+      renderMedicalOrders()
 
-      expect(screen.getByTestId('page-header')).toBeInTheDocument();
-    });
+      expect(screen.getByTestId('page-header')).toBeInTheDocument()
+    })
 
     it('should render stat cards', async () => {
-      renderMedicalOrders();
+      renderMedicalOrders()
 
-      expect(screen.getByTestId('stat-grid')).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByTestId('stat-grid')).toBeInTheDocument()
+    })
+  })
 
   describe('Orders List', () => {
     it('should render orders table', async () => {
-      renderMedicalOrders();
+      renderMedicalOrders()
 
-      expect(screen.getByText('医嘱列表')).toBeInTheDocument();
-    });
+      expect(screen.getByText('医嘱列表')).toBeInTheDocument()
+    })
 
     it('should render order type badges', async () => {
-      renderMedicalOrders();
+      renderMedicalOrders()
 
-      expect(screen.getByText('用药')).toBeInTheDocument();
-      expect(screen.getByText('监测')).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByText('用药')).toBeInTheDocument()
+      expect(screen.getByText('监测')).toBeInTheDocument()
+    })
+  })
 
   describe('Today Tasks', () => {
     it('should render today tasks section', async () => {
-      renderMedicalOrders();
+      renderMedicalOrders()
 
-      expect(screen.getByText(/任务清单/)).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByText(/任务清单/)).toBeInTheDocument()
+    })
+  })
 
   describe('Create Order', () => {
     it('should open create dialog', async () => {
-      renderMedicalOrders();
+      renderMedicalOrders()
 
-      const createButton = screen.getByText('新建医嘱');
-      await userEvent.click(createButton);
+      const createButton = screen.getByText('新建医嘱')
+      await userEvent.click(createButton)
 
       // Dialog should open
-    });
+    })
 
     it('should validate required fields', async () => {
-      renderMedicalOrders();
+      renderMedicalOrders()
 
-      const createButton = screen.getByText('新建医嘱');
-      await userEvent.click(createButton);
+      const createButton = screen.getByText('新建医嘱')
+      await userEvent.click(createButton)
 
       // Try to submit without filling form
       // This tests validation logic
-    });
-  });
+    })
+  })
 
   describe('Order Actions', () => {
     it('should activate order', async () => {
-      renderMedicalOrders();
+      renderMedicalOrders()
 
       await waitFor(() => {
-        const activateButtons = screen.getAllByText('激活');
+        const activateButtons = screen.getAllByText('激活')
         if (activateButtons.length > 0) {
-          await userEvent.click(activateButtons[0]);
-          expect(medicalOrdersApi.activate).toHaveBeenCalled();
+          await userEvent.click(activateButtons[0])
+          expect(medicalOrdersApi.activate).toHaveBeenCalled()
         }
-      });
-    });
+      })
+    })
 
     it('should show activate button for draft orders only', async () => {
-      renderMedicalOrders();
+      renderMedicalOrders()
 
       await waitFor(() => {
-        const activateButtons = screen.getAllByText('激活');
-        const activateIcon = screen.getAllByTestId('check');
+        const activateButtons = screen.getAllByText('激活')
+        const activateIcon = screen.getAllByTestId('check')
         // Should only show activate for draft orders
-      });
-    });
-  });
+      })
+    })
+  })
 
   describe('Status Filter', () => {
     it('should filter by status', async () => {
-      renderMedicalOrders();
+      renderMedicalOrders()
 
       // Find status select
-      const statusButtons = screen.getAllByText('全部');
+      const statusButtons = screen.getAllByText('全部')
       if (statusButtons.length > 0) {
-        await userEvent.click(statusButtons[0]);
+        await userEvent.click(statusButtons[0])
 
         await waitFor(() => {
-          expect(medicalOrdersApi.list).toHaveBeenCalledWith(expect.objectContaining({
-            status: 'draft',
-          }));
-        });
+          expect(medicalOrdersApi.list).toHaveBeenCalledWith(
+            expect.objectContaining({
+              status: 'draft',
+            })
+          )
+        })
       }
-    });
+    })
 
     it('should change to draft filter', async () => {
-      renderMedicalOrders();
+      renderMedicalOrders()
 
-      const draftButtons = screen.getAllByText('草稿');
+      const draftButtons = screen.getAllByText('草稿')
       if (draftButtons.length > 0) {
-        await userEvent.click(draftButtons[0]);
+        await userEvent.click(draftButtons[0])
 
         await waitFor(() => {
-          expect(medicalOrdersApi.list).toHaveBeenCalledWith(expect.objectContaining({
-            status: 'draft',
-          }));
-        });
+          expect(medicalOrdersApi.list).toHaveBeenCalledWith(
+            expect.objectContaining({
+              status: 'draft',
+            })
+          )
+        })
       }
-    });
-  });
-});
+    })
+  })
 
   describe('Tabs Navigation', () => {
     it('should switch between orders and tasks tabs', async () => {
-      renderMedicalOrders();
+      renderMedicalOrders()
 
-      const tasksTab = screen.getByText('今日任务');
+      const tasksTab = screen.getByText('今日任务')
       if (tasksTab) {
-        await userEvent.click(tasksTab);
+        await userEvent.click(tasksTab)
 
         // Tasks tab should be selected
       }
-    });
-  });
+    })
+  })
 
   describe('Loading States', () => {
     it('should show loading when fetching orders', async () => {
-      let resolveList: (value: any) => void;
+      let resolveList: (value: any) => void
       const pendingPromise = new Promise(resolve => {
-        resolveList = resolve;
-      });
-      vi.mocked(medicalOrdersApi.list).mockReturnValue(pendingPromise as any);
+        resolveList = resolve
+      })
+      vi.mocked(medicalOrdersApi.list).mockReturnValue(pendingPromise as any)
 
-      renderMedicalOrders();
+      renderMedicalOrders()
 
-      expect(screen.getAllByTestId('loader').length).toBeGreaterThan(0);
+      expect(screen.getAllByTestId('loader').length).toBeGreaterThan(0)
 
-      resolveList!({ data: [] });
-    });
-  });
-});
+      resolveList!({ data: [] })
+    })
+  })
 
   describe('Empty States', () => {
     it('should show empty orders state', async () => {
-      vi.mocked(medicalOrdersApi.list).mockResolvedValue({ data: [] });
+      vi.mocked(medicalOrdersApi.list).mockResolvedValue({ data: [] })
 
-      renderMedicalOrders();
+      renderMedicalOrders()
 
       await waitFor(() => {
-        expect(screen.getByText('暂无数据')).toBeInTheDocument();
-      });
-    });
-  });
-});
+        expect(screen.getByText('暂无数据')).toBeInTheDocument()
+      })
+    })
+  })
+})

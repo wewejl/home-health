@@ -5,7 +5,6 @@ struct AskDoctorView: View {
     @State private var searchText = ""
     @State private var selectedDepartment: DepartmentModel?
     @State private var showMyQuestions = false
-    @State private var showVirtualDoctors = false
     // API数据状态
     @State private var departments: [DepartmentModel] = []
     @State private var isLoadingDepartments = false
@@ -62,11 +61,6 @@ struct AskDoctorView: View {
                                 // 信任标签
                                 TrustBadgesView(layout: layout)
 
-                                // AI 医生入口
-                                VirtualDoctorEntryCard(layout: layout) {
-                                    showVirtualDoctors = true
-                                }
-
                                 // 科室列表（从 API 加载）
                                 DepartmentListView(
                                     departments: filteredDepartments,
@@ -90,9 +84,6 @@ struct AskDoctorView: View {
         }
         .navigationDestinationCompat(isPresented: $showMyQuestions) {
             MyQuestionsView()
-        }
-        .navigationDestinationCompat(isPresented: $showVirtualDoctors) {
-            VirtualDoctorSelectionView()
         }
         .onAppear {
             if departments.isEmpty {
@@ -399,95 +390,6 @@ struct TrustBadgesView: View {
     }
 }
 
-
-// MARK: - AI 医生入口卡片
-struct VirtualDoctorEntryCard: View {
-    let layout: AdaptiveLayout
-    let onTap: () -> Void
-    @State private var isPressed = false
-
-    var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: layout.cardSpacing / 2) {
-                // 左侧图标
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    HealingColors.deepSage.opacity(isPressed ? 0.25 : 0.18),
-                                    HealingColors.softSage.opacity(isPressed ? 0.2 : 0.12)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .overlay(
-                            Circle()
-                                .stroke(HealingColors.forestMist.opacity(isPressed ? 0.2 : 0.1), lineWidth: 1)
-                        )
-                        .shadow(
-                            color: HealingColors.forestMist.opacity(isPressed ? 0.2 : 0.12),
-                            radius: isPressed ? 6 : 4,
-                            x: 0,
-                            y: 2
-                        )
-
-                    Image(systemName: "heart.text.square.fill")
-                        .font(.system(size: AdaptiveFont.title3, weight: .medium))
-                        .foregroundColor(HealingColors.forestMist)
-                }
-                .frame(width: 36 * layout.iconScale, height: 36 * layout.iconScale)
-                .scaleEffect(isPressed ? 0.95 : 1.0)
-
-                VStack(alignment: .leading, spacing: layout.cardSpacing / 3) {
-                    Text("AI 智能医生")
-                        .font(.system(size: AdaptiveFont.caption1, weight: .semibold))
-                        .foregroundColor(HealingColors.textPrimary)
-
-                    Text("选择不同风格的 AI 医生进行问诊")
-                        .font(.system(size: AdaptiveFont.custom(7), weight: .regular))
-                        .foregroundColor(HealingColors.textTertiary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-                }
-
-                Spacer(minLength: 0)
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: UnifiedFont.caption1))
-                    .foregroundColor(HealingColors.textTertiary)
-            }
-            .padding(layout.cardInnerPadding - 2)
-            .frame(maxWidth: .infinity, minHeight: layout.cardInnerPadding * 4, alignment: .topLeading)
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(HealingColors.cardBackground)
-                    .shadow(
-                        color: Color.black.opacity(isPressed ? 0.06 : 0.08),
-                        radius: isPressed ? 6 : 10,
-                        x: 0,
-                        y: isPressed ? 2 : 4
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .stroke(
-                                HealingColors.softSage.opacity(isPressed ? 0.25 : 0.15),
-                                lineWidth: 1
-                            )
-                    )
-            )
-        }
-        .buttonStyle(PlainButtonStyle())
-        .scaleEffect(isPressed ? 0.98 : 1.0)
-        .animation(.easeInOut(duration: 0.12), value: isPressed)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
-    }
-}
 
 // MARK: - 治愈系底部品牌区
 struct BrandFooterView: View {

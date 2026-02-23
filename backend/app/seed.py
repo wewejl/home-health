@@ -4,7 +4,6 @@ from .models.department import Department
 from .models.doctor import Doctor
 from .models.disease import Disease
 from .models.drug import Drug, DrugCategory
-from .seeds.virtual_doctor_seeds import generate_virtual_doctor_seeds
 
 
 def seed_data():
@@ -59,52 +58,6 @@ def seed_data():
             db.add(doctor)
 
         db.commit()
-
-        # ========== 虚拟医生数据 ==========
-        print("正在初始化虚拟医生数据...")
-        try:
-            # 构建科室ID映射
-            department_id_map = {
-                dept.name.lower().replace("科", "").replace("内", "").replace("外", ""): dept.id
-                for dept in departments
-            }
-            # 映射处理
-            department_id_map["dermatology"] = department_id_map.get("皮肤", 1)
-            department_id_map["pediatrics"] = department_id_map.get("儿科", 2)
-            department_id_map["obstetrics_gynecology"] = department_id_map.get("妇产", 3)
-            department_id_map["gastroenterology"] = department_id_map.get("消化", 4)
-            department_id_map["respiratory"] = department_id_map.get("呼吸", 5)
-            department_id_map["cardiology"] = department_id_map.get("心血管", 6)
-            department_id_map["endocrinology"] = department_id_map.get("内分泌", 7)
-            department_id_map["neurology"] = department_id_map.get("神经", 8)
-            department_id_map["orthopedics"] = department_id_map.get("骨科", 9)
-            department_id_map["ophthalmology"] = department_id_map.get("眼科", 10)
-            department_id_map["otorhinolaryngology"] = department_id_map.get("耳鼻咽喉", 11)
-            department_id_map["stomatology"] = department_id_map.get("口腔", 12)
-
-            # 生成虚拟医生
-            virtual_doctors = generate_virtual_doctor_seeds(department_id_map)
-
-            # 检查是否已存在虚拟医生
-            existing_ai_doctors = db.query(Doctor).filter(
-                Doctor.is_ai == True
-            ).all()
-
-            if existing_ai_doctors:
-                print(f"已有 {len(existing_ai_doctors)} 个AI医生，跳过虚拟医生初始化")
-                print("提示：如需重新初始化，请先删除现有AI医生记录")
-            else:
-                # 插入虚拟医生
-                for doctor_data in virtual_doctors:
-                    doctor = Doctor(**doctor_data)
-                    db.add(doctor)
-
-                db.commit()
-                print(f"已创建 {len(virtual_doctors)} 位虚拟医生")
-
-        except Exception as e:
-            print(f"虚拟医生初始化失败: {e}")
-            db.rollback()
 
         # 疾病数据
         diseases_data = [

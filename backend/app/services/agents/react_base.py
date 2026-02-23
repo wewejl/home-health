@@ -319,7 +319,10 @@ class ReActAgent(ABC):
         messages = state.get("messages", [])
 
         # 计算对话轮数（用户消息数量）
-        conversation_rounds = len([m for m in messages if m.get("role") == "user" or getattr(m, "type", None) == "human"])
+        conversation_rounds = len([
+            m for m in messages
+            if (isinstance(m, dict) and m.get("role") == "user") or getattr(m, "type", None) == "human"
+        ])
 
         instruction = f"""# 决策指令
 

@@ -21,6 +21,7 @@ dashscope==1.14.1
 python-multipart>=0.0.9
 pypinyin==0.50.0
 psycopg[binary]==3.1.17
+asyncpg>=0.29.0
 curl-cffi
 litellm
 PyPDF2>=3.0.0

@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  # PostgreSQL数据库
+  # PostgreSQL数据库 (含 pgvector 扩展)
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: home_health_db
     environment:
       POSTGRES_DB: home_health

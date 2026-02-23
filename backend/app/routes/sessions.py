@@ -2,8 +2,8 @@
 统一会话接口
 
 使用多智能体架构：
-- AgentRouterV2 路由器
-- BaseAgentV2 基类
+- AgentRouter 路由器（agents/router.py）
+- ReActAgent 基类（agents/react_base.py）
 - AgentResponse 统一响应格式
 """
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -22,8 +22,7 @@ from ..models.message import Message, SenderType
 from ..models.doctor import Doctor
 from ..models.user import User
 from ..dependencies import get_current_user
-from ..services.agent_router_v2 import AgentRouterV2
-from ..services.agent_router_v3 import AgentRouterV3
+from ..services.agents.router import AgentRouter
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
@@ -73,29 +72,10 @@ async def create_session(
     """
     创建会话
 
-    支持两种模式：
-    1. 虚拟医生分身模式（推荐）：指定 doctor_id，使用虚拟医生配置
-    2. 传统模式：指定 agent_type，使用科室智能体
+    使用科室智能体架构
     """
     doctor = None
-    use_doctor_agent = False
 
-    if request.doctor_id:
-        doctor = db.query(Doctor).filter(Doctor.id == request.doctor_id).first()
-        if not doctor:
-            raise HTTPException(status_code=404, detail="医生不存在")
-        # 如果是AI医生，使用虚拟医生智能体
-        if doctor.is_ai:
-            use_doctor_agent = True
-
-    # 确定智能体类型
-    agent_type = getattr(request, 'agent_type', None)
-    if not agent_type:
-        if doctor:
-            dept_name = doctor.department.name if hasattr(doctor, 'department') and doctor.department else ""
-            agent_type = AgentRouterV2.infer_agent_type(dept_name)
-        else:
-            agent_type = "general"
     if request.doctor_id:
         doctor = db.query(Doctor).filter(Doctor.id == request.doctor_id).first()
         if not doctor:
@@ -105,45 +85,26 @@ async def create_session(
     agent_type = getattr(request, 'agent_type', None)
     if not agent_type and doctor:
         dept_name = doctor.department.name if hasattr(doctor, 'department') and doctor.department else ""
-        agent_type = AgentRouterV2.infer_agent_type(dept_name)
+        agent_type = AgentRouter.infer_agent_type(dept_name)
     if not agent_type:
         agent_type = "general"
-    
+
     # 验证智能体类型
-    if not AgentRouterV2.is_valid_agent_type(agent_type):
+    if not AgentRouter.is_valid_agent_type(agent_type):
         raise HTTPException(status_code=400, detail=f"不支持的智能体类型: {agent_type}")
 
     session_id = str(uuid.uuid4())
-
-    # 如果使用虚拟医生，保存医生配置到 agent_state
-    agent_state = {}
-    if doctor and doctor.is_ai:
-        # 保存医生配置到状态，用于后续恢复会话
-        agent_state = {
-            "use_doctor_agent": True,
-            "doctor_id": doctor.id,
-            "doctor_name": doctor.name,
-            "personality_type": doctor.agent_config.get("personality_type") if doctor.agent_config else None,
-            "greeting_template": doctor.agent_config.get("greeting_template") if doctor.agent_config else None,
-        }
 
     session = SessionModel(
         id=session_id,
         user_id=current_user.id,
         doctor_id=request.doctor_id,
         agent_type=agent_type,
-        agent_state=agent_state  # 初始状态包含医生配置
+        agent_state={}
     )
     db.add(session)
     db.commit()
     db.refresh(session)
-
-    # 获取虚拟医生信息
-    personality_type = None
-    greeting = None
-    if doctor and doctor.agent_config and isinstance(doctor.agent_config, dict):
-        personality_type = doctor.agent_config.get("personality_type")
-        greeting = doctor.agent_config.get("greeting_template")
 
     return SessionResponse(
         session_id=session.id,
@@ -153,9 +114,7 @@ async def create_session(
         last_message=session.last_message,
         status=session.status,
         created_at=session.created_at,
-        updated_at=session.updated_at,
-        personality_type=personality_type,
-        greeting=greeting
+        updated_at=session.updated_at
     )
 
 
@@ -190,51 +149,10 @@ async def send_message(
     if not session:
         raise HTTPException(status_code=404, detail="会话不存在")
 
-    # 获取智能体（优先使用虚拟医生智能体）
+    # 获取智能体
     agent_type = session.agent_type or "general"
     try:
-        # 检查是否使用虚拟医生模式
-        if session.agent_state and session.agent_state.get("use_doctor_agent"):
-            # 使用虚拟医生智能体
-            from ..services.agents.doctor_react_agent import DoctorReActAgent
-            from ..models.virtual_doctor import get_specialty_config
-
-            doctor_id = session.agent_state.get("doctor_id")
-            personality_type = session.agent_state.get("personality_type")
-
-            # 获取医生配置
-            doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
-            if not doctor:
-                raise HTTPException(status_code=404, detail="医生不存在")
-
-            # 构建医生配置字典
-            doctor_config = {
-                "id": doctor.id,
-                "name": doctor.name,
-                "title": doctor.title,
-                "agent_type": doctor.agent_type,
-                "department_id": doctor.department_id,
-                "avatar_url": doctor.avatar_url,
-                "intro": doctor.intro,
-                "specialty": doctor.specialty,
-                "rating": doctor.rating,
-                "monthly_answers": doctor.monthly_answers,
-                "avg_response_time": doctor.avg_response_time,
-                "can_prescribe": doctor.can_prescribe,
-                "is_top_hospital": doctor.is_top_hospital,
-                "is_ai": doctor.is_ai,
-                "is_active": doctor.is_active,
-                "ai_model": doctor.ai_model,
-                "ai_temperature": doctor.ai_temperature,
-                "ai_max_tokens": doctor.ai_max_tokens,
-                "ai_persona_prompt": doctor.ai_persona_prompt,
-                "agent_config": doctor.agent_config or {},
-            }
-
-            agent = DoctorReActAgent(doctor_config)
-        else:
-            # 使用传统科室智能体
-            agent = AgentRouterV2.get_agent(agent_type)
+        agent = AgentRouter.get_agent(agent_type)
     except ValueError:
         raise HTTPException(status_code=500, detail=f"智能体类型错误: {agent_type}")
 
@@ -493,13 +411,13 @@ def get_session_messages(
 @router.get("/agents", response_model=Dict[str, Any])
 async def list_agents():
     """获取所有可用智能体及其能力"""
-    return AgentRouterV2.list_agents()
+    return AgentRouter.list_agents()
 
 
 @router.get("/agents/{agent_type}/capabilities", response_model=Dict[str, Any])
 async def get_agent_capabilities(agent_type: str):
     """获取指定智能体的能力配置"""
-    capabilities = AgentRouterV2.get_capabilities(agent_type)
+    capabilities = AgentRouter.get_capabilities(agent_type)
     if not capabilities:
         raise HTTPException(status_code=404, detail=f"智能体不存在: {agent_type}")
     return capabilities
