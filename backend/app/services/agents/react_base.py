@@ -53,10 +53,7 @@ class ReActAgentState(TypedDict, total=False):
     # 工具调用
     pending_tool_calls: List[dict]
     tool_results: List[dict]
-    
-    # 医学上下文（AI 自己维护）
-    medical_context: dict
-    
+
     # 响应输出
     current_response: str
     quick_options: List[str]
@@ -103,19 +100,6 @@ def create_react_initial_state(
         "agent_decision": {},
         "pending_tool_calls": [],
         "tool_results": [],
-        "medical_context": {
-            "symptoms": [],
-            "duration": "",
-            "severity": "",
-            "affected_area": "",
-            "triggers": [],
-            "medical_history": [],
-            "allergies": [],
-            "current_medications": [],
-            "collected_info": [],
-            "missing_info": [],
-            "asked_questions": []
-        },
         "current_response": "",
         "quick_options": [],
         "stage": "greeting",
@@ -306,11 +290,7 @@ class ReActAgent(ABC):
                 )
 
                 state["agent_decision"] = decision
-                
-                # 更新医学上下文（如果 AI 提供了）
-                if decision.get("medical_context_update"):
-                    self._update_medical_context(state, decision["medical_context_update"])
-                
+
         except Exception as e:
             state["error"] = str(e)
             state["agent_decision"] = {
@@ -344,15 +324,6 @@ class ReActAgent(ABC):
             messages.append({
                 "role": "assistant",
                 "content": f"[工具调用结果] {result.get('tool')}: {json.dumps(result.get('result'), ensure_ascii=False)}"
-            })
-
-        # 添加当前医学上下文
-        ctx = state.get("medical_context", {})
-        if ctx.get("symptoms") or ctx.get("collected_info"):
-            context_summary = self._format_medical_context(ctx)
-            messages.append({
-                "role": "system",
-                "content": f"[当前收集的信息]\n{context_summary}"
             })
 
         # 添加思考历史（让 AI 看到自己之前的思考过程）
@@ -459,26 +430,6 @@ class ReActAgent(ABC):
         result = '\n'.join(thought_lines[:10])  # 最多 10 行
         return result[:500] if result else "思考过程未详细记录"
 
-    def _update_medical_context(self, state: Dict[str, Any], update: dict):
-        """更新医学上下文"""
-        ctx = state.get("medical_context", {})
-
-        for key, value in update.items():
-            if key == "asked_question":
-                # 🆕 特殊处理：记录已问过的问题
-                if "asked_questions" not in ctx:
-                    ctx["asked_questions"] = []
-                if value and value not in ctx["asked_questions"]:
-                    ctx["asked_questions"].append(value)
-            elif key in ctx:
-                if isinstance(ctx[key], list) and isinstance(value, list):
-                    ctx[key] = list(set(ctx[key] + value))
-                else:
-                    ctx[key] = value
-            else:
-                ctx[key] = value
-
-        state["medical_context"] = ctx    
     def _get_decision_instruction(self, state: Dict[str, Any]) -> str:
         """
         获取决策指令
@@ -494,23 +445,13 @@ class ReActAgent(ABC):
             for att in attachments
         )
 
-        # 获取已收集的信息
-        medical_context = state.get("medical_context", {})
-        collected_info = medical_context.get("collected_info", [])
-        symptoms = medical_context.get("symptoms", [])
         messages = state.get("messages", [])
 
         # 计算对话轮数（用户消息数量）
         conversation_rounds = len([
             m for m in messages
-            if (isinstance(m, dict) and m.get("role") == "user") or getattr(m, "type", None) == "human"
+            if isinstance(m, dict) and m.get("type") == "human"
         ])
-
-        # 获取对话历史摘要，帮助 AI 了解已问过什么
-        conversation_summary = self._build_conversation_summary(messages)
-
-        # 获取已问过的问题（从 medical_context 或对话历史中提取）
-        asked_questions = medical_context.get("asked_questions", [])
 
         instruction = f"""# AI 医生助手指令
 
@@ -524,21 +465,10 @@ class ReActAgent(ABC):
   "action": "respond",
   "response": "给患者的回复内容",
   "quick_options": ["选项1", "选项2"],
-  "medical_context_update": {{
-    "symptoms": ["症状1"],
-    "collected_info": ["部位", "时间"],
-    "asked_question": "刚才问的问题"
-  }},
   "ready_to_diagnose": false,
   "stage": "collecting"
 }}
 ```
-
-## 📊 对话历史
-
-{conversation_summary}
-
-**重要：不要重复问上述已经了解的信息！**
 
 ## 🎯 你的角色
 
@@ -644,7 +574,7 @@ class ReActAgent(ABC):
 
 ## ⚠️ 注意事项
 
-1. **已问过的问题**：{asked_questions} - 不要重复问这些
+1. **仔细阅读上面的对话历史** - 不要重复问已经了解的信息
 2. **每次只问 1-2 个问题** - 不要贪多
 3. **先给分析再提问** - 让用户感觉被理解
 4. **问完 4-6 个问题后应该给分析** - 不要一直问下去
@@ -658,58 +588,6 @@ class ReActAgent(ABC):
 请立即调用 `analyze_skin_image` 工具分析图片，然后基于分析结果继续提问或给出建议。"""
 
         return instruction
-
-    def _build_conversation_summary(self, messages: List) -> str:
-        """
-        构建对话历史摘要，帮助 AI 了解已问过什么问题
-
-        返回格式：
-        - 已了解的信息：xxx
-        - 已问过的问题：1. xxx 2. xxx
-        """
-        if not messages:
-            return "暂无对话记录"
-
-        summary_parts = []
-        known_info = []
-        asked_questions = []
-
-        for msg in messages:
-            if isinstance(msg, dict):
-                msg_type = msg.get("type", "")
-                content = msg.get("content", "")
-            else:
-                msg_type = getattr(msg, "type", "")
-                content = getattr(msg, "content", "")
-
-            # 只看 AI 的回复
-            if msg_type in ("ai", "assistant"):
-                # 提取 AI 提出的问题（简单启发式：找问号结尾的句子）
-                questions = [line.strip() for line in content.split("?") if "?" in line and line.strip()]
-                for q in questions:
-                    if len(q) < 100:  # 避免提取到整个回复
-                        asked_questions.append(q + "?")
-
-                # 提取关键信息（简单的关键词匹配）
-                if "疼痛" in content or "疼" in content:
-                    if "刀割" in content or "灼烧" in content or "烧" in content:
-                        known_info.append("疼痛性质：刀割样/灼烧感")
-                if "时间" in content or "开始" in content or "持续" in content or "天" in content:
-                    if any(w in content for w in ["前天", "昨天", "几天", "一周"]):
-                        known_info.append("已了解发病时间")
-
-        if known_info:
-            summary_parts.append("**已了解的信息：**")
-            summary_parts.extend(f"- {info}" for info in set(known_info))
-
-        if asked_questions:
-            summary_parts.append("\n**已问过的问题：**")
-            summary_parts.extend(f"{i}. {q}" for i, q in enumerate(asked_questions[-5:], 1))
-
-        if not summary_parts:
-            return "这是对话开始阶段"
-
-        return "\n".join(summary_parts)
 
     def _parse_decision(self, content: str) -> dict:
         """解析 AI 的决策输出"""
@@ -736,27 +614,25 @@ class ReActAgent(ABC):
             "quick_options": []
         }
 
-    def _format_medical_context(self, ctx: dict) -> str:
-        """格式化医学上下文为文本"""
-        parts = []
-        
-        if ctx.get("symptoms"):
-            parts.append(f"症状: {', '.join(ctx['symptoms'])}")
-        if ctx.get("duration"):
-            parts.append(f"病程: {ctx['duration']}")
-        if ctx.get("severity"):
-            parts.append(f"严重程度: {ctx['severity']}")
-        if ctx.get("affected_area"):
-            parts.append(f"部位: {ctx['affected_area']}")
-        if ctx.get("triggers"):
-            parts.append(f"诱因: {', '.join(ctx['triggers'])}")
-        if ctx.get("allergies"):
-            parts.append(f"过敏史: {', '.join(ctx['allergies'])}")
-        if ctx.get("missing_info"):
-            parts.append(f"待收集: {', '.join(ctx['missing_info'])}")
-        
-        return "\n".join(parts) if parts else "暂无"
-    
+    def _extract_symptoms_from_messages(self, messages: List) -> List[str]:
+        """从对话历史中提取症状关键词"""
+        symptoms = []
+        # 常见症状关键词
+        symptom_keywords = [
+            "头痛", "发热", "咳嗽", "喉咙痛", "咽痛", "胸痛", "腹痛",
+            "恶心", "呕吐", "腹泻", "便秘", "尿频", "尿急",
+            "皮疹", "瘙痒", "红肿", "疼痛", "麻木", "乏力"
+        ]
+
+        for msg in messages:
+            if isinstance(msg, dict) and msg.get("type") == "human":
+                content = msg.get("content", "")
+                for keyword in symptom_keywords:
+                    if keyword in content and keyword not in symptoms:
+                        symptoms.append(keyword)
+
+        return symptoms
+
     async def _tool_executor_node(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """
         工具执行节点
@@ -814,7 +690,6 @@ class ReActAgent(ABC):
         """
         processed_calls = []
         attachments = state.get("attachments", [])
-        medical_context = state.get("medical_context", {})
 
         for call in pending_calls:
             tool_name = call.get("function", {}).get("name", "")
@@ -830,7 +705,8 @@ class ReActAgent(ABC):
                 for att in attachments:
                     if att.get("type") == "image" or "image" in att.get("mime_type", ""):
                         args["image_base64"] = att.get("base64") or att.get("url", "")
-                        args["context"] = medical_context.get("symptoms", [])
+                        # 从对话历史中提取症状作为上下文
+                        args["context"] = self._extract_symptoms_from_messages(state.get("messages", []))
                         break
 
             # 重新构造工具调用
@@ -954,15 +830,21 @@ class ReActAgent(ABC):
             state["progress"] = max(state.get("progress", 0), 80)
 
         return state
-    
+
     async def _generate_diagnosis(self, state: Dict[str, Any]) -> str:
         """生成诊断（由 AI 完成）"""
-        ctx = state.get("medical_context", {})
+        messages = state.get("messages", [])[-10:]
         specialty_data = state.get("specialty_data", {})
 
-        diagnosis_prompt = f"""基于以下收集的信息，请给出专业的初步诊断意见：
+        # 构建对话历史文本
+        conversation_text = "\n".join([
+            f"{'患者' if m.get('type') == 'human' else 'AI'}: {m.get('content', '')}"
+            for m in messages
+        ])
 
-{self._format_medical_context(ctx)}
+        diagnosis_prompt = f"""基于以下对话历史，请给出专业的初步诊断意见：
+
+{conversation_text}
 
 图像分析结果：{specialty_data.get('skin_analysis', {}).get('findings', '无')}
 风险评估：{specialty_data.get('risk_assessment', {}).get('risk_level', '未评估')}
@@ -1142,10 +1024,6 @@ class ReActAgent(ABC):
                 decision = self._parse_decision(full_response)
                 state["agent_decision"] = decision
 
-                # 更新医学上下文（如果 AI 提供了）
-                if decision.get("medical_context_update"):
-                    self._update_medical_context(state, decision["medical_context_update"])
-
         except Exception as e:
             state["error"] = str(e)
             state["agent_decision"] = {
@@ -1166,12 +1044,18 @@ class ReActAgent(ABC):
         on_chunk: Optional[Callable[[str], Awaitable[None]]]
     ) -> str:
         """流式生成诊断"""
-        ctx = state.get("medical_context", {})
+        messages = state.get("messages", [])[-10:]
         specialty_data = state.get("specialty_data", {})
 
-        diagnosis_prompt = f"""基于以下收集的信息，请给出专业的初步诊断意见：
+        # 构建对话历史文本
+        conversation_text = "\n".join([
+            f"{'患者' if m.get('type') == 'human' else 'AI'}: {m.get('content', '')}"
+            for m in messages
+        ])
 
-{self._format_medical_context(ctx)}
+        diagnosis_prompt = f"""基于以下对话历史，请给出专业的初步诊断意见：
+
+{conversation_text}
 
 图像分析结果：{specialty_data.get('skin_analysis', {}).get('findings', '无')}
 风险评估：{specialty_data.get('risk_assessment', {}).get('risk_level', '未评估')}
