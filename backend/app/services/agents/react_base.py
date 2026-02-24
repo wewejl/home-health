@@ -517,9 +517,6 @@ class ReActAgent(ABC):
             if (isinstance(m, dict) and m.get("role") == "user") or getattr(m, "type", None) == "human"
         ])
 
-        # 判断信息完整度（用于 AI 参考）
-        info_completeness = self._assess_info_completeness(medical_context)
-
         instruction = f"""# 问诊决策指令
 
 ## ⚠️ 最重要：你必须返回 JSON 格式
@@ -602,87 +599,6 @@ class ReActAgent(ABC):
 
         return instruction
 
-    def _assess_info_completeness(self, medical_context: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        评估信息完整度（供 AI 参考）
-
-        返回：
-        - score: 完整度分数 (0-100)
-        - assessment: 文字描述
-        """
-        collected_info = medical_context.get("collected_info", [])
-        symptoms = medical_context.get("symptoms", [])
-
-        # 关键信息维度
-        dimensions = {
-            "主诉症状": 0,  # 知道用户来问什么
-            "发病部位": 0,  # 知道哪里不舒服
-            "持续时间": 0,  # 知道多久了
-            "症状性质": 0,  # 知道是什么样的感觉
-            "伴随症状": 0,  # 知道还有其他问题吗
-            "诱因/环境": 0,  # 知道可能的原因
-            "既往史": 0,    # 知道相关病史
-        }
-
-        info_lower = [info.lower() for info in collected_info]
-
-        # 主诉症状 (有症状就算)
-        if symptoms:
-            dimensions["主诉症状"] = 100
-
-        # 发病部位
-        location_keywords = ["部位", "手臂", "腿", "脸", "头", "胸", "腹", "背", "皮肤", "喉咙", "眼", "耳", "鼻"]
-        if any(kw in " ".join(info_lower) for kw in location_keywords):
-            dimensions["发病部位"] = 100
-
-        # 持续时间
-        duration_keywords = ["时间", "持续", "天", "周", "月", "年", "开始", "出现"]
-        if any(kw in " ".join(info_lower) for kw in duration_keywords):
-            dimensions["持续时间"] = 100
-
-        # 症状性质
-        nature_keywords = ["痛", "痒", "红", "肿", "热", "凉", "麻", "烧灼", "刀割", "胀"]
-        if any(kw in " ".join(info_lower) for kw in nature_keywords):
-            dimensions["症状性质"] = 100
-
-        # 伴随症状
-        accompanying_keywords = ["伴", "还", "同时", "其他", "咳嗽", "发热", "头痛", "恶心"]
-        if any(kw in " ".join(info_lower) for kw in accompanying_keywords):
-            dimensions["伴随症状"] = 100
-
-        # 诱因/环境
-        trigger_keywords = ["诱因", "原因", "环境", "接触", "吃", "装修", "空气"]
-        if any(kw in " ".join(info_lower) for kw in trigger_keywords):
-            dimensions["诱因/环境"] = 100
-
-        # 既往史
-        history_keywords = ["病史", "以前", "过去", "曾经", "史", "过敏"]
-        if any(kw in " ".join(info_lower) for kw in history_keywords):
-            dimensions["既往史"] = 100
-
-        # 计算总分
-        score = sum(dimensions.values()) // len(dimensions)
-
-        # 生成评估文字
-        completed_dims = [k for k, v in dimensions.items() if v == 100]
-        missing_dims = [k for k, v in dimensions.items() if v == 0]
-
-        assessment = f"### 已了解的信息：\n"
-        if completed_dims:
-            assessment += f"- ✅ {', '.join(completed_dims)}\n"
-        else:
-            assessment += "- 暂无完整信息\n"
-
-        if missing_dims:
-            assessment += f"\n### 建议继续了解：\n"
-            assessment += f"- ❓ {', '.join(missing_dims[:3])}\n"
-
-        return {
-            "score": score,
-            "assessment": assessment,
-            "dimensions": dimensions
-        }
-    
     def _parse_decision(self, content: str) -> dict:
         """解析 AI 的决策输出"""
         # 尝试提取 JSON
