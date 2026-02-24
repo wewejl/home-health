@@ -9,9 +9,8 @@ import logging
 from datetime import datetime
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, Callable, Awaitable, List
-from typing_extensions import TypedDict, Annotated
+from typing_extensions import TypedDict
 from langgraph.graph import StateGraph, END
-from langgraph.graph.message import add_messages
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
 from ..qwen_service import QwenService
@@ -44,10 +43,10 @@ class ReActAgentState(TypedDict, total=False):
     session_id: str
     user_id: int
     agent_type: str
-    
-    # 🆕 对话历史（使用 LangChain Message 类型 + add_messages reducer）
-    messages: Annotated[List[BaseMessage], add_messages]
-    
+
+    # 🆕 对话历史（使用字典列表，避免序列化问题）
+    messages: List[dict]  # [{"type": "human", "content": "..."}, {"type": "ai", "content": "..."}]
+
     # AI 决策（结构化 JSON）
     agent_decision: dict
     
@@ -327,28 +326,18 @@ class ReActAgent(ABC):
             {"role": "system", "content": self.get_system_prompt()}
         ]
 
-        # 🆕 添加对话历史（兼容 LangChain Message 和旧 dict 格式）
+        # 添加对话历史（现在 messages 是字典列表）
         for msg in state.get("messages", [])[-10:]:  # 最近10条
-            if isinstance(msg, BaseMessage):
-                # LangChain Message 对象 (HumanMessage, AIMessage)
-                msg_type = getattr(msg, "type", "")
+            if isinstance(msg, dict):
+                msg_type = msg.get("type", "")
                 if msg_type == "human":
-                    messages.append({"role": "user", "content": msg.content})
-                elif msg_type in ("ai", "assistant"):
-                    messages.append({"role": "assistant", "content": msg.content})
+                    messages.append({"role": "user", "content": msg.get("content", "")})
+                elif msg_type == "ai":
+                    messages.append({"role": "assistant", "content": msg.get("content", "")})
                 else:
-                    messages.append({"role": "assistant", "content": str(msg.content)})
-            elif isinstance(msg, dict):
-                messages.append({
-                    "role": msg.get("role", "user"),
-                    "content": msg.get("content", "")
-                })
-            elif hasattr(msg, "type"):
-                role = "user" if msg.type == "human" else "assistant"
-                messages.append({
-                    "role": role,
-                    "content": getattr(msg, "content", "")
-                })
+                    # 兼容旧格式 role
+                    role = msg.get("role", "user")
+                    messages.append({"role": role, "content": msg.get("content", "")})
 
         # 添加工具调用结果
         for result in state.get("tool_results", []):
@@ -366,7 +355,7 @@ class ReActAgent(ABC):
                 "content": f"[当前收集的信息]\n{context_summary}"
             })
 
-        # 🆕 添加思考历史（让 AI 看到自己之前的思考过程）
+        # 添加思考历史（让 AI 看到自己之前的思考过程）
         reasoning_history = state.get("reasoning_history", [])
         if reasoning_history:
             history_summary = self._format_reasoning_history(reasoning_history)
@@ -517,6 +506,12 @@ class ReActAgent(ABC):
             if (isinstance(m, dict) and m.get("role") == "user") or getattr(m, "type", None) == "human"
         ])
 
+        # 获取对话历史摘要，帮助 AI 了解已问过什么
+        conversation_summary = self._build_conversation_summary(messages)
+
+        # 获取已问过的问题（从 medical_context 或对话历史中提取）
+        asked_questions = medical_context.get("asked_questions", [])
+
         instruction = f"""# AI 医生助手指令
 
 ## ⚠️ 输出格式要求
@@ -525,42 +520,42 @@ class ReActAgent(ABC):
 
 ```json
 {{
-  "thought": "你的深度思考过程：分析用户描述，判断信息是否充分，决定下一步",
+  "thought": "你的深度思考过程",
   "action": "respond",
   "response": "给患者的回复内容",
-  "quick_options": ["选项1", "选项2", "选项3"],
+  "quick_options": ["选项1", "选项2"],
   "medical_context_update": {{
     "symptoms": ["症状1"],
-    "collected_info": ["部位", "时间"]
+    "collected_info": ["部位", "时间"],
+    "asked_question": "刚才问的问题"
   }},
   "ready_to_diagnose": false,
   "stage": "collecting"
 }}
 ```
 
+## 📊 对话历史
+
+{conversation_summary}
+
+**重要：不要重复问上述已经了解的信息！**
+
 ## 🎯 你的角色
 
-你是一位经验丰富的 AI 医生助手，目标是通过对话收集信息后给出专业建议。
+你是一位经验丰富的 AI 医生助手。通过渐进式问诊收集信息，然后给出专业建议。
 
-## 📋 对话策略
+## 📋 渐进式问诊流程
 
-### 阶段判断（自主判断，不要机械计数）
+**按以下顺序逐步收集信息，每次只问 1-2 个问题：**
 
-**继续问诊的情况：**
-- 对话少于 3 轮
-- 关键信息缺失（部位、持续时间、症状性质、伴随症状）
-- 用户主动补充新信息
+1. **时间线** - 什么时候开始的？突然还是逐渐？
+2. **症状性质** - 具体什么感觉？
+3. **伴随症状** - 还有其他不适吗？
+4. **环境关联** - 什么情况下加重/缓解？
+5. **干预史** - 做过什么检查吗？
+6. **个人史** - 相关病史
 
-**给出综合分析的情况：**
-- 已有 3-5 轮对话
-- 关键信息基本收集完整
-- 用户说"没有了"、"就这样"
-- 出现明显的诊断指向
-
-**立即建议就医的情况：**
-- 剧烈胸痛、呼吸困难
-- 意识改变、剧烈头痛
-- 高热不退、严重脱水
+**重要：问完 4-6 个问题后应该给出综合分析，不要一直问下去！**
 
 ## 💬 回复格式
 
@@ -568,106 +563,92 @@ class ReActAgent(ABC):
 
 **结构：**
 ```
-[确认理解用户描述]
+[先给一点初步分析，让用户感觉被理解]
 
-为了更准确地判断，我需要了解：
-1. [具体问题1]
-2. [具体问题2]
+[然后提1-2个具体问题]
 ```
-
-**要求：**
-- 每次问 1-2 个问题
-- 问题要具体，不要笼统
-- 针对最缺失的信息
 
 **示例：**
 ```
-听到您说喉咙非常疼，这确实很难受。为了更好地帮你分析：
-1. 疼痛是什么样子的？比如刀割样、烧灼感，还是胀痛？
-2. 从开始到现在大概多久了？
+装修后的环境因素确实可能对呼吸道产生刺激，比如甲醛等挥发性物质在温度升高时释放量增加。不过喉咙疼痛的原因也需要结合其他症状来综合判断，比如感染或过敏等。
+
+您提到症状是在过年后回来且天气暖和后出现的，具体是从哪一天开始喉咙明显疼痛或不适的？是突然发生的还是逐渐加重的？
 ```
 
 ### B. 综合分析阶段
 
-**必须包含以下结构：**
+**必须包含：**
 
 ```
-# 综合分析
+### 最可能的原因：**[病名]**
+[简要解释，用通俗语言]
 
-## 最可能的原因
-**[病名]**：[简要解释为什么是这个原因，关联用户提到的症状]
+其他可能性较小的原因包括：
+- **[病名2]**：[解释]
+- **[病名3]**：[解释]
 
-## 其他可能性
-- **[病名2]**：[为什么有可能]
-- **[病名3]**：[在什么情况下需要考虑]
+### 下一步建议
+1. [具体建议1]
+2. [具体建议2]
 
-## 建议措施
-1. **[措施1]**：[具体做法]
-2. **[措施2]**：[具体做法]
-3. **[措施3]**：[具体做法]
+### 何时需要就医？
+- [就医指征1]
+- [就医指征2]
 
-## 何时需要就医
-- [具体就医指征1]
-- [具体就医指征2]
-
-[结尾同理心表达]
+[同理心结尾]
 ```
 
 **示例：**
 ```
-# 综合分析
+### 最可能的原因：**环境刺激或过敏反应**
+装修两年多的房子，虽然已经过了初期高浓度释放期，但温度升高时，家具、板材中的甲醛等挥发性有机物释放量会增加。这些物质会刺激咽喉黏膜，引发灼烧感、疼痛。卧室通常空间封闭，空气流通差，污染物容易积聚，所以夜间症状更明显。
 
-## 最可能的原因
-**急性化脓性扁桃体炎**：您有突发咽痛、高热、扁桃体脓点和颈部淋巴结压痛，这是典型的细菌性扁桃体炎表现，多由链球菌感染引起。
+其他可能性较小的原因包括：
+- **病毒感染**：比如普通感冒，但通常伴有低烧、乏力等
+- **胃酸反流**：夜间平躺时胃酸可能刺激咽喉，但通常会有反酸、烧心感
 
-## 其他可能性
-- **传染性单核细胞增多症**：也可有咽痛+发热+淋巴结肿大，但通常还有乏力、肝脾肿大
-- **病毒性咽炎**：如果没有脓点且发热较轻，可能是病毒感染
+### 下一步建议：从环境改善入手
+1. 加强通风 - 每天至少开窗通风两次，每次30分钟以上
+2. 降低卧室污染物浓度 - 使用空气净化器，睡前开窗通风
+3. 临时缓解症状 - 温盐水漱口、多喝温水
 
-## 建议措施
-1. **尽快就诊**：查血常规+C反应蛋白，确诊后使用抗生素
-2. **对症缓解**：温盐水漱口、多饮水、退热药
-3. **休息隔离**：充分休息，避免传染他人
+### 何时需要就医？
+如果经过上述调整3-5天，症状没有缓解或继续加重，建议到耳鼻喉科就诊。
 
-## 何时需要就医
-- 出现呼吸困难、无法张口、高热不退超过48小时，请立即急诊
+喉咙的疼痛和不适通过环境调整和适当护理大多可以缓解，不用太焦虑。
+```
 
-不用太焦虑，及时就医后通常恢复良好。
+## 🤔 思考过程要求
+
+每次都要思考：
+1. **用户说了什么新信息**
+2. **现在已经知道什么**（汇总之前的对话）
+3. **还缺什么关键信息**
+4. **下一步问什么**（不要重复已问的）
+
+**示例：**
+```
+用户已经说明喉咙不适是天气转暖后逐渐加重的，这可能与环境因素有关。已知：天气转暖后出现、前天开始、逐渐加重。还缺：疼痛性质、伴随症状。下一步应该问疼痛的具体特征。
 ```
 
 ## 🎯 快速选项设计
 
-每次提问时提供 2-3 个快速选项：
+每次提问提供 2-3 个常见选项，让用户快速选择：
 
-| 问题类型 | 快速选项示例 |
-|---------|-------------|
-| 疼痛性质 | "刀割样疼痛", "烧灼感", "胀痛/隐痛" |
-| 持续时间 | "1-2天", "3-7天", "一周以上" |
-| 部位 | "喉咙", "胸口", "腹部" |
+| 问题类型 | 快速选项 |
+|---------|---------|
+| 疼痛性质 | "刀割样疼痛", "灼烧感", "胀痛/隐痛" |
+| 时间 | "1-2天", "3-7天", "一周以上" |
+| 程度 | "轻微", "中等", "严重" |
 | 是/否 | "是", "否", "不确定" |
-| 伴随症状 | "有发热", "有咳嗽", "都没有" |
-
-## 🤔 思考过程要求
-
-`thought` 字段应该包含：
-
-1. **用户说了什么** - 简要概括用户的新描述
-2. **当前信息状态** - 已知什么，还缺什么
-3. **推理分析** - 根据现有信息可能指向什么
-4. **下一步决定** - 继续问什么，或可以给出分析
-
-**示例：**
-```
-用户描述吞咽时剧痛且有脓点、颈部淋巴结肿痛，这是典型的化脓性扁桃体炎表现。已知信息包括：急性起病、高热、咽痛、脓点、淋巴结肿大。信息已较充分，可以给出综合分析。
-```
 
 ## ⚠️ 注意事项
 
-1. **不要机械地数轮数** - 2轮信息够了就可以分析，5轮还缺就继续问
-2. **用户说"没有了"** - 这是信号，可以开始综合分析
-3. **保持同理心** - 用"不用太焦虑"、"建议先观察"等安抚性语言
-4. **避免确诊语气** - 用"可能"、"建议"、"高度提示"而非"就是"、"一定是"
-5. **快速选项要真正有用** - 覆盖常见情况，让用户能快速选择"""
+1. **已问过的问题**：{asked_questions} - 不要重复问这些
+2. **每次只问 1-2 个问题** - 不要贪多
+3. **先给分析再提问** - 让用户感觉被理解
+4. **问完 4-6 个问题后应该给分析** - 不要一直问下去
+5. **用通俗语言** - "环境刺激"比"上呼吸道刺激因素"更易懂"""
 
         if has_image:
             instruction += """
@@ -677,6 +658,58 @@ class ReActAgent(ABC):
 请立即调用 `analyze_skin_image` 工具分析图片，然后基于分析结果继续提问或给出建议。"""
 
         return instruction
+
+    def _build_conversation_summary(self, messages: List) -> str:
+        """
+        构建对话历史摘要，帮助 AI 了解已问过什么问题
+
+        返回格式：
+        - 已了解的信息：xxx
+        - 已问过的问题：1. xxx 2. xxx
+        """
+        if not messages:
+            return "暂无对话记录"
+
+        summary_parts = []
+        known_info = []
+        asked_questions = []
+
+        for msg in messages:
+            if isinstance(msg, dict):
+                msg_type = msg.get("type", "")
+                content = msg.get("content", "")
+            else:
+                msg_type = getattr(msg, "type", "")
+                content = getattr(msg, "content", "")
+
+            # 只看 AI 的回复
+            if msg_type in ("ai", "assistant"):
+                # 提取 AI 提出的问题（简单启发式：找问号结尾的句子）
+                questions = [line.strip() for line in content.split("?") if "?" in line and line.strip()]
+                for q in questions:
+                    if len(q) < 100:  # 避免提取到整个回复
+                        asked_questions.append(q + "?")
+
+                # 提取关键信息（简单的关键词匹配）
+                if "疼痛" in content or "疼" in content:
+                    if "刀割" in content or "灼烧" in content or "烧" in content:
+                        known_info.append("疼痛性质：刀割样/灼烧感")
+                if "时间" in content or "开始" in content or "持续" in content or "天" in content:
+                    if any(w in content for w in ["前天", "昨天", "几天", "一周"]):
+                        known_info.append("已了解发病时间")
+
+        if known_info:
+            summary_parts.append("**已了解的信息：**")
+            summary_parts.extend(f"- {info}" for info in set(known_info))
+
+        if asked_questions:
+            summary_parts.append("\n**已问过的问题：**")
+            summary_parts.extend(f"{i}. {q}" for i, q in enumerate(asked_questions[-5:], 1))
+
+        if not summary_parts:
+            return "这是对话开始阶段"
+
+        return "\n".join(summary_parts)
 
     def _parse_decision(self, content: str) -> dict:
         """解析 AI 的决策输出"""
@@ -702,21 +735,7 @@ class ReActAgent(ABC):
             "thought": "",
             "quick_options": []
         }
-    
-    def _update_medical_context(self, state: Dict[str, Any], update: dict):
-        """更新医学上下文"""
-        ctx = state.get("medical_context", {})
-        
-        for key, value in update.items():
-            if key in ctx:
-                if isinstance(ctx[key], list) and isinstance(value, list):
-                    # 合并列表，去重
-                    ctx[key] = list(set(ctx[key] + value))
-                else:
-                    ctx[key] = value
-        
-        state["medical_context"] = ctx
-    
+
     def _format_medical_context(self, ctx: dict) -> str:
         """格式化医学上下文为文本"""
         parts = []
@@ -913,7 +932,7 @@ class ReActAgent(ABC):
         # 🆕 将 AI 的回复加入消息历史（使用 AIMessage + add_messages reducer）
         # CRITICAL FIX: 追加而不是替换，避免丢失历史消息
         current_messages = state.get("messages", [])
-        updated_messages = current_messages + [AIMessage(content=response)]
+        updated_messages = current_messages + [{"type": "ai", "content": response}]
 
         # 限制消息历史大小
         if len(updated_messages) > MAX_MESSAGE_HISTORY:
@@ -999,7 +1018,7 @@ class ReActAgent(ABC):
         # 🆕 将 AI 的回复加入消息历史（使用 AIMessage + add_messages reducer）
         # CRITICAL FIX: 追加而不是替换，避免丢失历史消息
         current_messages = state.get("messages", [])
-        updated_messages = current_messages + [AIMessage(content=response)]
+        updated_messages = current_messages + [{"type": "ai", "content": response}]
 
         # 限制消息历史大小
         if len(updated_messages) > MAX_MESSAGE_HISTORY:
@@ -1218,7 +1237,6 @@ class ReActAgent(ABC):
             AgentResponse
         """
         # CRITICAL FIX: 反序列化状态 - 将字典格式的 messages 转换为 BaseMessage 对象
-        state = self._deserialize_state_from_db(state)
 
         # 重置迭代计数
         state["iteration_count"] = 0
@@ -1229,7 +1247,7 @@ class ReActAgent(ABC):
         # CRITICAL FIX: 限制消息历史大小
         if user_input:
             existing_messages = state.get("messages", [])
-            new_message = HumanMessage(content=user_input)
+            new_message = {"type": "human", "content": user_input}
             updated_messages = existing_messages + [new_message] if existing_messages else [new_message]
 
             # 限制消息历史大小
@@ -1353,19 +1371,15 @@ class ReActAgent(ABC):
         Returns:
             AgentResponse
         """
-        # CRITICAL FIX: 反序列化状态 - 将字典格式的 messages 转换为 BaseMessage 对象
-        state = self._deserialize_state_from_db(state)
-
         # 重置迭代计数
         state["iteration_count"] = 0
         state["tool_results"] = []
         state["pending_tool_calls"] = []
 
         # 🆕 添加用户消息（保留之前的对话历史）
-        # CRITICAL FIX: 限制消息历史大小，防止内存泄漏
         if user_input:
             existing_messages = state.get("messages", [])
-            new_message = HumanMessage(content=user_input)
+            new_message = {"type": "human", "content": user_input}
             updated_messages = existing_messages + [new_message] if existing_messages else [new_message]
 
             # 限制消息历史大小
@@ -1433,20 +1447,11 @@ class ReActAgent(ABC):
                 continue
 
             # 处理 LangChain Message 对象列表
-            if isinstance(value, list) and value:
-                if all(isinstance(item, BaseMessage) for item in value):
-                    # 全是 Message 对象，转换为字典
-                    serialized[key] = [
-                        {"type": msg.type, "content": msg.content}
-                        for msg in value
-                    ]
-                    continue
-                elif all(isinstance(item, (dict, str, int, float, bool, type(None))) for item in value):
-                    # 基本类型列表，直接保留
-                    serialized[key] = value
-                    continue
-                else:
-                    # 混合类型，逐个处理
+            if isinstance(value, list):
+                # 检查是否包含 BaseMessage 对象
+                has_base_message = any(isinstance(item, BaseMessage) for item in value)
+                if has_base_message:
+                    # 转换所有 Message 对象为字典
                     serialized[key] = []
                     for item in value:
                         if isinstance(item, BaseMessage):
@@ -1455,6 +1460,10 @@ class ReActAgent(ABC):
                             serialized[key].append(self._serialize_dict(item))
                         else:
                             serialized[key].append(item)
+                    continue
+                else:
+                    # 基本类型列表，直接保留（但需要检查嵌套的字典）
+                    serialized[key] = self._serialize_list(value)
                     continue
 
             # 处理字典
@@ -1465,6 +1474,20 @@ class ReActAgent(ABC):
                 serialized[key] = value
 
         return serialized
+
+    def _serialize_list(self, lst: List) -> List:
+        """递归序列化列表中的非 JSON 类型"""
+        result = []
+        for item in lst:
+            if isinstance(item, BaseMessage):
+                result.append({"type": item.type, "content": item.content})
+            elif isinstance(item, dict):
+                result.append(self._serialize_dict(item))
+            elif isinstance(item, list):
+                result.append(self._serialize_list(item))
+            else:
+                result.append(item)
+        return result
 
     def _serialize_dict(self, d: Dict[str, Any]) -> Dict[str, Any]:
         """递归序列化字典中的非 JSON 类型"""
@@ -1482,42 +1505,6 @@ class ReActAgent(ABC):
             else:
                 result[k] = v
         return result
-
-    def _deserialize_state_from_db(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        CRITICAL FIX: 将数据库加载的状态反序列化
-
-        数据库中存储的 messages 是字典列表 [{"type": "human", "content": "..."}]，
-        需要转换回 LangChain Message 对象才能正确处理
-        """
-        if not state:
-            return state
-
-        deserialized = {}
-        for key, value in state.items():
-            # 处理 messages 字段 - 将字典列表转换为 Message 对象列表
-            if key == "messages" and isinstance(value, list):
-                messages = []
-                for item in value:
-                    if isinstance(item, dict):
-                        msg_type = item.get("type", "human")
-                        content = item.get("content", "")
-                        if msg_type == "human":
-                            messages.append(HumanMessage(content=content))
-                        elif msg_type == "ai":
-                            messages.append(AIMessage(content=content))
-                        else:
-                            # 其他类型保留原字典
-                            messages.append(item)
-                    elif isinstance(item, BaseMessage):
-                        messages.append(item)
-                    else:
-                        messages.append(item)
-                deserialized[key] = messages
-            else:
-                deserialized[key] = value
-
-        return deserialized
 
 
 # 兼容旧版导入 - 别名
