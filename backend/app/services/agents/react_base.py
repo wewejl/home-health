@@ -5,16 +5,37 @@ ReAct Agent 基类
 所有科室智能体继承此类，实现完全自主的 AI 决策
 """
 import json
+import logging
+from datetime import datetime
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, Callable, Awaitable, List
 from typing_extensions import TypedDict, Annotated
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
 from ..qwen_service import QwenService
 from ...schemas.agent_response import AgentResponse
 from .tools import TOOL_REGISTRY, ALL_TOOL_SCHEMAS, execute_tools_parallel
+
+logger = logging.getLogger(__name__)
+
+# 🆕 CRITICAL FIX: 限制消息历史大小，防止内存泄漏
+MAX_MESSAGE_HISTORY = 50
+MAX_REASONING_HISTORY = 100
+
+
+class ThoughtEntry(TypedDict, total=False):
+    """单条思考记录"""
+    step: int
+    timestamp: str
+    thought: str
+    intent_analysis: str
+    state_assessment: str
+    decision: str
+    action: str
+    tool_used: Optional[str]
+
 
 
 class ReActAgentState(TypedDict, total=False):
@@ -24,8 +45,8 @@ class ReActAgentState(TypedDict, total=False):
     user_id: int
     agent_type: str
     
-    # 对话历史（LangGraph 管理追加）
-    messages: Annotated[List[dict], add_messages]
+    # 🆕 对话历史（使用 LangChain Message 类型 + add_messages reducer）
+    messages: Annotated[List[BaseMessage], add_messages]
     
     # AI 决策（结构化 JSON）
     agent_decision: dict
@@ -60,6 +81,14 @@ class ReActAgentState(TypedDict, total=False):
     # 错误处理
     error: Optional[str]
 
+    # 🆕 思考追踪（不放入 messages，单独持久化）
+    current_thought: str
+    reasoning_history: List[ThoughtEntry]
+    show_thinking: bool
+
+    # 🆕 已问问题追踪（防止重复提问）
+    asked_questions: List[str]
+
 
 def create_react_initial_state(
     session_id: str, 
@@ -85,7 +114,8 @@ def create_react_initial_state(
             "allergies": [],
             "current_medications": [],
             "collected_info": [],
-            "missing_info": []
+            "missing_info": [],
+            "asked_questions": []
         },
         "current_response": "",
         "quick_options": [],
@@ -98,6 +128,10 @@ def create_react_initial_state(
         "iteration_count": 0,
         "max_iterations": 10,
         "error": None,
+        # 🆕 思考追踪初始化
+        "current_thought": "",
+        "reasoning_history": [],
+        "show_thinking": False,
     }
 
 
@@ -242,15 +276,36 @@ class ReActAgent(ABC):
                 # AI 决定调用工具
                 tool_calls = result["tool_calls"]
                 state["pending_tool_calls"] = tool_calls
+
+                # 提取并保存思考
+                thought_content = result.get("content", "")
+                state["current_thought"] = thought_content
+                self._save_thought_to_history(
+                    state, state["iteration_count"], thought_content, "use_tool",
+                    tool_calls[0].get("function", {}).get("name") if tool_calls else None
+                )
+
                 state["agent_decision"] = {
                     "action": "use_tool",
                     "tool_calls": tool_calls,
-                    "thought": result.get("content", "")
+                    "thought": thought_content
                 }
             else:
                 # AI 决定直接回复
                 content = result.get("content", "")
                 decision = self._parse_decision(content)
+
+                # 提取并保存思考
+                thought = decision.get("thought", "")
+                if not thought:
+                    thought = self._extract_thought_from_response(content)
+                state["current_thought"] = thought
+
+                self._save_thought_to_history(
+                    state, state["iteration_count"], thought,
+                    decision.get("action", "respond")
+                )
+
                 state["agent_decision"] = decision
                 
                 # 更新医学上下文（如果 AI 提供了）
@@ -272,14 +327,23 @@ class ReActAgent(ABC):
             {"role": "system", "content": self.get_system_prompt()}
         ]
 
-        # 添加对话历史
+        # 🆕 添加对话历史（兼容 LangChain Message 和旧 dict 格式）
         for msg in state.get("messages", [])[-10:]:  # 最近10条
-            if isinstance(msg, dict):
+            if isinstance(msg, BaseMessage):
+                # LangChain Message 对象 (HumanMessage, AIMessage)
+                msg_type = getattr(msg, "type", "")
+                if msg_type == "human":
+                    messages.append({"role": "user", "content": msg.content})
+                elif msg_type in ("ai", "assistant"):
+                    messages.append({"role": "assistant", "content": msg.content})
+                else:
+                    messages.append({"role": "assistant", "content": str(msg.content)})
+            elif isinstance(msg, dict):
                 messages.append({
                     "role": msg.get("role", "user"),
                     "content": msg.get("content", "")
                 })
-            elif hasattr(msg, "type"):  # LangChain Message 对象
+            elif hasattr(msg, "type"):
                 role = "user" if msg.type == "human" else "assistant"
                 messages.append({
                     "role": role,
@@ -302,8 +366,130 @@ class ReActAgent(ABC):
                 "content": f"[当前收集的信息]\n{context_summary}"
             })
 
+        # 🆕 添加思考历史（让 AI 看到自己之前的思考过程）
+        reasoning_history = state.get("reasoning_history", [])
+        if reasoning_history:
+            history_summary = self._format_reasoning_history(reasoning_history)
+            messages.append({
+                "role": "system",
+                "content": f"[之前的思考过程]\n{history_summary}"
+            })
+
         return messages
-    
+
+    def _format_reasoning_history(self, history: List[ThoughtEntry]) -> str:
+        """格式化思考历史为文本"""
+        if not history:
+            return "暂无"
+
+        parts = []
+        for entry in history[-5:]:  # 只显示最近5条
+            parts.append(f"步骤{entry.get('step')}: {entry.get('thought', '')[:50]}...")
+
+        return "\n".join(parts)
+
+    def _save_thought_to_history(
+        self,
+        state: Dict[str, Any],
+        step: int,
+        thought: str,
+        action: str,
+        tool_used: Optional[str] = None
+    ):
+        """
+        保存思考到历史记录
+
+        CRITICAL FIX: 限制 reasoning_history 大小，防止内存泄漏
+        """
+        history = state.get("reasoning_history", [])
+        if not isinstance(history, list):
+            history = []
+
+        thought_entry: ThoughtEntry = {
+            "step": step,
+            "timestamp": datetime.now().isoformat(),
+            "thought": thought,
+            "action": action,
+        }
+
+        if tool_used:
+            thought_entry["tool_used"] = tool_used
+
+        history.append(thought_entry)
+
+        # CRITICAL FIX: 限制历史大小
+        if len(history) > MAX_REASONING_HISTORY:
+            history = history[-MAX_REASONING_HISTORY:]
+
+        state["reasoning_history"] = history
+
+        logger.debug(f"[ReAct] Step {step}: {action} | Thought: {thought[:100]}...")
+
+    def _extract_thought_from_response(self, content: str) -> str:
+        """
+        从 AI 响应中提取思考内容
+
+        支持多种格式：
+        1. JSON 中的 thought 字段
+        2. ```thinking ... ``` 代码块
+        3. ## 思考 ... 标题下的内容
+        """
+        import re
+
+        # 尝试提取 JSON 中的 thought 字段
+        json_match = re.search(r'```json\s*(.*?)\s*```', content, re.DOTALL)
+        if json_match:
+            try:
+                parsed = json.loads(json_match.group(1))
+                if parsed.get("thought"):
+                    return parsed["thought"]
+            except:
+                pass
+
+        # 尝试提取 ```thinking ... ``` 代码块
+        thinking_match = re.search(r'```thinking\s*(.*?)\s*```', content, re.DOTALL)
+        if thinking_match:
+            return thinking_match.group(1).strip()
+
+        # 尝试提取 ## 思考 下的内容
+        thinking_section = re.search(r'## 思考\s*\n+(.*?)(?=##|```json|$)', content, re.DOTALL)
+        if thinking_section:
+            return thinking_section.group(1).strip()
+
+        # 如果都没找到，返回前 500 字符作为思考
+        lines = content.split('\n')
+        thought_lines = []
+        for line in lines:
+            line = line.strip()
+            # 跳过明显的决策部分
+            if line.startswith('```json') or line.startswith('"action"') or line.startswith('"tool_calls"'):
+                break
+            if line:
+                thought_lines.append(line)
+
+        result = '\n'.join(thought_lines[:10])  # 最多 10 行
+        return result[:500] if result else "思考过程未详细记录"
+
+    def _update_medical_context(self, state: Dict[str, Any], update: dict):
+        """更新医学上下文"""
+        ctx = state.get("medical_context", {})
+
+        for key, value in update.items():
+            if key == "asked_question":
+                # 🆕 特殊处理：记录已问过的问题
+                if "asked_questions" not in ctx:
+                    ctx["asked_questions"] = []
+                if value and value not in ctx["asked_questions"]:
+                    ctx["asked_questions"].append(value)
+            elif key in ctx:
+                if isinstance(ctx[key], list) and isinstance(value, list):
+                    ctx[key] = list(set(ctx[key] + value))
+                else:
+                    ctx[key] = value
+            else:
+                ctx[key] = value
+
+        state["medical_context"] = ctx    
     def _get_decision_instruction(self, state: Dict[str, Any]) -> str:
         """获取决策指令"""
         attachments = state.get("attachments", [])
@@ -625,10 +811,10 @@ class ReActAgent(ABC):
     async def _response_generator_node(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """响应生成节点"""
         decision = state.get("agent_decision", {})
-        
+
         # 获取响应内容
         response = decision.get("response", "")
-        
+
         if not response:
             # 如果没有预设响应，根据行动类型生成
             action = decision.get("action", "respond")
@@ -636,21 +822,33 @@ class ReActAgent(ABC):
                 response = await self._generate_diagnosis(state)
             else:
                 response = "请问还有什么需要了解的吗？"
-        
+
         state["current_response"] = response
+
+        # 🆕 将 AI 的回复加入消息历史（使用 AIMessage + add_messages reducer）
+        # CRITICAL FIX: 追加而不是替换，避免丢失历史消息
+        current_messages = state.get("messages", [])
+        updated_messages = current_messages + [AIMessage(content=response)]
+
+        # 限制消息历史大小
+        if len(updated_messages) > MAX_MESSAGE_HISTORY:
+            updated_messages = updated_messages[-MAX_MESSAGE_HISTORY:]
+
+        state["messages"] = updated_messages
+
         state["quick_options"] = decision.get("quick_options", [])
-        
+
         # 更新阶段和进度
         if decision.get("stage"):
             state["stage"] = decision["stage"]
         if decision.get("progress"):
             state["progress"] = decision["progress"]
-        
+
         # 如果准备诊断
         if decision.get("ready_to_diagnose") or decision.get("action") == "diagnose":
             state["stage"] = "diagnosing"
             state["progress"] = max(state.get("progress", 0), 80)
-        
+
         return state
     
     async def _generate_diagnosis(self, state: Dict[str, Any]) -> str:
@@ -712,6 +910,18 @@ class ReActAgent(ABC):
             await self._stream_chunked(response, on_chunk, chunk_size=10)
 
         state["current_response"] = response
+
+        # 🆕 将 AI 的回复加入消息历史（使用 AIMessage + add_messages reducer）
+        # CRITICAL FIX: 追加而不是替换，避免丢失历史消息
+        current_messages = state.get("messages", [])
+        updated_messages = current_messages + [AIMessage(content=response)]
+
+        # 限制消息历史大小
+        if len(updated_messages) > MAX_MESSAGE_HISTORY:
+            updated_messages = updated_messages[-MAX_MESSAGE_HISTORY:]
+
+        state["messages"] = updated_messages
+
         state["quick_options"] = decision.get("quick_options", [])
 
         if decision.get("stage"):
@@ -922,16 +1132,26 @@ class ReActAgent(ABC):
         Returns:
             AgentResponse
         """
+        # CRITICAL FIX: 反序列化状态 - 将字典格式的 messages 转换为 BaseMessage 对象
+        state = self._deserialize_state_from_db(state)
+
         # 重置迭代计数
         state["iteration_count"] = 0
         state["tool_results"] = []
         state["pending_tool_calls"] = []
 
-        # 添加用户消息
+        # 🆕 添加用户消息（保留之前的对话历史）
+        # CRITICAL FIX: 限制消息历史大小
         if user_input:
-            if "messages" not in state:
-                state["messages"] = []
-            state["messages"].append({"role": "user", "content": user_input})
+            existing_messages = state.get("messages", [])
+            new_message = HumanMessage(content=user_input)
+            updated_messages = existing_messages + [new_message] if existing_messages else [new_message]
+
+            # 限制消息历史大小
+            if len(updated_messages) > MAX_MESSAGE_HISTORY:
+                updated_messages = updated_messages[-MAX_MESSAGE_HISTORY:]
+
+            state["messages"] = updated_messages
 
         # 处理附件
         if attachments:
@@ -997,6 +1217,9 @@ class ReActAgent(ABC):
             # 序列化状态以便保存到数据库
             serialized_state = self._serialize_state_for_db(final_state)
 
+            # 🆕 提取思考历史
+            reasoning_history = final_state.get("reasoning_history", [])
+
             # 构建响应
             return AgentResponse(
                 message=final_state.get("current_response", ""),
@@ -1005,7 +1228,11 @@ class ReActAgent(ABC):
                 quick_options=final_state.get("quick_options", []),
                 risk_level=final_state.get("risk_level"),
                 specialty_data=final_state.get("specialty_data"),
-                next_state=serialized_state
+                next_state=serialized_state,
+                # 🆕 思考相关字段
+                current_thought=final_state.get("current_thought"),
+                reasoning_history=reasoning_history,
+                show_thinking=final_state.get("show_thinking", False)
             )
 
         except Exception as e:
@@ -1041,17 +1268,27 @@ class ReActAgent(ABC):
         Returns:
             AgentResponse
         """
+        # CRITICAL FIX: 反序列化状态 - 将字典格式的 messages 转换为 BaseMessage 对象
+        state = self._deserialize_state_from_db(state)
+
         # 重置迭代计数
         state["iteration_count"] = 0
         state["tool_results"] = []
         state["pending_tool_calls"] = []
-        
-        # 添加用户消息
+
+        # 🆕 添加用户消息（保留之前的对话历史）
+        # CRITICAL FIX: 限制消息历史大小，防止内存泄漏
         if user_input:
-            if "messages" not in state:
-                state["messages"] = []
-            state["messages"].append({"role": "user", "content": user_input})
-        
+            existing_messages = state.get("messages", [])
+            new_message = HumanMessage(content=user_input)
+            updated_messages = existing_messages + [new_message] if existing_messages else [new_message]
+
+            # 限制消息历史大小
+            if len(updated_messages) > MAX_MESSAGE_HISTORY:
+                updated_messages = updated_messages[-MAX_MESSAGE_HISTORY:]
+
+            state["messages"] = updated_messages
+
         # 处理附件
         if attachments:
             state["attachments"] = attachments
@@ -1063,6 +1300,9 @@ class ReActAgent(ABC):
             # 序列化状态以便保存到数据库
             serialized_state = self._serialize_state_for_db(final_state)
 
+            # 🆕 提取思考历史
+            reasoning_history = final_state.get("reasoning_history", [])
+
             # 构建响应
             return AgentResponse(
                 message=final_state.get("current_response", ""),
@@ -1071,7 +1311,11 @@ class ReActAgent(ABC):
                 quick_options=final_state.get("quick_options", []),
                 risk_level=final_state.get("risk_level"),
                 specialty_data=final_state.get("specialty_data"),
-                next_state=serialized_state
+                next_state=serialized_state,
+                # 🆕 思考相关字段
+                current_thought=final_state.get("current_thought"),
+                reasoning_history=reasoning_history,
+                show_thinking=final_state.get("show_thinking", False)
             )
             
         except Exception as e:
@@ -1153,6 +1397,42 @@ class ReActAgent(ABC):
             else:
                 result[k] = v
         return result
+
+    def _deserialize_state_from_db(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        CRITICAL FIX: 将数据库加载的状态反序列化
+
+        数据库中存储的 messages 是字典列表 [{"type": "human", "content": "..."}]，
+        需要转换回 LangChain Message 对象才能正确处理
+        """
+        if not state:
+            return state
+
+        deserialized = {}
+        for key, value in state.items():
+            # 处理 messages 字段 - 将字典列表转换为 Message 对象列表
+            if key == "messages" and isinstance(value, list):
+                messages = []
+                for item in value:
+                    if isinstance(item, dict):
+                        msg_type = item.get("type", "human")
+                        content = item.get("content", "")
+                        if msg_type == "human":
+                            messages.append(HumanMessage(content=content))
+                        elif msg_type == "ai":
+                            messages.append(AIMessage(content=content))
+                        else:
+                            # 其他类型保留原字典
+                            messages.append(item)
+                    elif isinstance(item, BaseMessage):
+                        messages.append(item)
+                    else:
+                        messages.append(item)
+                deserialized[key] = messages
+            else:
+                deserialized[key] = value
+
+        return deserialized
 
 
 # 兼容旧版导入 - 别名

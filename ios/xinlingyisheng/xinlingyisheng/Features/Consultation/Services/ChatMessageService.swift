@@ -228,11 +228,13 @@ class ChatMessageService: ObservableObject {
         if let lastIndex = messages.indices.last,
            !messages[lastIndex].isFromUser {
             let quickOpts = (response.quickOptions ?? []).map { QuickOption(text: $0, value: $0) }
+            // 🆕 传入思考状态
             messages[lastIndex] = UnifiedChatMessage(
                 content: response.message,
                 isFromUser: false,
                 messageType: .text,
-                quickOptions: quickOpts
+                quickOptions: quickOpts,
+                thinkingState: response.thinkingState
             )
         }
 
@@ -250,13 +252,15 @@ class ChatMessageService: ObservableObject {
         currentActionMode = nil
 
         let quickOpts = (response.quickOptions ?? []).map { QuickOption(text: $0, value: $0) }
+        // 🆕 传入思考状态
         let resultMessage = UnifiedChatMessage(
             content: response.message,
             isFromUser: false,
             messageType: response.structuredData != nil
                 ? .structuredResult(response.structuredData!)
                 : .text,
-            quickOptions: quickOpts
+            quickOptions: quickOpts,
+            thinkingState: response.thinkingState
         )
         messages.append(resultMessage)
 

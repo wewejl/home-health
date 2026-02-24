@@ -53,11 +53,17 @@ def migrate_legacy_state(legacy_state: Optional[Dict]) -> Dict:
             return {}
 
     # 新版本需要保留的状态字段
+    # 🆕 新增：保留 messages（对话历史）和思考相关字段
     valid_fields = {
         "stage", "chief_complaint", "symptoms",
         "skin_location", "diagnosis_card", "advice_history",
         "knowledge_refs", "reasoning_steps", "latest_analysis",
-        "latest_interpretation", "current_response"
+        "latest_interpretation", "current_response",
+        # 🆕 新增：保留对话历史和思考追踪
+        "messages", "current_thought", "reasoning_history",
+        "show_thinking", "asked_questions",
+        # 保留其他可能需要的字段
+        "iteration_count", "agent_decision", "medical_context"
     }
 
     return {k: v for k, v in legacy_state.items() if k in valid_fields}

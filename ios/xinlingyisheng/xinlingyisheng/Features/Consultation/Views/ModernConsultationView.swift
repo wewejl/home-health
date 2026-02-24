@@ -524,14 +524,30 @@ struct ChatMessageBubble: View {
     @Binding var messageText: String
     let layout: AdaptiveLayout
 
+    // 🆕 思考展开状态绑定
+    @State private var isThinkingExpanded = false
+
     var body: some View {
-        VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
+        VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 8) {
             if !message.isFromUser {
-                HStack(spacing: 8) {
-                    aiAvatar
-                    bubbleContent
+                // 🆕 AI 消息：先显示思考，再显示内容
+                VStack(alignment: .leading, spacing: 8) {
+                    // 思考气泡（如果有）
+                    if message.hasThinking {
+                        ThinkingBubbleView(
+                            thinkingState: message.thinkingState,
+                            isExpanded: $isThinkingExpanded
+                        )
+                    }
+
+                    // 主消息内容
+                    HStack(spacing: 8) {
+                        aiAvatar
+                        bubbleContent
+                    }
                 }
             } else {
+                // 用户消息
                 HStack {
                     Spacer()
                     bubbleContent
@@ -572,6 +588,8 @@ struct ChatMessageBubble: View {
             imageBubble(image)
         case .loading:
             loadingBubble
+        case .thinking:  // 🆕 处理思考类型（内部使用）
+            textBubble
         }
     }
 

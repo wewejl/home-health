@@ -123,12 +123,115 @@ struct QuickOption: Identifiable, Equatable {
     }
 }
 
+// MARK: - 思考条目
+struct ThoughtEntry: Identifiable, Codable, Equatable {
+    let id: String
+    let step: Int
+    let timestamp: Date
+    let thought: String
+    let intentAnalysis: String?
+    let stateAssessment: String?
+    let decision: String?
+    let action: String
+    let toolUsed: String?
+
+    init(
+        id: String = UUID().uuidString,
+        step: Int,
+        timestamp: Date = Date(),
+        thought: String,
+        intentAnalysis: String? = nil,
+        stateAssessment: String? = nil,
+        decision: String? = nil,
+        action: String,
+        toolUsed: String? = nil
+    ) {
+        self.id = id
+        self.step = step
+        self.timestamp = timestamp
+        self.thought = thought
+        self.intentAnalysis = intentAnalysis
+        self.stateAssessment = stateAssessment
+        self.decision = decision
+        self.action = action
+        self.toolUsed = toolUsed
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case step
+        case timestamp
+        case thought
+        case intentAnalysis = "intent_analysis"
+        case stateAssessment = "state_assessment"
+        case decision
+        case action
+        case toolUsed = "tool_used"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(String.self, forKey: .id) ?? UUID().uuidString
+        step = try container.decode(Int.self, forKey: .step)
+
+        // 🆕 自定义日期解码 - 支持多种 ISO8601 格式
+        if let dateString = try container.decodeIfPresent(String.self, forKey: .timestamp) {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+            // 尝试标准格式
+            if let date = formatter.date(from: dateString) {
+                timestamp = date
+            } else {
+                // 尝试不带时区的格式
+                let fallbackFormatter = DateFormatter()
+                fallbackFormatter.locale = Locale(identifier: "en_US_POSIX")
+                fallbackFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+                if let date = fallbackFormatter.date(from: dateString) {
+                    timestamp = date
+                } else {
+                    // 如果都失败，使用当前时间
+                    timestamp = Date()
+                }
+            }
+        } else {
+            timestamp = Date()
+        }
+
+        thought = try container.decode(String.self, forKey: .thought)
+        intentAnalysis = try container.decodeIfPresent(String.self, forKey: .intentAnalysis)
+        stateAssessment = try container.decodeIfPresent(String.self, forKey: .stateAssessment)
+        decision = try container.decodeIfPresent(String.self, forKey: .decision)
+        action = try container.decode(String.self, forKey: .action)
+        toolUsed = try container.decodeIfPresent(String.self, forKey: .toolUsed)
+    }
+}
+
+// MARK: - 思考状态
+enum ThinkingState: Equatable {
+    case idle                // 无思考
+    case thinking            // 正在思考中
+    case completed([ThoughtEntry])  // 思考完成
+
+    static func == (lhs: ThinkingState, rhs: ThinkingState) -> Bool {
+        switch (lhs, rhs) {
+        case (.idle, .idle), (.thinking, .thinking):
+            return true
+        case (.completed(let l1), .completed(let l2)):
+            return l1.count == l2.count && zip(l1, l2).allSatisfy { $0.id == $1.id }
+        default:
+            return false
+        }
+    }
+}
+
 // MARK: - 统一消息类型
 enum UnifiedMessageType: Equatable {
     case text
     case image(UIImage)
     case structuredResult(StructuredData)
     case loading
+    case thinking(ThinkingState)  // 🆕 思考类型
 
     static func == (lhs: UnifiedMessageType, rhs: UnifiedMessageType) -> Bool {
         switch (lhs, rhs) {
@@ -138,6 +241,8 @@ enum UnifiedMessageType: Equatable {
             return i1 === i2
         case (.structuredResult(let d1), .structuredResult(let d2)):
             return d1.type == d2.type
+        case (.thinking(let s1), .thinking(let s2)):
+            return s1 == s2
         default:
             return false
         }
@@ -154,6 +259,10 @@ struct UnifiedChatMessage: Identifiable {
     var attachments: [MessageAttachment]
     var quickOptions: [QuickOption]
 
+    // 🆕 思考相关字段
+    var thinkingState: ThinkingState
+    var isThinkingExpanded: Bool  // 控制思考区域展开/收起
+
     // 持久化相关字段
     var localImageId: String?       // 本地图片ID (用于从本地加载图片)
     var serverMessageId: Int?       // 后端消息ID (用于同步)
@@ -166,6 +275,8 @@ struct UnifiedChatMessage: Identifiable {
         messageType: UnifiedMessageType = .text,
         attachments: [MessageAttachment] = [],
         quickOptions: [QuickOption] = [],
+        thinkingState: ThinkingState = .idle,
+        isThinkingExpanded: Bool = false,
         localImageId: String? = nil,
         serverMessageId: Int? = nil
     ) {
@@ -176,16 +287,28 @@ struct UnifiedChatMessage: Identifiable {
         self.messageType = messageType
         self.attachments = attachments
         self.quickOptions = quickOptions
+        self.thinkingState = thinkingState
+        self.isThinkingExpanded = isThinkingExpanded
         self.localImageId = localImageId
         self.serverMessageId = serverMessageId
+    }
+
+    // 🆕 是否有思考内容
+    var hasThinking: Bool {
+        switch thinkingState {
+        case .idle:
+            return false
+        case .thinking, .completed:
+            return true
+        }
     }
 
     static func userMessage(_ content: String, attachments: [MessageAttachment] = []) -> UnifiedChatMessage {
         return UnifiedChatMessage(content: content, isFromUser: true, attachments: attachments)
     }
 
-    static func aiMessage(_ content: String, quickOptions: [QuickOption] = []) -> UnifiedChatMessage {
-        return UnifiedChatMessage(content: content, isFromUser: false, quickOptions: quickOptions)
+    static func aiMessage(_ content: String, quickOptions: [QuickOption] = [], thinkingState: ThinkingState = .idle) -> UnifiedChatMessage {
+        return UnifiedChatMessage(content: content, isFromUser: false, quickOptions: quickOptions, thinkingState: thinkingState)
     }
 
     static func loadingMessage() -> UnifiedChatMessage {
@@ -231,6 +354,11 @@ struct UnifiedMessageResponse: Codable {
     let isNewEvent: Bool?
     let shouldShowDossierPrompt: Bool?
 
+    // 🆕 思考相关字段
+    let currentThought: String?
+    let reasoningHistory: [ThoughtEntry]?
+    let showThinking: Bool?
+
     // 诊断相关计算属性
     var diagnosisCard: DiagnosisCard? {
         guard let diagnosisData = structuredData?.data?["diagnosis_card"] else { return nil }
@@ -252,6 +380,16 @@ struct UnifiedMessageResponse: Codable {
         return stepsData.value as? [String]
     }
 
+    // 🆕 思考状态计算属性
+    var thinkingState: ThinkingState {
+        if let history = reasoningHistory, !history.isEmpty {
+            return .completed(history)
+        } else if let thought = currentThought, !thought.isEmpty {
+            return .thinking
+        }
+        return .idle
+    }
+
     enum CodingKeys: String, CodingKey {
         case message
         case stage
@@ -261,6 +399,9 @@ struct UnifiedMessageResponse: Codable {
         case eventId = "event_id"
         case isNewEvent = "is_new_event"
         case shouldShowDossierPrompt = "should_show_dossier_prompt"
+        case currentThought = "current_thought"
+        case reasoningHistory = "reasoning_history"
+        case showThinking = "show_thinking"
     }
 
     init(from decoder: Decoder) throws {
@@ -273,6 +414,9 @@ struct UnifiedMessageResponse: Codable {
         eventId = try container.decodeIfPresent(String.self, forKey: .eventId)
         isNewEvent = try container.decodeIfPresent(Bool.self, forKey: .isNewEvent)
         shouldShowDossierPrompt = try container.decodeIfPresent(Bool.self, forKey: .shouldShowDossierPrompt)
+        currentThought = try container.decodeIfPresent(String.self, forKey: .currentThought)
+        reasoningHistory = try container.decodeIfPresent([ThoughtEntry].self, forKey: .reasoningHistory)
+        showThinking = try container.decodeIfPresent(Bool.self, forKey: .showThinking)
     }
 }
 
