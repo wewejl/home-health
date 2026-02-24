@@ -491,7 +491,14 @@ class ReActAgent(ABC):
 
         state["medical_context"] = ctx    
     def _get_decision_instruction(self, state: Dict[str, Any]) -> str:
-        """获取决策指令"""
+        """
+        获取决策指令
+
+        设计理念：
+        1. 阶段框架是参考，不是硬性限制
+        2. AI 自主判断何时信息充分
+        3. 每次追问提供快速选项，降低用户输入门槛
+        """
         attachments = state.get("attachments", [])
         has_image = any(
             att.get("type") == "image" or "image" in att.get("mime_type", "")
@@ -510,79 +517,81 @@ class ReActAgent(ABC):
             if (isinstance(m, dict) and m.get("role") == "user") or getattr(m, "type", None) == "human"
         ])
 
-        instruction = f"""# 决策指令
+        # 判断信息完整度（用于 AI 参考）
+        info_completeness = self._assess_info_completeness(medical_context)
 
-## 当前状态
-- 对话轮数：{conversation_rounds}
-- 已收集症状：{symptoms if symptoms else '暂无'}
-- 已收集信息项：{len(collected_info)} 项
+        instruction = f"""# 问诊决策指令
 
-## 核心原则：先问诊，后诊断
+## ⚠️ 最重要：你必须返回 JSON 格式
 
-**你必须先通过提问收集足够信息，然后才能给出诊断建议。**
-
-### 信息充分性判断标准
-
-**最低要求（必须全部满足才能进入诊断阶段）：**
-1. ✅ 了解主诉症状（皮疹形态、皮肤问题描述）
-2. ✅ 了解发病部位
-3. ✅ 了解持续时间
-4. ✅ 了解至少1个伴随症状或诱因
-
-### 决策流程
-
-```
-如果 对话轮数 < 2 或 已收集信息项 < 4：
-    → 进入信息收集模式，提问收集缺失信息
-否则 如果 信息收集充分：
-    → 可以给出初步诊断建议
-```
-
-### 信息收集模式（信息不足时）
-
-你的回复应该是**向患者提问**，格式：
-- "[提问] 请问您皮肤上的皮疹是什么样子的？"
-- "[提问] 皮疹出现在身体的哪个部位？"
-- "[提问] 这个问题出现多久了？"
-
-每次只问 **1-2 个问题**，针对最缺失的信息。
-
-### 诊断模式（信息充分后）
-
-当收集到足够信息后，你可以：
-- 调用工具：`search_medical_knowledge` 查询专业知识
-- 调用工具：`assess_risk` 评估风险等级
-- 给出初步诊断建议
-
----
-
-## 可用工具
-1. `search_medical_knowledge` - 查询医学知识库
-2. `assess_risk` - 评估病情风险
-3. `analyze_skin_image` - 分析皮肤照片
-4. `search_medication` - 查询用药信息
-5. `generate_medical_dossier` - 生成病历
-
-## 回复格式（JSON）
+**你的回复必须是 JSON 格式，格式如下：**
 
 ```json
 {{
-  "thought": "你的思考过程：当前信息是否充分，还需要收集什么",
+  "thought": "你的思考过程",
   "action": "respond",
-  "response": "给患者的回复内容（提问时使用问句）",
-  "quick_options": ["快速回复选项1", "选项2"],
+  "response": "给患者的回复内容（这里是真正的对话内容，不是模板）",
+  "quick_options": ["选项1", "选项2", "选项3"],
   "medical_context_update": {{
-    "symptoms": ["新提取的症状"],
-    "collected_info": ["部位", "时间", "症状类型"],
-    "missing_info": ["还需了解的信息"]
+    "symptoms": ["症状1"],
+    "collected_info": ["部位", "时间"]
   }},
-  "ready_to_diagnose": {True if len(collected_info) >= 4 else False},
-  "stage": "collecting",
-  "progress": {min(len(collected_info) * 15, 80)}
+  "ready_to_diagnose": false,
+  "stage": "collecting"
 }}
 ```
 
-**记住**：你的回复主要是**向患者提问**，直到收集足够信息。"""
+## 📊 当前状态
+- 对话轮数：{conversation_rounds}
+- 已收集症状：{symptoms if symptoms else '暂无'}
+
+## 🎯 核心原则
+
+你是 AI 医生助手。自主判断：
+- 信息不够 → 继续提问（1-2个问题）
+- 信息充分 → 给出综合分析
+- 紧急情况 → 立即建议就医
+
+## 💬 response 字段写什么
+
+### 信息收集阶段：
+```
+听到您说[症状描述]。为了更好地帮你分析，请问：
+1. 疼痛是什么样子的？比如刀割样、烧灼感？
+2. 这个问题出现多久了？
+```
+
+### 综合分析阶段：
+```
+# 综合分析
+
+## 可能的原因
+1. **[原因1]**：[解释]
+2. **[原因2]**：[解释]
+
+## 建议
+1. [建议1]
+2. [建议2]
+
+## 何时就医
+[就医指征]
+
+不用太焦虑，建议先观察几天。
+```
+
+## 🎯 quick_options 写什么
+
+提问时提供 2-3 个快捷选项，比如：
+- 疼痛性质：["刀割样疼痛", "灼烧感", "隐痛"]
+- 持续时间：["1-2天", "3-7天", "一周以上"]
+- 是/否问题：["是", "否", "不确定"]
+
+## 🛠️ 可用工具
+- search_medical_knowledge - 查询医学知识
+- assess_risk - 评估风险
+- analyze_skin_image - 分析皮肤照片
+
+记住：返回 JSON 格式，response 字段写真正的对话内容！"""
 
         if has_image:
             instruction += """
@@ -592,6 +601,87 @@ class ReActAgent(ABC):
 请立即调用 `analyze_skin_image` 工具分析图片，然后基于分析结果继续提问或给出建议。"""
 
         return instruction
+
+    def _assess_info_completeness(self, medical_context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        评估信息完整度（供 AI 参考）
+
+        返回：
+        - score: 完整度分数 (0-100)
+        - assessment: 文字描述
+        """
+        collected_info = medical_context.get("collected_info", [])
+        symptoms = medical_context.get("symptoms", [])
+
+        # 关键信息维度
+        dimensions = {
+            "主诉症状": 0,  # 知道用户来问什么
+            "发病部位": 0,  # 知道哪里不舒服
+            "持续时间": 0,  # 知道多久了
+            "症状性质": 0,  # 知道是什么样的感觉
+            "伴随症状": 0,  # 知道还有其他问题吗
+            "诱因/环境": 0,  # 知道可能的原因
+            "既往史": 0,    # 知道相关病史
+        }
+
+        info_lower = [info.lower() for info in collected_info]
+
+        # 主诉症状 (有症状就算)
+        if symptoms:
+            dimensions["主诉症状"] = 100
+
+        # 发病部位
+        location_keywords = ["部位", "手臂", "腿", "脸", "头", "胸", "腹", "背", "皮肤", "喉咙", "眼", "耳", "鼻"]
+        if any(kw in " ".join(info_lower) for kw in location_keywords):
+            dimensions["发病部位"] = 100
+
+        # 持续时间
+        duration_keywords = ["时间", "持续", "天", "周", "月", "年", "开始", "出现"]
+        if any(kw in " ".join(info_lower) for kw in duration_keywords):
+            dimensions["持续时间"] = 100
+
+        # 症状性质
+        nature_keywords = ["痛", "痒", "红", "肿", "热", "凉", "麻", "烧灼", "刀割", "胀"]
+        if any(kw in " ".join(info_lower) for kw in nature_keywords):
+            dimensions["症状性质"] = 100
+
+        # 伴随症状
+        accompanying_keywords = ["伴", "还", "同时", "其他", "咳嗽", "发热", "头痛", "恶心"]
+        if any(kw in " ".join(info_lower) for kw in accompanying_keywords):
+            dimensions["伴随症状"] = 100
+
+        # 诱因/环境
+        trigger_keywords = ["诱因", "原因", "环境", "接触", "吃", "装修", "空气"]
+        if any(kw in " ".join(info_lower) for kw in trigger_keywords):
+            dimensions["诱因/环境"] = 100
+
+        # 既往史
+        history_keywords = ["病史", "以前", "过去", "曾经", "史", "过敏"]
+        if any(kw in " ".join(info_lower) for kw in history_keywords):
+            dimensions["既往史"] = 100
+
+        # 计算总分
+        score = sum(dimensions.values()) // len(dimensions)
+
+        # 生成评估文字
+        completed_dims = [k for k, v in dimensions.items() if v == 100]
+        missing_dims = [k for k, v in dimensions.items() if v == 0]
+
+        assessment = f"### 已了解的信息：\n"
+        if completed_dims:
+            assessment += f"- ✅ {', '.join(completed_dims)}\n"
+        else:
+            assessment += "- 暂无完整信息\n"
+
+        if missing_dims:
+            assessment += f"\n### 建议继续了解：\n"
+            assessment += f"- ❓ {', '.join(missing_dims[:3])}\n"
+
+        return {
+            "score": score,
+            "assessment": assessment,
+            "dimensions": dimensions
+        }
     
     def _parse_decision(self, content: str) -> dict:
         """解析 AI 的决策输出"""
