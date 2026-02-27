@@ -22,6 +22,21 @@ logger = logging.getLogger(__name__)
 # 🆕 CRITICAL FIX: 限制消息历史大小，防止内存泄漏
 MAX_MESSAGE_HISTORY = 50
 MAX_REASONING_HISTORY = 100
+SUPPORTED_KNOWLEDGE_SPECIALTIES = {
+    "dermatology",
+    "cardiology",
+    "orthopedics",
+    "neurology",
+    "respiratory",
+    "gastroenterology",
+    "endocrinology",
+    "ophthalmology",
+    "otorhinolaryngology",
+    "stomatology",
+    "obstetrics_gynecology",
+    "pediatrics",
+    "general",
+}
 
 
 class ThoughtEntry(TypedDict, total=False):
@@ -237,6 +252,37 @@ class ReActAgent(ABC):
         这是 ReAct 的核心：AI 自主决策
         """
         state["iteration_count"] = state.get("iteration_count", 0) + 1
+
+        # 新用户输入优先触发知识检索，避免“只在疑难问题才查知识库”
+        if self._should_prefetch_knowledge(state):
+            query = self._build_knowledge_query(state)
+            if query:
+                specialty = self._get_knowledge_specialty(state)
+                tool_call = {
+                    "function": {
+                        "name": "search_medical_knowledge",
+                        "arguments": json.dumps(
+                            {"query": query, "specialty": specialty, "top_k": 5},
+                            ensure_ascii=False
+                        )
+                    }
+                }
+
+                state["pending_tool_calls"] = [tool_call]
+                state["current_thought"] = "先检索相关医学知识，再进行问诊推理。"
+                self._save_thought_to_history(
+                    state,
+                    state["iteration_count"],
+                    state["current_thought"],
+                    "use_tool",
+                    "search_medical_knowledge",
+                )
+                state["agent_decision"] = {
+                    "action": "use_tool",
+                    "tool_calls": [tool_call],
+                    "thought": state["current_thought"],
+                }
+                return state
         
         # 构建消息
         messages = self._build_reasoning_messages(state)
@@ -299,6 +345,53 @@ class ReActAgent(ABC):
             }
         
         return state
+
+    def _get_human_messages(self, state: Dict[str, Any]) -> List[dict]:
+        """获取人类消息列表（按时间顺序）"""
+        return [
+            m for m in state.get("messages", [])
+            if isinstance(m, dict) and m.get("type") == "human"
+        ]
+
+    def _build_knowledge_query(self, state: Dict[str, Any]) -> str:
+        """构建知识检索查询"""
+        human_messages = self._get_human_messages(state)
+        if not human_messages:
+            return ""
+        latest = (human_messages[-1].get("content") or "").strip()
+        return latest[:300]
+
+    def _get_knowledge_specialty(self, state: Dict[str, Any]) -> str:
+        """根据 agent_type 推断知识库 specialty"""
+        agent_type = (state.get("agent_type") or "general").strip().lower()
+        if agent_type in SUPPORTED_KNOWLEDGE_SPECIALTIES:
+            return agent_type
+        return "general"
+
+    def _should_prefetch_knowledge(self, state: Dict[str, Any]) -> bool:
+        """
+        判断是否需要预检索知识库
+
+        规则：
+        1. 当前智能体支持 search_medical_knowledge 工具
+        2. 至少有一条用户消息
+        3. 针对“当前最新用户消息”尚未做过知识检索
+        """
+        if "search_medical_knowledge" not in self._tools:
+            return False
+
+        human_messages = self._get_human_messages(state)
+        if not human_messages:
+            return False
+
+        latest_human_index = len(human_messages) - 1
+        specialty_data = state.get("specialty_data") or {}
+        last_prefetch_index = specialty_data.get("_kb_prefetch_human_index")
+
+        if last_prefetch_index == latest_human_index:
+            return False
+
+        return True
     
     def _build_reasoning_messages(self, state: Dict[str, Any]) -> List[dict]:
         """构建推理所需的消息列表"""
@@ -785,6 +878,9 @@ class ReActAgent(ABC):
             
         elif tool_name == "search_medication":
             specialty_data["medication_info"] = result
+        elif tool_name == "search_medical_knowledge":
+            specialty_data["_kb_prefetch_human_index"] = len(self._get_human_messages(state)) - 1
+            specialty_data["knowledge_context"] = result
         
         state["specialty_data"] = specialty_data
     
@@ -848,6 +944,7 @@ class ReActAgent(ABC):
 
 图像分析结果：{specialty_data.get('skin_analysis', {}).get('findings', '无')}
 风险评估：{specialty_data.get('risk_assessment', {}).get('risk_level', '未评估')}
+知识库参考：{json.dumps(specialty_data.get('knowledge_context', {}), ensure_ascii=False)}
 
 请包含：
 1. 可能的诊断（按可能性排序）

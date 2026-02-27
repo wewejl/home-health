@@ -77,6 +77,8 @@ class Settings(BaseSettings):
     
     # LangGraph 配置
     USE_LANGGRAPH: bool = True  # 是否使用 LangGraph 替代 CrewAI
+    USE_TRIAGE_ENGINE: bool = True  # 是否启用新导诊引擎灰度开关
+    TRIAGE_ENABLED_SPECIALTIES: str = "general,cardiology,respiratory"  # 灰度专科白名单
     LLM_TIMEOUT: int = 30  # LLM 调用超时（秒）
     LLM_MAX_RETRIES: int = 1  # LLM 调用最大重试次数
     LLM_MAX_TOKENS: int = 1500  # 普通 LLM 最大 token
@@ -213,6 +215,13 @@ class Settings(BaseSettings):
     def should_use_secure_cookies(self) -> bool:
         """生产环境使用安全 cookies"""
         return self.is_production
+
+    @property
+    def triage_enabled_specialties_list(self) -> list[str]:
+        """导诊引擎灰度专科白名单"""
+        raw = self.TRIAGE_ENABLED_SPECIALTIES or ""
+        items = [s.strip().lower() for s in raw.split(",") if s.strip()]
+        return items or ["general", "cardiology", "respiratory"]
 
 
 # 全局设置实例（单例模式）

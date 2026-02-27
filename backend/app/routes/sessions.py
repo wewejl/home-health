@@ -23,8 +23,11 @@ from ..models.doctor import Doctor
 from ..models.user import User
 from ..dependencies import get_current_user
 from ..services.agents.router import AgentRouter
+from ..config import get_settings
+from ..triage import TriageOrchestrator
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
+settings = get_settings()
 
 
 def migrate_legacy_state(legacy_state: Optional[Dict]) -> Dict:
@@ -155,12 +158,19 @@ async def send_message(
     if not session:
         raise HTTPException(status_code=404, detail="会话不存在")
 
-    # 获取智能体
-    agent_type = session.agent_type or "general"
-    try:
-        agent = AgentRouter.get_agent(agent_type)
-    except ValueError:
-        raise HTTPException(status_code=500, detail=f"智能体类型错误: {agent_type}")
+    # 获取执行器（旧智能体 / 新导诊引擎）
+    agent_type = (session.agent_type or "general").lower()
+    triage_enabled = (
+        settings.USE_TRIAGE_ENGINE
+        and agent_type in settings.triage_enabled_specialties_list
+    )
+    if triage_enabled:
+        agent = TriageOrchestrator()
+    else:
+        try:
+            agent = AgentRouter.get_agent(agent_type)
+        except ValueError:
+            raise HTTPException(status_code=500, detail=f"智能体类型错误: {agent_type}")
 
     # 解析请求参数
     content = request.content
@@ -190,10 +200,15 @@ async def send_message(
 
     # 恢复智能体状态（使用状态转换函数兼容旧会话）
     state = migrate_legacy_state(session.agent_state)
+    # 注入会话元数据（新导诊引擎需要；对旧智能体无副作用）
+    state["session_id"] = session.id
+    state["user_id"] = current_user.id
+    state["agent_type"] = agent_type
 
     # 检查是否请求流式响应
     accept_header = http_request.headers.get("accept", "")
     want_stream = "text/event-stream" in accept_header
+    debug_mode = http_request.query_params.get("debug", "false").lower() in {"1", "true", "yes", "on"}
 
     if want_stream:
         return StreamingResponse(
@@ -205,7 +220,8 @@ async def send_message(
                 action=action,
                 session_id=session.id,
                 agent_type=agent_type,
-                db_session=db
+                db_session=db,
+                debug=debug_mode,
             ),
             media_type="text/event-stream",
             headers={
@@ -220,7 +236,8 @@ async def send_message(
             state=state,
             user_input=content,
             attachments=attachments_data,
-            action=action
+            action=action,
+            debug=debug_mode,
         )
         
         # 保存 AI 消息
@@ -251,7 +268,8 @@ async def stream_agent_response(
     action: str,
     session_id: str,
     agent_type: str,
-    db_session: Optional[DBSession] = None
+    db_session: Optional[DBSession] = None,
+    debug: bool = False,
 ) -> AsyncGenerator[str, None]:
     """
     生成 SSE 流式响应
@@ -273,7 +291,8 @@ async def stream_agent_response(
                 user_input=user_input,
                 attachments=attachments,
                 action=action,
-                on_chunk=on_chunk
+                on_chunk=on_chunk,
+                debug=debug,
             )
         except Exception as e:
             error_occurred = str(e)
