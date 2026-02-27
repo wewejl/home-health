@@ -45,6 +45,18 @@ settings = get_settings()
 
 Base.metadata.create_all(bind=engine)
 
+
+async def check_knowledge_service_health() -> dict:
+    """检查独立知识库服务健康状态。"""
+    try:
+        async with httpx.AsyncClient(timeout=settings.KNOWLEDGE_SERVICE_TIMEOUT) as client:
+            response = await client.get(f"{settings.KNOWLEDGE_SERVICE_URL.rstrip('/')}/health")
+            response.raise_for_status()
+            data = response.json()
+            return {"status": "healthy", "data": data}
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}
+
 # 初始化速率限制器
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(
@@ -112,7 +124,7 @@ else:
 
 
 @app.on_event("startup")
-def startup_event():
+async def startup_event():
     # 初始化数据库表结构
     Base.metadata.create_all(bind=engine)
     
@@ -133,6 +145,17 @@ def startup_event():
         AdminAuthService.init_default_admin(db)
     finally:
         db.close()
+
+    # 启动时检查知识库服务连通性，便于快速定位部署问题
+    kb_status = await check_knowledge_service_health()
+    if kb_status["status"] == "healthy":
+        logger.info("✅ Knowledge service connected: %s", settings.KNOWLEDGE_SERVICE_URL)
+    else:
+        logger.warning(
+            "⚠️ Knowledge service unavailable at startup: %s, error=%s",
+            settings.KNOWLEDGE_SERVICE_URL,
+            kb_status.get("error", "unknown")
+        )
 
 
 @app.get("/")
@@ -178,6 +201,12 @@ async def health_detailed():
         llm_status = {"status": "not_configured"}
         health_info["status"] = "degraded"
     health_info["checks"]["llm"] = llm_status
+
+    # 知识库服务健康检查
+    kb_status = await check_knowledge_service_health()
+    health_info["checks"]["knowledge_service"] = kb_status
+    if kb_status["status"] != "healthy":
+        health_info["status"] = "degraded"
 
     # 环境信息
     health_info["environment"] = {

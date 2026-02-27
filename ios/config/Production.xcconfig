@@ -3,6 +3,7 @@
 
 // API 配置 - 必须从构建环境注入
 API_BASE_URL = $(API_BASE_URL)
+WS_BASE_URL = $(WS_BASE_URL)
 API_ENVIRONMENT = production
 
 // 功能开关

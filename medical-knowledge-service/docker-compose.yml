@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: medical_knowledge_db
+    environment:
+      POSTGRES_DB: medical_knowledge
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"  # 使用 5434 避免与主项目冲突
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: medical_knowledge_api
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/medical_knowledge
+      API_KEY: dev-key-123456
+      # 千问 Embedding 配置
+      EMBEDDING_PROVIDER: qwen
+      EMBEDDING_API_KEY: sk-61e2b328d6614408867ac61240423740
+      EMBEDDING_BASE_URL: https://dashscope.aliyuncs.com/api/v1/services/embeddings/text-embedding/text-embedding
+      EMBEDDING_MODEL: text-embedding-v3
+      DIMENSION: 1024
+    ports:
+      - "8200:8200"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # volumes:
+    #   - ./medical_knowledge_service:/app  # 注释掉，避免覆盖容器内代码
+
+volumes:
+  postgres_data:

@@ -94,7 +94,12 @@ class Settings(BaseSettings):
 
     # 阿里云 DashScope 配置（语音识别）
     DASHSCOPE_API_KEY: str = ""
-    
+
+    # 知识库服务配置（独立服务）
+    KNOWLEDGE_SERVICE_URL: str = "http://localhost:8200"  # 独立知识库服务地址
+    KNOWLEDGE_SERVICE_API_KEY: str = "change-me-knowledge-key"  # 默认启用鉴权，生产环境必须替换
+    KNOWLEDGE_SERVICE_TIMEOUT: int = 10  # 请求超时（秒）
+
     # Admin JWT 配置
     # 生成强随机密钥作为默认值（仅用于开发环境）
     # 生产环境必须通过环境变量设置
@@ -130,6 +135,8 @@ class Settings(BaseSettings):
                 self._default_admin_jwt_secret,
                 # 检查示例配置中的弱密钥
                 "CHANGE_THIS_IN_PRODUCTION_USE_STRONG_RANDOM_KEY",
+                "change-me-knowledge-key",
+                "dev-key-123456",
                 "",
             }
 
@@ -159,6 +166,13 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "SECURITY ERROR: ADMIN_TEST_MODE is enabled in production environment. "
                     "Set ADMIN_TEST_MODE=false in environment variables."
+                )
+
+            # 检查知识库服务 API Key（生产环境必须设置强密钥）
+            if not self.KNOWLEDGE_SERVICE_API_KEY or self.KNOWLEDGE_SERVICE_API_KEY in default_secrets:
+                raise ValueError(
+                    "SECURITY ERROR: Production environment requires a strong KNOWLEDGE_SERVICE_API_KEY. "
+                    "Set it via environment variable."
                 )
 
             # CORS 配置警告（可选，不阻止启动）

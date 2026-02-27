@@ -1,11 +1,12 @@
 """
 医学知识查询工具
 
-查询向量知识库，返回相关的疾病、症状、治疗方法等信息
-使用 PostgreSQL + pgvector 进行语义检索
+查询独立的知识库服务，返回相关的疾病、症状、治疗方法等信息
+通过 REST API 调用 medical-knowledge-service
 """
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -59,26 +60,6 @@ SPECIALTY_MAP = {
     "general": "全科"
 }
 
-# 知识库服务实例（延迟初始化）
-_knowledge_service = None
-
-
-def get_knowledge_service():
-    """获取知识库服务实例（单例）"""
-    global _knowledge_service
-    if _knowledge_service is None:
-        try:
-            from app.services.knowledge import KnowledgeService
-            _knowledge_service = KnowledgeService.get_instance()
-            logger.info("[KnowledgeTool] 知识库服务初始化成功")
-        except ImportError as e:
-            logger.warning(f"[KnowledgeTool] 无法导入知识库服务: {e}")
-            _knowledge_service = False
-        except Exception as e:
-            logger.error(f"[KnowledgeTool] 初始化知识库服务失败: {e}")
-            _knowledge_service = False
-    return _knowledge_service if _knowledge_service is not False else None
-
 
 def format_knowledge_result(result: Dict[str, Any]) -> str:
     """
@@ -90,8 +71,6 @@ def format_knowledge_result(result: Dict[str, Any]) -> str:
     Returns:
         格式化的文本
     """
-    import json
-
     content = result.get("content", "")
     metadata = result.get("metadata", {})
     score = result.get("score", 0)
@@ -106,8 +85,11 @@ def format_knowledge_result(result: Dict[str, Any]) -> str:
     # 提取元数据
     code = metadata.get("code", "")
     name = metadata.get("name", "")
-    keywords = metadata.get("keywords", [])
-    category = metadata.get("category", "")
+    keywords = metadata.get("keywords", "")
+    if isinstance(keywords, str):
+        keywords = keywords.split(",") if keywords else []
+    elif not isinstance(keywords, list):
+        keywords = []
 
     # 构建格式化输出
     lines = []
@@ -140,7 +122,7 @@ async def search_medical_knowledge(
     top_k: int = 5
 ) -> Dict[str, Any]:
     """
-    查询医学知识库（使用向量检索）
+    查询医学知识库（调用独立服务）
 
     Args:
         query: 查询内容
@@ -157,28 +139,14 @@ async def search_medical_knowledge(
             "source": "vector_knowledge_base"
         }
     """
-    # 获取知识库服务
-    kb_service = get_knowledge_service()
-
-    if kb_service is None:
-        # 知识库服务不可用，返回空结果
-        return {
-            "found": False,
-            "results": [],
-            "count": 0,
-            "query_used": query,
-            "specialty": specialty,
-            "source": "vector_knowledge_base",
-            "error": "知识库服务不可用"
-        }
-
     try:
-        # 确保知识库已初始化
-        if not kb_service._initialized:
-            await kb_service.initialize()
+        # 导入客户端
+        from app.services.knowledge.client import get_knowledge_client
 
-        # 执行向量检索
-        search_result = await kb_service.search(
+        client = get_knowledge_client()
+
+        # 调用独立服务
+        search_result = await client.search(
             query=query,
             specialty=specialty,
             top_k=top_k
@@ -195,7 +163,7 @@ async def search_medical_knowledge(
         return {
             "found": found,
             "results": formatted_results,
-            "raw_results": raw_results,  # 保留原始结果供进一步处理
+            "raw_results": raw_results,
             "count": len(formatted_results),
             "query_used": search_result.get("query_used", query),
             "specialty": specialty,
@@ -203,6 +171,17 @@ async def search_medical_knowledge(
             "source": "vector_knowledge_base"
         }
 
+    except ImportError:
+        logger.warning("[KnowledgeTool] 无法导入知识库客户端")
+        return {
+            "found": False,
+            "results": [],
+            "count": 0,
+            "query_used": query,
+            "specialty": specialty,
+            "source": "vector_knowledge_base",
+            "error": "知识库客户端不可用"
+        }
     except Exception as e:
         logger.error(f"[KnowledgeTool] 检索失败: {e}")
         return {
@@ -217,7 +196,7 @@ async def search_medical_knowledge(
 
 
 # ========== 后备方案：内置知识库 ==========
-# 当向量知识库不可用时使用
+# 当独立服务不可用时使用
 
 FALLBACK_DERMATOLOGY_KNOWLEDGE = {
     "湿疹": {
@@ -233,6 +212,13 @@ FALLBACK_DERMATOLOGY_KNOWLEDGE = {
         "diagnosis": "典型风团表现，详细询问病史寻找诱因。",
         "treatment": ["抗组胺药", "避免诱因", "急性发作时可用激素"],
         "warning_signs": ["喉头水肿", "呼吸困难", "腹痛", "低血压"]
+    },
+    "银屑病": {
+        "definition": "银屑病是一种慢性、复发性、炎症性皮肤病，典型表现为鳞屑性红斑。",
+        "symptoms": ["红色斑块", "银白色鳞屑", "Auspitz征", "境界清楚"],
+        "diagnosis": "典型皮疹表现，病理检查可确诊。",
+        "treatment": ["外用维生素D3衍生物", "光疗", "系统用药"],
+        "warning_signs": ["红皮病型", "关节症状"]
     }
 }
 
@@ -243,6 +229,23 @@ FALLBACK_CARDIOLOGY_KNOWLEDGE = {
         "diagnosis": "非同日三次测量血压≥140/90mmHg",
         "treatment": ["生活方式干预", "降压药物", "定期监测"],
         "warning_signs": ["剧烈头痛", "视力急剧下降", "胸痛", "呼吸困难"]
+    },
+    "心肌梗死": {
+        "definition": "心肌梗死是冠状动脉急性闭塞导致心肌坏死的心血管急症。",
+        "symptoms": ["胸骨后剧烈疼痛", "放射痛", "大汗", "濒死感"],
+        "diagnosis": "典型症状+心电图+心肌酶谱",
+        "treatment": ["立即就医", "抗血小板", "再灌注治疗"],
+        "warning_signs": ["心源性休克", "心律失常", "猝死"]
+    }
+}
+
+FALLBACK_RESPIRATORY_KNOWLEDGE = {
+    "哮喘": {
+        "definition": "支气管哮喘是一种气道慢性炎症性疾病，表现为可逆性气流受限。",
+        "symptoms": ["喘息", "呼气性呼吸困难", "胸闷", "咳嗽"],
+        "diagnosis": "典型症状+肺功能检查",
+        "treatment": ["吸入糖皮质激素", "支气管舒张剂", "避免诱因"],
+        "warning_signs": ["哮喘持续状态", "呼吸衰竭"]
     }
 }
 
@@ -252,7 +255,7 @@ async def search_medical_knowledge_fallback(
     specialty: str = "general"
 ) -> Dict[str, Any]:
     """
-    后备方案：使用内置知识库（当向量知识库不可用时）
+    后备方案：使用内置知识库（当独立服务不可用时）
 
     Args:
         query: 查询内容
@@ -269,8 +272,14 @@ async def search_medical_knowledge_fallback(
         knowledge_base = FALLBACK_DERMATOLOGY_KNOWLEDGE
     elif specialty == "cardiology":
         knowledge_base = FALLBACK_CARDIOLOGY_KNOWLEDGE
+    elif specialty == "respiratory":
+        knowledge_base = FALLBACK_RESPIRATORY_KNOWLEDGE
     else:
-        knowledge_base = {**FALLBACK_DERMATOLOGY_KNOWLEDGE, **FALLBACK_CARDIOLOGY_KNOWLEDGE}
+        knowledge_base = {
+            **FALLBACK_DERMATOLOGY_KNOWLEDGE,
+            **FALLBACK_CARDIOLOGY_KNOWLEDGE,
+            **FALLBACK_RESPIRATORY_KNOWLEDGE
+        }
 
     # 关键词匹配
     for disease_name, disease_info in knowledge_base.items():
@@ -290,5 +299,5 @@ async def search_medical_knowledge_fallback(
         "query_used": query,
         "specialty": specialty,
         "source": "fallback_knowledge_base",
-        "note": "使用内置知识库（向量知识库不可用）"
+        "note": "使用内置知识库（独立服务不可用）"
     }

@@ -43,7 +43,13 @@
             </dict>
         </dict>
     </dict>
-    
+
+    <!-- API 配置（可由 Build Settings 或环境变量覆盖） -->
+    <key>API_BASE_URL</key>
+    <string>$(API_BASE_URL)</string>
+    <key>WS_BASE_URL</key>
+    <string>$(WS_BASE_URL)</string>
+
     <!-- 相机权限（如需上传图片） -->
     <key>NSCameraUsageDescription</key>
     <string>用于拍照上传病历或症状图片</string>
