@@ -77,8 +77,23 @@ class Settings(BaseSettings):
     
     # LangGraph 配置
     USE_LANGGRAPH: bool = True  # 是否使用 LangGraph 替代 CrewAI
+    USE_AGENTIC_ENGINE: bool = False  # 是否启用主智能体+检索子智能体引擎
+    AGENTIC_ENABLED_SPECIALTIES: str = "general,cardiology,respiratory"  # agentic 灰度专科白名单
+    AGENTIC_MAX_CONTEXT_TURNS: int = 200  # 会话上下文最大轮次（默认覆盖完整问诊）
+    # Agentic 引擎内部配置
+    AGENTIC_MODEL_CONTEXT_MESSAGES: int = 14  # LLM 上下文保留的最近消息轮次
+    AGENTIC_MAX_QUERY_LENGTH: int = 200  # 检索查询最大字符数
+    AGENTIC_MAX_USER_INPUT_LENGTH: int = 5000  # 用户输入最大字符数（防止提示注入）
+    AGENTIC_STREAM_CHUNK_SIZE: int = 12  # SSE 流式响应分块大小
     USE_TRIAGE_ENGINE: bool = True  # 是否启用新导诊引擎灰度开关
     TRIAGE_ENABLED_SPECIALTIES: str = "general,cardiology,respiratory"  # 灰度专科白名单
+    AI_ENGINE_MODE: str = "legacy"  # legacy | remote_ai | hybrid_shadow
+    AI_SERVICE_URL: str = "http://home-health-ai:8300"  # 独立 AI 后端地址
+    AI_SERVICE_TOKEN: str = ""  # backend -> ai 服务鉴权 token
+    AI_SERVICE_TIMEOUT: int = 20  # 请求总超时（秒）
+    AI_SERVICE_CONNECT_TIMEOUT: int = 3  # 建连超时（秒）
+    AI_SERVICE_MAX_RETRIES: int = 1  # 可重试次数（仅 timeout/5xx/429）
+    AI_SERVICE_RETRY_BACKOFF_MS: int = 200  # 首次重试退避（毫秒）
     LLM_TIMEOUT: int = 30  # LLM 调用超时（秒）
     LLM_MAX_RETRIES: int = 1  # LLM 调用最大重试次数
     LLM_MAX_TOKENS: int = 1500  # 普通 LLM 最大 token
@@ -125,6 +140,19 @@ class Settings(BaseSettings):
 
     def _validate_security_settings(self):
         """验证安全配置，生产环境强制检查"""
+        valid_ai_modes = {"legacy", "remote_ai", "hybrid_shadow"}
+        if self.ai_engine_mode not in valid_ai_modes:
+            raise ValueError(
+                f"CONFIG ERROR: AI_ENGINE_MODE must be one of {sorted(valid_ai_modes)}, "
+                f"got: {self.AI_ENGINE_MODE!r}"
+            )
+
+        if self.ai_engine_mode in {"remote_ai", "hybrid_shadow"}:
+            if not self.AI_SERVICE_URL:
+                raise ValueError(
+                    "CONFIG ERROR: AI_SERVICE_URL is required when AI_ENGINE_MODE is remote_ai/hybrid_shadow"
+                )
+
         if not self.DEBUG:
             # 生产环境安全检查
             # 检查是否使用了默认生成的密钥或已知的弱密钥
@@ -177,6 +205,14 @@ class Settings(BaseSettings):
                     "Set it via environment variable."
                 )
 
+            # 检查 AI 服务 token（remote_ai / hybrid_shadow 需要）
+            if self.ai_engine_mode in {"remote_ai", "hybrid_shadow"}:
+                if not self.AI_SERVICE_TOKEN or self.AI_SERVICE_TOKEN in default_secrets:
+                    raise ValueError(
+                        "SECURITY ERROR: Production environment with remote AI requires a strong AI_SERVICE_TOKEN. "
+                        "Set it via environment variable."
+                    )
+
             # CORS 配置警告（可选，不阻止启动）
             if not self.CORS_ALLOWED_ORIGINS:
                 warnings.warn(
@@ -222,6 +258,18 @@ class Settings(BaseSettings):
         raw = self.TRIAGE_ENABLED_SPECIALTIES or ""
         items = [s.strip().lower() for s in raw.split(",") if s.strip()]
         return items or ["general", "cardiology", "respiratory"]
+
+    @property
+    def agentic_enabled_specialties_list(self) -> list[str]:
+        """agentic 引擎灰度专科白名单"""
+        raw = self.AGENTIC_ENABLED_SPECIALTIES or ""
+        items = [s.strip().lower() for s in raw.split(",") if s.strip()]
+        return items or ["general", "cardiology", "respiratory"]
+
+    @property
+    def ai_engine_mode(self) -> str:
+        """AI 引擎模式（统一小写）"""
+        return (self.AI_ENGINE_MODE or "legacy").strip().lower()
 
 
 # 全局设置实例（单例模式）

@@ -13,6 +13,7 @@ from typing import List, Optional, Dict, Any, AsyncGenerator, Union
 import uuid
 import json
 import asyncio
+import logging
 from ..database import get_db, SessionLocal
 from ..schemas.session import SessionCreate, SessionResponse, EnhancedSessionCreate
 from ..schemas.message import MessageCreate, MessageResponse, MessageListResponse, EnhancedMessageCreate
@@ -23,11 +24,19 @@ from ..models.doctor import Doctor
 from ..models.user import User
 from ..dependencies import get_current_user
 from ..services.agents.router import AgentRouter
+from ..services.ai_gateway import (
+    AIGatewayClient,
+    AIGatewayClientError,
+    build_chat_respond_request,
+    build_history_from_db_messages,
+)
 from ..config import get_settings
+from ..agentic import AgenticConsultOrchestrator
 from ..triage import TriageOrchestrator
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 
 def migrate_legacy_state(legacy_state: Optional[Dict]) -> Dict:
@@ -55,7 +64,22 @@ def migrate_legacy_state(legacy_state: Optional[Dict]) -> Dict:
         except:
             return {}
 
-    # 新版本需要保留的状态字段
+    # 新导诊引擎状态：直接保留，避免多轮对话关键槽位被误删
+    triage_markers = {
+        "specialty", "symptom_slots", "missing_slots", "turn_index",
+        "risk_level", "disposition", "_triage_audit",
+    }
+    if any(marker in legacy_state for marker in triage_markers):
+        return dict(legacy_state)
+
+    # agentic 引擎状态：直接保留（完整会话上下文）
+    agentic_markers = {
+        "agentic_engine", "agentic_last_plan", "agentic_last_evidence",
+    }
+    if any(marker in legacy_state for marker in agentic_markers):
+        return dict(legacy_state)
+
+    # 旧版本需要保留的状态字段
     # 🆕 新增：保留 messages（对话历史）和思考相关字段
     valid_fields = {
         "stage", "chief_complaint", "symptoms",
@@ -70,6 +94,250 @@ def migrate_legacy_state(legacy_state: Optional[Dict]) -> Dict:
     }
 
     return {k: v for k, v in legacy_state.items() if k in valid_fields}
+
+
+def _risk_to_disposition(risk_level: str) -> str:
+    if risk_level == "emergency":
+        return "er"
+    if risk_level == "high":
+        return "urgent_clinic"
+    if risk_level == "medium":
+        return "clinic"
+    return "home"
+
+
+def _trim_cache(cache: Dict[str, Any], max_entries: int = 30) -> Dict[str, Any]:
+    if len(cache) <= max_entries:
+        return cache
+    keep_keys = list(cache.keys())[-max_entries:]
+    return {k: cache[k] for k in keep_keys}
+
+
+async def _single_complete_stream(
+    response: AgentResponse,
+    session_id: str,
+    agent_type: str,
+) -> AsyncGenerator[str, None]:
+    meta_data = {"session_id": session_id, "agent_type": agent_type}
+    yield f"event: meta\ndata: {json.dumps(meta_data, ensure_ascii=False)}\n\n"
+    if response.message:
+        chunk_data = {"text": response.message}
+        yield f"event: chunk\ndata: {json.dumps(chunk_data, ensure_ascii=False)}\n\n"
+    yield f"event: complete\ndata: {json.dumps(response.model_dump(), ensure_ascii=False)}\n\n"
+
+
+async def _run_remote_ai_turn(
+    *,
+    session: SessionModel,
+    db: DBSession,
+    base_state: Dict[str, Any],
+    content: str,
+    attachments_data: List[Dict[str, Any]],
+    debug_mode: bool,
+    http_request: Request,
+    user_id: int,
+    agent_type: str,
+) -> AgentResponse:
+    request_id = http_request.headers.get("x-request-id") or f"req_{uuid.uuid4().hex}"
+    turn_index = int(base_state.get("turn_index", 0)) + 1
+    idempotency_key = f"{session.id}:{turn_index}:{request_id}"
+
+    # 幂等性缓存：防止同一请求重复调用 AI
+    # 注意：此处存在轻微竞态条件（读取-检查-写入非原子），
+    # 但可接受的权衡：极少数并发请求可能重复调用，远比引入分布式锁的复杂性更低
+    cache = base_state.get("remote_ai_idempotency_cache", {})
+    if isinstance(cache, dict):
+        cached = cache.get(idempotency_key)
+        if isinstance(cached, dict) and isinstance(cached.get("response"), dict):
+            try:
+                return AgentResponse.model_validate(cached["response"])
+            except Exception:
+                pass
+
+    history_rows = db.query(Message).filter(
+        Message.session_id == session.id
+    ).order_by(Message.created_at.asc()).all()
+    history = build_history_from_db_messages(history_rows, limit=20)
+
+    locale = (
+        http_request.headers.get("accept-language", "").split(",")[0].strip()
+        or "zh-CN"
+    )
+    timezone = http_request.headers.get("x-timezone")
+    channel = http_request.headers.get("x-client-channel", "web")
+    gateway_request = build_chat_respond_request(
+        request_id=request_id,
+        session_id=session.id,
+        turn_index=turn_index,
+        user_id=str(user_id),
+        agent_type=agent_type,
+        user_message=content,
+        history=history,
+        attachments=attachments_data,
+        locale=locale,
+        stream=False,
+        timezone=timezone,
+        channel=channel,
+        debug=debug_mode,
+    )
+
+    ai_client = AIGatewayClient()
+    ai_response = await ai_client.respond(gateway_request, transport_request_id=request_id)
+
+    message = (ai_response.assistant_message or "").strip()
+    if not message:
+        raise AIGatewayClientError(
+            code="AI_BAD_RESPONSE",
+            message="empty assistant_message from remote ai",
+            retryable=False,
+        )
+    risk_level = ai_response.risk_level or "low"
+    quick_options = (ai_response.quick_options or [])[:3]
+
+    if risk_level == "emergency":
+        stage, progress = "diagnosing", 100
+    elif risk_level == "high":
+        stage, progress = "diagnosing", 92
+    elif quick_options:
+        stage, progress = "collecting", min(80, 30 + turn_index * 8)
+    else:
+        stage, progress = "diagnosing", min(95, 60 + turn_index * 6)
+
+    state_messages = []
+    for row in history:
+        state_messages.append({
+            "type": "human" if row.role == "user" else "ai",
+            "content": row.content,
+        })
+    state_messages.append({"type": "ai", "content": message})
+
+    max_ctx = int(settings.AGENTIC_MAX_CONTEXT_TURNS or 0)
+    if max_ctx > 0 and len(state_messages) > max_ctx:
+        state_messages = state_messages[-max_ctx:]
+
+    next_state = dict(base_state)
+    next_state.update(
+        {
+            "session_id": session.id,
+            "user_id": user_id,
+            "agent_type": agent_type,
+            "agentic_engine": True,
+            "messages": state_messages,
+            "last_user_message": content,
+            "turn_index": turn_index,
+            "stage": stage,
+            "progress": progress,
+            "risk_level": risk_level,
+            "disposition": _risk_to_disposition(risk_level),
+            "quick_options": quick_options,
+            "current_response": message,
+            "remote_ai_request_id": ai_response.request_id,
+            "remote_ai_memory_patch": ai_response.memory_patch.model_dump(),
+            "remote_ai_tool_trace": [item.model_dump() for item in ai_response.tool_trace],
+            "remote_ai_metrics": ai_response.metrics.model_dump(),
+        }
+    )
+
+    if isinstance(cache, dict):
+        cache[idempotency_key] = {
+            "response": {},
+        }
+        cache = _trim_cache(cache)
+        next_state["remote_ai_idempotency_cache"] = cache
+
+    specialty_data = {
+        "agentic": {
+            "mode": "remote_ai",
+            "disposition": _risk_to_disposition(risk_level),
+            "request_id": ai_response.request_id,
+            "citations": [item.model_dump() for item in ai_response.citations],
+            "tool_trace": [item.model_dump() for item in ai_response.tool_trace],
+            "metrics": ai_response.metrics.model_dump(),
+            "error": ai_response.error.model_dump() if ai_response.error else None,
+            "degraded": ai_response.error is not None,
+        }
+    }
+
+    response = AgentResponse(
+        message=message,
+        stage=stage,
+        progress=progress,
+        quick_options=quick_options,
+        risk_level=risk_level,
+        specialty_data=specialty_data,
+        next_state=next_state,
+        current_thought=None,
+        reasoning_history=[],
+        show_thinking=False,
+    )
+
+    if isinstance(cache, dict):
+        cache[idempotency_key] = {"response": response.model_dump()}
+        next_state["remote_ai_idempotency_cache"] = _trim_cache(cache)
+        response.next_state = next_state
+
+    return response
+
+
+def _shadow_task_done_callback(task: asyncio.Task) -> None:
+    try:
+        task.result()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("hybrid_shadow task failed: %s", exc)
+
+
+async def _run_remote_ai_shadow_turn(
+    *,
+    session_id: str,
+    user_id: int,
+    agent_type: str,
+    content: str,
+    attachments_data: List[Dict[str, Any]],
+    debug_mode: bool,
+    request_headers: Dict[str, str],
+) -> None:
+    db_shadow = SessionLocal()
+    try:
+        session = db_shadow.query(SessionModel).filter(
+            SessionModel.id == session_id
+        ).first()
+        if not session:
+            return
+
+        base_state = migrate_legacy_state(session.agent_state)
+        # lightweight request-like accessor
+        class _ShadowRequest:
+            def __init__(self, headers: Dict[str, str]):
+                self.headers = headers
+
+        pseudo_request = _ShadowRequest(request_headers)
+
+        response = await _run_remote_ai_turn(
+            session=session,
+            db=db_shadow,
+            base_state=base_state,
+            content=content,
+            attachments_data=attachments_data,
+            debug_mode=debug_mode,
+            http_request=pseudo_request,  # type: ignore[arg-type]
+            user_id=user_id,
+            agent_type=agent_type,
+        )
+
+        merged_state = dict(session.agent_state or {})
+        merged_state["remote_ai_shadow_last"] = {
+            "message": response.message,
+            "risk_level": response.risk_level,
+            "quick_options": response.quick_options,
+            "specialty_data": response.specialty_data,
+            "captured_at_turn": int(base_state.get("turn_index", 0)) + 1,
+        }
+        session.agent_state = merged_state
+        db_shadow.commit()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("hybrid_shadow execution failed: %s", exc)
+    finally:
+        db_shadow.close()
 
 
 @router.post("", response_model=SessionResponse)
@@ -158,19 +426,8 @@ async def send_message(
     if not session:
         raise HTTPException(status_code=404, detail="会话不存在")
 
-    # 获取执行器（旧智能体 / 新导诊引擎）
+    # 获取会话智能体类型
     agent_type = (session.agent_type or "general").lower()
-    triage_enabled = (
-        settings.USE_TRIAGE_ENGINE
-        and agent_type in settings.triage_enabled_specialties_list
-    )
-    if triage_enabled:
-        agent = TriageOrchestrator()
-    else:
-        try:
-            agent = AgentRouter.get_agent(agent_type)
-        except ValueError:
-            raise HTTPException(status_code=500, detail=f"智能体类型错误: {agent_type}")
 
     # 解析请求参数
     content = request.content
@@ -210,6 +467,95 @@ async def send_message(
     want_stream = "text/event-stream" in accept_header
     debug_mode = http_request.query_params.get("debug", "false").lower() in {"1", "true", "yes", "on"}
 
+    if settings.ai_engine_mode == "hybrid_shadow":
+        shadow_headers = {k.lower(): v for k, v in http_request.headers.items()}
+        shadow_task = asyncio.create_task(
+            _run_remote_ai_shadow_turn(
+                session_id=session.id,
+                user_id=current_user.id,
+                agent_type=agent_type,
+                content=content,
+                attachments_data=attachments_data,
+                debug_mode=debug_mode,
+                request_headers=shadow_headers,
+            )
+        )
+        shadow_task.add_done_callback(_shadow_task_done_callback)
+
+    # 新架构：转发到独立 AI 后端
+    if settings.ai_engine_mode == "remote_ai":
+        try:
+            response = await _run_remote_ai_turn(
+                session=session,
+                db=db,
+                base_state=state,
+                content=content,
+                attachments_data=attachments_data,
+                debug_mode=debug_mode,
+                http_request=http_request,
+                user_id=current_user.id,
+                agent_type=agent_type,
+            )
+        except AIGatewayClientError as exc:
+            logger.warning("remote ai request failed: %s", exc)
+            raise HTTPException(
+                status_code=503,
+                detail=f"AI服务暂时不可用（{exc.code}），请稍后重试",
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("remote ai unknown error: %s", exc)
+            raise HTTPException(
+                status_code=503,
+                detail="AI服务暂时不可用，请稍后重试",
+            )
+
+        # 保存 AI 消息
+        ai_message = Message(
+            session_id=session_id,
+            sender=SenderType.ai,
+            content=response.message,
+            message_type="text",
+            structured_data=response.specialty_data,
+        )
+        db.add(ai_message)
+
+        # 更新会话状态
+        session.agent_state = response.next_state
+        session.last_message = response.message[:100] if response.message else ""
+        db.commit()
+        db.refresh(ai_message)
+
+        if want_stream:
+            return StreamingResponse(
+                _single_complete_stream(response, session.id, agent_type),
+                media_type="text/event-stream",
+                headers={
+                    "Cache-Control": "no-cache",
+                    "Connection": "keep-alive",
+                    "X-Accel-Buffering": "no",
+                },
+            )
+        return response.model_dump()
+
+    # 旧架构：旧智能体 / 导诊引擎 / agentic 引擎
+    agentic_enabled = (
+        settings.USE_AGENTIC_ENGINE
+        and agent_type in settings.agentic_enabled_specialties_list
+    )
+    triage_enabled = (
+        settings.USE_TRIAGE_ENGINE
+        and agent_type in settings.triage_enabled_specialties_list
+    )
+    if agentic_enabled:
+        agent = AgenticConsultOrchestrator()
+    elif triage_enabled:
+        agent = TriageOrchestrator()
+    else:
+        try:
+            agent = AgentRouter.get_agent(agent_type)
+        except ValueError:
+            raise HTTPException(status_code=500, detail=f"智能体类型错误: {agent_type}")
+
     if want_stream:
         return StreamingResponse(
             stream_agent_response(
@@ -232,13 +578,20 @@ async def send_message(
         )
     else:
         # 非流式响应
-        response: AgentResponse = await agent.run(
-            state=state,
-            user_input=content,
-            attachments=attachments_data,
-            action=action,
-            debug=debug_mode,
-        )
+        try:
+            response: AgentResponse = await agent.run(
+                state=state,
+                user_input=content,
+                attachments=attachments_data,
+                action=action,
+                debug=debug_mode,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("agent run failed: %s", exc)
+            raise HTTPException(
+                status_code=503,
+                detail="AI服务暂时不可用，请稍后重试",
+            )
         
         # 保存 AI 消息
         ai_message = Message(

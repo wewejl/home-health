@@ -178,7 +178,7 @@ class TestCreateSession:
         assert data["agent_type"] == "dermatology"
 
     def test_create_session_with_cardiology_department(self, test_client: TestClient, db_session: Session):
-        """测试心内科科室推断为 cardiology（但 cardiology 未实现）"""
+        """测试心内科科室推断为 cardiology"""
         # 创建心内科科室
         department = Department(
             id=3,
@@ -204,34 +204,20 @@ class TestCreateSession:
             "doctor_id": 3
         })
 
-        # BUG: 当通过 doctor 参数创建时，推断出的 cardiology 类型会返回 400
-        # 而不是像直接传 agent_type 那样回退到 general
-        # 这是一个代码不一致的 bug
-        assert response.status_code == 400
-        assert "不支持的智能体类型" in response.json()["detail"]
+        assert response.status_code == 200
+        assert response.json()["agent_type"] == "cardiology"
 
     def test_create_session_all_agent_types(self, test_client: TestClient, db_session: Session):
         """测试所有声明的智能体类型"""
         # VALID_AGENT_TYPES 声明的类型
         declared_types = ["general", "dermatology", "cardiology", "orthopedics"]
-        # _AGENTS 中实际注册的类型
-        registered_types = ["general", "dermatology"]
-
         for agent_type in declared_types:
             response = test_client.post("/sessions", json={
                 "agent_type": agent_type
             })
-            if agent_type in registered_types:
-                # 已注册的类型应该成功创建
-                assert response.status_code == 200, f"{agent_type} should succeed"
-                data = response.json()
-                assert data["agent_type"] == agent_type
-            else:
-                # BUG: cardiology 和 orthopedics 在 VALID_AGENT_TYPES 中声明但未在 _AGENTS 中注册
-                # Pydantic 验证通过，但 AgentRouterV2.is_valid_agent_type 返回 False
-                # 导致返回 400 错误
-                assert response.status_code == 400, f"{agent_type} should fail with 400"
-                assert "不支持的智能体类型" in response.json()["detail"]
+            assert response.status_code == 200, f"{agent_type} should succeed"
+            data = response.json()
+            assert data["agent_type"] == agent_type
 
 class TestGetSessions:
     """测试获取会话列表 (GET /sessions)"""
@@ -343,11 +329,12 @@ class TestSendMessage:
         db_session.add(session)
         db_session.commit()
 
-        # Mock AgentRouterV2.get_agent
+        # Mock AgentRouter.get_agent
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(return_value=create_mock_agent_response("你好，我是AI助手"))
 
-        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.settings.USE_TRIAGE_ENGINE', False), \
+             patch('app.routes.sessions.AgentRouter.get_agent', return_value=mock_agent):
             response = test_client.post(
                 "/sessions/test_msg_sess_1/messages",
                 json={"content": "你好"}
@@ -379,7 +366,8 @@ class TestSendMessage:
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(return_value=create_mock_agent_response("收到图片"))
 
-        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.settings.USE_TRIAGE_ENGINE', False), \
+             patch('app.routes.sessions.AgentRouter.get_agent', return_value=mock_agent):
             response = test_client.post(
                 "/sessions/test_msg_sess_2/messages",
                 json={
@@ -415,7 +403,8 @@ class TestSendMessage:
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(return_value=create_mock_agent_response("分析中..."))
 
-        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.settings.USE_TRIAGE_ENGINE', False), \
+             patch('app.routes.sessions.AgentRouter.get_agent', return_value=mock_agent):
             response = test_client.post(
                 "/sessions/test_msg_sess_3/messages",
                 json={
@@ -454,7 +443,8 @@ class TestSendMessage:
         mock_agent = MagicMock()
         mock_agent.run = mock_run_with_chunks
 
-        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.settings.USE_TRIAGE_ENGINE', False), \
+             patch('app.routes.sessions.AgentRouter.get_agent', return_value=mock_agent):
             response = test_client.post(
                 "/sessions/test_stream_sess_1/messages",
                 json={"content": "你好"},
@@ -483,7 +473,8 @@ class TestSendMessage:
         db_session.add(session)
         db_session.commit()
 
-        with patch('app.routes.sessions.AgentRouterV2.get_agent', side_effect=ValueError("Unknown agent")):
+        with patch('app.routes.sessions.settings.USE_TRIAGE_ENGINE', False), \
+             patch('app.routes.sessions.AgentRouter.get_agent', side_effect=ValueError("Unknown agent")):
             response = test_client.post(
                 "/sessions/test_invalid_agent/messages",
                 json={"content": "测试"}
@@ -512,7 +503,8 @@ class TestSendMessage:
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(return_value=create_mock_agent_response("已保存"))
 
-        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.settings.USE_TRIAGE_ENGINE', False), \
+             patch('app.routes.sessions.AgentRouter.get_agent', return_value=mock_agent):
             response = test_client.post(
                 "/sessions/test_save_sess/messages",
                 json={"content": "保存这条消息"}
@@ -843,6 +835,46 @@ class TestStateMigration:
         result = migrate_legacy_state("invalid json")
         assert result == {}
 
+    def test_migrate_legacy_state_preserves_triage_state(self, test_client: TestClient):
+        """测试 triage 状态字段不会在迁移时被误删"""
+        from app.routes.sessions import migrate_legacy_state
+
+        triage_state = {
+            "specialty": "general",
+            "symptom_slots": {"symptoms": ["咽痛"], "duration": "前天"},
+            "missing_slots": ["severity"],
+            "turn_index": 2,
+            "risk_level": "low",
+            "disposition": "home",
+            "_triage_audit": {"metrics_log": []},
+        }
+
+        result = migrate_legacy_state(triage_state)
+        assert result["specialty"] == "general"
+        assert result["symptom_slots"]["duration"] == "前天"
+        assert result["missing_slots"] == ["severity"]
+        assert result["turn_index"] == 2
+
+    def test_migrate_legacy_state_preserves_agentic_state(self, test_client: TestClient):
+        """测试 agentic 状态字段不会在迁移时被误删"""
+        from app.routes.sessions import migrate_legacy_state
+
+        agentic_state = {
+            "agentic_engine": True,
+            "messages": [
+                {"type": "human", "content": "我喉咙痛"},
+                {"type": "ai", "content": "先确认持续时间"},
+            ],
+            "turn_index": 2,
+            "agentic_last_plan": {"next_step": "ask"},
+            "agentic_last_evidence": {"count": 1},
+        }
+
+        result = migrate_legacy_state(agentic_state)
+        assert result["agentic_engine"] is True
+        assert len(result["messages"]) == 2
+        assert result["agentic_last_plan"]["next_step"] == "ask"
+
 
 class TestStreamingResponse:
     """测试流式响应功能"""
@@ -873,7 +905,8 @@ class TestStreamingResponse:
         mock_agent = MagicMock()
         mock_agent.run = mock_run
 
-        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.settings.USE_TRIAGE_ENGINE', False), \
+             patch('app.routes.sessions.AgentRouter.get_agent', return_value=mock_agent):
             response = test_client.post(
                 "/sessions/test_sse_sess/messages",
                 json={"content": "测试"},
@@ -905,7 +938,8 @@ class TestStreamingResponse:
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(return_value=create_mock_agent_response("非流式"))
 
-        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.settings.USE_TRIAGE_ENGINE', False), \
+             patch('app.routes.sessions.AgentRouter.get_agent', return_value=mock_agent):
             response = test_client.post(
                 "/sessions/test_no_stream_sess/messages",
                 json={"content": "测试"}
@@ -943,7 +977,8 @@ class TestSessionUpdate:
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(return_value=mock_response)
 
-        with patch('app.routes.sessions.AgentRouterV2.get_agent', return_value=mock_agent):
+        with patch('app.routes.sessions.settings.USE_TRIAGE_ENGINE', False), \
+             patch('app.routes.sessions.AgentRouter.get_agent', return_value=mock_agent):
             response = test_client.post(
                 "/sessions/test_update_sess/messages",
                 json={"content": "测试"}
@@ -963,39 +998,39 @@ class TestSessionUpdate:
 
 
 class TestAgentRouterIntegration:
-    """测试与 AgentRouterV2 的集成"""
+    """测试与 AgentRouter 的集成"""
 
     def test_agent_router_is_valid_agent_type(self, test_client: TestClient):
-        """测试 AgentRouterV2.is_valid_agent_type 方法"""
-        from app.services.agent_router_v2 import AgentRouterV2
+        """测试 AgentRouter.is_valid_agent_type 方法"""
+        from app.services.agents.router import AgentRouter
 
-        assert AgentRouterV2.is_valid_agent_type("general") is True
-        assert AgentRouterV2.is_valid_agent_type("dermatology") is True
-        assert AgentRouterV2.is_valid_agent_type("invalid") is False
+        assert AgentRouter.is_valid_agent_type("general") is True
+        assert AgentRouter.is_valid_agent_type("dermatology") is True
+        assert AgentRouter.is_valid_agent_type("invalid") is False
 
     def test_agent_router_infer_agent_type(self, test_client: TestClient):
-        """测试 AgentRouterV2.infer_agent_type 方法"""
-        from app.services.agent_router_v2 import AgentRouterV2
+        """测试 AgentRouter.infer_agent_type 方法"""
+        from app.services.agents.router import AgentRouter
 
-        assert AgentRouterV2.infer_agent_type("皮肤科") == "dermatology"
-        assert AgentRouterV2.infer_agent_type("心内科") == "cardiology"
-        assert AgentRouterV2.infer_agent_type("") == "general"
-        assert AgentRouterV2.infer_agent_type("未知科室") == "general"
+        assert AgentRouter.infer_agent_type("皮肤科") == "dermatology"
+        assert AgentRouter.infer_agent_type("心内科") == "cardiology"
+        assert AgentRouter.infer_agent_type("") == "general"
+        assert AgentRouter.infer_agent_type("未知科室") == "general"
 
     def test_agent_router_list_agents(self, test_client: TestClient):
-        """测试 AgentRouterV2.list_agents 方法"""
-        from app.services.agent_router_v2 import AgentRouterV2
+        """测试 AgentRouter.list_agents 方法"""
+        from app.services.agents.router import AgentRouter
 
-        agents = AgentRouterV2.list_agents()
+        agents = AgentRouter.list_agents()
         assert isinstance(agents, dict)
         assert len(agents) > 0
 
     def test_agent_router_get_capabilities(self, test_client: TestClient):
-        """测试 AgentRouterV2.get_capabilities 方法"""
-        from app.services.agent_router_v2 import AgentRouterV2
+        """测试 AgentRouter.get_capabilities 方法"""
+        from app.services.agents.router import AgentRouter
 
-        caps = AgentRouterV2.get_capabilities("general")
+        caps = AgentRouter.get_capabilities("general")
         assert isinstance(caps, dict)
 
-        caps_none = AgentRouterV2.get_capabilities("nonexistent")
+        caps_none = AgentRouter.get_capabilities("nonexistent")
         assert caps_none == {}

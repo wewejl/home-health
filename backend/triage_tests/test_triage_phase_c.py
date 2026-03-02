@@ -2,6 +2,7 @@ import pytest
 
 from backend.app.triage.nodes.evidence_gate import run as evidence_gate_run
 from backend.app.triage.nodes.compose_response import run as compose_response_run
+from backend.app.triage.nodes.differential import run as differential_run
 from backend.app.triage.nodes.focused_history import run as focused_history_run
 from backend.app.triage.orchestrator import TriageOrchestrator
 
@@ -39,6 +40,8 @@ async def test_focused_history_injects_pack_followup_questions():
     updated = await focused_history_run(state)
     assert updated["missing_slots"]
     assert len(updated["quick_options"]) > 0
+    assert updated["next_question"]
+    assert "持续" in updated["next_question"] or "多久" in updated["next_question"]
 
 
 @pytest.mark.asyncio
@@ -62,6 +65,49 @@ async def test_compose_response_contains_citations_and_stable_template():
     assert "风险等级" in text
     assert "依据要点" in text
     assert "[E1]" in text
+    assert "可能原因（按优先级）" in text
+    assert "现在可以做什么" in text
+
+
+@pytest.mark.asyncio
+async def test_compose_response_collecting_branch_uses_dynamic_question():
+    state = {
+        "specialty": "general",
+        "risk_level": "low",
+        "disposition": "home",
+        "differentials": [],
+        "missing_slots": ["duration", "severity"],
+        "next_question": "这个不适持续了多久？",
+        "quick_options": ["前天开始", "今天突然", "已经一周"],
+        "evidence_selected": [],
+        "node_trace": [],
+    }
+
+    updated = await compose_response_run(state)
+    text = updated["current_response"]
+    assert "下一步请先回答" in text
+    assert "可直接选" in text
+    assert "这个不适持续了多久" in text
+
+
+@pytest.mark.asyncio
+async def test_differential_builds_heuristics_when_no_evidence():
+    state = {
+        "specialty": "general",
+        "evidence_selected": [],
+        "evidence_candidates": [],
+        "symptom_slots": {
+            "symptoms": ["咽痛", "咳嗽", "鼻塞", "流涕"],
+            "triggers": ["装修", "不通风"],
+            "scene": ["晚上", "卧室"],
+        },
+        "last_user_message": "喉咙刀割样疼，晚上卧室更严重。",
+        "chief_complaint": "喉咙疼痛",
+        "node_trace": [],
+    }
+    updated = await differential_run(state)
+    names = [d["name"] for d in updated["differentials"]]
+    assert any("环境刺激" in n for n in names)
 
 
 @pytest.mark.asyncio

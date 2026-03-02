@@ -2,6 +2,7 @@ import pytest
 
 from backend.app.triage.knowledge.retriever import _rewrite_query
 from backend.app.triage.nodes.compose_response import run as compose_response_run
+from backend.app.triage.nodes.extract_normalize import run as extract_normalize_run
 from backend.app.triage.safety.risk import assess_risk
 from backend.app.triage.specialty import get_specialty_pack
 
@@ -55,3 +56,20 @@ async def test_compose_response_uses_specialty_warning_and_disposition_advice():
     assert "呼吸导诊" in text
     assert "建议呼吸科门诊评估" in text
     assert "静息气促" in text or "持续高热" in text or "痰中带血" in text
+
+
+@pytest.mark.asyncio
+async def test_extract_normalize_captures_environment_and_throat_synonyms():
+    state = {
+        "last_user_message": "喉咙非常疼，前天开始逐渐加重，晚上卧室更明显，家里不通风还刚装修过。",
+        "symptom_slots": {},
+        "node_trace": [],
+    }
+
+    updated = await extract_normalize_run(state)
+    slots = updated["symptom_slots"]
+    assert "咽痛" in slots.get("symptoms", [])
+    assert slots.get("duration") in {"前天", "最近", "今天", "昨天"} or slots.get("duration")
+    assert slots.get("severity") in {"high", "medium", "low"}
+    assert "装修" in slots.get("triggers", [])
+    assert "卧室" in slots.get("scene", [])
