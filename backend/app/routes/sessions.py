@@ -1,10 +1,7 @@
 """
 统一会话接口
 
-使用多智能体架构：
-- AgentRouter 路由器（agents/router.py）
-- ReActAgent 基类（agents/react_base.py）
-- AgentResponse 统一响应格式
+简化版本：直接转发到远程 AI 服务（home-health-ai）
 """
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -23,7 +20,6 @@ from ..models.message import Message, SenderType
 from ..models.doctor import Doctor
 from ..models.user import User
 from ..dependencies import get_current_user
-from ..services.agents.router import AgentRouter
 from ..services.ai_gateway import (
     AIGatewayClient,
     AIGatewayClientError,
@@ -31,69 +27,10 @@ from ..services.ai_gateway import (
     build_history_from_db_messages,
 )
 from ..config import get_settings
-from ..agentic import AgenticConsultOrchestrator
-from ..triage import TriageOrchestrator
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 settings = get_settings()
 logger = logging.getLogger(__name__)
-
-
-def migrate_legacy_state(legacy_state: Optional[Dict]) -> Dict:
-    """
-    将旧版本状态转换为新格式
-
-    旧版本字段 -> 新版本字段映射：
-    - questions_asked -> 删除（新版本不需要）
-    - session_id -> 删除（新版本从 session 对象获取）
-    - user_id -> 删除（新版本从 session 对象获取）
-    - stage -> 保留（新版本也使用）
-    - chief_complaint -> 保留（新版本也使用）
-    - symptoms -> 保留
-    - skin_location -> 保留
-    - diagnosis_card -> 保留
-    - advice_history -> 保留
-    """
-    if not legacy_state:
-        return {}
-
-    # 处理 JSON 字符串情况（旧版本可能存成字符串）
-    if isinstance(legacy_state, str):
-        try:
-            legacy_state = json.loads(legacy_state)
-        except:
-            return {}
-
-    # 新导诊引擎状态：直接保留，避免多轮对话关键槽位被误删
-    triage_markers = {
-        "specialty", "symptom_slots", "missing_slots", "turn_index",
-        "risk_level", "disposition", "_triage_audit",
-    }
-    if any(marker in legacy_state for marker in triage_markers):
-        return dict(legacy_state)
-
-    # agentic 引擎状态：直接保留（完整会话上下文）
-    agentic_markers = {
-        "agentic_engine", "agentic_last_plan", "agentic_last_evidence",
-    }
-    if any(marker in legacy_state for marker in agentic_markers):
-        return dict(legacy_state)
-
-    # 旧版本需要保留的状态字段
-    # 🆕 新增：保留 messages（对话历史）和思考相关字段
-    valid_fields = {
-        "stage", "chief_complaint", "symptoms",
-        "skin_location", "diagnosis_card", "advice_history",
-        "knowledge_refs", "reasoning_steps", "latest_analysis",
-        "latest_interpretation", "current_response",
-        # 🆕 新增：保留对话历史和思考追踪
-        "messages", "current_thought", "reasoning_history",
-        "show_thinking", "asked_questions",
-        # 保留其他可能需要的字段
-        "iteration_count", "agent_decision", "medical_context"
-    }
-
-    return {k: v for k, v in legacy_state.items() if k in valid_fields}
 
 
 def _risk_to_disposition(risk_level: str) -> str:
@@ -143,8 +80,6 @@ async def _run_remote_ai_turn(
     idempotency_key = f"{session.id}:{turn_index}:{request_id}"
 
     # 幂等性缓存：防止同一请求重复调用 AI
-    # 注意：此处存在轻微竞态条件（读取-检查-写入非原子），
-    # 但可接受的权衡：极少数并发请求可能重复调用，远比引入分布式锁的复杂性更低
     cache = base_state.get("remote_ai_idempotency_cache", {})
     if isinstance(cache, dict):
         cached = cache.get(idempotency_key)
@@ -279,67 +214,6 @@ async def _run_remote_ai_turn(
     return response
 
 
-def _shadow_task_done_callback(task: asyncio.Task) -> None:
-    try:
-        task.result()
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("hybrid_shadow task failed: %s", exc)
-
-
-async def _run_remote_ai_shadow_turn(
-    *,
-    session_id: str,
-    user_id: int,
-    agent_type: str,
-    content: str,
-    attachments_data: List[Dict[str, Any]],
-    debug_mode: bool,
-    request_headers: Dict[str, str],
-) -> None:
-    db_shadow = SessionLocal()
-    try:
-        session = db_shadow.query(SessionModel).filter(
-            SessionModel.id == session_id
-        ).first()
-        if not session:
-            return
-
-        base_state = migrate_legacy_state(session.agent_state)
-        # lightweight request-like accessor
-        class _ShadowRequest:
-            def __init__(self, headers: Dict[str, str]):
-                self.headers = headers
-
-        pseudo_request = _ShadowRequest(request_headers)
-
-        response = await _run_remote_ai_turn(
-            session=session,
-            db=db_shadow,
-            base_state=base_state,
-            content=content,
-            attachments_data=attachments_data,
-            debug_mode=debug_mode,
-            http_request=pseudo_request,  # type: ignore[arg-type]
-            user_id=user_id,
-            agent_type=agent_type,
-        )
-
-        merged_state = dict(session.agent_state or {})
-        merged_state["remote_ai_shadow_last"] = {
-            "message": response.message,
-            "risk_level": response.risk_level,
-            "quick_options": response.quick_options,
-            "specialty_data": response.specialty_data,
-            "captured_at_turn": int(base_state.get("turn_index", 0)) + 1,
-        }
-        session.agent_state = merged_state
-        db_shadow.commit()
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("hybrid_shadow execution failed: %s", exc)
-    finally:
-        db_shadow.close()
-
-
 @router.post("", response_model=SessionResponse)
 async def create_session(
     request: Union[SessionCreate, EnhancedSessionCreate],
@@ -349,7 +223,7 @@ async def create_session(
     """
     创建会话
 
-    使用科室智能体架构
+    简化版本：直接使用全科智能体
     """
     doctor = None
 
@@ -358,17 +232,8 @@ async def create_session(
         if not doctor:
             raise HTTPException(status_code=404, detail="医生不存在")
 
-    # 确定智能体类型
-    agent_type = getattr(request, 'agent_type', None)
-    if not agent_type and doctor:
-        dept_name = doctor.department.name if hasattr(doctor, 'department') and doctor.department else ""
-        agent_type = AgentRouter.infer_agent_type(dept_name)
-    if not agent_type:
-        agent_type = "general"
-
-    # 验证智能体类型
-    if not AgentRouter.is_valid_agent_type(agent_type):
-        raise HTTPException(status_code=400, detail=f"不支持的智能体类型: {agent_type}")
+    # 固定使用全科智能体
+    agent_type = "general"
 
     session_id = str(uuid.uuid4())
 
@@ -386,7 +251,7 @@ async def create_session(
     return SessionResponse(
         session_id=session.id,
         doctor_id=session.doctor_id,
-        doctor_name=doctor.name if doctor else "AI助手",
+        doctor_name=doctor.name if doctor else "AI全科医生",
         agent_type=session.agent_type,
         last_message=session.last_message,
         status=session.status,
@@ -410,7 +275,6 @@ async def send_message(
 
     测试模式：无需认证，可直接访问任何会话
     """
-    # 测试模式：不检查 user_id，直接根据 session_id 查询
     from ..dependencies import TEST_MODE
 
     if TEST_MODE:
@@ -426,14 +290,14 @@ async def send_message(
     if not session:
         raise HTTPException(status_code=404, detail="会话不存在")
 
-    # 获取会话智能体类型
+    # 获取会话智能体类型（固定为 general）
     agent_type = (session.agent_type or "general").lower()
 
     # 解析请求参数
     content = request.content
     attachments = getattr(request, 'attachments', None) or []
     action = getattr(request, 'action', 'conversation') or 'conversation'
-    
+
     # 转换 attachments
     attachments_data = []
     if attachments:
@@ -455,9 +319,8 @@ async def send_message(
     db.commit()
     db.refresh(user_message)
 
-    # 恢复智能体状态（使用状态转换函数兼容旧会话）
-    state = migrate_legacy_state(session.agent_state)
-    # 注入会话元数据（新导诊引擎需要；对旧智能体无副作用）
+    # 恢复智能体状态
+    state = session.agent_state or {}
     state["session_id"] = session.id
     state["user_id"] = current_user.id
     state["agent_type"] = agent_type
@@ -467,248 +330,59 @@ async def send_message(
     want_stream = "text/event-stream" in accept_header
     debug_mode = http_request.query_params.get("debug", "false").lower() in {"1", "true", "yes", "on"}
 
-    if settings.ai_engine_mode == "hybrid_shadow":
-        shadow_headers = {k.lower(): v for k, v in http_request.headers.items()}
-        shadow_task = asyncio.create_task(
-            _run_remote_ai_shadow_turn(
-                session_id=session.id,
-                user_id=current_user.id,
-                agent_type=agent_type,
-                content=content,
-                attachments_data=attachments_data,
-                debug_mode=debug_mode,
-                request_headers=shadow_headers,
-            )
+    # 转发到远程 AI 服务
+    try:
+        response = await _run_remote_ai_turn(
+            session=session,
+            db=db,
+            base_state=state,
+            content=content,
+            attachments_data=attachments_data,
+            debug_mode=debug_mode,
+            http_request=http_request,
+            user_id=current_user.id,
+            agent_type=agent_type,
         )
-        shadow_task.add_done_callback(_shadow_task_done_callback)
-
-    # 新架构：转发到独立 AI 后端
-    if settings.ai_engine_mode == "remote_ai":
-        try:
-            response = await _run_remote_ai_turn(
-                session=session,
-                db=db,
-                base_state=state,
-                content=content,
-                attachments_data=attachments_data,
-                debug_mode=debug_mode,
-                http_request=http_request,
-                user_id=current_user.id,
-                agent_type=agent_type,
-            )
-        except AIGatewayClientError as exc:
-            logger.warning("remote ai request failed: %s", exc)
-            raise HTTPException(
-                status_code=503,
-                detail=f"AI服务暂时不可用（{exc.code}），请稍后重试",
-            )
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("remote ai unknown error: %s", exc)
-            raise HTTPException(
-                status_code=503,
-                detail="AI服务暂时不可用，请稍后重试",
-            )
-
-        # 保存 AI 消息
-        ai_message = Message(
-            session_id=session_id,
-            sender=SenderType.ai,
-            content=response.message,
-            message_type="text",
-            structured_data=response.specialty_data,
+    except AIGatewayClientError as exc:
+        logger.warning("remote ai request failed: %s", exc)
+        raise HTTPException(
+            status_code=503,
+            detail=f"AI服务暂时不可用（{exc.code}），请稍后重试",
         )
-        db.add(ai_message)
+    except Exception as exc:
+        logger.exception("remote ai unknown error: %s", exc)
+        raise HTTPException(
+            status_code=503,
+            detail="AI服务暂时不可用，请稍后重试",
+        )
 
-        # 更新会话状态
-        session.agent_state = response.next_state
-        session.last_message = response.message[:100] if response.message else ""
-        db.commit()
-        db.refresh(ai_message)
-
-        if want_stream:
-            return StreamingResponse(
-                _single_complete_stream(response, session.id, agent_type),
-                media_type="text/event-stream",
-                headers={
-                    "Cache-Control": "no-cache",
-                    "Connection": "keep-alive",
-                    "X-Accel-Buffering": "no",
-                },
-            )
-        return response.model_dump()
-
-    # 旧架构：旧智能体 / 导诊引擎 / agentic 引擎
-    agentic_enabled = (
-        settings.USE_AGENTIC_ENGINE
-        and agent_type in settings.agentic_enabled_specialties_list
+    # 保存 AI 消息
+    ai_message = Message(
+        session_id=session_id,
+        sender=SenderType.ai,
+        content=response.message,
+        message_type="text",
+        structured_data=response.specialty_data,
     )
-    triage_enabled = (
-        settings.USE_TRIAGE_ENGINE
-        and agent_type in settings.triage_enabled_specialties_list
-    )
-    if agentic_enabled:
-        agent = AgenticConsultOrchestrator()
-    elif triage_enabled:
-        agent = TriageOrchestrator()
-    else:
-        try:
-            agent = AgentRouter.get_agent(agent_type)
-        except ValueError:
-            raise HTTPException(status_code=500, detail=f"智能体类型错误: {agent_type}")
+    db.add(ai_message)
+
+    # 更新会话状态
+    session.agent_state = response.next_state
+    session.last_message = response.message[:100] if response.message else ""
+    db.commit()
+    db.refresh(ai_message)
 
     if want_stream:
         return StreamingResponse(
-            stream_agent_response(
-                agent=agent,
-                state=state,
-                user_input=content,
-                attachments=attachments_data,
-                action=action,
-                session_id=session.id,
-                agent_type=agent_type,
-                db_session=db,
-                debug=debug_mode,
-            ),
+            _single_complete_stream(response, session.id, agent_type),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
-                "X-Accel-Buffering": "no"
-            }
+                "X-Accel-Buffering": "no",
+            },
         )
-    else:
-        # 非流式响应
-        try:
-            response: AgentResponse = await agent.run(
-                state=state,
-                user_input=content,
-                attachments=attachments_data,
-                action=action,
-                debug=debug_mode,
-            )
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("agent run failed: %s", exc)
-            raise HTTPException(
-                status_code=503,
-                detail="AI服务暂时不可用，请稍后重试",
-            )
-        
-        # 保存 AI 消息
-        ai_message = Message(
-            session_id=session_id,
-            sender=SenderType.ai,
-            content=response.message,
-            message_type="text",
-            structured_data=response.specialty_data
-        )
-        db.add(ai_message)
-        
-        # 更新会话状态
-        session.agent_state = response.next_state
-        session.last_message = response.message[:100] if response.message else ""
-        db.commit()
-        db.refresh(ai_message)
-        
-        # 返回 AgentResponse 格式
-        return response.model_dump()
-
-
-async def stream_agent_response(
-    agent,
-    state: Dict,
-    user_input: str,
-    attachments: list,
-    action: str,
-    session_id: str,
-    agent_type: str,
-    db_session: Optional[DBSession] = None,
-    debug: bool = False,
-) -> AsyncGenerator[str, None]:
-    """
-    生成 SSE 流式响应
-
-    返回 AgentResponse 统一格式
-    """
-    chunk_queue = asyncio.Queue()
-    final_response: Optional[AgentResponse] = None
-    error_occurred = None
-    
-    async def on_chunk(chunk: str):
-        await chunk_queue.put(("chunk", chunk))
-    
-    async def run_agent_task():
-        nonlocal final_response, error_occurred
-        try:
-            final_response = await agent.run(
-                state=state,
-                user_input=user_input,
-                attachments=attachments,
-                action=action,
-                on_chunk=on_chunk,
-                debug=debug,
-            )
-        except Exception as e:
-            error_occurred = str(e)
-            print(f"[stream_agent_response] Error: {e}")
-            import traceback
-            traceback.print_exc()
-        finally:
-            await chunk_queue.put(("done", None))
-    
-    agent_task = asyncio.create_task(run_agent_task())
-    
-    # 发送初始元数据
-    meta_data = {
-        "session_id": session_id,
-        "agent_type": agent_type
-    }
-    yield f"event: meta\ndata: {json.dumps(meta_data, ensure_ascii=False)}\n\n"
-    
-    # 流式输出 chunks
-    while True:
-        event_type, data = await chunk_queue.get()
-        if event_type == "done":
-            break
-        elif event_type == "chunk":
-            chunk_data = {"text": data}
-            yield f"event: chunk\ndata: {json.dumps(chunk_data, ensure_ascii=False)}\n\n"
-    
-    await agent_task
-    
-    if error_occurred:
-        error_data = {"error": error_occurred}
-        yield f"event: error\ndata: {json.dumps(error_data, ensure_ascii=False)}\n\n"
-    elif final_response:
-        # 保存到数据库
-        db_save = SessionLocal()
-        try:
-            session_obj = db_save.query(SessionModel).filter(
-                SessionModel.id == session_id
-            ).first()
-            
-            if session_obj:
-                # 保存 AI 消息
-                ai_message = Message(
-                    session_id=session_id,
-                    sender=SenderType.ai,
-                    content=final_response.message,
-                    message_type="text",
-                    structured_data=final_response.specialty_data
-                )
-                db_save.add(ai_message)
-                
-                # 更新会话状态
-                session_obj.agent_state = final_response.next_state
-                session_obj.last_message = final_response.message[:100] if final_response.message else ""
-                db_save.commit()
-        except Exception as e:
-            print(f"[stream_agent_response] 保存状态时出错: {e}")
-        finally:
-            db_save.close()
-        
-        # 发送完成事件 - AgentResponse 格式
-        complete_data = final_response.model_dump()
-        yield f"event: complete\ndata: {json.dumps(complete_data, ensure_ascii=False)}\n\n"
+    return response.model_dump()
 
 
 @router.get("", response_model=List[SessionResponse])
@@ -731,7 +405,7 @@ def get_sessions(
         result.append(SessionResponse(
             session_id=session.id,
             doctor_id=session.doctor_id,
-            doctor_name=doctor.name if doctor else "AI助手",
+            doctor_name=doctor.name if doctor else "AI全科医生",
             agent_type=session.agent_type or "general",
             last_message=session.last_message,
             status=session.status,
@@ -789,13 +463,26 @@ def get_session_messages(
 @router.get("/agents", response_model=Dict[str, Any])
 async def list_agents():
     """获取所有可用智能体及其能力"""
-    return AgentRouter.list_agents()
+    return {
+        "general": {
+            "display_name": "全科AI医生",
+            "description": "全科医疗咨询智能体",
+            "actions": ["conversation"],
+            "accepts_media": [],
+            "ui_components": ["TextBubble", "DiagnosisCard", "MedicationCard"],
+            "version": "1.0"
+        }
+    }
 
 
 @router.get("/agents/{agent_type}/capabilities", response_model=Dict[str, Any])
 async def get_agent_capabilities(agent_type: str):
     """获取指定智能体的能力配置"""
-    capabilities = AgentRouter.get_capabilities(agent_type)
-    if not capabilities:
-        raise HTTPException(status_code=404, detail=f"智能体不存在: {agent_type}")
-    return capabilities
+    return {
+        "display_name": "全科AI医生",
+        "description": "全科医疗咨询智能体",
+        "actions": ["conversation"],
+        "accepts_media": [],
+        "ui_components": ["TextBubble", "DiagnosisCard", "MedicationCard"],
+        "version": "1.0"
+    }
