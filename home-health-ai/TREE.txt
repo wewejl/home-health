@@ -1,0 +1,51 @@
+HIS 门诊智能助手系统 - 项目结构树
+his_outpatient/
+├── 📄 README.md                  # 项目说明
+├── 📄 PROJECT_STRUCTURE.md        # 结构详解
+├── 📄 PROJECT_SUMMARY.md          # 项目总结
+├── 📄 requirements.txt           # Python 依赖
+├── 📄 .env.example               # 环境变量模板
+├── 🚀 quick_start.sh            # 快速启动脚本
+├── 🐍 main.py                    # 主程序入口 ⭐
+│
+├── 📁 config/                    # 配置文件
+│   └── settings.py              # 应用配置 ⭐
+│
+├── 📁 db/                        # 数据库脚本
+│   └── schema.sql               # 数据库结构 ⭐
+│
+├── 📁 src/                       # 源代码目录
+│   ├── __init__.py
+│   │
+│   ├── 📁 agents/               # Agent 定义
+│   │   ├── __init__.py
+│   │   ├── diagnosis.py        # 诊断专家（待实现）
+│   │   ├── medication.py       # 用药专家（待实现）
+│   │   ├── guideline.py        # 指南专家（待实现）
+│   │   └── coordinator.py      # 协调器（待实现）
+│   │
+│   ├── 📁 db/                  # 数据库管理
+│   │   ├── __init__.py
+│   │   ├── session_manager.py  # 会话管理器 ⭐⭐⭐
+│   │   └── audit_logger.py     # 审计日志（待实现）
+│   │
+│   ├── 📁 api/                 # REST API（待开发）
+│   │   ├── __init__.py
+│   │   └── endpoints.py
+│   │
+│   ├── 📁 models/              # 数据模型
+│   │   ├── __init__.py
+│   │   └── schemas.py
+│   │
+│   └── 📁 utils/               # 工具函数
+│       ├── __init__.py
+│       └── tools.py
+│
+├── 📁 tests/                    # 测试文件
+│   └── test_session_manager.py # 会话管理器测试 ⭐
+│
+└── 📁 logs/                     # 日志文件（运行时生成）
+
+图例：
+⭐  重要文件
+⭐⭐⭐ 核心文件（必看）

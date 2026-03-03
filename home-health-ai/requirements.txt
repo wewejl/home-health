@@ -1,6 +1,16 @@
-fastapi==0.115.0
-uvicorn==0.31.1
-pydantic==2.11.9
-pydantic-core==2.33.2
-pydantic-settings==2.10.1
-httpx==0.28.1
+# 全科医生智能体 - 依赖包
+# Microsoft AutoGen 0.7.5
+# GitHub: https://github.com/microsoft/autogen
+# 安装: pip install -U "autogen-agentchat" "autogen-ext[openai]"
+autogen-agentchat>=0.4.0
+autogen-ext[openai]>=0.4.0
+openai>=1.0.0
+psycopg[binary]>=3.1.0
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+pyyaml>=6.0
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+loguru>=0.7.0

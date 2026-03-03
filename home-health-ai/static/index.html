@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>灵犀健康 - 全科医生智能体</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            max-height: 800px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 20px 24px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1::before {
+            content: "🏥";
+            font-size: 24px;
+        }
+
+        .status {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .message.user .bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+        }
+
+        .message.assistant .bubble {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 18px 18px 18px 4px;
+        }
+
+        .bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .message.assistant .thinking {
+            background: #fff9e6;
+            border-left: 3px solid #ffc107;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .message.assistant .content {
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .message.assistant .content h3 {
+            font-size: 16px;
+            margin: 12px 0 8px;
+            color: #333;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .message.user .message-time {
+            text-align: right;
+        }
+
+        .input-area {
+            padding: 16px 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        textarea {
+            flex: 1;
+            border: 2px solid #e9ecef;
+            border-radius: 16px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            min-height: 44px;
+            max-height: 120px;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .send-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .typing {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+        }
+
+        .typing span {
+            width: 8px;
+            height: 8px;
+            background: #adb5bd;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing span:nth-child(1) { animation-delay: -0.32s; }
+        .typing span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .welcome {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+
+        .welcome .avatar {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .welcome h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .welcome p {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .quick-btn {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 13px;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #dee2e6;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>灵犀健康</h1>
+            <div class="status">全科医生智能体 · AutoGen 0.7.5 驱动</div>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="welcome">
+                <div class="avatar">👨‍⚕️</div>
+                <h2>您好，我是全科医生智能助手</h2>
+                <p>我可以帮您解答健康问题、提供疾病和药物信息。<br>请告诉我您有什么不适或疑问。</p>
+                <div class="quick-questions">
+                    <button class="quick-btn" id="btn1">头痛头晕三天</button>
+                    <button class="quick-btn" id="btn2">喉咙疼痛</button>
+                    <button class="quick-btn" id="btn3">高血压注意事项</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea id="messageInput" placeholder="描述您的症状或健康问题..." rows="1"></textarea>
+                <button class="send-btn" id="sendBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9 4-2 20z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8300';
+
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatArea = document.getElementById('chatArea');
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+
+            let sessionId = 'session_' + Date.now();
+            let hisUserId = 'user_' + Date.now();
+            let isFirstMessage = true;
+            let fullContent = '';
+            let thinking = null;
+
+            // Auto-resize textarea
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+
+            // Enter to send
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                }
+            });
+
+            // Send button click
+            sendBtn.addEventListener('click', handleSendMessage);
+
+            // Quick buttons
+            document.getElementById('btn1').addEventListener('click', function() {
+                messageInput.value = '我最近感觉头痛头晕，已经三天了';
+                handleSendMessage();
+            });
+
+            document.getElementById('btn2').addEventListener('click', function() {
+                messageInput.value = '我为什么喉咙非常的疼呢？';
+                handleSendMessage();
+            });
+
+            document.getElementById('btn3').addEventListener('click', function() {
+                messageInput.value = '高血压患者平时需要注意什么？';
+                handleSendMessage();
+            });
+
+            function formatTime() {
+                return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+            }
+
+            function addMessage(role, content, thinkingText = null) {
+                if (isFirstMessage) {
+                    const welcome = chatArea.querySelector('.welcome');
+                    if (welcome) welcome.remove();
+                    isFirstMessage = false;
+                }
+
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'message ' + role;
+
+                let html = '';
+                if (thinkingText) {
+                    html += '<div class="thinking">💭 ' + thinkingText + '</div>';
+                }
+                html += '<div class="bubble">' + content + '</div>';
+                html += '<div class="message-time">' + formatTime() + '</div>';
+
+                msgDiv.innerHTML = html;
+                chatArea.appendChild(msgDiv);
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+
+            function addTypingIndicator() {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'message assistant typing-message';
+                msgDiv.id = 'typing';
+                msgDiv.innerHTML = '<div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>';
+                chatArea.appendChild(msgDiv);
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+
+            function removeTypingIndicator() {
+                const typing = document.getElementById('typing');
+                if (typing) typing.remove();
+            }
+
+            function parseMarkdown(text) {
+                return text
+                    .replace(/### (.+)/g, '<h3>$1</h3>')
+                    .replace(/## (.+)/g, '<h3>$1</h3>')
+                    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/- (.+)/g, '<li>$1</li>')
+                    .replace(/(\d+)\. (.+)/g, '<li>$2</li>')
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/\n/g, '<br>');
+            }
+
+            async function handleSendMessage() {
+                const message = messageInput.value.trim();
+                if (!message) return;
+
+                messageInput.disabled = true;
+                sendBtn.disabled = true;
+
+                addMessage('user', message);
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+
+                addTypingIndicator();
+
+                try {
+                    const response = await fetch(API_BASE_URL + '/chat/stream', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            session_id: sessionId,
+                            his_user_id: hisUserId,
+                            message: message
+                        })
+                    });
+
+                    if (!response.ok) throw new Error('Network error');
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    fullContent = '';
+                    thinking = null;
+                    let displayedContent = '';  // 追踪已显示的内容
+
+                    removeTypingIndicator();
+                    let lastMsg = null;
+                    let thinkingDiv = null;
+
+                    // SSE 解析状态
+                    let currentEvent = '';
+                    let currentData = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        const chunk = decoder.decode(value, { stream: true });
+                        const lines = chunk.split('\n');
+
+                        for (const line of lines) {
+                            // 解析 event: 格式
+                            if (line.startsWith('event: ')) {
+                                currentEvent = line.slice(7).trim();
+                                continue;
+                            }
+
+                            // 解析 data: 格式
+                            if (line.startsWith('data: ')) {
+                                currentData = line.slice(6);
+
+                                // 处理不同的事件类型
+                                try {
+                                    const data = JSON.parse(currentData);
+
+                                    // meta 事件
+                                    if (currentEvent === 'meta') {
+                                        console.log('Session:', data.session_id);
+                                    }
+
+                                    // chunk 事件（流式文本）
+                                    else if (currentEvent === 'chunk') {
+                                        removeTypingIndicator();
+
+                                        if (!lastMsg) {
+                                            lastMsg = document.createElement('div');
+                                            lastMsg.className = 'message assistant';
+                                            chatArea.appendChild(lastMsg);
+                                        }
+
+                                        // 累积内容
+                                        displayedContent += data.text;
+
+                                        // 提取深度思考
+                                        const thinkingMatch = displayedContent.match(/深度思考（(.+?)）/);
+                                        if (thinkingMatch && !thinkingDiv) {
+                                            thinking = thinkingMatch[1];
+                                            thinkingDiv = document.createElement('div');
+                                            thinkingDiv.className = 'thinking';
+                                            thinkingDiv.textContent = '💭 ' + thinking;
+                                            lastMsg.appendChild(thinkingDiv);
+                                        }
+
+                                        // 创建或更新消息气泡
+                                        let bubble = lastMsg.querySelector('.bubble');
+                                        if (!bubble) {
+                                            bubble = document.createElement('div');
+                                            bubble.className = 'bubble';
+                                            lastMsg.appendChild(bubble);
+                                        }
+
+                                        // 显示内容（去除思考标记）
+                                        let cleanContent = displayedContent.replace(/深度思考（.+?）\s*/, '');
+                                        bubble.innerHTML = parseMarkdown(cleanContent);
+
+                                        chatArea.scrollTop = chatArea.scrollHeight;
+                                    }
+
+                                    // complete 事件
+                                    else if (currentEvent === 'complete') {
+                                        console.log('Complete:', data);
+                                    }
+
+                                    // error 事件
+                                    else if (currentEvent === 'error') {
+                                        removeTypingIndicator();
+                                        addMessage('assistant', '❌ ' + (data.error || '服务暂时不可用'));
+                                    }
+
+                                    // 兼容旧格式（event_type）
+                                    else if (data.event_type === 'done' || data.type === 'done') {
+                                        break;
+                                    }
+
+                                    else if (data.event_type === 'error') {
+                                        removeTypingIndicator();
+                                        addMessage('assistant', '❌ ' + (data.error || '服务暂时不可用'));
+                                        break;
+                                    }
+
+                                    else if (data.event_type === 'Response' && data.data && data.data.chat_message) {
+                                        const content = data.data.chat_message.content;
+                                        fullContent = content;
+
+                                        const thinkingMatch = content.match(/深度思考（(.+?)）/);
+                                        if (thinkingMatch) {
+                                            thinking = thinkingMatch[1];
+                                        }
+
+                                        removeTypingIndicator();
+
+                                        if (!lastMsg) {
+                                            lastMsg = document.createElement('div');
+                                            lastMsg.className = 'message assistant';
+                                            chatArea.appendChild(lastMsg);
+                                        }
+
+                                        let displayContent = fullContent;
+                                        if (thinking) {
+                                            displayContent = '<div class="thinking">💭 ' + thinking + '</div>' +
+                                                displayContent.replace(/深度思考（.+?）/, '');
+                                        }
+
+                                        lastMsg.innerHTML = '<div class="bubble">' + parseMarkdown(displayContent) + '</div>';
+                                        chatArea.scrollTop = chatArea.scrollHeight;
+                                    }
+
+                                } catch (e) {
+                                    console.error('Parse error:', e, 'Raw data:', currentData);
+                                }
+
+                                currentEvent = '';
+                                currentData = '';
+                            }
+                        }
+                    }
+
+                } catch (error) {
+                    removeTypingIndicator();
+                    addMessage('assistant', '❌ 连接失败，请确保服务已启动');
+                    console.error('Error:', error);
+                } finally {
+                    messageInput.disabled = false;
+                    sendBtn.disabled = false;
+                    messageInput.focus();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
