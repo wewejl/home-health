@@ -1,3 +1,36 @@
+# 会话日志 - 2026-03-03
+
+## 本次会话完成的工作
+
+### 前端认证重构
+1. **整合认证状态到 Zustand**
+   - 移除 App.tsx 中的本地 useState 状态管理
+   - 统一使用 useAuthStore 管理认证状态
+   - 新增 initialize() 方法统一初始化逻辑
+   - 添加 isLoading 状态改善加载体验
+   - 完善注释和使用示例文档
+
+2. **代码变更**
+   - `frontend/src/App.tsx`: 从 ~190 行减少到 ~145 行
+   - `frontend/src/store/authStore.ts`: 功能完善，文档齐全
+
+3. **提交**
+   - commit: a01af8d8 refactor(frontend): 整合认证状态到 Zustand store
+
+## 新架构
+```
+useAuthStore (Zustand)  ← 唯一真相来源
+  ├── token
+  ├── user
+  ├── isAuthenticated
+  ├── isLoading
+  ├── setAuth()
+  ├── logout()
+  └── initialize()
+```
+
+---
+
 # 会话日志 - 2026-02-14
 
 ## 本次会话完成的工作
