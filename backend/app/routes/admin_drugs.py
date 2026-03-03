@@ -51,14 +51,28 @@ class DrugCreate(BaseModel):
     pinyin_abbr: Optional[str] = None
     aliases: Optional[str] = None
     common_brands: Optional[str] = None
-    
+
+    # 新增字段
+    barcode: Optional[str] = None
+    approval_number: Optional[str] = None
+    specification: Optional[str] = None
+    dosage_form: Optional[str] = None
+    package_unit: Optional[str] = None
+    prescription_type: Optional[str] = None
+    drug_nature: Optional[str] = None
+    ingredients: Optional[str] = None
+    appearance: Optional[str] = None
+    manufacturer: Optional[str] = None
+    origin: Optional[str] = None
+    standard_code: Optional[str] = None
+
     pregnancy_level: Optional[str] = None
     pregnancy_desc: Optional[str] = None
     lactation_level: Optional[str] = None
     lactation_desc: Optional[str] = None
     children_usable: bool = True
     children_desc: Optional[str] = None
-    
+
     indications: Optional[str] = None
     contraindications: Optional[str] = None
     dosage: Optional[str] = None
@@ -66,12 +80,12 @@ class DrugCreate(BaseModel):
     precautions: Optional[str] = None
     interactions: Optional[str] = None
     storage: Optional[str] = None
-    
+
     author_name: Optional[str] = None
     author_title: Optional[str] = None
     author_avatar: Optional[str] = None
     reviewer_info: Optional[str] = None
-    
+
     is_hot: bool = False
     sort_order: int = 0
     is_active: bool = True
@@ -84,14 +98,28 @@ class DrugUpdate(BaseModel):
     pinyin_abbr: Optional[str] = None
     aliases: Optional[str] = None
     common_brands: Optional[str] = None
-    
+
+    # 新增字段
+    barcode: Optional[str] = None
+    approval_number: Optional[str] = None
+    specification: Optional[str] = None
+    dosage_form: Optional[str] = None
+    package_unit: Optional[str] = None
+    prescription_type: Optional[str] = None
+    drug_nature: Optional[str] = None
+    ingredients: Optional[str] = None
+    appearance: Optional[str] = None
+    manufacturer: Optional[str] = None
+    origin: Optional[str] = None
+    standard_code: Optional[str] = None
+
     pregnancy_level: Optional[str] = None
     pregnancy_desc: Optional[str] = None
     lactation_level: Optional[str] = None
     lactation_desc: Optional[str] = None
     children_usable: Optional[bool] = None
     children_desc: Optional[str] = None
-    
+
     indications: Optional[str] = None
     contraindications: Optional[str] = None
     dosage: Optional[str] = None
@@ -99,12 +127,12 @@ class DrugUpdate(BaseModel):
     precautions: Optional[str] = None
     interactions: Optional[str] = None
     storage: Optional[str] = None
-    
+
     author_name: Optional[str] = None
     author_title: Optional[str] = None
     author_avatar: Optional[str] = None
     reviewer_info: Optional[str] = None
-    
+
     is_hot: Optional[bool] = None
     sort_order: Optional[int] = None
     is_active: Optional[bool] = None
@@ -115,6 +143,12 @@ class DrugListResponse(BaseModel):
     id: int
     name: str
     common_brands: Optional[str] = None
+    barcode: Optional[str] = None
+    specification: Optional[str] = None
+    dosage_form: Optional[str] = None
+    prescription_type: Optional[str] = None
+    drug_nature: Optional[str] = None
+    manufacturer: Optional[str] = None
     is_hot: bool
     is_active: bool
     sort_order: int
@@ -132,14 +166,28 @@ class DrugDetailResponse(BaseModel):
     pinyin_abbr: Optional[str] = None
     aliases: Optional[str] = None
     common_brands: Optional[str] = None
-    
+
+    # 新增字段
+    barcode: Optional[str] = None
+    approval_number: Optional[str] = None
+    specification: Optional[str] = None
+    dosage_form: Optional[str] = None
+    package_unit: Optional[str] = None
+    prescription_type: Optional[str] = None
+    drug_nature: Optional[str] = None
+    ingredients: Optional[str] = None
+    appearance: Optional[str] = None
+    manufacturer: Optional[str] = None
+    origin: Optional[str] = None
+    standard_code: Optional[str] = None
+
     pregnancy_level: Optional[str] = None
     pregnancy_desc: Optional[str] = None
     lactation_level: Optional[str] = None
     lactation_desc: Optional[str] = None
     children_usable: bool = True
     children_desc: Optional[str] = None
-    
+
     indications: Optional[str] = None
     contraindications: Optional[str] = None
     dosage: Optional[str] = None
@@ -147,12 +195,12 @@ class DrugDetailResponse(BaseModel):
     precautions: Optional[str] = None
     interactions: Optional[str] = None
     storage: Optional[str] = None
-    
+
     author_name: Optional[str] = None
     author_title: Optional[str] = None
     author_avatar: Optional[str] = None
     reviewer_info: Optional[str] = None
-    
+
     is_hot: bool = False
     sort_order: int = 0
     is_active: bool = True
@@ -287,40 +335,51 @@ def list_drugs(
 ):
     """获取药品列表（分页、筛选）"""
     query = db.query(Drug)
-    
+
     if q:
         search_term = f"%{q}%"
         query = query.filter(or_(
             Drug.name.ilike(search_term),
             Drug.pinyin.ilike(search_term),
-            Drug.aliases.ilike(search_term)
+            Drug.pinyin_abbr.ilike(search_term),
+            Drug.aliases.ilike(search_term),
+            Drug.common_brands.ilike(search_term),
+            Drug.barcode.ilike(search_term),
+            Drug.approval_number.ilike(search_term),
+            Drug.manufacturer.ilike(search_term)
         ))
-    
+
     if category_id:
         query = query.filter(Drug.categories.any(id=category_id))
-    
+
     if is_hot is not None:
         query = query.filter(Drug.is_hot == is_hot)
-    
+
     if is_active is not None:
         query = query.filter(Drug.is_active == is_active)
-    
+
     total = query.count()
     drugs = query.order_by(Drug.sort_order, Drug.id.desc()).offset(offset).limit(limit).all()
-    
+
     items = []
     for drug in drugs:
         items.append(DrugListResponse(
             id=drug.id,
             name=drug.name,
             common_brands=drug.common_brands,
+            barcode=drug.barcode,
+            specification=drug.specification,
+            dosage_form=drug.dosage_form,
+            prescription_type=drug.prescription_type,
+            drug_nature=drug.drug_nature,
+            manufacturer=drug.manufacturer,
             is_hot=drug.is_hot,
             is_active=drug.is_active,
             sort_order=drug.sort_order,
             view_count=drug.view_count,
             category_names=[c.name for c in drug.categories]
         ))
-    
+
     return PaginatedDrugsResponse(total=total, items=items)
 
 
@@ -334,7 +393,7 @@ def get_drug(
     drug = db.query(Drug).filter(Drug.id == drug_id).first()
     if not drug:
         raise HTTPException(status_code=404, detail="药品不存在")
-    
+
     return DrugDetailResponse(
         id=drug.id,
         name=drug.name,
@@ -342,12 +401,27 @@ def get_drug(
         pinyin_abbr=drug.pinyin_abbr,
         aliases=drug.aliases,
         common_brands=drug.common_brands,
+        # 新增字段
+        barcode=drug.barcode,
+        approval_number=drug.approval_number,
+        specification=drug.specification,
+        dosage_form=drug.dosage_form,
+        package_unit=drug.package_unit,
+        prescription_type=drug.prescription_type,
+        drug_nature=drug.drug_nature,
+        ingredients=drug.ingredients,
+        appearance=drug.appearance,
+        manufacturer=drug.manufacturer,
+        origin=drug.origin,
+        standard_code=drug.standard_code,
+        # 安全等级
         pregnancy_level=drug.pregnancy_level,
         pregnancy_desc=drug.pregnancy_desc,
         lactation_level=drug.lactation_level,
         lactation_desc=drug.lactation_desc,
         children_usable=drug.children_usable,
         children_desc=drug.children_desc,
+        # 内容模块
         indications=drug.indications,
         contraindications=drug.contraindications,
         dosage=drug.dosage,
@@ -355,10 +429,12 @@ def get_drug(
         precautions=drug.precautions,
         interactions=drug.interactions,
         storage=drug.storage,
+        # 作者与审核
         author_name=drug.author_name,
         author_title=drug.author_title,
         author_avatar=drug.author_avatar,
         reviewer_info=drug.reviewer_info,
+        # 状态
         is_hot=drug.is_hot,
         sort_order=drug.sort_order,
         is_active=drug.is_active,
@@ -376,17 +452,17 @@ def create_drug(
     """创建药品"""
     category_ids = data.category_ids
     drug_data = data.model_dump(exclude={"category_ids"})
-    
+
     drug = Drug(**drug_data)
-    
+
     if category_ids:
         categories = db.query(DrugCategory).filter(DrugCategory.id.in_(category_ids)).all()
         drug.categories = categories
-    
+
     db.add(drug)
     db.commit()
     db.refresh(drug)
-    
+
     return DrugDetailResponse(
         id=drug.id,
         name=drug.name,
@@ -394,12 +470,27 @@ def create_drug(
         pinyin_abbr=drug.pinyin_abbr,
         aliases=drug.aliases,
         common_brands=drug.common_brands,
+        # 新增字段
+        barcode=drug.barcode,
+        approval_number=drug.approval_number,
+        specification=drug.specification,
+        dosage_form=drug.dosage_form,
+        package_unit=drug.package_unit,
+        prescription_type=drug.prescription_type,
+        drug_nature=drug.drug_nature,
+        ingredients=drug.ingredients,
+        appearance=drug.appearance,
+        manufacturer=drug.manufacturer,
+        origin=drug.origin,
+        standard_code=drug.standard_code,
+        # 安全等级
         pregnancy_level=drug.pregnancy_level,
         pregnancy_desc=drug.pregnancy_desc,
         lactation_level=drug.lactation_level,
         lactation_desc=drug.lactation_desc,
         children_usable=drug.children_usable,
         children_desc=drug.children_desc,
+        # 内容模块
         indications=drug.indications,
         contraindications=drug.contraindications,
         dosage=drug.dosage,
@@ -407,10 +498,12 @@ def create_drug(
         precautions=drug.precautions,
         interactions=drug.interactions,
         storage=drug.storage,
+        # 作者与审核
         author_name=drug.author_name,
         author_title=drug.author_title,
         author_avatar=drug.author_avatar,
         reviewer_info=drug.reviewer_info,
+        # 状态
         is_hot=drug.is_hot,
         sort_order=drug.sort_order,
         is_active=drug.is_active,
@@ -430,20 +523,20 @@ def update_drug(
     drug = db.query(Drug).filter(Drug.id == drug_id).first()
     if not drug:
         raise HTTPException(status_code=404, detail="药品不存在")
-    
+
     update_data = data.model_dump(exclude_unset=True)
     category_ids = update_data.pop("category_ids", None)
-    
+
     for key, value in update_data.items():
         setattr(drug, key, value)
-    
+
     if category_ids is not None:
         categories = db.query(DrugCategory).filter(DrugCategory.id.in_(category_ids)).all()
         drug.categories = categories
-    
+
     db.commit()
     db.refresh(drug)
-    
+
     return DrugDetailResponse(
         id=drug.id,
         name=drug.name,
@@ -451,12 +544,27 @@ def update_drug(
         pinyin_abbr=drug.pinyin_abbr,
         aliases=drug.aliases,
         common_brands=drug.common_brands,
+        # 新增字段
+        barcode=drug.barcode,
+        approval_number=drug.approval_number,
+        specification=drug.specification,
+        dosage_form=drug.dosage_form,
+        package_unit=drug.package_unit,
+        prescription_type=drug.prescription_type,
+        drug_nature=drug.drug_nature,
+        ingredients=drug.ingredients,
+        appearance=drug.appearance,
+        manufacturer=drug.manufacturer,
+        origin=drug.origin,
+        standard_code=drug.standard_code,
+        # 安全等级
         pregnancy_level=drug.pregnancy_level,
         pregnancy_desc=drug.pregnancy_desc,
         lactation_level=drug.lactation_level,
         lactation_desc=drug.lactation_desc,
         children_usable=drug.children_usable,
         children_desc=drug.children_desc,
+        # 内容模块
         indications=drug.indications,
         contraindications=drug.contraindications,
         dosage=drug.dosage,
@@ -464,10 +572,12 @@ def update_drug(
         precautions=drug.precautions,
         interactions=drug.interactions,
         storage=drug.storage,
+        # 作者与审核
         author_name=drug.author_name,
         author_title=drug.author_title,
         author_avatar=drug.author_avatar,
         reviewer_info=drug.reviewer_info,
+        # 状态
         is_hot=drug.is_hot,
         sort_order=drug.sort_order,
         is_active=drug.is_active,

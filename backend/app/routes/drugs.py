@@ -15,6 +15,11 @@ class DrugListItem(BaseModel):
     id: int
     name: str
     common_brands: Optional[str] = None
+    barcode: Optional[str] = None
+    specification: Optional[str] = None
+    dosage_form: Optional[str] = None
+    prescription_type: Optional[str] = None
+    drug_nature: Optional[str] = None
     is_hot: bool = False
     view_count: int = 0
 
@@ -38,14 +43,30 @@ class DrugDetailResponse(BaseModel):
     name: str
     common_brands: Optional[str] = None
     aliases: Optional[str] = None
-    
+
+    # 新增字段
+    barcode: Optional[str] = None
+    approval_number: Optional[str] = None
+    specification: Optional[str] = None
+    dosage_form: Optional[str] = None
+    package_unit: Optional[str] = None
+    prescription_type: Optional[str] = None
+    drug_nature: Optional[str] = None
+    ingredients: Optional[str] = None
+    appearance: Optional[str] = None
+    manufacturer: Optional[str] = None
+    origin: Optional[str] = None
+    standard_code: Optional[str] = None
+
+    # 安全等级
     pregnancy_level: Optional[str] = None
     pregnancy_desc: Optional[str] = None
     lactation_level: Optional[str] = None
     lactation_desc: Optional[str] = None
     children_usable: bool = True
     children_desc: Optional[str] = None
-    
+
+    # 内容模块
     indications: Optional[str] = None
     contraindications: Optional[str] = None
     dosage: Optional[str] = None
@@ -53,12 +74,14 @@ class DrugDetailResponse(BaseModel):
     precautions: Optional[str] = None
     interactions: Optional[str] = None
     storage: Optional[str] = None
-    
+
+    # 作者与审核
     author_name: Optional[str] = None
     author_title: Optional[str] = None
     author_avatar: Optional[str] = None
     reviewer_info: Optional[str] = None
-    
+
+    # 状态
     is_hot: bool = False
     view_count: int = 0
     updated_at: Optional[str] = None
@@ -136,7 +159,10 @@ def search_drugs(
             Drug.pinyin.ilike(search_term),
             Drug.pinyin_abbr.ilike(search_term),
             Drug.aliases.ilike(search_term),
-            Drug.common_brands.ilike(search_term)
+            Drug.common_brands.ilike(search_term),
+            Drug.barcode.ilike(search_term),
+            Drug.approval_number.ilike(search_term),
+            Drug.manufacturer.ilike(search_term)
         )
     )
     
@@ -169,12 +195,27 @@ def get_drug_detail(drug_id: int, db: Session = Depends(get_db)):
         name=drug.name,
         common_brands=drug.common_brands,
         aliases=drug.aliases,
+        # 新增字段
+        barcode=drug.barcode,
+        approval_number=drug.approval_number,
+        specification=drug.specification,
+        dosage_form=drug.dosage_form,
+        package_unit=drug.package_unit,
+        prescription_type=drug.prescription_type,
+        drug_nature=drug.drug_nature,
+        ingredients=drug.ingredients,
+        appearance=drug.appearance,
+        manufacturer=drug.manufacturer,
+        origin=drug.origin,
+        standard_code=drug.standard_code,
+        # 安全等级
         pregnancy_level=drug.pregnancy_level,
         pregnancy_desc=drug.pregnancy_desc,
         lactation_level=drug.lactation_level,
         lactation_desc=drug.lactation_desc,
         children_usable=drug.children_usable,
         children_desc=drug.children_desc,
+        # 内容模块
         indications=drug.indications,
         contraindications=drug.contraindications,
         dosage=drug.dosage,
@@ -182,10 +223,12 @@ def get_drug_detail(drug_id: int, db: Session = Depends(get_db)):
         precautions=drug.precautions,
         interactions=drug.interactions,
         storage=drug.storage,
+        # 作者与审核
         author_name=drug.author_name,
         author_title=drug.author_title,
         author_avatar=drug.author_avatar,
         reviewer_info=drug.reviewer_info,
+        # 状态
         is_hot=drug.is_hot,
         view_count=drug.view_count,
         updated_at=drug.updated_at.isoformat() if drug.updated_at else None

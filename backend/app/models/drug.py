@@ -44,7 +44,21 @@ class Drug(Base):
     pinyin_abbr = Column(String(50), nullable=True, index=True)  # 拼音首字母
     aliases = Column(Text, nullable=True)  # 别名，逗号分隔
     common_brands = Column(Text, nullable=True)  # 常见商品名，如"赛乐欣、希舒美、齐迈星"
-    
+
+    # === 新增：Excel 导入字段 ===
+    barcode = Column(String(50), nullable=True, index=True)  # 商品条码
+    approval_number = Column(String(50), nullable=True, index=True)  # 批准文号，如"国药准字H13023351"
+    specification = Column(String(100), nullable=True)  # 规格，如"10mg*12片*2板"
+    dosage_form = Column(String(50), nullable=True, index=True)  # 剂型，如"片剂"、"胶囊剂"
+    package_unit = Column(String(20), nullable=True)  # 包装单位，如"盒"、"袋"、"支"
+    prescription_type = Column(String(20), nullable=True, index=True)  # 处方类型：处方药/非处方药
+    drug_nature = Column(String(20), nullable=True, index=True)  # 性质分类：西药/中成药
+    ingredients = Column(Text, nullable=True)  # 主要成分
+    appearance = Column(Text, nullable=True)  # 性状
+    manufacturer = Column(String(200), nullable=True, index=True)  # 生产厂家
+    origin = Column(String(100), nullable=True)  # 产地
+    standard_code = Column(String(50), nullable=True)  # 本位码
+
     # 安全等级
     pregnancy_level = Column(String(20), nullable=True)  # 孕期安全等级：A/B/C/D/X
     pregnancy_desc = Column(String(100), nullable=True)  # 孕期说明，如"妊娠分级 B"
@@ -52,7 +66,7 @@ class Drug(Base):
     lactation_desc = Column(String(100), nullable=True)  # 哺乳说明，如"哺乳分级 L2"
     children_usable = Column(Boolean, default=True)  # 儿童是否可用
     children_desc = Column(String(100), nullable=True)  # 儿童用药说明
-    
+
     # 内容模块 (Markdown)
     indications = Column(Text, nullable=True)  # 功效作用/适应症
     contraindications = Column(Text, nullable=True)  # 用药禁忌
@@ -61,21 +75,21 @@ class Drug(Base):
     precautions = Column(Text, nullable=True)  # 注意事项
     interactions = Column(Text, nullable=True)  # 药物相互作用
     storage = Column(Text, nullable=True)  # 贮藏方法
-    
+
     # 作者与审核
     author_name = Column(String(50), nullable=True)
     author_title = Column(String(100), nullable=True)
     author_avatar = Column(String(255), nullable=True)
     reviewer_info = Column(String(200), nullable=True)
-    
+
     # 状态与排序
     is_hot = Column(Boolean, default=False)
     sort_order = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
     view_count = Column(Integer, default=0)
-    
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    
+
     # 关系
     categories = relationship("DrugCategory", secondary=drug_category_association, back_populates="drugs")
