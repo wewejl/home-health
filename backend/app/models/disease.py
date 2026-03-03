@@ -30,6 +30,13 @@ class Disease(Base):
     prevention = Column(Text, nullable=True)  # 预防
     care = Column(Text, nullable=True)  # 日常护理
 
+    # 疾病数据库扩展字段
+    complications = Column(Text, nullable=True)  # 并发症
+    body_parts = Column(Text, nullable=True)  # 发病部位（多个部位用空格分隔）
+    related_symptoms = Column(Text, nullable=True)  # 相关症状
+    exam_items = Column(Text, nullable=True)  # 检查项目
+    related_diseases = Column(Text, nullable=True)  # 相关疾病（多个疾病用空格/逗号分隔）
+
     # MedLive 格式内容 (JSONB) - 结构化区块
     sections = Column(JSON, nullable=True)  # [{"id": "overview", "title": "疾病简介", ...}]
 

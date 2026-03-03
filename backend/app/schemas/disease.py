@@ -47,6 +47,11 @@ class DiseaseBase(BaseModel):
     treatment: Optional[str] = None
     prevention: Optional[str] = None
     care: Optional[str] = None
+    complications: Optional[str] = None
+    body_parts: Optional[str] = None
+    related_symptoms: Optional[str] = None
+    exam_items: Optional[str] = None
+    related_diseases: Optional[str] = None
     author_name: Optional[str] = None
     author_title: Optional[str] = None
     author_avatar: Optional[str] = None
@@ -73,6 +78,11 @@ class DiseaseUpdate(BaseModel):
     treatment: Optional[str] = None
     prevention: Optional[str] = None
     care: Optional[str] = None
+    complications: Optional[str] = None
+    body_parts: Optional[str] = None
+    related_symptoms: Optional[str] = None
+    exam_items: Optional[str] = None
+    related_diseases: Optional[str] = None
     author_name: Optional[str] = None
     author_title: Optional[str] = None
     author_avatar: Optional[str] = None
@@ -111,6 +121,11 @@ class DiseaseDetailResponse(BaseModel):
     treatment: Optional[str] = None
     prevention: Optional[str] = None
     care: Optional[str] = None
+    complications: Optional[str] = None
+    body_parts: Optional[str] = None
+    related_symptoms: Optional[str] = None
+    exam_items: Optional[str] = None
+    related_diseases: Optional[str] = None
     author_name: Optional[str] = None
     author_title: Optional[str] = None
     author_avatar: Optional[str] = None
@@ -139,6 +154,11 @@ class DiseaseAdminResponse(BaseModel):
     treatment: Optional[str] = None
     prevention: Optional[str] = None
     care: Optional[str] = None
+    complications: Optional[str] = None
+    body_parts: Optional[str] = None
+    related_symptoms: Optional[str] = None
+    exam_items: Optional[str] = None
+    related_diseases: Optional[str] = None
     author_name: Optional[str] = None
     author_title: Optional[str] = None
     author_avatar: Optional[str] = None
