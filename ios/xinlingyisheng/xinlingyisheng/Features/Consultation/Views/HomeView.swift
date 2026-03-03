@@ -83,7 +83,7 @@ struct HomeView: View {
             .tag(0)
 
             CompatibleNavigationStack(path: $tab1Path) {
-                AskDoctorView()
+                AIConsultationEntryView()
             }
             .tabItem {
                 Image(systemName: selectedTab == 1 ? "message.badge.fill" : "message.badge")
@@ -205,13 +205,9 @@ struct HealingHomeContentView: View {
                                 )
                                 .fluidFadeIn(delay: 0.2)
 
-                                // 科室导航 - 传递布局参数
-                                HealingDepartmentSection(layout: layout)
-                                    .fluidFadeIn(delay: 0.3)
-
                                 // 健康资讯
                                 HealingHealthTips(layout: layout)
-                                    .fluidFadeIn(delay: 0.4)
+                                    .fluidFadeIn(delay: 0.3)
                             }
                             .padding(.horizontal, layout.horizontalPadding)
                             .padding(.bottom, ScaleFactor.padding(140))
@@ -631,167 +627,83 @@ struct QuickActionCard: View {
     }
 }
 
-// MARK: - 科室导航
-struct HealingDepartmentSection: View {
-    let layout: AdaptiveLayout
-    @State private var departments: [DepartmentModel] = []
-    @State private var isLoading = false
-    @State private var selectedDepartment: DepartmentModel?
-
-    let columns = [
-        GridItem(.flexible()),
-        GridItem(.flexible()),
-        GridItem(.flexible()),
-        GridItem(.flexible())
-    ]
+// MARK: - AI 问诊入口视图（简化版，直接进入全科问诊）
+struct AIConsultationEntryView: View {
+    @State private var showConsultation = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: layout.cardSpacing + 2) {
-            // 标题
-            HStack {
-                Text("科室导航")
-                    .font(.system(size: layout.bodyFontSize, weight: .bold))
-                    .foregroundColor(HealingColors.textPrimary)
+        ZStack {
+            HealingColors.background
+                .ignoresSafeArea()
+
+            VStack(spacing: 24) {
+                Spacer()
+
+                // AI 医生图标
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [HealingColors.softSage.opacity(0.3), HealingColors.deepSage.opacity(0.2)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 120, height: 120)
+
+                    Image(systemName: "heart.text.square.fill")
+                        .font(.system(size: 50))
+                        .foregroundColor(HealingColors.forestMist)
+                }
+                .shadow(color: HealingColors.forestMist.opacity(0.3), radius: 20)
+
+                VStack(spacing: 12) {
+                    Text("AI 全科医生")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(HealingColors.textPrimary)
+
+                    Text("24小时在线，随时为您服务")
+                        .font(.system(size: 16))
+                        .foregroundColor(HealingColors.textSecondary)
+                }
 
                 Spacer()
 
-                Button(action: {}) {
-                    HStack(spacing: 4) {
-                        Text("全部")
-                            .font(.system(size: UnifiedFont.caption1, weight: .medium))
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: UnifiedFont.caption1, weight: .semibold))
+                // 开始问诊按钮
+                Button(action: { showConsultation = true }) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "message.fill")
+                        Text("开始问诊")
+                            .font(.system(size: 18, weight: .semibold))
                     }
-                    .foregroundColor(HealingColors.forestMist)
-                }
-            }
-
-            // 科室网格
-            if isLoading {
-                ProgressView()
-                    .tint(HealingColors.forestMist)
-                    .frame(height: 120)
-            } else if departments.isEmpty {
-                // 空状态占位
-                LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(placeholderDepartments.prefix(8), id: \.self) { name in
-                        DepartmentGridItem(name: name, icon: placeholderIcon(for: name), layout: layout)
-                    }
-                }
-            } else {
-                LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(displayDepartments) { dept in
-                        DepartmentGridItem(
-                            name: dept.name,
-                            icon: SFSymbolResolver.resolve(dept.icon),
-                            layout: layout
-                        )
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            selectedDepartment = dept
-                        }
-                    }
-
-                    DepartmentGridItem(name: "更多", icon: "ellipsis", layout: layout)
-                }
-            }
-        }
-        .navigationDestinationCompat(item: $selectedDepartment) { dept in
-            DepartmentDetailView(departmentName: dept.name, departmentId: dept.id)
-        }
-        .onAppear {
-            loadDepartments()
-        }
-    }
-
-    private var displayDepartments: [DepartmentModel] {
-        Array(departments.prefix(7))
-    }
-
-    private var placeholderDepartments: [String] {
-        ["内科", "外科", "儿科", "妇科", "皮肤科", "骨科", "眼科", "耳鼻喉"]
-    }
-
-    private func placeholderIcon(for name: String) -> String {
-        switch name {
-        case "内科": return "lungs.fill"
-        case "外科": return "cross.case.fill"
-        case "儿科": return "figure.child"
-        case "妇科": return "figure.2.and.child.holdinghands"
-        case "皮肤科": return "face.smiling"
-        case "骨科": return "figure.walk"
-        case "眼科": return "eye.fill"
-        case "耳鼻喉": return "ear.fill"
-        default: return "staroflife.fill"
-        }
-    }
-
-    private func loadDepartments() {
-        guard departments.isEmpty else { return }
-        isLoading = true
-
-        Task {
-            do {
-                let depts = try await APIService.shared.getDepartments()
-                await MainActor.run {
-                    departments = depts
-                    isLoading = false
-                }
-            } catch {
-                await MainActor.run {
-                    isLoading = false
-                }
-            }
-        }
-    }
-}
-
-// MARK: - 科室网格项
-struct DepartmentGridItem: View {
-    let name: String
-    let icon: String
-    let layout: AdaptiveLayout
-    @State private var isPressed = false
-
-    var body: some View {
-        VStack(spacing: 10) {
-            // 图标背景 - 增强效果
-            ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 18)
+                    .background(
                         LinearGradient(
-                            colors: [
-                                HealingColors.softSage.opacity(isPressed ? 0.35 : 0.25),
-                                HealingColors.deepSage.opacity(isPressed ? 0.2 : 0.12)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+                            colors: [HealingColors.deepSage, HealingColors.forestMist],
+                            startPoint: .leading,
+                            endPoint: .trailing
                         )
                     )
-                    .frame(width: layout.iconLargeSize + 4, height: layout.iconLargeSize + 4)
-                    .shadow(
-                        color: HealingColors.softSage.opacity(isPressed ? 0.3 : 0.15),
-                        radius: isPressed ? 8 : 4,
-                        x: 0,
-                        y: 2
-                    )
-
-                Image(systemName: icon)
-                    .font(.system(size: AdaptiveFont.title3, weight: .medium))
-                    .foregroundColor(HealingColors.forestMist)
+                    .clipShape(Capsule())
+                    .shadow(color: HealingColors.forestMist.opacity(0.4), radius: 15, y: 5)
+                }
+                .padding(.horizontal, 32)
+                .padding(.bottom, 40)
             }
-            .scaleEffect(isPressed ? 0.95 : 1.0)
-
-            Text(name)
-                .font(.system(size: AdaptiveFont.caption1, weight: .medium))
-                .foregroundColor(HealingColors.textPrimary)
-                .opacity(isPressed ? 0.7 : 1.0)
         }
-        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
-            withAnimation(.easeInOut(duration: 0.15)) {
-                isPressed = pressing
-            }
-        }, perform: {})
+        .navigationBarHidden(true)
+        .navigationDestinationCompat(isPresented: $showConsultation) {
+            // 全科智能体问诊，不需要 doctorId
+            ModernConsultationView(
+                doctorId: nil,
+                doctorName: "AI全科医生",
+                department: "全科",
+                doctorTitle: "智能助理",
+                doctorBio: "我是您的AI全科健康助手，可以帮您解答各类健康问题"
+            )
+        }
     }
 }
 
