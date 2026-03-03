@@ -2,6 +2,39 @@
 
 ## 本次会话完成的工作
 
+### 疾病数据库导入
+1. **扩展 Disease 模型**
+   - 新增字段: complications (并发症)
+   - 新增字段: body_parts (发病部位)
+   - 新增字段: related_symptoms (相关症状)
+   - 新增字段: exam_items (检查项目)
+   - 新增字段: related_diseases (相关疾病)
+
+2. **导入数据**
+   - 数据源: 疾病数据库.xlsx (7,296条疾病数据)
+   - 成功导入: 7,247条
+   - 跳过重复: 49条
+   - 数据质量: 优秀 (99%+ 字段填充率)
+
+3. **自动创建科室**
+   - 新增 50+ 个科室 (疼痛专科、营养科、重症医学科、生殖医学科等)
+
+4. **文件变更**
+   - backend/app/models/disease.py: 添加5个扩展字段
+   - backend/app/schemas/disease.py: 更新所有Schema类
+   - backend/scripts/migrations/add_disease_extended_fields.py: 迁移脚本
+   - backend/scripts/import_jibing_disease_db.py: 导入脚本
+   - backend/data/疾病数据库.xlsx: 数据源
+
+5. **提交**
+   - commit: 371a349c feat(disease): 扩展疾病模型并导入7296条疾病数据
+
+---
+
+# 会话日志 - 2026-03-03 (之前)
+
+## 本次会话完成的工作
+
 ### 前端认证重构
 1. **整合认证状态到 Zustand**
    - 移除 App.tsx 中的本地 useState 状态管理
