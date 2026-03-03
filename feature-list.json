@@ -315,12 +315,12 @@
       "consultation": {
         "name": "问诊",
         "status": "passing",
+        "note": "简化为单一全科智能体问诊，删除科室选择流程",
         "views": [
-          "AskDoctorView.swift",
+          "HomeView.swift (含AIConsultationEntryView)",
           "ModernConsultationView.swift",
           "SessionHistoryView.swift",
-          "VirtualDoctorSelectionView.swift",
-          "VirtualDoctorDetailView.swift"
+          "MyQuestionsView.swift"
         ]
       },
       "medical_orders": {

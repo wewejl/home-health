@@ -2,6 +2,38 @@
 
 ## 本次会话完成的工作
 
+### iOS 问诊流程简化
+1. **删除科室问诊流程**
+   - 删除 `AskDoctorView.swift`（科室列表页）
+   - 删除 `DepartmentDetailView.swift`（科室详情页）
+   - 删除 `HealingDepartmentSection`（首页科室导航）
+   - 删除 `DepartmentGridItem`（科室网格项）
+
+2. **简化为单一全科智能体**
+   - 新增 `AIConsultationEntryView`（AI 问诊入口页面）
+   - Tab "问医生" 直接进入 AI 全科问诊
+   - 首页"开始咨询"直接进入 AI 全科问诊
+
+3. **代码变更**
+   - `HomeView.swift`: 删除 ~150 行，新增 ~60 行
+   - 删除 2 个文件，净减少 ~1200 行代码
+
+4. **提交**
+   - commit: b32348bc refactor(ios): 简化问诊流程为单一全科智能体
+
+## 新架构
+```
+用户
+  ├── Tab "问医生" → AIConsultationEntryView → ModernConsultationView (全科)
+  └── 首页 "开始咨询" → AIConsultationEntryView → ModernConsultationView (全科)
+```
+
+---
+
+# 会话日志 - 2026-03-03 (之前)
+
+## 本次会话完成的工作
+
 ### 前端认证重构
 1. **整合认证状态到 Zustand**
    - 移除 App.tsx 中的本地 useState 状态管理
