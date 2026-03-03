@@ -68,12 +68,23 @@ services:
       KNOWLEDGE_SERVICE_URL: http://medical-knowledge-api:8200
       # 安全默认：即使未显式配置也启用 API Key 鉴权
       KNOWLEDGE_SERVICE_API_KEY: ${KNOWLEDGE_SERVICE_API_KEY:-change-me-knowledge-key}
+
+      # AI 后端网关配置（Phase 1）
+      AI_ENGINE_MODE: ${AI_ENGINE_MODE:-legacy}
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://home-health-ai:8300}
+      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:-change-me-internal-token}
+      AI_SERVICE_TIMEOUT: ${AI_SERVICE_TIMEOUT:-20}
+      AI_SERVICE_CONNECT_TIMEOUT: ${AI_SERVICE_CONNECT_TIMEOUT:-3}
+      AI_SERVICE_MAX_RETRIES: ${AI_SERVICE_MAX_RETRIES:-1}
+      AI_SERVICE_RETRY_BACKOFF_MS: ${AI_SERVICE_RETRY_BACKOFF_MS:-200}
     ports:
       - "8100:8100"
     depends_on:
       postgres:
         condition: service_healthy
       medical-knowledge-api:
+        condition: service_healthy
+      home-health-ai:
         condition: service_healthy
     restart: unless-stopped
     # 资源限制
@@ -96,6 +107,47 @@ services:
       retries: 3
       start_period: 40s
 
+  # 独立 AI 编排服务（主智能体 + 检索子智能体）
+  home-health-ai:
+    build:
+      context: ./home-health-ai
+      dockerfile: Dockerfile
+    container_name: home-health-ai
+    volumes:
+      - ./home-health-ai:/app
+      - /app/__pycache__
+    environment:
+      DEBUG: ${DEBUG:-false}
+      INTERNAL_API_TOKEN: ${AI_SERVICE_TOKEN:-change-me-internal-token}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1}
+      LLM_MODEL: ${LLM_MODEL:-qwen-plus}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0.3}
+      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-900}
+      LLM_TIMEOUT: ${LLM_TIMEOUT:-30}
+      LLM_MAX_RETRIES: ${LLM_MAX_RETRIES:-1}
+      KNOWLEDGE_SERVICE_URL: http://medical-knowledge-api:8200
+      KNOWLEDGE_SERVICE_API_KEY: ${KNOWLEDGE_SERVICE_API_KEY:-change-me-knowledge-key}
+      KNOWLEDGE_SERVICE_TIMEOUT: ${KNOWLEDGE_SERVICE_TIMEOUT:-10}
+      KNOWLEDGE_TOP_K: ${KNOWLEDGE_TOP_K:-5}
+    ports:
+      - "8300:8300"
+    depends_on:
+      medical-knowledge-api:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8300/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
   # 独立医学知识库服务
   medical-knowledge-api:
     build:
@@ -105,6 +157,8 @@ services:
     environment:
       # 使用与主业务相同的数据库，避免新环境下因数据库不存在导致启动失败
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/home_health
+      # 使用独立向量表，避免与主业务旧 knowledge_vectors 结构冲突
+      VECTOR_TABLE: medical_knowledge_vectors
       # 安全默认：避免 dev-key 放行导致未鉴权访问
       API_KEY: ${KNOWLEDGE_SERVICE_API_KEY:-change-me-knowledge-key}
       EMBEDDING_PROVIDER: mock

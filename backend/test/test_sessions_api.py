@@ -26,6 +26,8 @@ try:
     from app.database import get_db
     from app.dependencies import TEST_MODE
     from app.schemas.agent_response import AgentResponse
+    from app.schemas.ai_gateway import ChatRespondResponse
+    from app.services.ai_gateway.client import AIGatewayClientError
 except ImportError:
     from backend.app.main import app
     from backend.app.models.session import Session as SessionModel
@@ -36,6 +38,8 @@ except ImportError:
     from backend.app.database import get_db
     from backend.app.dependencies import TEST_MODE
     from backend.app.schemas.agent_response import AgentResponse
+    from backend.app.schemas.ai_gateway import ChatRespondResponse
+    from backend.app.services.ai_gateway.client import AIGatewayClientError
 
 
 # ============================================================================
@@ -526,6 +530,93 @@ class TestSendMessage:
             Message.sender == SenderType.ai
         ).all()
         assert len(ai_messages) > 0
+
+    def test_send_message_remote_ai_success(self, test_client: TestClient, db_session: Session):
+        """测试 remote_ai 模式成功返回并持久化"""
+        test_user = db_session.query(User).filter(User.phone == "test_user").first()
+        if not test_user:
+            test_user = User(phone="test_user", nickname="测试用户", is_active=True)
+            db_session.add(test_user)
+            db_session.commit()
+            db_session.refresh(test_user)
+
+        session = SessionModel(
+            id="test_remote_ai_sess",
+            user_id=test_user.id,
+            agent_type="general"
+        )
+        db_session.add(session)
+        db_session.commit()
+
+        remote_resp = ChatRespondResponse.model_validate({
+            "request_id": "req_test_remote_001",
+            "session_id": "test_remote_ai_sess",
+            "turn_index": 1,
+            "assistant_message": "这是来自 remote ai 的回复",
+            "risk_level": "medium",
+            "quick_options": ["有发热", "无发热", "不确定"],
+            "memory_patch": {"facts": ["咽痛"], "summary_delta": "需要继续问诊", "profile_delta": {}},
+            "citations": [{"id": "E1", "source": "kb", "snippet": "参考片段"}],
+            "tool_trace": [{"name": "subagent.retrieval", "status": "ok", "latency_ms": 22}],
+            "metrics": {"total_ms": 1234, "llm_ms": 1100, "tools_ms": 80, "model_calls": 1},
+            "error": None,
+        })
+
+        with patch('app.routes.sessions.settings.AI_ENGINE_MODE', 'remote_ai'), \
+             patch('app.routes.sessions.AIGatewayClient.respond', AsyncMock(return_value=remote_resp)):
+            response = test_client.post(
+                "/sessions/test_remote_ai_sess/messages",
+                json={"content": "我喉咙痛"}
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["message"] == "这是来自 remote ai 的回复"
+        assert data["risk_level"] == "medium"
+        assert data["specialty_data"]["agentic"]["mode"] == "remote_ai"
+        assert data["specialty_data"]["agentic"]["degraded"] is False
+
+        ai_messages = db_session.query(Message).filter(
+            Message.session_id == "test_remote_ai_sess",
+            Message.sender == SenderType.ai
+        ).all()
+        assert len(ai_messages) > 0
+
+    def test_send_message_remote_ai_returns_503_on_timeout(self, test_client: TestClient, db_session: Session):
+        """测试 remote_ai 超时后返回服务不可用错误"""
+        test_user = db_session.query(User).filter(User.phone == "test_user").first()
+        if not test_user:
+            test_user = User(phone="test_user", nickname="测试用户", is_active=True)
+            db_session.add(test_user)
+            db_session.commit()
+            db_session.refresh(test_user)
+
+        session = SessionModel(
+            id="test_remote_ai_timeout_sess",
+            user_id=test_user.id,
+            agent_type="general"
+        )
+        db_session.add(session)
+        db_session.commit()
+
+        with patch('app.routes.sessions.settings.AI_ENGINE_MODE', 'remote_ai'), \
+             patch(
+                 'app.routes.sessions.AIGatewayClient.respond',
+                 AsyncMock(side_effect=AIGatewayClientError(
+                     code="AI_TIMEOUT",
+                     message="upstream timeout",
+                     retryable=True
+                 ))
+             ):
+            response = test_client.post(
+                "/sessions/test_remote_ai_timeout_sess/messages",
+                json={"content": "我喉咙痛"}
+            )
+
+        assert response.status_code == 503
+        data = response.json()
+        assert "AI服务暂时不可用" in data["detail"]
+        assert "AI_TIMEOUT" in data["detail"]
 
 
 class TestGetSessionMessages:
