@@ -1,42 +1,56 @@
 import pytest
 
 from backend.app.agentic.consult_agent import AgenticConsultOrchestrator
-from backend.app.agentic.types import ComposedReply, TurnPlan
+from backend.app.agentic.types import ComposedReply
 
 
 @pytest.mark.asyncio
 async def test_consult_agent_keeps_full_session_messages(monkeypatch):
-    async def fake_plan(self, specialty, conversation_text, last_user_message):
+    async def fake_retrieve(*args, **kwargs):
+        _ = args
+        _ = kwargs
+
+        class _Bundle:
+            count = 0
+            confidence = 0.0
+            highlights = []
+            summary = ""
+            items = []
+
+            def model_dump(self):
+                return {
+                    "query_used": "",
+                    "found": False,
+                    "count": 0,
+                    "confidence": 0.0,
+                    "highlights": [],
+                    "summary": "",
+                    "items": [],
+                }
+
+        return _Bundle()
+
+    async def fake_compose(self, specialty, conversation_text, last_user_message, turn_index, evidence):
         _ = specialty
         _ = conversation_text
         _ = last_user_message
-        return TurnPlan(
-            needs_retrieval=False,
-            retrieval_query="",
-            next_step="ask",
-            brief_rationale="补充关键信息",
-            next_question="症状持续多久？",
-            quick_options=["今天", "前天", "一周以上"],
-            risk_level="low",
-        )
-
-    async def fake_compose(self, specialty, conversation_text, plan, evidence):
-        _ = specialty
-        _ = conversation_text
-        _ = plan
+        _ = turn_index
         _ = evidence
         return ComposedReply(
             message="先确认一下，您的症状持续多久了？",
+            mode="ask",
+            brief_rationale="补充关键病史",
+            next_question="症状持续多久？",
             quick_options=["今天", "前天", "一周以上"],
             risk_level="low",
             disposition="home",
             red_flags=[],
         )
 
-    monkeypatch.setattr(AgenticConsultOrchestrator, "_plan_turn", fake_plan)
     monkeypatch.setattr(AgenticConsultOrchestrator, "_compose_turn", fake_compose)
 
     agent = AgenticConsultOrchestrator()
+    monkeypatch.setattr(agent._retrieval_subagent, "run", fake_retrieve)
     state = {
         "session_id": "s1",
         "user_id": 1,
@@ -57,20 +71,6 @@ async def test_consult_agent_keeps_full_session_messages(monkeypatch):
 @pytest.mark.asyncio
 async def test_consult_agent_calls_retrieval_subagent_when_needed(monkeypatch):
     called = {"value": False}
-
-    async def fake_plan(self, specialty, conversation_text, last_user_message):
-        _ = specialty
-        _ = conversation_text
-        _ = last_user_message
-        return TurnPlan(
-            needs_retrieval=True,
-            retrieval_query="咽痛与过敏鉴别",
-            next_step="advise",
-            brief_rationale="需要证据支持",
-            next_question="",
-            quick_options=["继续观察", "需要就医吗"],
-            risk_level="medium",
-        )
 
     async def fake_retrieve(*args, **kwargs):
         _ = args
@@ -97,20 +97,23 @@ async def test_consult_agent_calls_retrieval_subagent_when_needed(monkeypatch):
 
         return _Bundle()
 
-    async def fake_compose(self, specialty, conversation_text, plan, evidence):
+    async def fake_compose(self, specialty, conversation_text, last_user_message, turn_index, evidence):
         _ = specialty
         _ = conversation_text
-        _ = plan
+        _ = last_user_message
+        _ = turn_index
         _ = evidence
         return ComposedReply(
             message="结合目前信息，更倾向环境刺激导致咽喉不适。",
+            mode="advise",
+            brief_rationale="证据支持环境刺激倾向",
+            next_question="",
             quick_options=["如何改善环境", "哪些情况要就医"],
             risk_level="medium",
             disposition="clinic",
             red_flags=[],
         )
 
-    monkeypatch.setattr(AgenticConsultOrchestrator, "_plan_turn", fake_plan)
     monkeypatch.setattr(AgenticConsultOrchestrator, "_compose_turn", fake_compose)
 
     agent = AgenticConsultOrchestrator()

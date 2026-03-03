@@ -43,9 +43,12 @@ class EvidenceBundle(BaseModel):
 
 
 class ComposedReply(BaseModel):
-    """Main agent final response payload."""
+    """Main agent single-turn output payload."""
 
     message: str
+    mode: TurnMode = "ask"
+    brief_rationale: str = ""
+    next_question: str = ""
     quick_options: List[str] = Field(default_factory=list)
     risk_level: RiskLevel = "low"
     disposition: Disposition = "home"
