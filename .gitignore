@@ -101,3 +101,4 @@ dev-debug.log
 # tasks.json
 # tasks/ 
 backend/reports/
+.superset/
