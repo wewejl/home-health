@@ -21,11 +21,36 @@
 4. **提交**
    - commit: b32348bc refactor(ios): 简化问诊流程为单一全科智能体
 
+### 后端 AI 智能体代码删除
+1. **删除的模块**
+   - `services/agents/` - ReAct 智能体（14个科室，~9500行）
+   - `agentic/` - Agentic 子智能体系统（~600行）
+   - `triage/` - Triage 分诊系统（~1500行）
+   - `services/cardiology/` - 心血管科旧代码
+   - `services/dermatology/` - 皮肤科旧代码
+   - `services/orthopedics/` - 骨科旧代码
+   - `services/general/` - 全科旧代码
+   - 其他相关文件（112个文件）
+
+2. **代码变更**
+   - 删除 15202 行代码
+   - 新增 70 行（简化的 sessions.py）
+   - 净减少 15132 行代码
+
+3. **提交**
+   - commit: ab89b9b3 refactor(backend): 删除复杂 AI 智能体代码，简化为单一全科智能体
+
 ## 新架构
 ```
+前端:
 用户
   ├── Tab "问医生" → AIConsultationEntryView → ModernConsultationView (全科)
   └── 首页 "开始咨询" → AIConsultationEntryView → ModernConsultationView (全科)
+
+后端:
+用户 → sessions.py → AIGatewayClient → home-health-ai (远程 AI 服务)
+                                  ↓
+                            全科智能体 (general)
 ```
 
 ---
