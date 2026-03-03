@@ -2,56 +2,32 @@
 
 ## 本次会话完成的工作
 
-### iOS 问诊流程简化
-1. **删除科室问诊流程**
-   - 删除 `AskDoctorView.swift`（科室列表页）
-   - 删除 `DepartmentDetailView.swift`（科室详情页）
-   - 删除 `HealingDepartmentSection`（首页科室导航）
-   - 删除 `DepartmentGridItem`（科室网格项）
+### 疾病数据库导入
+1. **扩展 Disease 模型**
+   - 新增字段: complications (并发症)
+   - 新增字段: body_parts (发病部位)
+   - 新增字段: related_symptoms (相关症状)
+   - 新增字段: exam_items (检查项目)
+   - 新增字段: related_diseases (相关疾病)
 
-2. **简化为单一全科智能体**
-   - 新增 `AIConsultationEntryView`（AI 问诊入口页面）
-   - Tab "问医生" 直接进入 AI 全科问诊
-   - 首页"开始咨询"直接进入 AI 全科问诊
+2. **导入数据**
+   - 数据源: 疾病数据库.xlsx (7,296条疾病数据)
+   - 成功导入: 7,247条
+   - 跳过重复: 49条
+   - 数据质量: 优秀 (99%+ 字段填充率)
 
-3. **代码变更**
-   - `HomeView.swift`: 删除 ~150 行，新增 ~60 行
-   - 删除 2 个文件，净减少 ~1200 行代码
+3. **自动创建科室**
+   - 新增 50+ 个科室 (疼痛专科、营养科、重症医学科、生殖医学科等)
 
-4. **提交**
-   - commit: b32348bc refactor(ios): 简化问诊流程为单一全科智能体
+4. **文件变更**
+   - backend/app/models/disease.py: 添加5个扩展字段
+   - backend/app/schemas/disease.py: 更新所有Schema类
+   - backend/scripts/migrations/add_disease_extended_fields.py: 迁移脚本
+   - backend/scripts/import_jibing_disease_db.py: 导入脚本
+   - backend/data/疾病数据库.xlsx: 数据源
 
-### 后端 AI 智能体代码删除
-1. **删除的模块**
-   - `services/agents/` - ReAct 智能体（14个科室，~9500行）
-   - `agentic/` - Agentic 子智能体系统（~600行）
-   - `triage/` - Triage 分诊系统（~1500行）
-   - `services/cardiology/` - 心血管科旧代码
-   - `services/dermatology/` - 皮肤科旧代码
-   - `services/orthopedics/` - 骨科旧代码
-   - `services/general/` - 全科旧代码
-   - 其他相关文件（112个文件）
-
-2. **代码变更**
-   - 删除 15202 行代码
-   - 新增 70 行（简化的 sessions.py）
-   - 净减少 15132 行代码
-
-3. **提交**
-   - commit: ab89b9b3 refactor(backend): 删除复杂 AI 智能体代码，简化为单一全科智能体
-
-## 新架构
-```
-前端:
-用户
-  ├── Tab "问医生" → AIConsultationEntryView → ModernConsultationView (全科)
-  └── 首页 "开始咨询" → AIConsultationEntryView → ModernConsultationView (全科)
-
-后端:
-用户 → sessions.py → AIGatewayClient → home-health-ai (远程 AI 服务)
-                                  ↓
-                            全科智能体 (general)
-```
+5. **提交**
+   - commit: 371a349c feat(disease): 扩展疾病模型并导入7296条疾病数据
 
 ---
 
