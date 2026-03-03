@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 import re
 
 
-# 有效的智能体类型
-VALID_AGENT_TYPES = Literal["general", "dermatology", "cardiology", "orthopedics"]
+# 智能体类型（固定为全科）
+VALID_AGENT_TYPES = Literal["general"]
 
 
 class SessionCreate(BaseModel):
