@@ -1,0 +1,452 @@
+openapi: 3.0.3
+info:
+  title: Home Health AI Service API
+  version: 0.1.0
+  description: |
+    Phase 1 contract for agentic subagent architecture.
+    Scope: backend -> ai respond endpoint.
+servers:
+  - url: http://home-health-ai:8300
+    description: internal docker network
+tags:
+  - name: chat
+    description: chat response API
+paths:
+  /v1/chat/respond:
+    post:
+      tags: [chat]
+      summary: Generate assistant response for one user turn
+      operationId: respondChatTurn
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: header
+          name: X-Request-Id
+          required: false
+          schema:
+            type: string
+          description: Optional transport-level trace id. Business idempotency key is request_id in body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRespondRequest'
+            examples:
+              throat_case:
+                summary: Throat pain sample turn
+                value:
+                  request_id: req_20260227_001
+                  session_id: 36f1b8ad-670c-4a97-9416-ec596e7e97e9
+                  turn_index: 6
+                  user_id: u_12345
+                  agent_type: general
+                  locale: zh-CN
+                  stream: false
+                  user_message: 我喉咙刀割样疼痛，晚上卧室更严重。
+                  history:
+                    - role: user
+                      content: 我喉咙非常疼，前天开始逐步加重。
+                    - role: assistant
+                      content: 有发热吗？最高体温多少？
+                  attachments: []
+                  client_context:
+                    timezone: America/Los_Angeles
+                    channel: web
+                  debug: false
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatRespondResponse'
+              examples:
+                ok:
+                  value:
+                    request_id: req_20260227_001
+                    session_id: 36f1b8ad-670c-4a97-9416-ec596e7e97e9
+                    turn_index: 6
+                    assistant_message: 结合您目前描述，最可能是咽喉炎症叠加环境刺激。今晚先通风补水，若出现吞咽明显困难、呼吸费力或高热，请及时就医。
+                    risk_level: medium
+                    quick_options:
+                      - 有发热
+                      - 无发热
+                      - 不确定
+                    memory_patch:
+                      facts:
+                        - 喉咙刀割样疼痛
+                        - 夜间卧室症状更重
+                      summary_delta: 疑似上呼吸道炎症，需进一步确认发热和吞咽困难
+                      profile_delta: {}
+                    citations:
+                      - id: E1
+                        source: kb
+                        snippet: 咽痛伴鼻塞咳嗽常见于上呼吸道感染或刺激因素。
+                    tool_trace:
+                      - name: memory.read
+                        status: ok
+                        latency_ms: 9
+                      - name: subagent.retrieval
+                        status: ok
+                        latency_ms: 186
+                    metrics:
+                      total_ms: 12402
+                      llm_ms: 11620
+                      tools_ms: 212
+                      model_calls: 1
+                    error: null
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatRespondResponse'
+              examples:
+                bad_request:
+                  value:
+                    request_id: req_20260227_001
+                    session_id: 36f1b8ad-670c-4a97-9416-ec596e7e97e9
+                    turn_index: 6
+                    assistant_message: ""
+                    risk_level: low
+                    quick_options: []
+                    memory_patch:
+                      facts: []
+                      summary_delta: ""
+                      profile_delta: {}
+                    citations: []
+                    tool_trace: []
+                    metrics:
+                      total_ms: 0
+                      llm_ms: 0
+                      tools_ms: 0
+                      model_calls: 0
+                    error:
+                      code: AI_BAD_REQUEST
+                      message: turn_index must be positive integer
+                      retryable: false
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatRespondResponse'
+              examples:
+                unauthorized:
+                  value:
+                    request_id: req_20260227_001
+                    session_id: 36f1b8ad-670c-4a97-9416-ec596e7e97e9
+                    turn_index: 6
+                    assistant_message: ""
+                    risk_level: low
+                    quick_options: []
+                    memory_patch:
+                      facts: []
+                      summary_delta: ""
+                      profile_delta: {}
+                    citations: []
+                    tool_trace: []
+                    metrics:
+                      total_ms: 0
+                      llm_ms: 0
+                      tools_ms: 0
+                      model_calls: 0
+                    error:
+                      code: AI_UNAUTHORIZED
+                      message: invalid internal service token
+                      retryable: false
+        '429':
+          description: Overloaded / rate limited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatRespondResponse'
+              examples:
+                overloaded:
+                  value:
+                    request_id: req_20260227_001
+                    session_id: 36f1b8ad-670c-4a97-9416-ec596e7e97e9
+                    turn_index: 6
+                    assistant_message: 为保证回复质量，请稍后再试。
+                    risk_level: low
+                    quick_options: []
+                    memory_patch:
+                      facts: []
+                      summary_delta: ""
+                      profile_delta: {}
+                    citations: []
+                    tool_trace:
+                      - name: scheduler
+                        status: degraded
+                        latency_ms: 0
+                    metrics:
+                      total_ms: 5
+                      llm_ms: 0
+                      tools_ms: 0
+                      model_calls: 0
+                    error:
+                      code: AI_OVERLOADED
+                      message: too many concurrent requests
+                      retryable: true
+        '500':
+          description: Internal or upstream failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatRespondResponse'
+              examples:
+                timeout_fallback:
+                  value:
+                    request_id: req_20260227_001
+                    session_id: 36f1b8ad-670c-4a97-9416-ec596e7e97e9
+                    turn_index: 6
+                    assistant_message: 我先帮您做安全建议：今晚保持通风和补水，若呼吸费力、高热或吞咽明显困难请及时就医。您方便补充一下是否发热吗？
+                    risk_level: medium
+                    quick_options:
+                      - 有发热
+                      - 无发热
+                      - 不确定
+                    memory_patch:
+                      facts: []
+                      summary_delta: ""
+                      profile_delta: {}
+                    citations: []
+                    tool_trace:
+                      - name: llm.generate
+                        status: degraded
+                        latency_ms: 14000
+                    metrics:
+                      total_ms: 14120
+                      llm_ms: 14000
+                      tools_ms: 0
+                      model_calls: 1
+                    error:
+                      code: AI_TIMEOUT
+                      message: upstream model timeout
+                      retryable: true
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ChatRole:
+      type: string
+      enum: [user, assistant, system]
+    ChatMessage:
+      type: object
+      required: [role, content]
+      properties:
+        role:
+          $ref: '#/components/schemas/ChatRole'
+        content:
+          type: string
+          minLength: 1
+    Attachment:
+      type: object
+      additionalProperties: true
+      description: Reserved for multimodal phases.
+    ClientContext:
+      type: object
+      additionalProperties: false
+      properties:
+        timezone:
+          type: string
+          example: America/Los_Angeles
+        channel:
+          type: string
+          example: web
+    ChatRespondRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - request_id
+        - session_id
+        - turn_index
+        - user_id
+        - agent_type
+        - user_message
+        - history
+      properties:
+        request_id:
+          type: string
+          minLength: 1
+        session_id:
+          type: string
+          minLength: 1
+        turn_index:
+          type: integer
+          minimum: 1
+        user_id:
+          type: string
+          minLength: 1
+        agent_type:
+          type: string
+          minLength: 1
+          example: general
+        locale:
+          type: string
+          default: zh-CN
+        stream:
+          type: boolean
+          default: false
+          description: Phase 1 fixed false.
+        user_message:
+          type: string
+          minLength: 1
+        history:
+          type: array
+          minItems: 0
+          maxItems: 40
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        client_context:
+          $ref: '#/components/schemas/ClientContext'
+        debug:
+          type: boolean
+          default: false
+    MemoryPatch:
+      type: object
+      additionalProperties: false
+      required: [facts, summary_delta, profile_delta]
+      properties:
+        facts:
+          type: array
+          items:
+            type: string
+        summary_delta:
+          type: string
+        profile_delta:
+          type: object
+          additionalProperties: true
+    Citation:
+      type: object
+      additionalProperties: false
+      required: [id, source, snippet]
+      properties:
+        id:
+          type: string
+        source:
+          type: string
+          enum: [kb, guideline, doc, unknown]
+        snippet:
+          type: string
+    ToolTraceItem:
+      type: object
+      additionalProperties: false
+      required: [name, status, latency_ms]
+      properties:
+        name:
+          type: string
+          example: subagent.retrieval
+        status:
+          type: string
+          enum: [ok, degraded, error, skipped]
+        latency_ms:
+          type: integer
+          minimum: 0
+    RespondMetrics:
+      type: object
+      additionalProperties: false
+      required: [total_ms, llm_ms, tools_ms, model_calls]
+      properties:
+        total_ms:
+          type: integer
+          minimum: 0
+        llm_ms:
+          type: integer
+          minimum: 0
+        tools_ms:
+          type: integer
+          minimum: 0
+        model_calls:
+          type: integer
+          minimum: 0
+    ErrorObject:
+      type: object
+      additionalProperties: false
+      required: [code, message, retryable]
+      properties:
+        code:
+          type: string
+          enum:
+            - AI_BAD_REQUEST
+            - AI_UNAUTHORIZED
+            - AI_TIMEOUT
+            - AI_UPSTREAM_5XX
+            - AI_OVERLOADED
+            - AI_INTERNAL_ERROR
+        message:
+          type: string
+        retryable:
+          type: boolean
+    ChatRespondResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - request_id
+        - session_id
+        - turn_index
+        - assistant_message
+        - risk_level
+        - quick_options
+        - memory_patch
+        - citations
+        - tool_trace
+        - metrics
+      properties:
+        request_id:
+          type: string
+        session_id:
+          type: string
+        turn_index:
+          type: integer
+          minimum: 1
+        assistant_message:
+          type: string
+        risk_level:
+          type: string
+          enum: [low, medium, high, emergency]
+        quick_options:
+          type: array
+          items:
+            type: string
+          maxItems: 3
+        memory_patch:
+          $ref: '#/components/schemas/MemoryPatch'
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+        tool_trace:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolTraceItem'
+        metrics:
+          $ref: '#/components/schemas/RespondMetrics'
+        error:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/ErrorObject'
+x-runtime-policy:
+  timeout_budget_ms:
+    total: 20000
+    llm: 14000
+    tools_total: 4000
+    kb_search: 2500
+  retry:
+    max_attempts: 2
+    retriable_codes: [AI_TIMEOUT, AI_UPSTREAM_5XX, AI_OVERLOADED]
+    backoff_ms: [200, 500]
+  idempotency:
+    key: session_id+turn_index+request_id
+    duplicate_behavior: return_first_success
+  degrade_policy:
+    forbid_raw_errors_to_user: true
+    require_natural_language_fallback: true
