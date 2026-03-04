@@ -1,11 +1,32 @@
 import SwiftUI
 
+// MARK: - 登录方式枚举
+enum LoginMethod: String, CaseIterable {
+    case oneClick = "oneClick"
+    case verification = "verification"
+
+    var displayName: String {
+        switch self {
+        case .oneClick: return "一键登录"
+        case .verification: return "验证码登录"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .oneClick: return "antenna.radiowaves.left.and.right"
+        case .verification: return "message.fill"
+        }
+    }
+}
+
 // MARK: - 登录页面（全新高级设计）
 
 struct LoginView: View {
     @StateObject private var viewModel = LoginViewModel()
     @FocusState private var focusedField: LoginField?
     @Environment(\.openURL) private var openURL
+    @State private var selectedLoginMethod: LoginMethod = .oneClick
 
     var onLoginSuccess: (() -> Void)?
 
@@ -30,7 +51,8 @@ struct LoginView: View {
                         PremiumLoginForm(
                             viewModel: viewModel,
                             focusedField: $focusedField,
-                            layout: layout
+                            layout: layout,
+                            selectedLoginMethod: $selectedLoginMethod
                         )
                         .padding(.horizontal, layout.horizontalPadding + 4)
 
@@ -309,77 +331,92 @@ struct PremiumLoginForm: View {
     @ObservedObject var viewModel: LoginViewModel
     var focusedField: FocusState<LoginField?>.Binding
     let layout: AdaptiveLayout
+    @Binding var selectedLoginMethod: LoginMethod
 
     @State private var showContent = false
+    @State private var isOneClickLoading = false
 
     var body: some View {
         VStack(spacing: ScaleFactor.spacing(20)) {
-            // 表单标题
-            VStack(alignment: .leading, spacing: 4) {
-                Text("手机号登录")
-                    .font(.system(size: UnifiedFont.title3, weight: .bold))
-                    .foregroundColor(HealingColors.textPrimary)
+            // 登录方式选择器
+            LoginMethodSelector(
+                selectedMethod: $selectedLoginMethod
+            )
 
-                Text("未注册的手机号将自动创建账号")
-                    .font(.system(size: UnifiedFont.footnote))
-                    .foregroundColor(HealingColors.textTertiary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            // 手机号输入区
-            VStack(alignment: .leading, spacing: ScaleFactor.spacing(6)) {
-                Label("手机号码", systemImage: "phone.fill")
-                    .font(.system(size: UnifiedFont.caption1, weight: .medium))
-                    .foregroundColor(HealingColors.textSecondary)
-
-                PhoneNumberTextField(
-                    phoneNumber: $viewModel.phoneNumber,
-                    displayNumber: $viewModel.displayPhoneNumber,
-                    isFocused: focusedField.wrappedValue == .phone,
-                    onPhoneChange: { phone, display in
-                        viewModel.handlePhoneInput(display)
-                    },
-                    onComplete: {
-                        focusedField.wrappedValue = .code
-                        viewModel.onPhoneComplete()
-                    }
+            if selectedLoginMethod == .oneClick {
+                // 一键登录区域
+                OneClickLoginSection(
+                    isLoading: isOneClickLoading,
+                    onLogin: handleOneClickLogin
                 )
-            }
+            } else {
+                // 表单标题
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("手机号登录")
+                        .font(.system(size: UnifiedFont.title3, weight: .bold))
+                        .foregroundColor(HealingColors.textPrimary)
 
-            // 验证码发送提示
-            if viewModel.showCodeSentNotice {
-                PremiumCodeSentBanner(phoneText: viewModel.maskedPhoneText)
-            }
+                    Text("未注册的手机号将自动创建账号")
+                        .font(.system(size: UnifiedFont.footnote))
+                        .foregroundColor(HealingColors.textTertiary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-            // 验证码区域
-            VStack(alignment: .leading, spacing: ScaleFactor.spacing(6)) {
-                HStack {
-                    Label("验证码", systemImage: "lock.shield.fill")
+                // 手机号输入区
+                VStack(alignment: .leading, spacing: ScaleFactor.spacing(6)) {
+                    Label("手机号码", systemImage: "phone.fill")
                         .font(.system(size: UnifiedFont.caption1, weight: .medium))
                         .foregroundColor(HealingColors.textSecondary)
 
-                    Spacer()
-
-                    PremiumSendCodeButton(viewModel: viewModel)
+                    PhoneNumberTextField(
+                        phoneNumber: $viewModel.phoneNumber,
+                        displayNumber: $viewModel.displayPhoneNumber,
+                        isFocused: focusedField.wrappedValue == .phone,
+                        onPhoneChange: { phone, display in
+                            viewModel.handlePhoneInput(display)
+                        },
+                        onComplete: {
+                            focusedField.wrappedValue = .code
+                            viewModel.onPhoneComplete()
+                        }
+                    )
                 }
 
-                VerificationCodeInput(
-                    code: $viewModel.verificationCode,
-                    codeLength: 6,
-                    onComplete: { _ in
-                        focusedField.wrappedValue = nil
-                        viewModel.onCodeComplete()
-                    },
-                    style: VerificationCodeStyle(
-                        baseFill: HealingColors.warmCream.opacity(0.6),
-                        emptyBorder: HealingColors.softSage.opacity(0.3),
-                        activeBorder: HealingColors.forestMist,
-                        filledBorder: HealingColors.forestMist.opacity(0.6),
-                        successBorder: HealingColors.forestMist,
-                        textColor: HealingColors.textPrimary
-                    ),
-                    isExternallyFocused: focusedField.wrappedValue == .code
-                )
+                // 验证码发送提示
+                if viewModel.showCodeSentNotice {
+                    PremiumCodeSentBanner(phoneText: viewModel.maskedPhoneText)
+                }
+
+                // 验证码区域
+                VStack(alignment: .leading, spacing: ScaleFactor.spacing(6)) {
+                    HStack {
+                        Label("验证码", systemImage: "lock.shield.fill")
+                            .font(.system(size: UnifiedFont.caption1, weight: .medium))
+                            .foregroundColor(HealingColors.textSecondary)
+
+                        Spacer()
+
+                        PremiumSendCodeButton(viewModel: viewModel)
+                    }
+
+                    VerificationCodeInput(
+                        code: $viewModel.verificationCode,
+                        codeLength: 6,
+                        onComplete: { _ in
+                            focusedField.wrappedValue = nil
+                            viewModel.onCodeComplete()
+                        },
+                        style: VerificationCodeStyle(
+                            baseFill: HealingColors.warmCream.opacity(0.6),
+                            emptyBorder: HealingColors.softSage.opacity(0.3),
+                            activeBorder: HealingColors.forestMist,
+                            filledBorder: HealingColors.forestMist.opacity(0.6),
+                            successBorder: HealingColors.forestMist,
+                            textColor: HealingColors.textPrimary
+                        ),
+                        isExternallyFocused: focusedField.wrappedValue == .code
+                    )
+                }
             }
 
             // 协议区域
@@ -389,11 +426,18 @@ struct PremiumLoginForm: View {
             )
 
             // 登录按钮
-            PremiumLoginButton(
-                isLoading: viewModel.isLoading,
-                isEnabled: viewModel.canLogin || viewModel.isLoading,
-                action: viewModel.login
-            )
+            if selectedLoginMethod == .oneClick {
+                PremiumOneClickLoginButton(
+                    isLoading: isOneClickLoading,
+                    action: handleOneClickLogin
+                )
+            } else {
+                PremiumLoginButton(
+                    isLoading: viewModel.isLoading,
+                    isEnabled: viewModel.canLogin || viewModel.isLoading,
+                    action: viewModel.login
+                )
+            }
         }
         .padding(ScaleFactor.padding(24))
         .background(
@@ -420,6 +464,34 @@ struct PremiumLoginForm: View {
         .onAppear {
             withAnimation(.spring(response: 0.8, dampingFraction: 0.8).delay(0.3)) {
                 showContent = true
+            }
+        }
+    }
+
+    // MARK: - 一键登录处理
+    private func handleOneClickLogin() {
+        isOneClickLoading = true
+
+        Task {
+            do {
+                let result = try await OneClickAuthService.shared.oneClickLogin()
+
+                await MainActor.run {
+                    AuthManager.shared.login(
+                        token: result.token,
+                        refreshToken: result.refreshToken,
+                        user: result.user,
+                        isNewUser: result.isNewUser
+                    )
+                    isOneClickLoading = false
+                }
+
+            } catch {
+                await MainActor.run {
+                    isOneClickLoading = false
+                    viewModel.errorMessage = error.localizedDescription
+                    viewModel.showError = true
+                }
             }
         }
     }
@@ -671,6 +743,180 @@ struct PremiumLoadingOverlay: View {
         .onAppear {
             withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) {
                 rotation = 360
+            }
+        }
+    }
+}
+
+// MARK: - 登录方式选择器
+
+struct LoginMethodSelector: View {
+    @Binding var selectedMethod: LoginMethod
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(LoginMethod.allCases, id: \.self) { method in
+                LoginMethodButton(method: method, isSelected: selectedMethod == method) {
+                    selectedMethod = method
+                }
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+
+    private func LoginMethodButton(method: LoginMethod, isSelected: Bool, onTap: @escaping () -> Void) -> some View {
+        Button(action: onTap) {
+            HStack(spacing: 6) {
+                Image(systemName: method.icon)
+                    .font(.system(size: 13, weight: .medium))
+                Text(method.displayName)
+                    .font(.system(size: UnifiedFont.subheadline, weight: .medium))
+            }
+            .foregroundColor(isSelected ? .white : HealingColors.textSecondary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(
+                Group {
+                    if isSelected {
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [HealingColors.deepSage, HealingColors.forestMist],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                    } else {
+                        Capsule()
+                            .fill(HealingColors.warmSand.opacity(0.3))
+                    }
+                }
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - 一键登录区域
+
+struct OneClickLoginSection: View {
+    let isLoading: Bool
+    let onLogin: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            // 说明文字
+            VStack(alignment: .leading, spacing: 4) {
+                Text("一键登录")
+                    .font(.system(size: UnifiedFont.title3, weight: .bold))
+                    .foregroundColor(HealingColors.textPrimary)
+
+                Text("使用本机号码快速登录，无需输入")
+                    .font(.system(size: UnifiedFont.footnote))
+                    .foregroundColor(HealingColors.textTertiary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            // 提示信息
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(HealingColors.forestMist)
+
+                Text("请使用移动数据网络（4G/5G）进行一键登录")
+                    .font(.system(size: UnifiedFont.caption2))
+                    .foregroundColor(HealingColors.textSecondary)
+
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(HealingColors.forestMist.opacity(0.08))
+            )
+        }
+    }
+}
+
+// MARK: - 一键登录按钮
+
+struct PremiumOneClickLoginButton: View {
+    let isLoading: Bool
+    let action: () -> Void
+
+    @State private var isPressed = false
+    @State private var pulseScale: CGFloat = 1.0
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                if isLoading {
+                    ProgressView()
+                        .tint(.white)
+                        .scaleEffect(0.9)
+                } else {
+                    Image(systemName: "antenna.radiowaves.left.and.right")
+                        .font(.system(size: 18, weight: .semibold))
+                        .offset(x: isPressed ? 3 : 0)
+
+                    Text("一键登录")
+                        .font(.system(size: UnifiedFont.body, weight: .bold))
+
+                    Text("秒登录")
+                        .font(.system(size: UnifiedFont.caption1, weight: .medium))
+                        .foregroundColor(.white.opacity(0.8))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .fill(.white.opacity(0.2))
+                        )
+                }
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(
+                ZStack {
+                    // 脉冲效果
+                    Circle()
+                        .fill(HealingColors.forestMist.opacity(0.3))
+                        .frame(width: 80, height: 80)
+                        .scaleEffect(pulseScale)
+                        .opacity(isLoading ? 0 : 1)
+
+                    LinearGradient(
+                        colors: [
+                            HealingColors.forestMist,
+                            HealingColors.deepSage
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                }
+            )
+            .clipShape(Capsule())
+            .shadow(
+                color: HealingColors.forestMist.opacity(0.4),
+                radius: isPressed ? 10 : 20,
+                x: 0,
+                y: isPressed ? 5 : 10
+            )
+            .scaleEffect(isPressed ? 0.97 : 1.0)
+        }
+        .disabled(isLoading)
+        .animation(.easeInOut(duration: 0.15), value: isPressed)
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            withAnimation(.easeInOut(duration: 0.1)) {
+                isPressed = pressing
+            }
+        }, perform: {})
+        .onAppear {
+            if !isLoading {
+                withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
+                    pulseScale = 1.3
+                }
             }
         }
     }

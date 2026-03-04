@@ -75,6 +75,14 @@ struct HomeView: View {
                 .navigationDestinationCompat(isPresented: $showDiseaseList) {
                     DiseaseListView().navigationBarBackgroundHidden()
                 }
+                .onChangeCompat(of: tab0Path) { newPath in
+                    // 当导航路径为空时（回到根视图），重置导航状态
+                    // 这样可以确保下次点击可以再次触发导航
+                    if newPath.isEmpty {
+                        showDrugList = false
+                        showDiseaseList = false
+                    }
+                }
             }
             .tabItem {
                 Image(systemName: selectedTab == 0 ? "heart.fill" : "heart")
@@ -490,7 +498,17 @@ struct HealingQuickActions: View {
             // 不对称卡片布局 - 使用自适应间距
             HStack(alignment: .top, spacing: layout.cardSpacing - 2) {
                 // 左侧大卡片 - 查疾病
-                Button(action: { showDiseaseList = true }) {
+                Button(action: {
+                    // 确保每次点击都能触发导航
+                    if showDiseaseList {
+                        showDiseaseList = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                            showDiseaseList = true
+                        }
+                    } else {
+                        showDiseaseList = true
+                    }
+                }) {
                     QuickActionCard(
                         icon: "stethoscope",
                         title: "查疾病",
@@ -505,7 +523,17 @@ struct HealingQuickActions: View {
                 // 右侧两个小卡片
                 VStack(spacing: layout.cardSpacing - 2) {
                     // 查药品
-                    Button(action: { showDrugList = true }) {
+                    Button(action: {
+                        // 确保每次点击都能触发导航
+                        if showDrugList {
+                            showDrugList = false
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                                showDrugList = true
+                            }
+                        } else {
+                            showDrugList = true
+                        }
+                    }) {
                         QuickActionCard(
                             icon: "pills.fill",
                             title: "查药品",
@@ -619,11 +647,8 @@ struct QuickActionCard: View {
             .scaleEffect(isPressed ? 0.96 : 1.0)
         }
         .frame(height: size == .large ? layout.quickCardLargeHeight : layout.quickCardSmallHeight)
-        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
-            withAnimation(.easeInOut(duration: 0.12)) {
-                isPressed = pressing
-            }
-        }, perform: {})
+        // 注意：不使用 onLongPressGesture，因为它会阻止父级 Button 的点击事件
+        // 按压效果由 ScaleButtonStyle 处理
     }
 }
 

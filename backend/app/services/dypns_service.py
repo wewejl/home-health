@@ -69,6 +69,12 @@ class DypnsService:
         Returns:
             (是否成功, 错误消息/手机号)
         """
+        # 开发模式：识别 dev_mock_token
+        if token.startswith("dev_mock_token_"):
+            logger.info("[Dypns] 开发模式：检测到模拟 Token")
+            # 使用固定测试手机号 18107300888
+            return True, "18107300888"
+
         client = cls._get_client()
         if client is None:
             # SDK未安装或配置缺失，返回测试手机号

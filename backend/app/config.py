@@ -64,6 +64,9 @@ class Settings(BaseSettings):
     SMS_ACCESS_KEY_SECRET: str = "zb5cA+aWzARI/OosFzD1Dv/8tqVj49iawGCKI2rs9/5qMKnCgi3SbomCeVY/EUCAmtqUGF3fb3JU6p1AWYtBLzo343Y78hcnOE6DYIgIT538gBmJfjRM4rH9lvRYlMg6CdJYXUw2NaAt8539dqtwkson83zCv+UdN5ylnJLm6nwfnA40fWXazBJeCKWq3ftJ/WIRYk+og0Qg65gINE6tz7yM3D1vFuUkjlmMS0mHoz08yUy/jKKVUiW9kjRRCJLRMfqOeOsQokM="
     SMS_SIGN_NAME: str = "鑫琳医生"
     SMS_TEMPLATE_CODE: str = ""
+
+    # 阿里云号码认证服务（一键登录）
+    DYPNS_APP_KEY: str = "FC220000012370277"  # 方案Code，iOS/Android SDK 需要
     
     # LLM 配置
     LLM_PROVIDER: str = "qwen"
