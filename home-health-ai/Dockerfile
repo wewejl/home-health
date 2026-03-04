@@ -8,8 +8,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-COPY app /app/app
+COPY src/ /app/
+COPY config/ /app/config/
+COPY main.py /app/main.py
+COPY static/ /app/static/
 
 EXPOSE 8300
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8300"]
+CMD ["python", "main.py"]
