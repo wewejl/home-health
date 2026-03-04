@@ -23,9 +23,9 @@
     <!-- App Transport Security - 安全配置 -->
     <key>NSAppTransportSecurity</key>
     <dict>
-        <!-- 生产环境禁止任意 HTTP 加载 -->
+        <!-- 开发环境允许任意 HTTP 加载 -->
         <key>NSAllowsArbitraryLoads</key>
-        <false/>
+        <true/>
         <!-- 仅开发环境允许 localhost 使用 HTTP -->
         <key>NSExceptionDomains</key>
         <dict>
@@ -37,6 +37,11 @@
                 <true/>
             </dict>
             <key>127.0.0.1</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+            </dict>
+            <key>192.168.2.7</key>
             <dict>
                 <key>NSExceptionAllowsInsecureHTTPLoads</key>
                 <true/>

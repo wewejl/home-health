@@ -130,6 +130,13 @@ class OneClickAuthService: ObservableObject {
 
     private let bridge = AliyunDypnsBridge.shared
 
+    // 开发模式：允许 WiFi 下测试
+    #if DEBUG
+    private let isDevelopmentMode = true
+    #else
+    private let isDevelopmentMode = false
+    #endif
+
     // AppKey 从配置文件读取
     private var appKey: String {
         return APIConfig.aliyunDypnsAppKey
@@ -152,7 +159,13 @@ class OneClickAuthService: ObservableObject {
 
     // MARK: - 检查是否可用
     func isAvailable() -> Bool {
-        // 必须是移动网络
+        // 开发模式下允许 WiFi 测试
+        if isDevelopmentMode {
+            print("[OneClick] 开发模式：允许 WiFi 测试")
+            return true
+        }
+
+        // 生产环境必须移动网络
         guard bridge.checkNetwork() else {
             print("[OneClick] 非移动网络，不可用")
             return false
@@ -177,7 +190,13 @@ class OneClickAuthService: ObservableObject {
         // 2. 获取Token
         let accessToken: String
         do {
-            accessToken = try await bridge.getCurrentToken()
+            // 开发模式下模拟 Token
+            if isDevelopmentMode && !bridge.checkNetwork() {
+                print("[OneClick] 开发模式：使用模拟 Token")
+                accessToken = "dev_mock_token_\(Int(Date().timeIntervalSince1970))"
+            } else {
+                accessToken = try await bridge.getCurrentToken()
+            }
             print("[OneClick] 获取Token成功")
         } catch {
             print("[OneClick] 获取Token失败: \(error)")
