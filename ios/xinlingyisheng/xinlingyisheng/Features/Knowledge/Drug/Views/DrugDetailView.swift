@@ -10,7 +10,7 @@ struct DrugDetailView: View {
     @State private var isLoading = true
     @State private var selectedTab = 0
 
-    private let tabs = ["功效作用", "用药禁忌", "用法用量"]
+    private let tabs = ["基本信息", "成分厂家", "用药指导"]
 
     var body: some View {
         GeometryReader { geometry in
@@ -436,43 +436,18 @@ struct HealingDrugDetailContentSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            let content: String? = {
-                switch selectedTab {
-                case 0: return drug.indications
-                case 1: return drug.contraindications
-                case 2: return drug.dosage
-                default: return nil
-                }
-            }()
-
-            if let content = content, !content.isEmpty {
-                HealingDrugContentCard(
-                    title: tabs[selectedTab],
-                    content: content,
-                    layout: layout
-                )
-            } else {
-                VStack(spacing: layout.cardSpacing) {
-                    Spacer()
-
-                    ZStack {
-                        Circle()
-                            .fill(HealingColors.textTertiary.opacity(0.1))
-                            .frame(width: layout.iconLargeSize, height: layout.iconLargeSize)
-
-                        Image(systemName: "doc.text")
-                            .font(.system(size: UnifiedFont.title3, weight: .light))
-                            .foregroundColor(HealingColors.textTertiary)
-                    }
-
-                    Text("暂无\(tabs[selectedTab])内容")
-                        .font(.system(size: UnifiedFont.footnote))
-                        .foregroundColor(HealingColors.textTertiary)
-
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, layout.cardInnerPadding * 4)
+            switch selectedTab {
+            case 0:
+                // 基本信息
+                BasicInfoContentCard(drug: drug, layout: layout)
+            case 1:
+                // 成分厂家
+                ManufacturerContentCard(drug: drug, layout: layout)
+            case 2:
+                // 用药指导
+                MedicationGuideContentCard(drug: drug, tabs: tabs, layout: layout)
+            default:
+                EmptyView()
             }
         }
         .padding(.top, layout.cardSpacing)
@@ -480,8 +455,144 @@ struct HealingDrugDetailContentSection: View {
     }
 }
 
-// MARK: - 治愈系药品内容卡片
-struct HealingDrugContentCard: View {
+// MARK: - 基本信息卡片
+struct BasicInfoContentCard: View {
+    let drug: DrugDetailModel
+    let layout: AdaptiveLayout
+
+    private var infoItems: [(String, String?)] {
+        [
+            ("条形码", drug.barcode),
+            ("批准文号", drug.approval_number),
+            ("规格", drug.specification),
+            ("剂型", drug.dosage_form),
+            ("包装单位", drug.package_unit),
+            ("处方类型", drug.prescription_type),
+            ("药品性质", drug.drug_nature),
+        ]
+    }
+
+    private var hasContent: Bool {
+        infoItems.contains { if let v = $1, !v.isEmpty { return true }; return false }
+    }
+
+    var body: some View {
+        if hasContent {
+            VStack(alignment: .leading, spacing: layout.cardSpacing) {
+                SectionHeader(title: "基本信息", icon: "info.circle.fill", layout: layout)
+
+                VStack(spacing: 0) {
+                    ForEach(Array(infoItems.enumerated()), id: \.offset) { index, item in
+                        if let value = item.1, !value.isEmpty {
+                            InfoRow(label: item.0, value: value, layout: layout)
+                            if index < infoItems.count - 1 {
+                                Divider()
+                                    .padding(.leading, layout.iconLargeSize + 12)
+                            }
+                        }
+                    }
+                }
+                .padding(layout.cardInnerPadding + 4)
+                .background(HealingColors.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 2)
+                .padding(.horizontal, layout.horizontalPadding)
+            }
+            .padding(.bottom, layout.cardSpacing)
+        } else {
+            EmptyStateView(message: "暂无基本信息", layout: layout)
+        }
+    }
+}
+
+// MARK: - 成分厂家卡片
+struct ManufacturerContentCard: View {
+    let drug: DrugDetailModel
+    let layout: AdaptiveLayout
+
+    private var infoItems: [(String, String?)] {
+        [
+            ("成分", drug.ingredients),
+            ("性状", drug.appearance),
+            ("生产厂家", drug.manufacturer),
+            ("产地", drug.origin),
+            ("标准编码", drug.standard_code),
+        ]
+    }
+
+    private var hasContent: Bool {
+        infoItems.contains { if let v = $1, !v.isEmpty { return true }; return false }
+    }
+
+    var body: some View {
+        if hasContent {
+            VStack(alignment: .leading, spacing: layout.cardSpacing) {
+                SectionHeader(title: "成分厂家", icon: "building.2.fill", layout: layout)
+
+                VStack(spacing: 0) {
+                    ForEach(Array(infoItems.enumerated()), id: \.offset) { index, item in
+                        if let value = item.1, !value.isEmpty {
+                            InfoRow(label: item.0, value: value, layout: layout)
+                            if index < infoItems.count - 1 {
+                                Divider()
+                                    .padding(.leading, layout.iconLargeSize + 12)
+                            }
+                        }
+                    }
+                }
+                .padding(layout.cardInnerPadding + 4)
+                .background(HealingColors.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 2)
+                .padding(.horizontal, layout.horizontalPadding)
+            }
+            .padding(.bottom, layout.cardSpacing)
+        } else {
+            EmptyStateView(message: "暂无成分厂家信息", layout: layout)
+        }
+    }
+}
+
+// MARK: - 用药指导卡片
+struct MedicationGuideContentCard: View {
+    let drug: DrugDetailModel
+    let tabs: [String]
+    let layout: AdaptiveLayout
+
+    private var guideItems: [(String, String?)] {
+        [
+            ("功效作用", drug.indications),
+            ("用药禁忌", drug.contraindications),
+            ("用法用量", drug.dosage),
+            ("副作用", drug.side_effects),
+            ("注意事项", drug.precautions),
+            ("药物相互作用", drug.interactions),
+            ("贮藏", drug.storage),
+        ]
+    }
+
+    private var hasContent: Bool {
+        guideItems.contains { $0 != nil && !$1!.isEmpty }
+    }
+
+    var body: some View {
+        if hasContent {
+            VStack(alignment: .leading, spacing: layout.cardSpacing) {
+                ForEach(Array(guideItems.enumerated()), id: \.offset) { index, item in
+                    if let content = item.1, !content.isEmpty {
+                        MedicationSectionCard(title: item.0, content: content, layout: layout)
+                    }
+                }
+            }
+            .padding(.bottom, layout.cardSpacing)
+        } else {
+            EmptyStateView(message: "暂无用药指导信息", layout: layout)
+        }
+    }
+}
+
+// MARK: - 用药指导卡片项
+struct MedicationSectionCard: View {
     let title: String
     let content: String
     let layout: AdaptiveLayout
@@ -525,7 +636,6 @@ struct HealingDrugContentCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 2)
         .padding(.horizontal, layout.horizontalPadding)
-        .padding(.bottom, layout.cardSpacing)
     }
 
     private func parseMarkdown(_ text: String) -> String {
@@ -536,6 +646,83 @@ struct HealingDrugContentCard: View {
         result = result.replacingOccurrences(of: "#", with: "")
         result = result.replacingOccurrences(of: "- ", with: "• ")
         return result
+    }
+}
+
+// MARK: - 信息行
+struct InfoRow: View {
+    let label: String
+    let value: String
+    let layout: AdaptiveLayout
+
+    var body: some View {
+        HStack(alignment: .top, spacing: layout.cardSpacing) {
+            Text(label)
+                .font(.system(size: UnifiedFont.caption1))
+                .foregroundColor(HealingColors.textTertiary)
+                .frame(width: 80, alignment: .leading)
+
+            Text(value)
+                .font(.system(size: UnifiedFont.footnote))
+                .foregroundColor(HealingColors.textPrimary)
+                .lineLimit(nil)
+
+            Spacer()
+        }
+        .padding(.vertical, layout.cardSpacing / 2)
+    }
+}
+
+// MARK: - 分节标题
+struct SectionHeader: View {
+    let title: String
+    let icon: String
+    let layout: AdaptiveLayout
+
+    var body: some View {
+        HStack(spacing: layout.cardSpacing / 2) {
+            Image(systemName: icon)
+                .font(.system(size: UnifiedFont.footnote))
+                .foregroundColor(HealingColors.forestMist)
+
+            Text(title)
+                .font(.system(size: UnifiedFont.subheadline, weight: .semibold))
+                .foregroundColor(HealingColors.textPrimary)
+
+            Spacer()
+        }
+        .padding(.horizontal, layout.horizontalPadding)
+        .padding(.bottom, layout.cardSpacing / 2)
+    }
+}
+
+// MARK: - 空状态视图
+struct EmptyStateView: View {
+    let message: String
+    let layout: AdaptiveLayout
+
+    var body: some View {
+        VStack(spacing: layout.cardSpacing) {
+            Spacer()
+
+            ZStack {
+                Circle()
+                    .fill(HealingColors.textTertiary.opacity(0.1))
+                    .frame(width: layout.iconLargeSize, height: layout.iconLargeSize)
+
+                Image(systemName: "doc.text")
+                    .font(.system(size: UnifiedFont.title3, weight: .light))
+                    .foregroundColor(HealingColors.textTertiary)
+            }
+
+            Text(message)
+                .font(.system(size: UnifiedFont.footnote))
+                .foregroundColor(HealingColors.textTertiary)
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, layout.cardInnerPadding * 4)
     }
 }
 
