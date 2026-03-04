@@ -47,6 +47,8 @@ services:
       - /app/venv
       - /app/__pycache__
       - /app/.pytest_cache
+    env_file:
+      - .env.aliyun
     environment:
       # 数据库配置
       DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD}@postgres:5432/home_health?options=-c%20timezone%3DUTC
@@ -130,6 +132,12 @@ services:
       KNOWLEDGE_SERVICE_API_KEY: ${KNOWLEDGE_SERVICE_API_KEY:-change-me-knowledge-key}
       KNOWLEDGE_SERVICE_TIMEOUT: ${KNOWLEDGE_SERVICE_TIMEOUT:-10}
       KNOWLEDGE_TOP_K: ${KNOWLEDGE_TOP_K:-5}
+      # 数据库配置（Docker 网络内部）
+      POSTGRESQL_HOST: postgres
+      POSTGRESQL_PORT: 5432
+      POSTGRESQL_DB: home_health
+      POSTGRESQL_USER: postgres
+      POSTGRESQL_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "8300:8300"
     depends_on:

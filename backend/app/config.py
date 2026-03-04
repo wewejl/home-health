@@ -64,6 +64,9 @@ class Settings(BaseSettings):
     SMS_ACCESS_KEY_SECRET: str = ""
     SMS_SIGN_NAME: str = ""
     SMS_TEMPLATE_CODE: str = ""
+
+    # 阿里云号码认证服务（一键登录）
+    DYPNS_APP_KEY: str = "FC220000012370277"  # 方案Code，iOS/Android SDK 需要
     
     # LLM 配置
     LLM_PROVIDER: str = "qwen"

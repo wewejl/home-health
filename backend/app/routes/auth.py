@@ -437,7 +437,7 @@ async def get_one_click_config():
     settings = get_settings()
 
     return {
-        "app_key": settings.SMS_ACCESS_KEY_ID or "",
+        "app_key": settings.DYPNS_APP_KEY or "",
         "endpoint": "dypnsapi.aliyuncs.com",
         "enabled": dypns_service.is_enabled()
     }
