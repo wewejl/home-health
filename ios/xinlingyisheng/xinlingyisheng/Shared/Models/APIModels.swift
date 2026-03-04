@@ -293,14 +293,30 @@ struct DrugDetailModel: Codable, Identifiable {
     let name: String
     let common_brands: String?
     let aliases: String?
-    
+
+    // 新增：5.7万条药品数据字段
+    let barcode: String?
+    let approval_number: String?
+    let specification: String?
+    let dosage_form: String?
+    let package_unit: String?
+    let prescription_type: String?
+    let drug_nature: String?
+    let ingredients: String?
+    let appearance: String?
+    let manufacturer: String?
+    let origin: String?
+    let standard_code: String?
+
+    // 安全等级
     let pregnancy_level: String?
     let pregnancy_desc: String?
     let lactation_level: String?
     let lactation_desc: String?
     let children_usable: Bool
     let children_desc: String?
-    
+
+    // 内容模块
     let indications: String?
     let contraindications: String?
     let dosage: String?
@@ -308,12 +324,13 @@ struct DrugDetailModel: Codable, Identifiable {
     let precautions: String?
     let interactions: String?
     let storage: String?
-    
+
+    // 作者与审核
     let author_name: String?
     let author_title: String?
     let author_avatar: String?
     let reviewer_info: String?
-    
+
     let is_hot: Bool
     let view_count: Int
     let updated_at: String?
