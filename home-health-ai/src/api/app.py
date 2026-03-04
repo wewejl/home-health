@@ -24,6 +24,7 @@ from src.api.models import (
     ErrorResponse,
     iOSMessageRequest,
 )
+from src.api.backend_compat import router as backend_compat_router
 
 # 配置日志
 logging.basicConfig(
@@ -88,6 +89,10 @@ if os.path.exists(static_dir):
     logger.info(f"✅ 静态文件挂载: {static_dir}")
 else:
     logger.warning(f"⚠️  静态文件目录不存在: {static_dir}")
+
+# 注册后端兼容路由
+app.include_router(backend_compat_router)
+logger.info("✅ 后端兼容路由已注册: /v1/chat/respond")
 
 
 # =====================================================
