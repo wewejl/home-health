@@ -87,8 +87,8 @@ class Settings(BaseSettings):
     AGENTIC_STREAM_CHUNK_SIZE: int = 12  # SSE 流式响应分块大小
     USE_TRIAGE_ENGINE: bool = True  # 是否启用新导诊引擎灰度开关
     TRIAGE_ENABLED_SPECIALTIES: str = "general,cardiology,respiratory"  # 灰度专科白名单
-    AI_ENGINE_MODE: str = "legacy"  # legacy | remote_ai | hybrid_shadow
-    AI_SERVICE_URL: str = "http://home-health-ai:8300"  # 独立 AI 后端地址
+    AI_ENGINE_MODE: str = "remote_ai"  # legacy | remote_ai | hybrid_shadow
+    AI_SERVICE_URL: str = "http://192.168.65.254:8300"  # 独立 AI 后端地址 (host.docker.internal IP)
     AI_SERVICE_TOKEN: str = ""  # backend -> ai 服务鉴权 token
     AI_SERVICE_TIMEOUT: int = 20  # 请求总超时（秒）
     AI_SERVICE_CONNECT_TIMEOUT: int = 3  # 建连超时（秒）

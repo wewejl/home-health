@@ -70,8 +70,8 @@ services:
       KNOWLEDGE_SERVICE_API_KEY: ${KNOWLEDGE_SERVICE_API_KEY:-change-me-knowledge-key}
 
       # AI 后端网关配置（Phase 1）
-      AI_ENGINE_MODE: ${AI_ENGINE_MODE:-legacy}
-      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://home-health-ai:8300}
+      AI_ENGINE_MODE: ${AI_ENGINE_MODE:-remote_ai}
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://host.docker.internal:8300}
       AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:-change-me-internal-token}
       AI_SERVICE_TIMEOUT: ${AI_SERVICE_TIMEOUT:-20}
       AI_SERVICE_CONNECT_TIMEOUT: ${AI_SERVICE_CONNECT_TIMEOUT:-3}
