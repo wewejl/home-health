@@ -167,7 +167,24 @@ class APIService {
         let data = try JSONEncoder().encode(body)
         return try await makeRequest(endpoint: APIConfig.Endpoints.resetPassword, method: "POST", body: data)
     }
-    
+
+    // MARK: - One Click Login (阿里云号码认证)
+
+    /// 一键登录验证
+    /// - Parameter token: 从阿里云SDK获取的Token
+    /// - Returns: 登录响应，包含JWT Token和用户信息
+    func verifyOneClickLogin(token: String) async throws -> LoginResponse {
+        print("[API] 一键登录验证，Token: \(token.prefix(20))...")
+        let body = OneClickVerifyRequest(token: token)
+        let data = try JSONEncoder().encode(body)
+        return try await makeRequest(endpoint: APIConfig.Endpoints.oneClickVerify, method: "POST", body: data)
+    }
+
+    /// 获取一键登录配置（返回SDK配置信息给客户端）
+    func getOneClickConfig() async throws -> OneClickConfigResponse {
+        return try await makeRequest(endpoint: APIConfig.Endpoints.oneClickConfig)
+    }
+
     // MARK: - Departments
     func getDepartments(primaryOnly: Bool = false) async throws -> [DepartmentModel] {
         var endpoint = APIConfig.Endpoints.departments
@@ -481,6 +498,20 @@ struct PasswordResetRequest: Encodable {
     let phone: String
     let code: String
     let new_password: String
+}
+
+// MARK: - One Click Login Types (阿里云号码认证)
+
+/// 一键登录验证请求
+struct OneClickVerifyRequest: Encodable {
+    let token: String
+}
+
+/// 一键登录配置响应
+struct OneClickConfigResponse: Decodable {
+    let app_key: String
+    let endpoint: String
+    let enabled: Bool
 }
 
 // MARK: - Unified Chat API Extension

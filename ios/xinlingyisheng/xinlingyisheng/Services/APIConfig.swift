@@ -43,6 +43,10 @@ enum APIConfig {
         static let setPassword = "/auth/password/set"
         static let resetPassword = "/auth/password/reset"
 
+        // One Click Login (阿里云号码认证)
+        static let oneClickVerify = "/auth/one-click/verify"
+        static let oneClickConfig = "/auth/one-click/config"
+
         // Departments & Doctors
         static let departments = "/departments"
         static func doctors(departmentId: Int) -> String {
@@ -149,5 +153,45 @@ enum AliyunConfig {
     static var enableFSMNVAD: Bool {
         return ProcessInfo.processInfo.environment["ENABLE_FSMN_VAD"] == "true"
             || true  // 默认启用
+    }
+
+    // MARK: - 号码认证服务 (一键登录)
+
+    /// 阿里云号码认证 AppKey
+    /// 从环境变量或 SecurityConfig 获取
+    static var aliyunDypnsAppKey: String {
+        #if DEBUG
+        // 开发环境：从环境变量读取，或使用测试值
+        return ProcessInfo.processInfo.environment["ALIYUN_DYPNS_APP_KEY"]
+            ?? SecurityConfig.aliyunDypnsAppKey
+            ?? "YOUR_APP_KEY_HERE"  // 需替换为真实值
+        #else
+        // 生产环境：从 SecurityConfig 读取
+        return SecurityConfig.aliyunDypnsAppKey
+        #endif
+    }
+
+    /// 阿里云号码认证 AppSecret (仅用于服务端，客户端不应存储)
+    static var aliyunDypnsAppSecret: String {
+        #if DEBUG
+        return ProcessInfo.processInfo.environment["ALIYUN_DYPNS_APP_SECRET"]
+            ?? "YOUR_APP_SECRET_HERE"
+        #else
+        return SecurityConfig.aliyunDypnsAppSecret
+        #endif
+    }
+
+    /// 是否启用一键登录
+    static var isOneClickLoginEnabled: Bool {
+        return !aliyunDypnsAppKey.isEmpty
+            && aliyunDypnsAppKey != "YOUR_APP_KEY_HERE"
+    }
+}
+
+// MARK: - 便捷访问
+extension APIConfig {
+    /// 阿里云号码认证 AppKey (便捷访问)
+    static var aliyunDypnsAppKey: String {
+        return AliyunConfig.aliyunDypnsAppKey
     }
 }

@@ -8,9 +8,11 @@ from ..schemas.auth import (
     UserResponse, ProfileUpdateRequest,
     RefreshTokenRequest, RefreshTokenResponse,
     PasswordRegisterRequest, PasswordLoginRequest,
-    SetPasswordRequest, PasswordResetRequest, CheckPhoneResponse
+    SetPasswordRequest, PasswordResetRequest, CheckPhoneResponse,
+    OneClickVerifyRequest, OneClickVerifyResponse
 )
 from ..services.auth_service import AuthService
+from ..services.dypns_service import dypns_service
 from ..dependencies import get_current_user, TEST_MODE
 from ..models.user import User
 from ..utils.rate_limit import check_rate_limit
@@ -419,4 +421,82 @@ def reset_password(
         refresh_token=refresh_token,
         user=UserResponse.model_validate(user),
         is_new_user=False
+    )
+
+
+# ===== 一键登录相关接口 (阿里云号码认证) =====
+
+@router.get("/one-click/config")
+async def get_one_click_config():
+    """
+    获取一键登录配置
+
+    返回客户端SDK所需的配置信息
+    """
+    from ..config import get_settings
+    settings = get_settings()
+
+    return {
+        "app_key": settings.SMS_ACCESS_KEY_ID or "",
+        "endpoint": "dypnsapi.aliyuncs.com",
+        "enabled": dypns_service.is_enabled()
+    }
+
+
+@router.post("/one-click/verify", response_model=LoginResponse)
+async def verify_one_click_login(
+    request_body: OneClickVerifyRequest,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    一键登录验证
+
+    - **token**: 客户端从SDK获取的Token
+
+    流程：
+    1. 验证Token有效性
+    2. 调用阿里云API获取手机号
+    3. 查询或创建用户
+    4. 返回JWT Token
+
+    注意：
+    - 必须使用移动数据网络（4G/5G）
+    - WiFi网络下无法使用
+    """
+    client_ip = get_client_ip(request)
+
+    # 验证Token并获取手机号
+    success, result = await dypns_service.verify_token(request_body.token)
+
+    if not success:
+        AuthService.log_auth_event("one_click_failed", extra={
+            "ip": client_ip,
+            "error": result
+        })
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result
+        )
+
+    phone = result
+    logger.info(f"[OneClick] 验证成功，手机号: {phone[-4:]}")
+
+    # 获取或创建用户
+    user, is_new_user = AuthService.get_or_create_user(db, phone)
+
+    # 创建Token
+    access_token, refresh_token = AuthService.create_tokens(user.id)
+
+    AuthService.log_auth_event(
+        "one_click_success" if not is_new_user else "one_click_register",
+        user_id=user.id,
+        extra={"phone": phone[-4:], "ip": client_ip}
+    )
+
+    return LoginResponse(
+        token=access_token,
+        refresh_token=refresh_token,
+        user=UserResponse.model_validate(user),
+        is_new_user=is_new_user
     )

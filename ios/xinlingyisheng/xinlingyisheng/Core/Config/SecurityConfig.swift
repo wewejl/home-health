@@ -35,6 +35,25 @@ enum SecurityConfig {
         return "\(scheme)://\(host)\(portPart)/ws"
     }
 
+    // MARK: - Aliyun Dypns Config (号码认证服务)
+
+    /// 阿里云号码认证 AppKey
+    /// 方案Code: FC220000012370277 (灵犀健康)
+    static var aliyunDypnsAppKey: String {
+        return resolvedValue(
+            envKey: "ALIYUN_DYPNS_APP_KEY",
+            infoKey: "ALIYUN_DYPNS_APP_KEY"
+        ) ?? "FC220000012370277"  // 默认使用灵犀健康的方案Code
+    }
+
+    /// 阿里云号码认证 AppSecret (仅服务端使用)
+    static var aliyunDypnsAppSecret: String {
+        return resolvedValue(
+            envKey: "ALIYUN_DYPNS_APP_SECRET",
+            infoKey: "ALIYUN_DYPNS_APP_SECRET"
+        ) ?? ""
+    }
+
     private static func resolvedValue(envKey: String, infoKey: String) -> String? {
         if let envValue = env[envKey]?.trimmingCharacters(in: .whitespacesAndNewlines),
            !envValue.isEmpty {
