@@ -77,6 +77,7 @@ struct HomeView: View {
                 }
                 .onChangeCompat(of: tab0Path) { newPath in
                     // 当导航路径为空时（回到根视图），重置导航状态
+                    // 这样可以确保下次点击可以再次触发导航
                     if newPath.isEmpty {
                         showDrugList = false
                         showDiseaseList = false
