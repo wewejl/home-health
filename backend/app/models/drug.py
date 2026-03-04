@@ -46,18 +46,18 @@ class Drug(Base):
     common_brands = Column(Text, nullable=True)  # 常见商品名，如"赛乐欣、希舒美、齐迈星"
 
     # === 新增：Excel 导入字段 ===
-    barcode = Column(String(50), nullable=True, index=True)  # 商品条码
-    approval_number = Column(String(50), nullable=True, index=True)  # 批准文号，如"国药准字H13023351"
-    specification = Column(String(100), nullable=True)  # 规格，如"10mg*12片*2板"
+    barcode = Column(String(100), nullable=True, index=True)  # 商品条码
+    approval_number = Column(Text, nullable=True)  # 批准文号，如"国药准字H13023351"
+    specification = Column(Text, nullable=True)  # 规格，如"10mg*12片*2板"
     dosage_form = Column(String(50), nullable=True, index=True)  # 剂型，如"片剂"、"胶囊剂"
     package_unit = Column(String(20), nullable=True)  # 包装单位，如"盒"、"袋"、"支"
     prescription_type = Column(String(20), nullable=True, index=True)  # 处方类型：处方药/非处方药
     drug_nature = Column(String(20), nullable=True, index=True)  # 性质分类：西药/中成药
     ingredients = Column(Text, nullable=True)  # 主要成分
     appearance = Column(Text, nullable=True)  # 性状
-    manufacturer = Column(String(200), nullable=True, index=True)  # 生产厂家
-    origin = Column(String(100), nullable=True)  # 产地
-    standard_code = Column(String(50), nullable=True)  # 本位码
+    manufacturer = Column(String(300), nullable=True, index=True)  # 生产厂家
+    origin = Column(Text, nullable=True)  # 产地
+    standard_code = Column(Text, nullable=True)  # 本位码
 
     # 安全等级
     pregnancy_level = Column(String(20), nullable=True)  # 孕期安全等级：A/B/C/D/X
