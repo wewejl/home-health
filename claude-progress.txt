@@ -90,3 +90,25 @@ useAuthStore (Zustand)  ← 唯一真相来源
   2. 筛选功能正常
   3. 点击医生进入详情页
   4. 开始问诊跳转到聊天界面
+
+=== 2026-03-04 会话 ===
+任务: 药品数据导入
+
+完成工作:
+1. 复制药品数据文件 (药品库带条码.xlsx, 5.7万条记录) 从桌面到项目
+2. 扩展数据库字段长度:
+   - barcode: VARCHAR(50) -> VARCHAR(100)
+   - approval_number: VARCHAR(50) -> TEXT
+   - specification: VARCHAR(100) -> TEXT
+   - origin: VARCHAR(100) -> TEXT
+   - standard_code: VARCHAR(50) -> TEXT
+3. 成功导入 56977 条药品数据
+4. 更新 drug.py 模型以匹配数据库结构
+5. 验证 API 正常工作 (药品搜索、热门药品)
+
+数据库状态:
+- 药品总数: 85820 条
+- 分类总数: 35 个
+
+提交: b7a75428, faf4f84e
+
