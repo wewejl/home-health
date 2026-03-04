@@ -257,3 +257,16 @@ class CheckPhoneResponse(BaseModel):
     """检查手机号响应"""
     exists: bool = Field(..., description="用户是否存在")
     has_password: bool = Field(..., description="是否设置了密码")
+
+
+# ===== 一键登录相关 Schema (阿里云号码认证) =====
+
+class OneClickVerifyRequest(BaseModel):
+    """一键登录验证请求"""
+    token: str = Field(..., description="客户端SDK获取的Token")
+
+
+class OneClickVerifyResponse(BaseModel):
+    """一键登录验证响应"""
+    message: str
+    phone: Optional[str] = None
