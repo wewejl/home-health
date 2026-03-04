@@ -199,8 +199,8 @@ export const doctorApi = {
   }) => api.put(`/api/doctor/orders/${orderId}`, data),
 
   // 药品搜索
-  searchDrugs: (search: string, limit: number = 20) =>
-    api.get('/api/doctor/drugs/search', { params: { search, limit } }),
+  searchDrugs: (q: string, limit: number = 20) =>
+    api.get('/drugs/search', { params: { q, limit } }),
 
   // 医嘱模板
   getOrderTemplates: (orderType?: string) =>
