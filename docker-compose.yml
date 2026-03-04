@@ -47,6 +47,8 @@ services:
       - /app/venv
       - /app/__pycache__
       - /app/.pytest_cache
+    env_file:
+      - .env.aliyun
     environment:
       # 数据库配置
       DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD}@postgres:5432/home_health?options=-c%20timezone%3DUTC
@@ -70,13 +72,18 @@ services:
       KNOWLEDGE_SERVICE_API_KEY: ${KNOWLEDGE_SERVICE_API_KEY:-change-me-knowledge-key}
 
       # AI 后端网关配置（Phase 1）
-      AI_ENGINE_MODE: ${AI_ENGINE_MODE:-remote_ai}
-      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://host.docker.internal:8300}
+      AI_ENGINE_MODE: ${AI_ENGINE_MODE:-legacy}
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://home-health-ai:8300}
       AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:-change-me-internal-token}
       AI_SERVICE_TIMEOUT: ${AI_SERVICE_TIMEOUT:-20}
       AI_SERVICE_CONNECT_TIMEOUT: ${AI_SERVICE_CONNECT_TIMEOUT:-3}
       AI_SERVICE_MAX_RETRIES: ${AI_SERVICE_MAX_RETRIES:-1}
       AI_SERVICE_RETRY_BACKOFF_MS: ${AI_SERVICE_RETRY_BACKOFF_MS:-200}
+
+      # 阿里云号码认证服务（一键登录）
+      SMS_ACCESS_KEY_ID: LTAI5tMPbmvNP5rNzd6uiALx
+      SMS_ACCESS_KEY_SECRET: zb5cA+aWzARI/OosFzD1Dv/8tqVj49iawGCKI2rs9/5qMKnCgi3SbomCeVY/EUCAmtqUGF3fb3JU6p1AWYtBLzo343Y78hcnOE6DYIgIT538gBmJfjRM4rH9lvRYlMg6CdJYXUw2NaAt8539dqtwkson83zCv+UdN5ylnJLm6nwfnA40fWXazBJeCKWq3ftJ/WIRYk+og0Qg65gINE6tz7yM3D1vFuUkjlmMS0mHoz08yUy/jKKVUiW9kjRRCJLRMfqOeOsQokM=
+      SMS_PROVIDER: aliyun
     ports:
       - "8100:8100"
     depends_on:
