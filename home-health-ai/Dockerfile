@@ -10,8 +10,9 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY src/ /app/
 COPY config/ /app/config/
+COPY main.py /app/main.py
 COPY static/ /app/static/
 
 EXPOSE 8300
 
-CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8300"]
+CMD ["python", "main.py"]
